@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Implement a comprehensive unit testing system for SVG2PPTX with pytest-based unit tests achieving 80%+ coverage, visual regression testing to validate conversion quality, and performance benchmarking integrated into CI/CD pipelines. The system will provide automated test generation, fixtures for common scenarios, and detailed coverage reporting to ensure code reliability and catch regressions early in the development cycle.

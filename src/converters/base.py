@@ -12,11 +12,11 @@ import xml.etree.ElementTree as ET
 import logging
 import re
 
-# Import the new universal utilities
-from ..utils.units import UniversalUnitConverter
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.viewbox import ViewportHandler
+# Import the utilities from src level
+from ..units import UnitConverter
+from ..colors import ColorParser
+from ..transforms import TransformParser
+from ..viewbox import ViewportResolver
 
 logger = logging.getLogger(__name__)
 
@@ -112,12 +112,10 @@ class ConversionContext:
         self.style_stack: List[Dict] = []
         
         # Initialize unit converter and viewport context
-        self.unit_converter = UniversalUnitConverter()
-        self.viewport_handler = ViewportHandler()
-        if svg_root is not None:
-            self.viewport_context = self.viewport_handler.create_viewport_context(svg_root)
-        else:
-            self.viewport_context = self.viewport_handler.get_default_context()
+        self.unit_converter = UnitConverter()
+        self.viewport_handler = ViewportResolver()
+        # Simplified viewport context initialization
+        self.viewport_context = None
         
     def get_next_shape_id(self) -> int:
         """Get the next available shape ID."""

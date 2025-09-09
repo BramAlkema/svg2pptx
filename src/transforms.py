@@ -291,7 +291,11 @@ class Matrix:
     
     def has_scale(self, tolerance: float = 1e-6) -> bool:
         """Check if matrix contains scaling."""
-        return abs(self.a - 1) > tolerance or abs(self.d - 1) > tolerance
+        # Calculate the determinant of the linear part (excluding translation)
+        det = abs(self.a * self.d - self.b * self.c)
+        # For pure rotation/reflection, determinant should be ±1
+        # For scaling, determinant will be different from 1
+        return abs(det - 1) > tolerance
     
     def to_svg_string(self) -> str:
         """Convert to SVG matrix string."""

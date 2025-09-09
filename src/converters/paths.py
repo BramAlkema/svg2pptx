@@ -40,6 +40,9 @@ class PathData:
         for part in parts:
             if re.match(r'[MmLlHhVvCcSsQqTtAaZz]', part):
                 current_command = part
+                # Handle commands that don't need coordinates (Z, z)
+                if current_command.lower() == 'z':
+                    self.commands.append((current_command, []))
             elif current_command and part:
                 coords = [float(x) for x in part.split() if x]
                 self.commands.append((current_command, coords))
@@ -55,6 +58,11 @@ class PathConverter(BaseConverter):
         self.current_pos = [0.0, 0.0]  # Current position
         self.last_control = None  # Last control point for smooth curves
         self.start_pos = [0.0, 0.0]  # Path start position for Z command
+    
+    def can_convert(self, element) -> bool:
+        """Check if this converter can handle the element."""
+        tag = self.get_element_tag(element)
+        return tag == 'path'
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG path to DrawingML custom geometry"""
@@ -78,13 +86,13 @@ class PathConverter(BaseConverter):
         
         return f"""<a:sp>
     <a:nvSpPr>
-        <a:cNvPr id="{context.get_next_id()}" name="Path"/>
+        <a:cNvPr id="{context.get_next_shape_id()}" name="Path"/>
         <a:cNvSpPr/>
     </a:nvSpPr>
     <a:spPr>
         <a:xfrm>
             <a:off x="0" y="0"/>
-            <a:ext cx="{context.coord_system.page_width}" cy="{context.coord_system.page_height}"/>
+            <a:ext cx="21600" cy="21600"/>
         </a:xfrm>
         {geometry_xml}
         {style_attrs}
@@ -149,8 +157,8 @@ class PathConverter(BaseConverter):
                 y += self.current_pos[1]
             
             # Convert to DrawingML coordinates (0-21600 range)
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             if i == 0:  # First move is moveTo
                 commands.append(f'<a:moveTo><a:pt x="{dx}" y="{dy}"/></a:moveTo>')
@@ -178,8 +186,8 @@ class PathConverter(BaseConverter):
                 x += self.current_pos[0]
                 y += self.current_pos[1]
             
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos = [x, y]
@@ -196,8 +204,8 @@ class PathConverter(BaseConverter):
             if not absolute:
                 x += self.current_pos[0]
             
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((self.current_pos[1] / context.coord_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((self.current_pos[1] / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos[0] = x
@@ -214,8 +222,8 @@ class PathConverter(BaseConverter):
             if not absolute:
                 y += self.current_pos[1]
             
-            dx = int((self.current_pos[0] / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx = int((self.current_pos[0] / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos[1] = y
@@ -243,12 +251,12 @@ class PathConverter(BaseConverter):
                 y += self.current_pos[1]
             
             # Convert control points and end point
-            dx1 = int((x1 / context.coord_system.svg_width) * 21600)
-            dy1 = int((y1 / context.coord_system.svg_height) * 21600)
-            dx2 = int((x2 / context.coord_system.svg_width) * 21600)
-            dy2 = int((y2 / context.coord_system.svg_height) * 21600)
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx1 = int((x1 / context.coordinate_system.svg_width) * 21600)
+            dy1 = int((y1 / context.coordinate_system.svg_height) * 21600)
+            dx2 = int((x2 / context.coordinate_system.svg_width) * 21600)
+            dy2 = int((y2 / context.coordinate_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -282,12 +290,12 @@ class PathConverter(BaseConverter):
                 x1, y1 = self.current_pos
             
             # Convert all points
-            dx1 = int((x1 / context.coord_system.svg_width) * 21600)
-            dy1 = int((y1 / context.coord_system.svg_height) * 21600)
-            dx2 = int((x2 / context.coord_system.svg_width) * 21600)
-            dy2 = int((y2 / context.coord_system.svg_height) * 21600)
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx1 = int((x1 / context.coordinate_system.svg_width) * 21600)
+            dy1 = int((y1 / context.coordinate_system.svg_height) * 21600)
+            dx2 = int((x2 / context.coordinate_system.svg_width) * 21600)
+            dy2 = int((y2 / context.coordinate_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -320,12 +328,12 @@ class PathConverter(BaseConverter):
             cx2 = x + (2/3) * (x1 - x)
             cy2 = y + (2/3) * (y1 - y)
             
-            dx1 = int((cx1 / context.coord_system.svg_width) * 21600)
-            dy1 = int((cy1 / context.coord_system.svg_height) * 21600)
-            dx2 = int((cx2 / context.coord_system.svg_width) * 21600)
-            dy2 = int((cy2 / context.coord_system.svg_height) * 21600)
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx1 = int((cx1 / context.coordinate_system.svg_width) * 21600)
+            dy1 = int((cy1 / context.coordinate_system.svg_height) * 21600)
+            dx2 = int((cx2 / context.coordinate_system.svg_width) * 21600)
+            dy2 = int((cy2 / context.coordinate_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -362,12 +370,12 @@ class PathConverter(BaseConverter):
             cx2 = x + (2/3) * (x1 - x)
             cy2 = y + (2/3) * (y1 - y)
             
-            dx1 = int((cx1 / context.coord_system.svg_width) * 21600)
-            dy1 = int((cy1 / context.coord_system.svg_height) * 21600)
-            dx2 = int((cx2 / context.coord_system.svg_width) * 21600)
-            dy2 = int((cy2 / context.coord_system.svg_height) * 21600)
-            dx = int((x / context.coord_system.svg_width) * 21600)
-            dy = int((y / context.coord_system.svg_height) * 21600)
+            dx1 = int((cx1 / context.coordinate_system.svg_width) * 21600)
+            dy1 = int((cy1 / context.coordinate_system.svg_height) * 21600)
+            dx2 = int((cx2 / context.coordinate_system.svg_width) * 21600)
+            dy2 = int((cy2 / context.coordinate_system.svg_height) * 21600)
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -413,7 +421,26 @@ class PathConverter(BaseConverter):
         # For production use, implement proper arc-to-bezier conversion
         
         # For now, just draw a straight line as fallback
-        dx = int((x2 / context.coord_system.svg_width) * 21600)
-        dy = int((y2 / context.coord_system.svg_height) * 21600)
+        dx = int((x2 / context.coordinate_system.svg_width) * 21600)
+        dy = int((y2 / context.coordinate_system.svg_height) * 21600)
         
         return [f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>']
+    
+    def _get_style_attributes(self, element: ET.Element, context: ConversionContext) -> str:
+        """Get style attributes for the path element."""
+        fill = self.get_attribute_with_style(element, 'fill', 'black')
+        stroke = self.get_attribute_with_style(element, 'stroke', 'none')
+        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
+        opacity = self.get_attribute_with_style(element, 'opacity', '1')
+        fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
+        stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
+        
+        style_parts = []
+        
+        if fill and fill != 'none':
+            style_parts.append(self.generate_fill(fill, fill_opacity, context))
+        
+        if stroke and stroke != 'none':
+            style_parts.append(self.generate_stroke(stroke, stroke_width, stroke_opacity, context))
+        
+        return '\n        '.join(style_parts)

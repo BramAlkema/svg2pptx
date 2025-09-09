@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Complex gradient with multiple stops -->
+        <linearGradient id="complexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ff0000;stop-opacity:1" />
+            <stop offset="25%" style="stop-color:#00ff00;stop-opacity:0.8" />
+            <stop offset="50%" style="stop-color:#0000ff;stop-opacity:0.6" />
+            <stop offset="75%" style="stop-color:#ffff00;stop-opacity:0.4" />
+            <stop offset="100%" style="stop-color:#ff00ff;stop-opacity:0.2" />
+        </linearGradient>
+        
+        <!-- Clipping path with complex shape -->
+        <clipPath id="starClip">
+            <path d="M 300,50 L 318,118 L 386,118 L 332,162 L 350,230 L 300,186 L 250,230 L 268,162 L 214,118 L 282,118 Z"/>
+        </clipPath>
+        
+        <!-- Pattern definition -->
+        <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="3" fill="red"/>
+        </pattern>
+    </defs>
+    
+    <!-- Background with gradient -->
+    <rect width="600" height="400" fill="url(#complexGrad)"/>
+    
+    <!-- Transformed group with nested transforms -->
+    <g transform="translate(100,100) rotate(15) scale(1.2,0.8)">
+        <rect x="0" y="0" width="80" height="60" fill="url(#dots)" opacity="0.7"/>
+        
+        <!-- Text with custom font and effects -->
+        <text x="10" y="30" font-family="Arial Black" font-size="16" fill="white" 
+              font-weight="bold" text-decoration="underline" 
+              transform="rotate(-10)">Custom Font Text</text>
+        
+        <!-- Nested group with more transforms -->
+        <g transform="translate(50,30) skewX(15)">
+            <ellipse cx="0" cy="0" rx="25" ry="15" fill="yellow" opacity="0.5"/>
+        </g>
+    </g>
+    
+    <!-- Complex path with all curve types -->
+    <path d="M 200,200 Q 250,150 300,200 T 400,200 C 400,250 450,300 400,350 S 350,400 300,350 L 250,320 A 30,20 0 0,1 200,300 Z" 
+          fill="rgba(0,255,0,0.6)" stroke="blue" stroke-width="3" clip-path="url(#starClip)"/>
+    
+    <!-- Text along a path -->
+    <defs>
+        <path id="textPath" d="M 50,350 Q 300,300 550,350"/>
+    </defs>
+    <text font-family="Times" font-size="18" fill="darkblue">
+        <textPath href="#textPath">This text follows a curved path!</textPath>
+    </text>
+    
+    <!-- Multiple overlapping shapes with transparency -->
+    <g opacity="0.8">
+        <circle cx="500" cy="100" r="40" fill="red"/>
+        <circle cx="520" cy="100" r="40" fill="green"/>
+        <circle cx="510" cy="120" r="40" fill="blue"/>
+    </g>
+    
+</svg>

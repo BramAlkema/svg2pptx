@@ -310,8 +310,8 @@ class ColorParser:
         try:
             # Parse HSL values
             h = float(params[0].rstrip('deg')) % 360  # Hue in degrees
-            s = float(params[1].rstrip('%')) / 100.0  # Saturation 0-1
-            l = float(params[2].rstrip('%')) / 100.0  # Lightness 0-1
+            s = float(params[1].rstrip('%'))  # Saturation 0-100
+            l = float(params[2].rstrip('%'))  # Lightness 0-100
             
             # Parse alpha
             alpha = 1.0

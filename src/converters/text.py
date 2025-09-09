@@ -20,6 +20,11 @@ class TextConverter(BaseConverter):
     
     supported_elements = ['text', 'tspan']
     
+    def can_convert(self, element):
+        """Check if this converter can handle the given element."""
+        tag = self.get_element_tag(element)
+        return tag in self.supported_elements
+    
     # Font weight mappings
     FONT_WEIGHTS = {
         'normal': '400',
@@ -45,8 +50,7 @@ class TextConverter(BaseConverter):
         y = float(element.get('y', '0'))
         
         # Convert coordinates to EMU
-        x_emu = context.coord_system.svg_to_emu_x(x)
-        y_emu = context.coord_system.svg_to_emu_y(y)
+        x_emu, y_emu = context.coordinate_system.svg_to_emu(x, y)
         
         # Get text content and formatting
         text_content = self._extract_text_content(element)
@@ -68,20 +72,20 @@ class TextConverter(BaseConverter):
         
         # Adjust position based on text anchor
         if text_anchor == 'ctr':
-            x_emu -= int(text_width * context.coord_system.pixels_per_inch * 12700 / 2)
+            x_emu -= int(text_width * 12700 / 2)  # Convert to EMU directly
         elif text_anchor == 'r':
-            x_emu -= int(text_width * context.coord_system.pixels_per_inch * 12700)
+            x_emu -= int(text_width * 12700)  # Convert to EMU directly
         
         # Create text shape
         return f"""<a:sp>
     <a:nvSpPr>
-        <a:cNvPr id="{context.get_next_id()}" name="Text"/>
+        <a:cNvPr id="{context.get_next_shape_id()}" name="Text"/>
         <a:cNvSpPr txBox="1"/>
     </a:nvSpPr>
     <a:spPr>
         <a:xfrm>
             <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{int(text_width * context.coord_system.pixels_per_inch * 12700)}" cy="{int(text_height * context.coord_system.pixels_per_inch * 12700)}"/>
+            <a:ext cx="{int(text_width * 12700)}" cy="{int(text_height * 12700)}"/>
         </a:xfrm>
         <a:prstGeom prst="rect">
             <a:avLst/>
@@ -131,7 +135,10 @@ class TextConverter(BaseConverter):
         font_family = element.get('font-family')
         if font_family:
             # Clean up font family (remove quotes, get first font)
-            font_family = font_family.strip('\'"').split(',')[0].strip()
+            font_family = font_family.split(',')[0].strip()
+            # Remove surrounding quotes
+            if font_family.startswith(("'", '"')) and font_family.endswith(("'", '"')):
+                font_family = font_family[1:-1]
             return font_family
         
         # Check style attribute
@@ -140,7 +147,11 @@ class TextConverter(BaseConverter):
             for part in style.split(';'):
                 if part.strip().startswith('font-family:'):
                     font_family = part.split(':', 1)[1].strip()
-                    return font_family.strip('\'"').split(',')[0].strip()
+                    font_family = font_family.split(',')[0].strip()
+                    # Remove surrounding quotes
+                    if font_family.startswith(("'", '"')) and font_family.endswith(("'", '"')):
+                        font_family = font_family[1:-1]
+                    return font_family
         
         return 'Arial'  # Default font
     
@@ -162,12 +173,12 @@ class TextConverter(BaseConverter):
         return 12  # Default font size
     
     def _parse_font_size(self, font_size: str, context: ConversionContext) -> int:
-        """Parse font size with units using Universal Unit Converter"""
+        """Parse font size with units"""
         try:
-            # Convert to pixels first using Universal Unit Converter
-            pixels = context.to_pixels(font_size)
-            # Convert pixels to points for PowerPoint (using context's DPI)
-            points = pixels * 72.0 / context.viewport_context.dpi
+            # Use base converter's parse_length method
+            pixels = self.parse_length(font_size)
+            # Convert pixels to points for PowerPoint
+            points = pixels * 72.0 / 96.0  # Assume 96 DPI
             return int(points)
         except:
             return 12  # Default font size in points
@@ -175,8 +186,8 @@ class TextConverter(BaseConverter):
     def _get_font_weight(self, element: ET.Element) -> str:
         """Get font weight"""
         # Check direct attribute
-        font_weight = element.get('font-weight', 'normal')
-        if font_weight in self.FONT_WEIGHTS:
+        font_weight = element.get('font-weight')
+        if font_weight and font_weight in self.FONT_WEIGHTS:
             return self.FONT_WEIGHTS[font_weight]
         
         # Check style attribute
@@ -236,7 +247,7 @@ class TextConverter(BaseConverter):
         # Check direct fill attribute
         fill = element.get('fill')
         if fill and fill != 'none':
-            color = self._parse_color(fill)
+            color = self.parse_color(fill)
             if color:
                 return f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
         
@@ -247,46 +258,13 @@ class TextConverter(BaseConverter):
                 if part.strip().startswith('fill:'):
                     fill = part.split(':', 1)[1].strip()
                     if fill and fill != 'none':
-                        color = self._parse_color(fill)
+                        color = self.parse_color(fill)
                         if color:
                             return f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
         
         # Default black color
         return '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>'
     
-    def _parse_color(self, color: str) -> Optional[str]:
-        """Parse color value to hex format"""
-        color = color.strip().lower()
-        
-        # Hex colors
-        if color.startswith('#'):
-            hex_color = color[1:]
-            if len(hex_color) == 3:
-                # Expand short hex
-                hex_color = ''.join([c*2 for c in hex_color])
-            if len(hex_color) == 6:
-                return hex_color.upper()
-        
-        # RGB colors
-        if color.startswith('rgb('):
-            try:
-                rgb_str = color[4:-1]  # Remove 'rgb(' and ')'
-                r, g, b = [int(x.strip()) for x in rgb_str.split(',')]
-                return f"{r:02X}{g:02X}{b:02X}"
-            except (ValueError, IndexError):
-                pass
-        
-        # Named colors (basic set)
-        color_names = {
-            'black': '000000', 'white': 'FFFFFF', 'red': 'FF0000',
-            'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00',
-            'cyan': '00FFFF', 'magenta': 'FF00FF', 'silver': 'C0C0C0',
-            'gray': '808080', 'maroon': '800000', 'olive': '808000',
-            'lime': '00FF00', 'aqua': '00FFFF', 'teal': '008080',
-            'navy': '000080', 'fuchsia': 'FF00FF', 'purple': '800080'
-        }
-        
-        return color_names.get(color)
     
     def _escape_xml(self, text: str) -> str:
         """Escape XML special characters"""

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<svg width="500" height="200" xmlns="http://www.w3.org/2000/svg">
+    <text x="50" y="50" font-family="Arial" font-size="20" fill="blue">Arial Text</text>
+    <text x="50" y="80" font-family="Times" font-size="18" fill="red" font-weight="bold">Bold Times</text>
+    <text x="50" y="110" font-family="Courier" font-size="16" fill="green" font-style="italic">Italic Courier</text>
+    <text x="50" y="140" font-family="Helvetica" font-size="24" fill="purple" text-decoration="underline">Underlined</text>
+</svg>

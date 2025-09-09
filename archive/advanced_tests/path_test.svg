@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 50,150 Q 150,50 250,150 T 350,150" stroke="blue" stroke-width="3" fill="none"/>
+    <path d="M 50,200 C 50,100 200,100 200,200 S 350,300 350,200" stroke="red" stroke-width="2" fill="rgba(255,0,0,0.3)"/>
+    <path d="M 100,250 A 30,50 0 0,1 200,250 Z" fill="orange" stroke="black"/>
+</svg>

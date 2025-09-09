@@ -73,11 +73,17 @@ class RectangleConverter(BaseConverter):
         shape_id = context.get_next_shape_id()
         
         # Determine shape preset
-        if rx > 0 or ry > 0:
+        if rx_emu > 0 or ry_emu > 0:
             # Rounded rectangle
             # Calculate corner radius as percentage (DrawingML uses percentage)
-            corner_radius_x = min(50, (rx / width) * 100) if width > 0 else 0
-            corner_radius_y = min(50, (ry / height) * 100) if height > 0 else 0
+            # Convert back to pixels for calculation
+            rx_px = self.parse_length(rx_str) if rx_str else 0
+            ry_px = self.parse_length(ry_str) if ry_str else 0
+            width_px = self.parse_length(width_str) if width_str else 0
+            height_px = self.parse_length(height_str) if height_str else 0
+            
+            corner_radius_x = min(50, (rx_px / width_px) * 100) if width_px > 0 else 0
+            corner_radius_y = min(50, (ry_px / height_px) * 100) if height_px > 0 else 0
             corner_radius = max(corner_radius_x, corner_radius_y)
             
             shape_preset = f'''<a:prstGeom prst="roundRect">
