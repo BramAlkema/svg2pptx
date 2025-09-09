@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <symbol id="star" viewBox="0 0 20 20">
+      <path d="M10,2 L12,8 L18,8 L13,12 L15,18 L10,14 L5,18 L7,12 L2,8 L8,8 Z" fill="gold"/>
+    </symbol>
+  </defs>
+  <use href="#star" x="50" y="50" width="30" height="30"/>
+  <use href="#star" x="100" y="100" width="20" height="20"/>
+</svg>

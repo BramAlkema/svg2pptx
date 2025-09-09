@@ -30,11 +30,11 @@ from enum import Enum
 import xml.etree.ElementTree as ET
 
 from .base import BaseConverter
-from ..context import ConversionContext
-from ..utils.units import UniversalUnitConverter
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.viewbox import ViewportHandler
+from .base import ConversionContext
+from ..units import UnitConverter
+from ..colors import ColorParser, ColorInfo
+from ..transforms import TransformParser, Matrix
+from ..viewbox import ViewportResolver
 
 
 class MarkerPosition(Enum):
@@ -109,10 +109,10 @@ class MarkerConverter(BaseConverter):
         super().__init__()
         self.markers: Dict[str, MarkerDefinition] = {}
         self.symbols: Dict[str, SymbolDefinition] = {}
-        self.unit_converter = UniversalUnitConverter()
-        self.transform_engine = UniversalTransformEngine()
-        self.color_parser = UniversalColorParser()
-        self.viewport_handler = ViewportHandler()
+        self.unit_converter = UnitConverter()
+        self.transform_engine = TransformParser()
+        self.color_parser = ColorParser()
+        self.viewport_handler = ViewportResolver()
         
         # Common arrowhead geometries for PowerPoint compatibility
         self.standard_arrows = {

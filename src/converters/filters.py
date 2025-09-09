@@ -30,11 +30,11 @@ from enum import Enum
 import xml.etree.ElementTree as ET
 
 from .base import BaseConverter
-from ..context import ConversionContext
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.units import UniversalUnitConverter
-from ..utils.viewbox import ViewportHandler
+from .base import ConversionContext
+from ..colors import ColorParser, ColorInfo
+from ..transforms import TransformParser
+from ..units import UnitConverter
+from ..viewbox import ViewportResolver
 
 
 class FilterPrimitiveType(Enum):
@@ -165,10 +165,10 @@ class FilterConverter(BaseConverter):
     def __init__(self):
         super().__init__()
         self.filters: Dict[str, FilterDefinition] = {}
-        self.color_parser = UniversalColorParser()
-        self.unit_converter = UniversalUnitConverter()
-        self.transform_engine = UniversalTransformEngine()
-        self.viewport_handler = ViewportHandler()
+        self.color_parser = ColorParser()
+        self.unit_converter = UnitConverter()
+        self.transform_engine = TransformParser()
+        self.viewport_handler = ViewportResolver()
         
         # PowerPoint effect mapping
         self.powerpoint_effects = {

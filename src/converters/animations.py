@@ -31,11 +31,11 @@ from enum import Enum
 import xml.etree.ElementTree as ET
 
 from .base import BaseConverter
-from ..context import ConversionContext
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.units import UniversalUnitConverter
-from ..utils.viewbox import ViewportHandler
+from .base import ConversionContext
+from ..colors import ColorParser
+from ..transforms import TransformParser
+from ..units import UnitConverter
+from ..viewbox import ViewportResolver
 
 
 class AnimationType(Enum):
@@ -161,7 +161,7 @@ class AnimationDefinition:
     
     def _interpolate_colors(self, color1: str, color2: str, t: float) -> str:
         """Interpolate between two colors."""
-        parser = UniversalColorParser()
+        parser = ColorParser()
         c1 = parser.parse(color1)
         c2 = parser.parse(color2)
         
@@ -229,10 +229,10 @@ class AnimationConverter(BaseConverter):
     def __init__(self):
         super().__init__()
         self.animations: List[AnimationDefinition] = []
-        self.color_parser = UniversalColorParser()
-        self.transform_engine = UniversalTransformEngine()
-        self.unit_converter = UniversalUnitConverter()
-        self.viewport_handler = ViewportHandler()
+        self.color_parser = ColorParser()
+        self.transform_engine = TransformParser()
+        self.unit_converter = UnitConverter()
+        self.viewport_handler = ViewportResolver()
         
         # Animation processing options
         self.max_keyframes = 30  # Maximum keyframes to extract

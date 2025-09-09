@@ -24,11 +24,11 @@ from dataclasses import dataclass
 from enum import Enum
 
 from .base import BaseConverter
-from ..utils.units import UniversalUnitConverter
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.viewbox import ViewportHandler
-from ..context import ConversionContext
+from ..units import UnitConverter
+from ..colors import ColorParser
+from ..transforms import TransformParser
+from ..viewbox import ViewportResolver
+from .base import ConversionContext
 
 logger = logging.getLogger(__name__)
 
@@ -108,10 +108,10 @@ class MaskingConverter(BaseConverter):
     
     def __init__(self):
         super().__init__()
-        self.unit_converter = UniversalUnitConverter()
-        self.color_parser = UniversalColorParser()
-        self.transform_engine = UniversalTransformEngine()
-        self.viewport_handler = ViewportHandler()
+        self.unit_converter = UnitConverter()
+        self.color_parser = ColorParser()
+        self.transform_engine = TransformParser()
+        self.viewport_handler = ViewportResolver()
         
         # Storage for mask and clipPath definitions
         self.mask_definitions: Dict[str, MaskDefinition] = {}

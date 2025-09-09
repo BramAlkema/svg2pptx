@@ -24,6 +24,11 @@ google-auth-httplib2>=0.1.1
 pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 
+# Font processing and text-to-path conversion
+fonttools>=4.42.0
+uharfbuzz>=0.37.0
+freetype-py>=2.4.0
+
 # Optional: Enhanced SVG parsing
 # svglib>=1.4.0
 # reportlab>=3.6.0

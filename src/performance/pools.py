@@ -245,36 +245,36 @@ class ConverterPool:
     
     def _register_common_utilities(self):
         """Register commonly used utility pools."""
-        from ..utils.units import UniversalUnitConverter
-        from ..utils.colors import UniversalColorParser
-        from ..utils.transforms import UniversalTransformEngine
-        from ..utils.viewbox import ViewportHandler
+        from ..units import UnitConverter
+        from ..colors import ColorParser
+        from ..transforms import TransformParser
+        from ..viewbox import ViewportResolver
         
         # Register utility pools with factories
         self.utility_pool.register_pool(
             'unit_converter',
-            factory=lambda: UniversalUnitConverter(),
+            factory=lambda: UnitConverter(),
             max_size=3,
             init_size=1
         )
         
         self.utility_pool.register_pool(
             'color_parser', 
-            factory=lambda: UniversalColorParser(),
+            factory=lambda: ColorParser(),
             max_size=3,
             init_size=1
         )
         
         self.utility_pool.register_pool(
             'transform_engine',
-            factory=lambda: UniversalTransformEngine(),
+            factory=lambda: TransformParser(),
             max_size=3,
             init_size=1
         )
         
         self.utility_pool.register_pool(
             'viewport_handler',
-            factory=lambda: ViewportHandler(),
+            factory=lambda: ViewportResolver(),
             max_size=3,
             init_size=1
         )

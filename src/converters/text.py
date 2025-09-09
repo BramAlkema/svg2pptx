@@ -8,17 +8,41 @@ Handles SVG text elements with support for:
 - Text decorations (underline, strikethrough)
 - Multi-line text with tspan elements
 - Text paths (basic support)
+- Text-to-path fallback when fonts are unavailable
 """
 
 from typing import List, Dict, Any, Optional
 import xml.etree.ElementTree as ET
+import logging
 from .base import BaseConverter, ConversionContext
+
+logger = logging.getLogger(__name__)
 
 
 class TextConverter(BaseConverter):
-    """Converts SVG text elements to DrawingML text shapes"""
+    """Converts SVG text elements to DrawingML text shapes with optional text-to-path fallback"""
     
     supported_elements = ['text', 'tspan']
+    
+    def __init__(self, enable_text_to_path_fallback: bool = False):
+        """
+        Initialize TextConverter with optional text-to-path fallback.
+        
+        Args:
+            enable_text_to_path_fallback: Enable automatic fallback to path conversion
+        """
+        super().__init__()
+        self.enable_text_to_path_fallback = enable_text_to_path_fallback
+        self._text_to_path_converter = None
+        
+        if self.enable_text_to_path_fallback:
+            try:
+                from .text_to_path import TextToPathConverter
+                self._text_to_path_converter = TextToPathConverter()
+                logger.info("Text-to-path fallback enabled")
+            except ImportError as e:
+                logger.warning(f"Could not enable text-to-path fallback: {e}")
+                self.enable_text_to_path_fallback = False
     
     def can_convert(self, element):
         """Check if this converter can handle the given element."""
@@ -43,7 +67,21 @@ class TextConverter(BaseConverter):
     }
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG text to DrawingML text shape"""
+        """Convert SVG text to DrawingML text shape with optional path fallback"""
+        
+        # Try text-to-path fallback if enabled
+        if (self.enable_text_to_path_fallback and 
+            self._text_to_path_converter and 
+            self._text_to_path_converter.should_convert_to_path(element, context)):
+            
+            logger.debug(f"Using text-to-path fallback for element: {element.get('font-family', 'unknown')}")
+            return self._text_to_path_converter.convert(element, context)
+        
+        # Use regular text conversion
+        return self._convert_to_text_shape(element, context)
+    
+    def _convert_to_text_shape(self, element: ET.Element, context: ConversionContext) -> str:
+        """Convert SVG text to regular DrawingML text shape"""
         
         # Get text position
         x = float(element.get('x', '0'))

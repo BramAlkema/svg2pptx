@@ -32,11 +32,11 @@ import xml.etree.ElementTree as ET
 
 from .base import BaseConverter
 from .paths import PathConverter  # For path processing
-from ..context import ConversionContext
-from ..utils.colors import UniversalColorParser
-from ..utils.transforms import UniversalTransformEngine
-from ..utils.units import UniversalUnitConverter
-from ..utils.viewbox import ViewportHandler
+from .base import ConversionContext
+from ..colors import ColorParser, ColorInfo
+from ..transforms import TransformParser
+from ..units import UnitConverter
+from ..viewbox import ViewportResolver
 
 
 class TextPathMethod(Enum):
@@ -330,10 +330,10 @@ class TextPathConverter(BaseConverter):
     
     def __init__(self):
         super().__init__()
-        self.color_parser = UniversalColorParser()
-        self.unit_converter = UniversalUnitConverter()
-        self.transform_engine = UniversalTransformEngine()
-        self.viewport_handler = ViewportHandler()
+        self.color_parser = ColorParser()
+        self.unit_converter = UnitConverter()
+        self.transform_engine = TransformParser()
+        self.viewport_handler = ViewportResolver()
         self.path_sampler = PathSampler()
         self.path_definitions: Dict[str, str] = {}  # Cache path definitions
         

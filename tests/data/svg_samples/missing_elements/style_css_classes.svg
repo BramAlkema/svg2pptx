@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>
+    .red-circle { fill: red; stroke: black; stroke-width: 2; }
+    .blue-rect { fill: blue; opacity: 0.7; }
+    #special { fill: green; transform: rotate(45deg); }
+  </style>
+  <circle class="red-circle" cx="100" cy="50" r="30"/>
+  <rect class="blue-rect" x="50" y="100" width="60" height="40"/>
+  <polygon id="special" points="150,150 170,120 190,150"/>
+</svg>
