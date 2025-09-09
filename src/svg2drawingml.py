@@ -26,6 +26,7 @@ class SVGParser:
         self.root = ET.fromstring(svg_content)
         self.width, self.height = self._parse_dimensions()
         self.viewbox = self._parse_viewbox()
+        self.gradients = self._parse_gradients()
     
     def _parse_viewbox(self) -> Tuple[float, float, float, float]:
         """Parse SVG viewBox attribute."""
@@ -72,6 +73,78 @@ class SVGParser:
         # Recurse into child elements
         for child in element:
             self._extract_recursive(child, elements)
+    
+    def _parse_gradients(self) -> Dict[str, Dict]:
+        """Parse gradient definitions from SVG."""
+        gradients = {}
+        
+        # Find defs section
+        defs = self.root.find('.//defs') or self.root.find('.//{http://www.w3.org/2000/svg}defs')
+        if defs is None:
+            return gradients
+        
+        # Parse linear gradients
+        for grad in defs.findall('.//linearGradient') or defs.findall('.//{http://www.w3.org/2000/svg}linearGradient'):
+            grad_id = grad.get('id')
+            if grad_id:
+                gradients[grad_id] = {
+                    'type': 'linear',
+                    'x1': grad.get('x1', '0%'),
+                    'y1': grad.get('y1', '0%'),
+                    'x2': grad.get('x2', '100%'),
+                    'y2': grad.get('y2', '0%'),
+                    'stops': self._parse_gradient_stops(grad)
+                }
+        
+        # Parse radial gradients
+        for grad in defs.findall('.//radialGradient') or defs.findall('.//{http://www.w3.org/2000/svg}radialGradient'):
+            grad_id = grad.get('id')
+            if grad_id:
+                gradients[grad_id] = {
+                    'type': 'radial',
+                    'cx': grad.get('cx', '50%'),
+                    'cy': grad.get('cy', '50%'),
+                    'r': grad.get('r', '50%'),
+                    'stops': self._parse_gradient_stops(grad)
+                }
+        
+        return gradients
+    
+    def _parse_gradient_stops(self, gradient_element: ET.Element) -> List[Dict]:
+        """Parse gradient stop elements."""
+        stops = []
+        
+        for stop in gradient_element.findall('.//stop') or gradient_element.findall('.//{http://www.w3.org/2000/svg}stop'):
+            stop_data = {
+                'offset': stop.get('offset', '0%'),
+                'color': '#000000',
+                'opacity': '1'
+            }
+            
+            # Parse style attribute or direct attributes
+            style = stop.get('style', '')
+            if style:
+                style_parts = [part.strip() for part in style.split(';') if part.strip()]
+                for part in style_parts:
+                    if ':' in part:
+                        prop, value = part.split(':', 1)
+                        prop = prop.strip()
+                        value = value.strip()
+                        
+                        if prop == 'stop-color':
+                            stop_data['color'] = value
+                        elif prop == 'stop-opacity':
+                            stop_data['opacity'] = value
+            
+            # Direct attributes override style
+            if stop.get('stop-color'):
+                stop_data['color'] = stop.get('stop-color')
+            if stop.get('stop-opacity'):
+                stop_data['opacity'] = stop.get('stop-opacity')
+            
+            stops.append(stop_data)
+        
+        return stops
 
 
 class CoordinateMapper:
@@ -118,8 +191,9 @@ class CoordinateMapper:
 class DrawingMLGenerator:
     """Generate DrawingML XML markup from SVG elements."""
     
-    def __init__(self, coordinate_mapper: CoordinateMapper):
+    def __init__(self, coordinate_mapper: CoordinateMapper, gradients: Dict[str, Dict] = None):
         self.coord_mapper = coordinate_mapper
+        self.gradients = gradients or {}
         self.shape_id = 1000  # Starting ID for shapes
     
     def generate_shape(self, svg_element: Dict) -> str:
@@ -379,16 +453,24 @@ class DrawingMLGenerator:
         
         # Handle fill
         if fill and fill != 'none':
-            if fill.startswith('#'):
+            if fill.startswith('url(#'):
+                # Gradient fill reference
+                grad_id = fill[5:-1]  # Remove url(# and )
+                fill_xml = self._generate_gradient_fill(grad_id)
+            elif fill.startswith('#'):
                 # Convert hex color to RGB
                 color = fill[1:]  # Remove #
                 fill_xml = f'''<a:solidFill>
                     <a:srgbClr val="{color}"/>
                 </a:solidFill>'''
+            elif fill.startswith('rgb('):
+                # RGB color
+                fill_xml = self._parse_rgb_fill(fill)
             else:
-                # Default fill
-                fill_xml = '''<a:solidFill>
-                    <a:srgbClr val="000000"/>
+                # Named color or default fill
+                color = self._color_name_to_hex(fill)
+                fill_xml = f'''<a:solidFill>
+                    <a:srgbClr val="{color}"/>
                 </a:solidFill>'''
         else:
             fill_xml = "<a:noFill/>"
@@ -404,9 +486,10 @@ class DrawingMLGenerator:
                     </a:solidFill>
                 </a:ln>'''
             else:
+                color = self._color_name_to_hex(stroke)
                 stroke_xml = f'''<a:ln w="{width_emu}">
                     <a:solidFill>
-                        <a:srgbClr val="000000"/>
+                        <a:srgbClr val="{color}"/>
                     </a:solidFill>
                 </a:ln>'''
         
@@ -418,13 +501,148 @@ class DrawingMLGenerator:
         stroke_width = attrs.get('stroke-width', '1')
         
         width_emu = int(float(stroke_width) * 12700)
-        color = stroke[1:] if stroke.startswith('#') else "000000"
+        color = stroke[1:] if stroke.startswith('#') else self._color_name_to_hex(stroke)
         
         return f'''<a:ln w="{width_emu}">
             <a:solidFill>
                 <a:srgbClr val="{color}"/>
             </a:solidFill>
         </a:ln>'''
+    
+    def _generate_gradient_fill(self, grad_id: str) -> str:
+        """Generate DrawingML gradient fill from SVG gradient definition."""
+        if grad_id not in self.gradients:
+            # Fallback to solid fill if gradient not found
+            return '''<a:solidFill>
+                <a:srgbClr val="808080"/>
+            </a:solidFill>'''
+        
+        gradient = self.gradients[grad_id]
+        
+        if gradient['type'] == 'linear':
+            return self._generate_linear_gradient(gradient)
+        elif gradient['type'] == 'radial':
+            return self._generate_radial_gradient(gradient)
+        else:
+            return '''<a:solidFill>
+                <a:srgbClr val="808080"/>
+            </a:solidFill>'''
+    
+    def _generate_linear_gradient(self, gradient: Dict) -> str:
+        """Generate DrawingML linear gradient."""
+        stops = gradient.get('stops', [])
+        if not stops:
+            return '''<a:solidFill>
+                <a:srgbClr val="808080"/>
+            </a:solidFill>'''
+        
+        # Convert SVG gradient direction to DrawingML angle
+        x1 = self._parse_percentage(gradient.get('x1', '0%'))
+        y1 = self._parse_percentage(gradient.get('y1', '0%'))  
+        x2 = self._parse_percentage(gradient.get('x2', '100%'))
+        y2 = self._parse_percentage(gradient.get('y2', '0%'))
+        
+        # Calculate angle (DrawingML uses 60000 units per degree)
+        dx = x2 - x1
+        dy = y2 - y1
+        angle_rad = math.atan2(dy, dx)
+        angle_deg = math.degrees(angle_rad)
+        angle_60k = int(angle_deg * 60000)
+        
+        # Generate gradient stops
+        gradient_stops = []
+        for stop in stops:
+            offset = self._parse_percentage(stop['offset'])
+            color = self._parse_color(stop['color'])
+            opacity = float(stop.get('opacity', '1'))
+            alpha = int(opacity * 100000)  # DrawingML uses 100000 for full opacity
+            
+            gradient_stops.append(f'''
+                <a:gs pos="{int(offset * 1000)}">
+                    <a:srgbClr val="{color}">
+                        <a:alpha val="{alpha}"/>
+                    </a:srgbClr>
+                </a:gs>''')
+        
+        return f'''<a:gradFill flip="none" rotWithShape="1">
+            <a:gsLst>
+                {''.join(gradient_stops)}
+            </a:gsLst>
+            <a:lin ang="{angle_60k}" scaled="0"/>
+        </a:gradFill>'''
+    
+    def _generate_radial_gradient(self, gradient: Dict) -> str:
+        """Generate DrawingML radial gradient."""
+        stops = gradient.get('stops', [])
+        if not stops:
+            return '''<a:solidFill>
+                <a:srgbClr val="808080"/>
+            </a:solidFill>'''
+        
+        # Generate gradient stops
+        gradient_stops = []
+        for stop in stops:
+            offset = self._parse_percentage(stop['offset'])
+            color = self._parse_color(stop['color'])
+            opacity = float(stop.get('opacity', '1'))
+            alpha = int(opacity * 100000)
+            
+            gradient_stops.append(f'''
+                <a:gs pos="{int(offset * 1000)}">
+                    <a:srgbClr val="{color}">
+                        <a:alpha val="{alpha}"/>
+                    </a:srgbClr>
+                </a:gs>''')
+        
+        return f'''<a:gradFill flip="none" rotWithShape="1">
+            <a:gsLst>
+                {''.join(gradient_stops)}
+            </a:gsLst>
+            <a:path path="circle">
+                <a:fillToRect l="50000" t="-80000" r="50000" b="180000"/>
+            </a:path>
+        </a:gradFill>'''
+    
+    def _parse_percentage(self, value: str) -> float:
+        """Parse percentage or decimal value to float 0-1."""
+        if value.endswith('%'):
+            return float(value[:-1]) / 100.0
+        return float(value)
+    
+    def _parse_color(self, color: str) -> str:
+        """Parse color value to hex string."""
+        if color.startswith('#'):
+            return color[1:].upper()
+        elif color.startswith('rgb('):
+            return self._parse_rgb_color(color)
+        else:
+            return self._color_name_to_hex(color)
+    
+    def _parse_rgb_color(self, rgb_str: str) -> str:
+        """Parse rgb(r,g,b) string to hex."""
+        rgb_match = re.match(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', rgb_str)
+        if rgb_match:
+            r, g, b = map(int, rgb_match.groups())
+            return f"{r:02X}{g:02X}{b:02X}"
+        return "808080"  # Default gray
+    
+    def _parse_rgb_fill(self, rgb_str: str) -> str:
+        """Generate solid fill from rgb() color."""
+        color = self._parse_rgb_color(rgb_str)
+        return f'''<a:solidFill>
+            <a:srgbClr val="{color}"/>
+        </a:solidFill>'''
+    
+    def _color_name_to_hex(self, color_name: str) -> str:
+        """Convert color name to hex value."""
+        color_map = {
+            'black': '000000', 'white': 'FFFFFF', 'red': 'FF0000',
+            'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00',
+            'cyan': '00FFFF', 'magenta': 'FF00FF', 'gray': '808080',
+            'grey': '808080', 'darkred': '8B0000', 'darkgreen': '006400',
+            'darkblue': '00008B', 'orange': 'FFA500', 'purple': '800080'
+        }
+        return color_map.get(color_name.lower(), '000000')
 
 
 class SVGToDrawingMLConverter:
@@ -444,8 +662,8 @@ class SVGToDrawingMLConverter:
         # Set up coordinate mapping
         self.coord_mapper = CoordinateMapper(self.parser.viewbox)
         
-        # Set up DrawingML generator
-        self.generator = DrawingMLGenerator(self.coord_mapper)
+        # Set up DrawingML generator with gradient support
+        self.generator = DrawingMLGenerator(self.coord_mapper, self.parser.gradients)
         
         # Convert each element
         drawingml_shapes = []

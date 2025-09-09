@@ -6,6 +6,24 @@ python-pptx>=0.6.21
 # XML parsing and manipulation
 lxml>=4.9.0
 
+# Web API Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# HTTP Client for SVG fetching
+httpx>=0.25.0
+
+# Google Drive Integration
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
+
+# Environment Configuration
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
 # Optional: Enhanced SVG parsing
 # svglib>=1.4.0
 # reportlab>=3.6.0
@@ -13,6 +31,7 @@ lxml>=4.9.0
 # Development and testing
 pytest>=7.0.0
 pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
 
 # Code quality
 black>=22.0.0
