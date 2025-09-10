@@ -16,6 +16,9 @@ import re
 from .base import ConversionContext
 from .gradients import GradientConverter
 from ..colors import ColorParser
+from ..units import UnitConverter
+from ..transforms import TransformParser
+from ..viewbox import ViewportResolver
 
 
 class StyleProcessor:
@@ -24,6 +27,9 @@ class StyleProcessor:
     def __init__(self):
         self.gradient_converter = GradientConverter()
         self.color_parser = ColorParser()
+        self.unit_converter = UnitConverter()
+        self.transform_parser = TransformParser()
+        self.viewport_resolver = ViewportResolver()
         self.css_rules = {}  # Store CSS rules from <style> elements
     
     def process_element_styles(self, element: ET.Element, context: ConversionContext) -> Dict[str, Any]:
@@ -171,7 +177,10 @@ class StyleProcessor:
     def _process_fill(self, styles: Dict[str, str], element: ET.Element, context: ConversionContext) -> Optional[str]:
         """Process fill styles and return DrawingML fill XML"""
         fill_value = styles.get('fill', 'black')
-        fill_opacity = float(styles.get('fill-opacity', '1'))
+        try:
+            fill_opacity = float(styles.get('fill-opacity', '1'))
+        except (ValueError, TypeError):
+            fill_opacity = 1.0
         
         if fill_value == 'none':
             return '<a:noFill/>'
@@ -204,7 +213,10 @@ class StyleProcessor:
             return '<a:ln><a:noFill/></a:ln>'
         
         stroke_width = styles.get('stroke-width', '1')
-        stroke_opacity = float(styles.get('stroke-opacity', '1'))
+        try:
+            stroke_opacity = float(styles.get('stroke-opacity', '1'))
+        except (ValueError, TypeError):
+            stroke_opacity = 1.0
         stroke_linecap = styles.get('stroke-linecap', 'butt')
         stroke_linejoin = styles.get('stroke-linejoin', 'miter')
         stroke_dasharray = styles.get('stroke-dasharray', '')

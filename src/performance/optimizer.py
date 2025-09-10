@@ -9,7 +9,7 @@ maximum performance for SVG conversion operations.
 import time
 import threading
 from typing import List, Dict, Any, Optional, Type, Callable
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import logging
 from dataclasses import dataclass
 from enum import Enum

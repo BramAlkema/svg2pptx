@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, NamedTuple, Union
 from dataclasses import dataclass
 from functools import lru_cache
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 class EmbeddedFontFace(NamedTuple):

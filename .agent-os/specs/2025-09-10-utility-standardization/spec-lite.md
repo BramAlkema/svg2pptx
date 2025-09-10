@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Standardize the usage of universal utilities (ColorParser, UnitConverter, TransformParser, ViewportResolver) across all SVG converters to eliminate inconsistencies, reduce code duplication, and improve maintainability. Remove duplicate HSL-to-RGB conversion in gradients.py, replace hardcoded color values with ColorParser calls, and ensure consistent transform handling across all 14 converter modules. Create comprehensive test coverage and usage guidelines to maintain consistent utility usage patterns for future development.

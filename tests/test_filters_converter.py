@@ -802,5 +802,55 @@ class TestFilterIntegrationScenarios:
                 assert result == "empty"
 
 
+class TestFallbackColors:
+    """Test fallback color handling with ColorParser integration"""
+    
+    def setup_method(self):
+        """Set up test fixtures"""
+        self.converter = FilterConverter()
+    
+    def test_shadow_fallback_color_without_color_param(self):
+        """Test that shadow effect uses proper fallback when no color specified"""
+        # Test _generate_shadow_effect method directly
+        params = {'dx': 2, 'dy': 2, 'blur': 3}  # No color parameter
+        result = self.converter._generate_shadow_effect(params)
+        
+        # Should contain fallback black color (currently hardcoded as 000000)
+        assert '<a:srgbClr val="000000"/>' in result
+        assert '<a:outerShdw' in result
+    
+    def test_glow_fallback_color_without_color_param(self):
+        """Test that glow effect uses proper fallback when no color specified"""
+        # Test _generate_glow_effect method directly
+        params = {'blur': 5}  # No color parameter
+        result = self.converter._generate_glow_effect(params)
+        
+        # Should contain fallback white color (currently hardcoded as FFFFFF)
+        assert '<a:srgbClr val="FFFFFF"/>' in result
+        assert '<a:glow' in result
+    
+    def test_shadow_with_explicit_color(self):
+        """Test that shadow effect uses provided color when available"""
+        params = {'dx': 2, 'dy': 2, 'blur': 3, 'color': 'red'}
+        result = self.converter._generate_shadow_effect(params)
+        
+        # Should not contain hardcoded black, should use parsed color  
+        assert '<a:srgbClr val="000000"/>' not in result
+        assert '<a:outerShdw' in result
+        # Should contain red color (FF0000)
+        assert 'FF0000' in result
+    
+    def test_glow_with_explicit_color(self):
+        """Test that glow effect uses provided color when available"""
+        params = {'blur': 5, 'color': 'blue'}
+        result = self.converter._generate_glow_effect(params)
+        
+        # Should not contain hardcoded white, should use parsed color
+        assert '<a:srgbClr val="FFFFFF"/>' not in result
+        assert '<a:glow' in result
+        # Should contain blue color (0000FF)
+        assert '0000FF' in result
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

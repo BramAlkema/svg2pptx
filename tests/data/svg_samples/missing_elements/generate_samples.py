@@ -21,7 +21,7 @@ def create_svg_samples():
             fill="none" stroke="green" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>''',
 
-        # Tspan samples  
+        # Tspan samples (Critical Priority)
         'tspan_styling.svg': '''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
   <text x="50" y="50" font-family="Arial" font-size="16">
@@ -37,7 +37,38 @@ def create_svg_samples():
   </text>
 </svg>''',
 
-        # Image samples
+        'tspan_positioning.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <text x="10" y="30" font-size="14" fill="black">
+    <tspan x="20" y="40">Absolute position</tspan>
+    <tspan dx="5" dy="-10">Relative offset</tspan>
+    <tspan dx="10,5,3" dy="0,2,-1">Multiple deltas</tspan>
+  </text>
+</svg>''',
+
+        'tspan_complex_formatting.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <text x="10" y="30" font-family="Arial" font-size="12">
+    <tspan font-size="18" font-weight="bold" fill="darkblue">Title: </tspan>
+    <tspan font-style="italic" text-decoration="underline" fill="blue">Subtitle</tspan>
+    <tspan x="10" y="60" font-family="Courier" fill="green">Code: </tspan>
+    <tspan font-family="Courier" font-size="10" fill="darkgreen">function() { return true; }</tspan>
+    <tspan x="10" y="90" font-variant="small-caps" letter-spacing="2">Small Caps</tspan>
+    <tspan x="10" y="120" word-spacing="4" fill="purple">Wide Spaced Words</tspan>
+  </text>
+</svg>''',
+
+        'tspan_inheritance.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <text x="10" y="30" font-family="Arial" font-size="14" fill="black" font-weight="normal">
+    Parent text properties: 
+    <tspan fill="red">Override fill only</tspan>
+    <tspan font-weight="bold">Override weight only</tspan>
+    <tspan>Inherit all parent properties</tspan>
+  </text>
+</svg>''',
+
+        # Image samples (Critical Priority)
         'image_embedded.svg': '''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <image x="10" y="10" width="100" height="80" href="test.jpg"/>
@@ -47,6 +78,30 @@ def create_svg_samples():
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <image x="50" y="50" width="50" height="50" 
          href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="/>
+</svg>''',
+
+        'image_xlink_href.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 200">
+  <image x="20" y="20" width="80" height="60" xlink:href="legacy.png"/>
+</svg>''',
+
+        'image_with_transforms.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <image x="50" y="50" width="100" height="100" href="rotated.jpg" 
+         transform="rotate(15, 100, 100) scale(0.8)"/>
+  <image x="150" y="150" width="80" height="80" href="scaled.png" 
+         transform="translate(10, 10)"/>
+</svg>''',
+
+        'image_opacity_clipping.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250">
+  <defs>
+    <clipPath id="circle-clip">
+      <circle cx="75" cy="75" r="40"/>
+    </clipPath>
+  </defs>
+  <image x="25" y="25" width="100" height="100" href="clipped.jpg" 
+         clip-path="url(#circle-clip)" opacity="0.7"/>
 </svg>''',
 
         # Symbol and Use samples
@@ -114,6 +169,61 @@ def create_svg_samples():
     </filter>
   </defs>
   <rect x="50" y="50" width="100" height="60" fill="red" filter="url(#shadow)"/>
+</svg>''',
+
+        'filter_drop_shadow_variations.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <filter id="light-shadow">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="gray" flood-opacity="0.2"/>
+    </filter>
+    <filter id="heavy-shadow">
+      <feDropShadow dx="5" dy="5" stdDeviation="3" flood-color="black" flood-opacity="0.6"/>
+    </filter>
+    <filter id="colored-shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="blue" flood-opacity="0.4"/>
+    </filter>
+    <filter id="offset-shadow">
+      <feDropShadow dx="8" dy="-3" stdDeviation="1" flood-color="red" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  
+  <rect x="50" y="50" width="80" height="40" fill="lightblue" filter="url(#light-shadow)"/>
+  <circle cx="250" cy="70" r="30" fill="yellow" filter="url(#heavy-shadow)"/>
+  <ellipse cx="120" cy="150" rx="40" ry="25" fill="green" filter="url(#colored-shadow)"/>
+  <polygon points="300,120 340,140 320,180 280,160" fill="orange" filter="url(#offset-shadow)"/>
+</svg>''',
+
+        'filter_drop_shadow_text.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <defs>
+    <filter id="text-shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-color="black" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow-shadow">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="white" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+  
+  <text x="50" y="50" font-family="Arial" font-size="24" font-weight="bold" 
+        fill="darkblue" filter="url(#text-shadow)">Shadowed Text</text>
+  <text x="50" y="100" font-family="Arial" font-size="20" 
+        fill="darkred" filter="url(#glow-shadow)">Glowing Text</text>
+</svg>''',
+
+        'filter_drop_shadow_complex.svg': '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <defs>
+    <filter id="multi-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-color="red" flood-opacity="0.3" result="shadow1"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="1" flood-color="blue" flood-opacity="0.3" result="shadow2"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#multi-shadow)">
+    <rect x="50" y="50" width="80" height="60" fill="white" stroke="black" stroke-width="2"/>
+    <text x="90" y="85" text-anchor="middle" font-family="Arial" font-size="14" fill="black">Multi Shadow</text>
+  </g>
 </svg>''',
 
         # Style element samples

@@ -13,7 +13,7 @@ Handles SVG path elements with support for:
 import re
 import math
 from typing import List, Tuple, Dict, Any
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from .base import BaseConverter, ConversionContext
 
 
@@ -65,7 +65,7 @@ class PathConverter(BaseConverter):
         return tag == 'path'
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG path to DrawingML custom geometry with transform support"""
+        """Convert SVG path to DrawingML custom geometry with viewport-aware coordinate mapping"""
         path_data = element.get('d', '')
         if not path_data:
             return ""
@@ -77,6 +77,10 @@ class PathConverter(BaseConverter):
         
         # Parse path data
         path = PathData(path_data)
+        
+        # Initialize viewport-aware coordinate mapping if SVG root is available
+        if context.svg_root is not None:
+            self._initialize_viewport_mapping(context)
         
         # Handle transforms
         transform_matrix = self.get_element_transform_matrix(element, context.viewport_context)
@@ -165,9 +169,8 @@ class PathConverter(BaseConverter):
                 x += self.current_pos[0]
                 y += self.current_pos[1]
             
-            # Convert to DrawingML coordinates (0-21600 range)
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            # Convert to DrawingML coordinates using viewport-aware mapping
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             if i == 0:  # First move is moveTo
                 commands.append(f'<a:moveTo><a:pt x="{dx}" y="{dy}"/></a:moveTo>')
@@ -195,8 +198,7 @@ class PathConverter(BaseConverter):
                 x += self.current_pos[0]
                 y += self.current_pos[1]
             
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos = [x, y]
@@ -213,8 +215,7 @@ class PathConverter(BaseConverter):
             if not absolute:
                 x += self.current_pos[0]
             
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((self.current_pos[1] / context.coordinate_system.svg_height) * 21600)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, self.current_pos[1], context)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos[0] = x
@@ -231,8 +232,7 @@ class PathConverter(BaseConverter):
             if not absolute:
                 y += self.current_pos[1]
             
-            dx = int((self.current_pos[0] / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            dx, dy = self._convert_svg_to_drawingml_coords(self.current_pos[0], y, context)
             
             commands.append(f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>')
             self.current_pos[1] = y
@@ -259,13 +259,10 @@ class PathConverter(BaseConverter):
                 x += self.current_pos[0]
                 y += self.current_pos[1]
             
-            # Convert control points and end point
-            dx1 = int((x1 / context.coordinate_system.svg_width) * 21600)
-            dy1 = int((y1 / context.coordinate_system.svg_height) * 21600)
-            dx2 = int((x2 / context.coordinate_system.svg_width) * 21600)
-            dy2 = int((y2 / context.coordinate_system.svg_height) * 21600)
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            # Convert control points and end point using viewport-aware mapping
+            dx1, dy1 = self._convert_svg_to_drawingml_coords(x1, y1, context)
+            dx2, dy2 = self._convert_svg_to_drawingml_coords(x2, y2, context)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -299,12 +296,9 @@ class PathConverter(BaseConverter):
                 x1, y1 = self.current_pos
             
             # Convert all points
-            dx1 = int((x1 / context.coordinate_system.svg_width) * 21600)
-            dy1 = int((y1 / context.coordinate_system.svg_height) * 21600)
-            dx2 = int((x2 / context.coordinate_system.svg_width) * 21600)
-            dy2 = int((y2 / context.coordinate_system.svg_height) * 21600)
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            dx1, dy1 = self._convert_svg_to_drawingml_coords(x1, y1, context)
+            dx2, dy2 = self._convert_svg_to_drawingml_coords(x2, y2, context)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -337,12 +331,9 @@ class PathConverter(BaseConverter):
             cx2 = x + (2/3) * (x1 - x)
             cy2 = y + (2/3) * (y1 - y)
             
-            dx1 = int((cx1 / context.coordinate_system.svg_width) * 21600)
-            dy1 = int((cy1 / context.coordinate_system.svg_height) * 21600)
-            dx2 = int((cx2 / context.coordinate_system.svg_width) * 21600)
-            dy2 = int((cy2 / context.coordinate_system.svg_height) * 21600)
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            dx1, dy1 = self._convert_svg_to_drawingml_coords(cx1, cy1, context)
+            dx2, dy2 = self._convert_svg_to_drawingml_coords(cx2, cy2, context)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -379,12 +370,9 @@ class PathConverter(BaseConverter):
             cx2 = x + (2/3) * (x1 - x)
             cy2 = y + (2/3) * (y1 - y)
             
-            dx1 = int((cx1 / context.coordinate_system.svg_width) * 21600)
-            dy1 = int((cy1 / context.coordinate_system.svg_height) * 21600)
-            dx2 = int((cx2 / context.coordinate_system.svg_width) * 21600)
-            dy2 = int((cy2 / context.coordinate_system.svg_height) * 21600)
-            dx = int((x / context.coordinate_system.svg_width) * 21600)
-            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            dx1, dy1 = self._convert_svg_to_drawingml_coords(cx1, cy1, context)
+            dx2, dy2 = self._convert_svg_to_drawingml_coords(cx2, cy2, context)
+            dx, dy = self._convert_svg_to_drawingml_coords(x, y, context)
             
             commands.append(f'<a:cubicBezTo><a:pt x="{dx1}" y="{dy1}"/><a:pt x="{dx2}" y="{dy2}"/><a:pt x="{dx}" y="{dy}"/></a:cubicBezTo>')
             
@@ -430,10 +418,39 @@ class PathConverter(BaseConverter):
         # For production use, implement proper arc-to-bezier conversion
         
         # For now, just draw a straight line as fallback
-        dx = int((x2 / context.coordinate_system.svg_width) * 21600)
-        dy = int((y2 / context.coordinate_system.svg_height) * 21600)
+        dx, dy = self._convert_svg_to_drawingml_coords(x2, y2, context)
         
         return [f'<a:lnTo><a:pt x="{dx}" y="{dy}"/></a:lnTo>']
+    
+    def _initialize_viewport_mapping(self, context: ConversionContext):
+        """Initialize viewport-aware coordinate mapping using ViewportResolver."""
+        try:
+            # Use ViewportResolver to get proper viewport mapping
+            viewport_mapping = self.viewport_resolver.resolve_svg_viewport(
+                context.svg_root,
+                target_width_emu=21600,  # DrawingML coordinate space
+                target_height_emu=21600,
+                context=context.viewport_context
+            )
+            
+            # Store viewport mapping for coordinate conversion
+            context.viewport_mapping = viewport_mapping
+            
+        except Exception as e:
+            # Fallback to existing coordinate system if ViewportResolver fails
+            self.logger.warning(f"ViewportResolver initialization failed: {e}, using fallback")
+            context.viewport_mapping = None
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML coordinates using viewport-aware mapping."""
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            # Use ViewportResolver mapping for accurate coordinate conversion
+            return context.viewport_mapping.svg_to_emu(x, y)
+        else:
+            # Fallback to manual scaling for compatibility
+            dx = int((x / context.coordinate_system.svg_width) * 21600)
+            dy = int((y / context.coordinate_system.svg_height) * 21600)
+            return dx, dy
     
     def _get_style_attributes(self, element: ET.Element, context: ConversionContext) -> str:
         """Get style attributes for the path element."""

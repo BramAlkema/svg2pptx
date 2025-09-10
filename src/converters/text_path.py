@@ -28,7 +28,7 @@ import math
 from typing import List, Dict, Tuple, Optional, Any, Union
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .base import BaseConverter
 from .paths import PathConverter  # For path processing
@@ -332,6 +332,14 @@ class TextPathConverter(BaseConverter):
         super().__init__()
         self.path_sampler = PathSampler()
         self.path_definitions: Dict[str, str] = {}  # Cache path definitions
+    
+    def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:
+        """Check if element can be converted by this converter."""
+        if element.tag.endswith('textPath'):
+            return True
+        elif element.tag.endswith('text') and self._has_text_path(element):
+            return True
+        return False
         
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert textPath element to DrawingML."""
@@ -605,13 +613,13 @@ class TextPathConverter(BaseConverter):
                                 textpath_info: TextPathInfo, shape_id: int) -> str:
         """Generate DrawingML for single character."""
         
-        # Convert position to EMU using proper unit converter
-        x_emu = self.to_emu(f"{placement.x}px")
-        y_emu = self.to_emu(f"{placement.y}px")
+        # Convert position to EMU using unit converter
+        x_emu = int(self.unit_converter.convert_to_emu(placement.x))
+        y_emu = int(self.unit_converter.convert_to_emu(placement.y))
         
         # Character size in EMU
-        char_width_emu = self.to_emu(f"{placement.advance}px")
-        char_height_emu = self.to_emu(f"{textpath_info.font_size}px")
+        char_width_emu = int(self.unit_converter.convert_to_emu(placement.advance))
+        char_height_emu = int(self.unit_converter.convert_to_emu(textpath_info.font_size))
         
         # Generate color
         color_xml = ""

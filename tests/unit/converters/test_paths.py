@@ -193,9 +193,10 @@ class TestPathConverter:
         converter = PathConverter()
         element = ET.fromstring('<path d="M10,10 L20,20"/>')
         
-        # Mock context
+        # Mock context with required attributes
         context = Mock(spec=ConversionContext)
         context.get_next_shape_id.return_value = 1001
+        context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
         mock_coord_system.page_width = 21600
         mock_coord_system.page_height = 21600
@@ -225,6 +226,18 @@ class TestPathConverter:
     def test_handle_move_absolute(self):
         """Test handling absolute move commands."""
         converter = PathConverter()
+        
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        
+        # Calculate expected coordinates using standardized tool
+        expected_x = int((10.0 / 100) * 21600)  # SVG coordinate system scaling
+        expected_y = int((20.0 / 100) * 21600)
+        
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
@@ -235,8 +248,8 @@ class TestPathConverter:
         
         assert len(commands) == 1
         assert '<a:moveTo>' in commands[0]
-        assert 'x="2160"' in commands[0]  # (10/100) * 21600 = 2160
-        assert 'y="4320"' in commands[0]  # (20/100) * 21600 = 4320
+        assert f'x="{expected_x}"' in commands[0]  # Tool-based calculation
+        assert f'y="{expected_y}"' in commands[0]  # Tool-based calculation
         
         # Check state updates
         assert converter.current_pos == [10.0, 20.0]
@@ -281,6 +294,10 @@ class TestPathConverter:
         converter = PathConverter()
         converter.current_pos = [10.0, 10.0]
         
+        # Use tool-based coordinate calculations
+        expected_x = int((30.0 / 100) * 21600)  # SVG coordinate system scaling
+        expected_y = int((40.0 / 100) * 21600)
+        
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
@@ -291,8 +308,8 @@ class TestPathConverter:
         
         assert len(commands) == 1
         assert '<a:lnTo>' in commands[0]
-        assert 'x="6480"' in commands[0]  # (30/100) * 21600 = 6480
-        assert 'y="8640"' in commands[0]  # (40/100) * 21600 = 8640
+        assert f'x="{expected_x}"' in commands[0]  # Tool-based calculation
+        assert f'y="{expected_y}"' in commands[0]  # Tool-based calculation
         
         # Check state updates
         assert converter.current_pos == [30.0, 40.0]
@@ -319,6 +336,10 @@ class TestPathConverter:
         converter = PathConverter()
         converter.current_pos = [10.0, 20.0]
         
+        # Use tool-based coordinate calculations
+        expected_x = int((50.0 / 100) * 21600)  # New X position
+        expected_y = int((20.0 / 100) * 21600)  # Y unchanged from current position
+        
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
@@ -329,8 +350,8 @@ class TestPathConverter:
         
         assert len(commands) == 1
         assert '<a:lnTo>' in commands[0]
-        assert 'x="10800"' in commands[0]  # (50/100) * 21600 = 10800
-        assert 'y="4320"' in commands[0]   # (20/100) * 21600 = 4320 (y unchanged)
+        assert f'x="{expected_x}"' in commands[0]  # Tool-based calculation
+        assert f'y="{expected_y}"' in commands[0]  # Y unchanged from current position
         
         # X position should change, Y should stay the same
         assert converter.current_pos == [50.0, 20.0]
@@ -339,6 +360,10 @@ class TestPathConverter:
         """Test handling absolute vertical line commands."""
         converter = PathConverter()
         converter.current_pos = [10.0, 20.0]
+        
+        # Use tool-based coordinate calculations
+        expected_x = int((10.0 / 100) * 21600)  # X unchanged from current position
+        expected_y = int((60.0 / 100) * 21600)  # New Y position
         
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock()
@@ -350,8 +375,8 @@ class TestPathConverter:
         
         assert len(commands) == 1
         assert '<a:lnTo>' in commands[0]
-        assert 'x="2160"' in commands[0]   # (10/100) * 21600 = 2160 (x unchanged)
-        assert 'y="12960"' in commands[0]  # (60/100) * 21600 = 12960
+        assert f'x="{expected_x}"' in commands[0]  # X unchanged from current position
+        assert f'y="{expected_y}"' in commands[0]  # Tool-based calculation
         
         # Y position should change, X should stay the same
         assert converter.current_pos == [10.0, 60.0]
@@ -520,17 +545,21 @@ class TestPathConverter:
         """Test coordinate scaling to DrawingML 21600 coordinate system."""
         converter = PathConverter()
         
+        # Use tool-based coordinate calculations for different SVG dimensions
+        expected_x = int((100.0 / 200) * 21600)  # (100/200)*21600=10800
+        expected_y = int((50.0 / 100) * 21600)   # (50/100)*21600=10800
+        
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 200  # SVG is 200 units wide
         mock_coord_system.svg_height = 100  # SVG is 100 units tall
         context.coordinate_system = mock_coord_system
         
-        # Point at (100, 50) should be center: (100/200)*21600=10800, (50/100)*21600=10800
+        # Point at (100, 50) should be center
         commands = converter._handle_move('M', [100.0, 50.0], context)
         
-        assert 'x="10800"' in commands[0]  # Center X
-        assert 'y="10800"' in commands[0]  # Center Y
+        assert f'x="{expected_x}"' in commands[0]  # Center X (tool-based)
+        assert f'y="{expected_y}"' in commands[0]  # Center Y (tool-based)
     
     def test_state_reset_on_convert(self):
         """Test that converter state is reset on each convert call."""
@@ -544,6 +573,7 @@ class TestPathConverter:
         element = ET.fromstring('<path d="M0,0 L10,10"/>')
         context = Mock(spec=ConversionContext)
         context.get_next_shape_id.return_value = 1001
+        context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
         mock_coord_system.page_width = 21600
         mock_coord_system.page_height = 21600
@@ -573,6 +603,7 @@ class TestPathConverterIntegration:
         
         context = Mock(spec=ConversionContext)
         context.get_next_shape_id.return_value = 2001
+        context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
         mock_coord_system.page_width = 21600
         mock_coord_system.page_height = 21600

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <text x="10" y="30" font-family="Arial" font-size="14" fill="black" font-weight="normal">
+    Parent text properties: 
+    <tspan fill="red">Override fill only</tspan>
+    <tspan font-weight="bold">Override weight only</tspan>
+    <tspan>Inherit all parent properties</tspan>
+  </text>
+</svg>

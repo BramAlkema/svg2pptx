@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <text x="10" y="30" font-family="Arial" font-size="12">
+    <tspan font-size="18" font-weight="bold" fill="darkblue">Title: </tspan>
+    <tspan font-style="italic" text-decoration="underline" fill="blue">Subtitle</tspan>
+    <tspan x="10" y="60" font-family="Courier" fill="green">Code: </tspan>
+    <tspan font-family="Courier" font-size="10" fill="darkgreen">function() { return true; }</tspan>
+    <tspan x="10" y="90" font-variant="small-caps" letter-spacing="2">Small Caps</tspan>
+    <tspan x="10" y="120" word-spacing="4" fill="purple">Wide Spaced Words</tspan>
+  </text>
+</svg>

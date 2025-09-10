@@ -29,7 +29,7 @@ import math
 from typing import List, Tuple, Optional, Dict, Any, Union
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .units import UnitConverter, ViewportContext, EMU_PER_INCH
 

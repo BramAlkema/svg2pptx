@@ -278,7 +278,7 @@ class TestPreprocessingPipeline:
     def test_preprocessing_plugin_chain(self):
         """Test specific preprocessing plugin interactions."""
         from src.preprocessing.plugins import (
-            CleanupAttrsPlugin, RemoveEmptyContainersPlugin, 
+            CleanupAttrsPlugin, CleanupNumericValuesPlugin, RemoveEmptyContainersPlugin, 
             ConvertColorsPlugin, RemoveCommentsPlugin
         )
         from src.preprocessing.base import PreprocessingContext
@@ -301,6 +301,7 @@ class TestPreprocessingPipeline:
         plugins = [
             RemoveCommentsPlugin(),
             CleanupAttrsPlugin(),
+            CleanupNumericValuesPlugin(),
             RemoveEmptyContainersPlugin(),
             ConvertColorsPlugin()
         ]

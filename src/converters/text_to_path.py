@@ -12,7 +12,7 @@ Key Features:
 - Multi-line text and tspan element handling
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import List, Dict, Any, Optional, Tuple
 import logging
 import re

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <defs>
+    <filter id="text-shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-color="black" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow-shadow">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="white" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+  
+  <text x="50" y="50" font-family="Arial" font-size="24" font-weight="bold" 
+        fill="darkblue" filter="url(#text-shadow)">Shadowed Text</text>
+  <text x="50" y="100" font-family="Arial" font-size="20" 
+        fill="darkred" filter="url(#glow-shadow)">Glowing Text</text>
+</svg>

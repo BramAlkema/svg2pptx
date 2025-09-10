@@ -14,10 +14,10 @@ from pptx.util import Inches, Emu
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
-from svg2drawingml import SVGToDrawingMLConverter
+from .svg2drawingml import SVGToDrawingMLConverter
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 class SVGToPowerPointConverter:
@@ -163,6 +163,71 @@ def main():
         
         output_file = converter.convert_file(args.input, args.output)
         print(f"✓ Created PowerPoint: {output_file}")
+
+
+# API Functions for integration tests and external use
+def convert_svg_to_pptx(svg_input, output_path: str = None, 
+                       slide_width: float = 10, slide_height: float = 7.5,
+                       preprocessing_config: dict = None) -> str:
+    """
+    Convert SVG content or file to PowerPoint presentation.
+    
+    Args:
+        svg_input: SVG content as string OR path to SVG file
+        output_path: Output PPTX file path (optional, creates temp file if None)
+        slide_width: Slide width in inches (default: 10")
+        slide_height: Slide height in inches (default: 7.5")
+        preprocessing_config: Optional preprocessing configuration
+    
+    Returns:
+        Path to created PPTX file
+    """
+    import tempfile
+    
+    # Determine if input is file path or content
+    if isinstance(svg_input, str) and svg_input.endswith('.svg') and os.path.exists(svg_input):
+        # Input is a file path
+        with open(svg_input, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        temp_svg_path = svg_input  # Use existing file
+        cleanup_temp_svg = False
+    else:
+        # Input is SVG content
+        svg_content = svg_input
+        # Create temporary SVG file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False, encoding='utf-8') as f:
+            f.write(svg_content)
+            temp_svg_path = f.name
+        cleanup_temp_svg = True
+    
+    try:
+        # Apply preprocessing if configured
+        if preprocessing_config:
+            from src.preprocessing import create_optimizer
+            optimizer = create_optimizer(**preprocessing_config)
+            optimized_content = optimizer.optimize(svg_content)
+            
+            # Write optimized content back to temp file
+            with open(temp_svg_path, 'w', encoding='utf-8') as f:
+                f.write(optimized_content)
+        
+        # Create converter and convert
+        converter = SVGToPowerPointConverter(slide_width, slide_height)
+        
+        # Generate output path if not provided
+        if not output_path:
+            output_path = tempfile.mktemp(suffix='.pptx')
+        
+        result_path = converter.convert_file(temp_svg_path, output_path)
+        return result_path
+        
+    finally:
+        # Clean up temporary SVG file only if we created it
+        if cleanup_temp_svg:
+            try:
+                os.unlink(temp_svg_path)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":

@@ -242,30 +242,35 @@ class TestFontMetricsAnalyzer:
     
     def _create_mock_font(self):
         """Helper to create a mock font with all required tables."""
-        mock_font = Mock()
+        # Use a dictionary to allow item assignment
+        mock_font = {}
         
         # head table
-        mock_font['head'] = Mock()
-        mock_font['head'].unitsPerEm = 1000
-        mock_font['head'].xMin = 0
-        mock_font['head'].yMin = -200
-        mock_font['head'].xMax = 800
-        mock_font['head'].yMax = 800
+        head_mock = Mock()
+        head_mock.unitsPerEm = 1000
+        head_mock.xMin = 0
+        head_mock.yMin = -200
+        head_mock.xMax = 800
+        head_mock.yMax = 800
+        mock_font['head'] = head_mock
         
         # hhea table
-        mock_font['hhea'] = Mock()
-        mock_font['hhea'].ascent = 800
-        mock_font['hhea'].descent = -200
-        mock_font['hhea'].lineGap = 100
+        hhea_mock = Mock()
+        hhea_mock.ascent = 800
+        hhea_mock.descent = -200
+        hhea_mock.lineGap = 100
+        mock_font['hhea'] = hhea_mock
         
         # OS/2 table
-        mock_font['OS/2'] = Mock()
-        mock_font['OS/2'].sxHeight = 500
-        mock_font['OS/2'].sCapHeight = 700
+        os2_mock = Mock()
+        os2_mock.sxHeight = 500
+        os2_mock.sCapHeight = 700
+        mock_font['OS/2'] = os2_mock
         
         # name table
-        mock_font['name'] = Mock()
-        mock_font['name'].getDebugName.return_value = 'Arial'
+        name_mock = Mock()
+        name_mock.getDebugName.return_value = 'Arial'
+        mock_font['name'] = name_mock
         
         return mock_font
 

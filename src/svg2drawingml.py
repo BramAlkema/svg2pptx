@@ -12,7 +12,7 @@ Architecture:
 - Shape Converter: Map SVG elements to DrawingML equivalents
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import re

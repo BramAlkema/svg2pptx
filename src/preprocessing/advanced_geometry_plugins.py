@@ -3,7 +3,7 @@ Advanced geometry optimization plugins using the high-performance geometry_simpl
 """
 
 import re
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Optional, Set, Tuple
 from .base import PreprocessingPlugin, PreprocessingContext
 from .geometry_simplify import simplify_polyline, simplify_to_cubics, Pt
@@ -16,7 +16,7 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
     description = "advanced path simplification using RDP algorithm with cubic smoothing"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('path') and 'd' in element.attrib
+        return self._tag_matches(element, 'path') and 'd' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         path_data = element.attrib.get('d', '')
@@ -144,7 +144,7 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
     description = "advanced polygon simplification with RDP algorithm and optional cubic smoothing"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith(('polygon', 'polyline')) and 'points' in element.attrib
+        return self._tag_matches(element, ('polygon', 'polyline')) and 'points' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         points_str = element.attrib.get('points', '')
@@ -221,7 +221,7 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # Only apply to polygons/polylines with sufficient points
-        if not (element.tag.endswith(('polygon', 'polyline')) and 'points' in element.attrib):
+        if not (self._tag_matches(element, ('polygon', 'polyline')) and 'points' in element.attrib):
             return False
         
         points_str = element.attrib.get('points', '')
@@ -360,7 +360,7 @@ class GeometryOptimizationStatsPlugin(PreprocessingPlugin):
     description = "collect statistics on geometry optimization effectiveness"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith(('path', 'polygon', 'polyline'))
+        return self._tag_matches(element, ('path', 'polygon', 'polyline'))
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # This plugin doesn't modify elements, just collects stats

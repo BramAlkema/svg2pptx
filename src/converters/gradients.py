@@ -248,34 +248,3 @@ class GradientConverter(BaseConverter):
                                 return color
         
         return None
-    
-    
-    def _hsl_to_rgb(self, h: float, s: float, l: float) -> Tuple[int, int, int]:
-        """Convert HSL to RGB"""
-        h = h / 360.0  # Convert to 0-1 range
-        
-        if s == 0:
-            # Achromatic (gray)
-            r = g = b = l
-        else:
-            def hue_to_rgb(p: float, q: float, t: float) -> float:
-                if t < 0:
-                    t += 1
-                if t > 1:
-                    t -= 1
-                if t < 1/6:
-                    return p + (q - p) * 6 * t
-                if t < 1/2:
-                    return q
-                if t < 2/3:
-                    return p + (q - p) * (2/3 - t) * 6
-                return p
-            
-            q = l * (1 + s) if l < 0.5 else l + s - l * s
-            p = 2 * l - q
-            
-            r = hue_to_rgb(p, q, h + 1/3)
-            g = hue_to_rgb(p, q, h)
-            b = hue_to_rgb(p, q, h - 1/3)
-        
-        return (int(r * 255), int(g * 255), int(b * 255))

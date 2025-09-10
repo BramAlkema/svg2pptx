@@ -33,23 +33,22 @@ class RectangleConverter(BaseConverter):
         rx_str = element.get('rx', '0')
         ry_str = element.get('ry', '0')
         
-        # Use new units system for batch conversion
-        dimensions = context.batch_convert_to_emu({
-            'x': x_str,
-            'y': y_str,
-            'width': width_str,
-            'height': height_str,
-            'rx': rx_str,
-            'ry': ry_str
-        })
+        # Parse dimensions to numeric values first
+        x = self.parse_length(x_str)
+        y = self.parse_length(y_str)
+        width = self.parse_length(width_str)
+        height = self.parse_length(height_str)
+        rx = self.parse_length(rx_str)
+        ry = self.parse_length(ry_str)
         
-        # Extract converted values
-        emu_x = dimensions['x']
-        emu_y = dimensions['y']
-        emu_width = dimensions['width']
-        emu_height = dimensions['height']
-        rx_emu = dimensions['rx']
-        ry_emu = dimensions['ry']
+        # Convert position using viewport-aware mapping if available
+        emu_x, emu_y = self._convert_svg_to_drawingml_coords(x, y, context)
+        
+        # Convert dimensions using standard coordinate system
+        emu_width = context.coordinate_system.svg_length_to_emu(width, 'x')
+        emu_height = context.coordinate_system.svg_length_to_emu(height, 'y')
+        rx_emu = context.coordinate_system.svg_length_to_emu(rx, 'x') if rx > 0 else 0
+        ry_emu = context.coordinate_system.svg_length_to_emu(ry, 'y') if ry > 0 else 0
         
         # Handle rounded corners
         if rx_emu == 0 and ry_emu > 0:
@@ -76,14 +75,8 @@ class RectangleConverter(BaseConverter):
         if rx_emu > 0 or ry_emu > 0:
             # Rounded rectangle
             # Calculate corner radius as percentage (DrawingML uses percentage)
-            # Convert back to pixels for calculation
-            rx_px = self.parse_length(rx_str) if rx_str else 0
-            ry_px = self.parse_length(ry_str) if ry_str else 0
-            width_px = self.parse_length(width_str) if width_str else 0
-            height_px = self.parse_length(height_str) if height_str else 0
-            
-            corner_radius_x = min(50, (rx_px / width_px) * 100) if width_px > 0 else 0
-            corner_radius_y = min(50, (ry_px / height_px) * 100) if height_px > 0 else 0
+            corner_radius_x = min(50, (rx / width) * 100) if width > 0 else 0
+            corner_radius_y = min(50, (ry / height) * 100) if height > 0 else 0
             corner_radius = max(corner_radius_x, corner_radius_y)
             
             shape_preset = f'''<a:prstGeom prst="roundRect">
@@ -128,6 +121,15 @@ class RectangleConverter(BaseConverter):
         """Generate DrawingML transform from SVG transform."""
         # This is a placeholder - full implementation in TransformConverter
         return ''
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""
+        # Check if ViewportResolver mapping is available in context
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            return context.viewport_mapping.svg_to_emu(x, y)
+        
+        # Fallback to standard coordinate system conversion
+        return context.coordinate_system.svg_to_emu(x, y)
 
 
 class CircleConverter(BaseConverter):
@@ -152,8 +154,8 @@ class CircleConverter(BaseConverter):
         y = cy - r
         diameter = 2 * r
         
-        # Convert to EMUs
-        emu_x, emu_y = context.coordinate_system.svg_to_emu(x, y)
+        # Convert to EMUs using viewport-aware mapping if available
+        emu_x, emu_y = self._convert_svg_to_drawingml_coords(x, y, context)
         emu_diameter = context.coordinate_system.svg_length_to_emu(diameter, 'x')
         
         # Get style attributes
@@ -194,6 +196,15 @@ class CircleConverter(BaseConverter):
                 </a:p>
             </p:txBody>
         </p:sp>'''
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""
+        # Check if ViewportResolver mapping is available in context
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            return context.viewport_mapping.svg_to_emu(x, y)
+        
+        # Fallback to standard coordinate system conversion
+        return context.coordinate_system.svg_to_emu(x, y)
 
 
 class EllipseConverter(BaseConverter):
@@ -220,8 +231,8 @@ class EllipseConverter(BaseConverter):
         width = 2 * rx
         height = 2 * ry
         
-        # Convert to EMUs
-        emu_x, emu_y = context.coordinate_system.svg_to_emu(x, y)
+        # Convert to EMUs using viewport-aware mapping if available
+        emu_x, emu_y = self._convert_svg_to_drawingml_coords(x, y, context)
         emu_width = context.coordinate_system.svg_length_to_emu(width, 'x')
         emu_height = context.coordinate_system.svg_length_to_emu(height, 'y')
         
@@ -263,6 +274,15 @@ class EllipseConverter(BaseConverter):
                 </a:p>
             </p:txBody>
         </p:sp>'''
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""
+        # Check if ViewportResolver mapping is available in context
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            return context.viewport_mapping.svg_to_emu(x, y)
+        
+        # Fallback to standard coordinate system conversion
+        return context.coordinate_system.svg_to_emu(x, y)
 
 
 class PolygonConverter(BaseConverter):

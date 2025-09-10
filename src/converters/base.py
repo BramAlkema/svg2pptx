@@ -8,7 +8,7 @@ where each SVG element type has its own specialized converter.
 
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional, Any, Type
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import logging
 import re
 
@@ -38,6 +38,10 @@ class CoordinateSystem:
         self.viewbox = viewbox
         self.slide_width = slide_width
         self.slide_height = slide_height
+        
+        # Extract SVG dimensions from viewbox for compatibility
+        self.svg_width = viewbox[2]
+        self.svg_height = viewbox[3]
         
         # Calculate scaling factors
         self.scale_x = slide_width / viewbox[2] if viewbox[2] > 0 else 1
@@ -88,12 +92,16 @@ class ConversionContext:
         self.group_stack: List[Dict] = []
         self.current_transform: Optional[str] = None
         self.style_stack: List[Dict] = []
+        self.svg_root = svg_root
         
         # Initialize unit converter and viewport context
         self.unit_converter = UnitConverter()
         self.viewport_handler = ViewportResolver()
         # Simplified viewport context initialization
         self.viewport_context = None
+        
+        # Initialize converter registry for nested conversions
+        self.converter_registry: Optional[ConverterRegistry] = None
         
     def get_next_shape_id(self) -> int:
         """Get the next available shape ID."""
@@ -322,7 +330,8 @@ class BaseConverter(ABC):
                 return self.generate_pattern_fill(context.patterns[ref_id], opacity)
             else:
                 # Fallback to gray if reference not found
-                return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+                gray_color = self.parse_color('gray')
+                return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
         
         # Solid color fill
         color = self.parse_color(fill)
@@ -372,12 +381,14 @@ class BaseConverter(ABC):
     def generate_gradient_fill(self, gradient: Dict, opacity: str = '1') -> str:
         """Generate DrawingML gradient fill."""
         # This is a placeholder - should be implemented in GradientConverter
-        return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+        gray_color = self.parse_color('gray')
+        return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
     
     def generate_pattern_fill(self, pattern: Dict, opacity: str = '1') -> str:
         """Generate DrawingML pattern fill."""
         # This is a placeholder - patterns are complex in DrawingML
-        return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+        gray_color = self.parse_color('gray')
+        return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
 
 
 class ConverterRegistry:
@@ -437,3 +448,76 @@ class ConverterRegistry:
             tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
             logger.warning(f"No converter found for element: {tag}")
             return None
+    
+    def register_default_converters(self):
+        """Register all default converters for SVG elements."""
+        converters_registered = []
+        
+        # Register shape converters (enhanced with ViewportResolver)
+        try:
+            from .shapes import RectangleConverter, CircleConverter, EllipseConverter, PolygonConverter, LineConverter
+            self.register_class(RectangleConverter)
+            self.register_class(CircleConverter)
+            self.register_class(EllipseConverter)
+            self.register_class(PolygonConverter)
+            self.register_class(LineConverter)
+            converters_registered.extend(['RectangleConverter', 'CircleConverter', 'EllipseConverter', 'PolygonConverter', 'LineConverter'])
+        except ImportError as e:
+            logger.warning(f"Failed to import shape converters: {e}")
+        
+        # Register path converter
+        try:
+            from .paths import PathConverter
+            self.register_class(PathConverter)
+            converters_registered.append('PathConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import PathConverter: {e}")
+        
+        # Register text converter
+        try:
+            from .text import TextConverter
+            self.register_class(TextConverter)
+            converters_registered.append('TextConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import TextConverter: {e}")
+        
+        # Register gradient converter
+        try:
+            from .gradients import GradientConverter
+            self.register_class(GradientConverter)
+            converters_registered.append('GradientConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import GradientConverter: {e}")
+        
+        # Register transform converter
+        try:
+            from .transforms import TransformConverter
+            self.register_class(TransformConverter)
+            converters_registered.append('TransformConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import TransformConverter: {e}")
+        
+        # Register group handler
+        try:
+            from .groups import GroupHandler
+            self.register_class(GroupHandler)
+            converters_registered.append('GroupHandler')
+        except ImportError as e:
+            logger.warning(f"Failed to import GroupHandler: {e}")
+        
+        # Register new converters
+        try:
+            from .image import ImageConverter
+            self.register_class(ImageConverter)
+            converters_registered.append('ImageConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import ImageConverter: {e}")
+        
+        try:
+            from .style import StyleConverter
+            self.register_class(StyleConverter)
+            converters_registered.append('StyleConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import StyleConverter: {e}")
+        
+        logger.info(f"Registered {len(converters_registered)} converters: {', '.join(converters_registered)}")

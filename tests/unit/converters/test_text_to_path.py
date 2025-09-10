@@ -11,6 +11,8 @@ from unittest.mock import Mock, patch, MagicMock
 from src.converters.text_to_path import TextToPathConverter
 from src.converters.base import ConversionContext, CoordinateSystem
 from src.converters.font_metrics import FontMetrics, GlyphOutline
+from src.units import UnitConverter
+from src.colors import ColorParser
 
 
 class TestTextToPathConverter:
@@ -37,7 +39,11 @@ class TestTextToPathConverter:
         """Create mock conversion context."""
         context = Mock(spec=ConversionContext)
         context.coordinate_system = Mock(spec=CoordinateSystem)
-        context.coordinate_system.svg_to_emu.return_value = (12700, 25400)  # 1pt, 2pt in EMUs
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        pt1_emu = unit_converter.to_emu('1pt')
+        pt2_emu = unit_converter.to_emu('2pt')
+        context.coordinate_system.svg_to_emu.return_value = (pt1_emu, pt2_emu)
         context.get_next_shape_id.return_value = 100
         return context
     
@@ -225,10 +231,13 @@ class TestTextToPathConverter:
     def test_get_fill_color_xml(self, converter):
         """Test fill color extraction as DrawingML XML."""
         element = ET.fromstring('<text fill="red">Test</text>')
-        with patch.object(converter, 'parse_color', return_value='FF0000'):
+        # Use ColorParser to get expected hex value
+        color_parser = ColorParser()
+        expected_hex = color_parser.parse('red').hex.upper()
+        with patch.object(converter, 'parse_color', return_value=expected_hex):
             color_xml = converter._get_fill_color_xml(element)
             assert '<a:solidFill>' in color_xml
-            assert 'FF0000' in color_xml
+            assert expected_hex in color_xml
     
     def test_get_text_decorations(self, converter):
         """Test text decoration extraction."""
@@ -245,7 +254,10 @@ class TestTextToPathConverter:
             </text>
         ''')
         
-        with patch.object(converter, 'parse_color', return_value='0000FF'):
+        # Use ColorParser to get expected hex value for blue
+        color_parser = ColorParser()
+        expected_blue_hex = color_parser.parse('blue').hex.upper()
+        with patch.object(converter, 'parse_color', return_value=expected_blue_hex):
             props = converter._extract_text_properties(element, mock_context)
             
             assert props['x'] == 100

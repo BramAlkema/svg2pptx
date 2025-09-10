@@ -14,7 +14,7 @@ import pickle
 from typing import Any, Dict, Optional, Union, Tuple, List
 from functools import lru_cache, wraps
 from dataclasses import dataclass
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import time
 import threading
 from collections import defaultdict

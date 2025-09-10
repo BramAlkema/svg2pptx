@@ -16,7 +16,7 @@ Key Features:
 - Path-based and shape-based clipping conversion
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Optional, Tuple, Union, NamedTuple
 import math
 import logging
@@ -117,7 +117,7 @@ class MaskingConverter(BaseConverter):
         self.masked_elements: List[MaskApplication] = []
         self.clipped_elements: List[ClipApplication] = []
     
-    def can_convert(self, element: ET.Element, context: ConversionContext) -> bool:
+    def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:
         """Check if element can be converted by this converter."""
         if element.tag.endswith(('mask', 'clipPath')):
             return True
@@ -311,8 +311,8 @@ class MaskingConverter(BaseConverter):
         
         # Apply clipPath transform if present
         if clip_def.transform:
-            matrix = self.transform_engine.parse_transform(clip_def.transform)
-            resolved_path = self.transform_engine.apply_matrix_to_path(resolved_path, matrix)
+            matrix = self.transform_parser.parse_transform(clip_def.transform)
+            resolved_path = self.transform_parser.apply_matrix_to_path(resolved_path, matrix)
         
         # Store clip application
         clip_app = ClipApplication(
@@ -367,7 +367,7 @@ class MaskingConverter(BaseConverter):
         return f"""<!-- PowerPoint Mask Application -->
 <p:sp>
     <p:nvSpPr>
-        <p:cNvPr id="{context.get_next_id()}" name="MaskedShape"/>
+        <p:cNvPr id="{context.get_next_shape_id()}" name="MaskedShape"/>
         <p:cNvSpPr/>
         <p:nvPr/>
     </p:nvSpPr>
@@ -391,7 +391,7 @@ class MaskingConverter(BaseConverter):
 <!-- Target: {mask_app.target_element.tag} -->
 <p:sp>
     <p:nvSpPr>
-        <p:cNvPr id="{context.get_next_id()}" name="RasterizedMask"/>
+        <p:cNvPr id="{context.get_next_shape_id()}" name="RasterizedMask"/>
         <p:cNvSpPr/>
         <p:nvPr/>
     </p:nvSpPr>
@@ -409,7 +409,7 @@ class MaskingConverter(BaseConverter):
         return f"""<!-- PowerPoint Clipping Path -->
 <p:sp>
     <p:nvSpPr>
-        <p:cNvPr id="{context.get_next_id()}" name="ClippingShape"/>
+        <p:cNvPr id="{context.get_next_shape_id()}" name="ClippingShape"/>
         <p:cNvSpPr/>
         <p:nvPr/>
     </p:nvSpPr>
@@ -439,7 +439,7 @@ class MaskingConverter(BaseConverter):
 <!-- ClipPath ID: {clip_app.clip_definition.id} -->
 <p:sp>
     <p:nvSpPr>
-        <p:cNvPr id="{context.get_next_id()}" name="ComplexClip"/>
+        <p:cNvPr id="{context.get_next_shape_id()}" name="ComplexClip"/>
         <p:cNvSpPr/>
         <p:nvPr/>
     </p:nvSpPr>
@@ -538,7 +538,6 @@ class MaskingConverter(BaseConverter):
     
     def reset(self):
         """Reset converter state for new conversion."""
-        super().reset()
         self.mask_definitions.clear()
         self.clippath_definitions.clear()
         self.masked_elements.clear()

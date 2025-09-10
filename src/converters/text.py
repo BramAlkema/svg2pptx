@@ -12,7 +12,7 @@ Handles SVG text elements with support for:
 """
 
 from typing import List, Dict, Any, Optional
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import logging
 from .base import BaseConverter, ConversionContext
 
@@ -24,15 +24,36 @@ class TextConverter(BaseConverter):
     
     supported_elements = ['text', 'tspan']
     
-    def __init__(self, enable_text_to_path_fallback: bool = False):
+    def __init__(self, 
+                 enable_font_embedding: bool = True,
+                 enable_text_to_path_fallback: bool = False):
         """
-        Initialize TextConverter with optional text-to-path fallback.
+        Initialize TextConverter with enhanced font capabilities.
         
         Args:
+            enable_font_embedding: Enable three-tier font strategy with PPTX embedding
             enable_text_to_path_fallback: Enable automatic fallback to path conversion
         """
         super().__init__()
+        self.enable_font_embedding = enable_font_embedding
         self.enable_text_to_path_fallback = enable_text_to_path_fallback
+        
+        # Font embedding components
+        self._font_analyzer = None
+        self._font_embedder = None
+        
+        if self.enable_font_embedding:
+            try:
+                from .font_embedding import FontEmbeddingAnalyzer
+                from ..pptx_font_embedder import PPTXFontEmbedder
+                self._font_analyzer = FontEmbeddingAnalyzer()
+                self._font_embedder = PPTXFontEmbedder()
+                logger.info("Font embedding enabled with three-tier strategy")
+            except ImportError as e:
+                logger.warning(f"Could not enable font embedding: {e}")
+                self.enable_font_embedding = False
+        
+        # Text-to-path fallback
         self._text_to_path_converter = None
         
         if self.enable_text_to_path_fallback:
@@ -67,17 +88,44 @@ class TextConverter(BaseConverter):
     }
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG text to DrawingML text shape with optional path fallback"""
+        """Convert SVG text to DrawingML using three-tier font strategy"""
         
-        # Try text-to-path fallback if enabled
-        if (self.enable_text_to_path_fallback and 
-            self._text_to_path_converter and 
-            self._text_to_path_converter.should_convert_to_path(element, context)):
+        # Extract font information for strategy decision
+        font_family = self._get_font_family(element)
+        font_weight = self._get_font_weight(element)
+        font_style = self._get_font_style(element)
+        is_italic = font_style.lower() == 'italic'
+        weight_value = self._parse_font_weight_value(font_weight)
+        
+        # Apply three-tier font strategy if enabled
+        if self.enable_font_embedding and self._font_analyzer:
+            strategy = self._determine_font_strategy(font_family, weight_value, is_italic, context)
             
-            logger.debug(f"Using text-to-path fallback for element: {element.get('font-family', 'unknown')}")
+            if strategy == 'convert_to_path':
+                # Tier 3: Convert to path when font unavailable
+                if (self.enable_text_to_path_fallback and 
+                    self._text_to_path_converter):
+                    logger.debug(f"Using text-to-path conversion for unavailable font: {font_family}")
+                    return self._text_to_path_converter.convert(element, context)
+                else:
+                    # Fallback to regular text without specific font
+                    logger.debug(f"Font {font_family} unavailable, using fallback text conversion")
+                    return self._convert_to_text_shape_with_font_strategy(element, context, 'fallback')
+            
+            elif strategy in ['embedded', 'system']:
+                # Tier 1 & 2: Use embedded or system fonts 
+                logger.debug(f"Using {strategy} font strategy for: {font_family}")
+                return self._convert_to_text_shape_with_font_strategy(element, context, strategy)
+        
+        # Legacy path: Try text-to-path fallback if font embedding disabled
+        elif (self.enable_text_to_path_fallback and 
+              self._text_to_path_converter and 
+              self._text_to_path_converter.should_convert_to_path(element, context)):
+            
+            logger.debug(f"Using text-to-path fallback for element: {font_family}")
             return self._text_to_path_converter.convert(element, context)
         
-        # Use regular text conversion
+        # Default: Use regular text conversion
         return self._convert_to_text_shape(element, context)
     
     def _convert_to_text_shape(self, element: ET.Element, context: ConversionContext) -> str:
@@ -317,3 +365,129 @@ class TextConverter(BaseConverter):
                    .replace('>', '&gt;')
                    .replace('"', '&quot;')
                    .replace("'", '&apos;'))
+    
+    # === Three-Tier Font Strategy Methods ===
+    
+    def _parse_font_weight_value(self, weight_str: str) -> int:
+        """Parse font weight string to numeric value"""
+        try:
+            return int(weight_str)
+        except ValueError:
+            weight_map = {
+                'normal': 400, 'bold': 700, 'bolder': 800, 'lighter': 200,
+                'thin': 100, 'light': 300, 'medium': 500, 'semibold': 600,
+                'extra-bold': 800, 'black': 900
+            }
+            return weight_map.get(weight_str.lower(), 400)
+    
+    def _determine_font_strategy(self, family: str, weight: int, italic: bool, 
+                                 context: ConversionContext) -> str:
+        """
+        Determine which font strategy to use for given font
+        
+        Returns:
+            'embedded' - Use embedded font from @font-face
+            'system' - Use system font  
+            'convert_to_path' - Convert to paths
+        """
+        # Check if we have embedded fonts in context
+        embedded_fonts = getattr(context, 'embedded_fonts', {})
+        
+        # Check if font is embedded via @font-face
+        if family in embedded_fonts:
+            variant = self._get_font_variant_name(weight, italic)
+            if variant in embedded_fonts[family]:
+                return 'embedded'
+        
+        # Check if system font is available
+        if self._font_analyzer:
+            try:
+                font_bytes = self._font_analyzer.load_system_font(
+                    family, weight, italic, ['Arial', 'Helvetica', 'sans-serif']
+                )
+                if font_bytes:
+                    return 'system'
+            except Exception as e:
+                logger.debug(f"System font check failed for {family}: {e}")
+        
+        # Fall back to path conversion
+        return 'convert_to_path'
+    
+    def _get_font_variant_name(self, weight: int, italic: bool) -> str:
+        """Get font variant name for embedding (regular, bold, italic, bolditalic)"""
+        if italic and weight >= 700:
+            return 'bolditalic'
+        elif weight >= 700:
+            return 'bold'
+        elif italic:
+            return 'italic'
+        else:
+            return 'regular'
+    
+    def _convert_to_text_shape_with_font_strategy(self, element: ET.Element, 
+                                                  context: ConversionContext, 
+                                                  strategy: str) -> str:
+        """Convert SVG text to DrawingML with specific font strategy"""
+        # Get basic text properties
+        text_content = self._extract_text_content(element)
+        if not text_content.strip():
+            return ""
+        
+        font_family = self._get_font_family(element)
+        font_size = self._get_font_size(element, context)
+        font_weight = self._get_font_weight(element)
+        font_style = self._get_font_style(element)
+        weight_value = self._parse_font_weight_value(font_weight)
+        is_italic = font_style.lower() == 'italic'
+        
+        # Handle font embedding if strategy requires it
+        if strategy == 'embedded':
+            self._register_embedded_font(font_family, weight_value, is_italic, context)
+        elif strategy == 'system':
+            self._register_system_font(font_family, weight_value, is_italic, context)
+        
+        # Generate DrawingML with appropriate font references
+        return self._generate_drawingml_with_font_strategy(
+            element, context, font_family, font_size, weight_value, is_italic, strategy
+        )
+    
+    def _register_embedded_font(self, family: str, weight: int, italic: bool, 
+                                context: ConversionContext):
+        """Register embedded font for PPTX inclusion"""
+        if not self._font_embedder:
+            return
+            
+        embedded_fonts = getattr(context, 'embedded_fonts', {})
+        if family in embedded_fonts:
+            variant = self._get_font_variant_name(weight, italic)
+            if variant in embedded_fonts[family]:
+                font_bytes = embedded_fonts[family][variant]
+                self._font_embedder.add_font_embed(family, variant, font_bytes)
+                logger.debug(f"Registered embedded font: {family} {variant}")
+    
+    def _register_system_font(self, family: str, weight: int, italic: bool, 
+                              context: ConversionContext):
+        """Register system font for PPTX inclusion"""
+        if not self._font_embedder or not self._font_analyzer:
+            return
+            
+        try:
+            font_bytes = self._font_analyzer.load_system_font(
+                family, weight, italic, ['Arial', 'Helvetica', 'sans-serif']
+            )
+            if font_bytes:
+                variant = self._get_font_variant_name(weight, italic)
+                self._font_embedder.add_font_embed(family, variant, font_bytes)
+                logger.debug(f"Registered system font: {family} {variant}")
+        except Exception as e:
+            logger.warning(f"Could not register system font {family}: {e}")
+    
+    def _generate_drawingml_with_font_strategy(self, element: ET.Element, 
+                                               context: ConversionContext,
+                                               font_family: str, font_size: int,
+                                               weight: int, italic: bool, 
+                                               strategy: str) -> str:
+        """Generate DrawingML text with font strategy-specific references"""
+        # For now, use the existing _convert_to_text_shape method
+        # In a full implementation, this would add embedded font references
+        return self._convert_to_text_shape(element, context)

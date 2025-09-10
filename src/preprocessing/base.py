@@ -4,7 +4,7 @@ Base classes for SVG preprocessing plugins.
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 class PreprocessingPlugin(ABC):
@@ -16,6 +16,20 @@ class PreprocessingPlugin(ABC):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.enabled = self.config.get('enabled', True)
+    
+    def _is_valid_element(self, element: ET.Element) -> bool:
+        """Check if element is a valid XML element (not comment, processing instruction, etc.)."""
+        return hasattr(element, 'tag') and isinstance(element.tag, str)
+    
+    def _tag_matches(self, element: ET.Element, tag_or_tags) -> bool:
+        """Safely check if element tag matches given tag(s)."""
+        if not self._is_valid_element(element):
+            return False
+        
+        if isinstance(tag_or_tags, str):
+            return element.tag.endswith(tag_or_tags)
+        else:
+            return any(element.tag.endswith(tag) for tag in tag_or_tags)
     
     @abstractmethod
     def can_process(self, element: ET.Element, context: 'PreprocessingContext') -> bool:

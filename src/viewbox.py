@@ -26,7 +26,7 @@ import math
 from typing import Optional, Tuple, Dict, Any, List
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .units import UnitConverter, ViewportContext
 

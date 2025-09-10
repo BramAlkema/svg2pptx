@@ -5,7 +5,7 @@ These provide more sophisticated optimizations for complex SVG structures.
 
 import re
 import math
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Optional, Set, Tuple, Union
 from .base import PreprocessingPlugin, PreprocessingContext
 
@@ -17,7 +17,7 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
     description = "optimizes path data: writes in shorter form, applies transformations"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('path') and 'd' in element.attrib
+        return self._tag_matches(element, 'path') and 'd' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         path_data = element.attrib.get('d', '')
@@ -105,10 +105,10 @@ class MergePathsPlugin(PreprocessingPlugin):
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # This plugin operates on parent elements that contain paths
-        return len([child for child in element if child.tag.endswith('path')]) > 1
+        return len([child for child in element if self._tag_matches(child, 'path')]) > 1
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        paths = [child for child in element if child.tag.endswith('path')]
+        paths = [child for child in element if self._tag_matches(child, 'path')]
         if len(paths) < 2:
             return False
         
@@ -370,7 +370,7 @@ class RemoveHiddenElementsPlugin(PreprocessingPlugin):
     description = "removes hidden elements (zero sized, with absent attributes)"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return True  # Can process any element
+        return self._is_valid_element(element)  # Only process valid XML elements
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         if self._is_hidden_element(element):
@@ -418,13 +418,13 @@ class MinifyStylesPlugin(PreprocessingPlugin):
     description = "minifies styles and removes unused styles"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('style') or 'style' in element.attrib
+        return self._tag_matches(element, 'style') or 'style' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         modified = False
         
         # Process style elements
-        if element.tag.endswith('style') and element.text:
+        if self._tag_matches(element, 'style') and element.text:
             minified_css = self._minify_css(element.text)
             if minified_css != element.text:
                 element.text = minified_css

@@ -3,7 +3,7 @@ Core preprocessing plugins ported from SVGO.
 """
 
 import re
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Optional, Set
 from .base import PreprocessingPlugin, PreprocessingContext
 
@@ -56,7 +56,7 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
                     modified = True
         
         # Clean up path data
-        if element.tag.endswith('path') and 'd' in element.attrib:
+        if self._tag_matches(element, 'path') and 'd' in element.attrib:
             path_data = element.attrib['d']
             cleaned_path = self._clean_path_data(path_data, context.precision)
             if cleaned_path != path_data:
@@ -128,7 +128,7 @@ class RemoveEmptyContainersPlugin(PreprocessingPlugin):
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         container_tags = {'g', 'defs', 'symbol', 'marker', 'pattern', 'clipPath', 'mask'}
-        return any(element.tag.endswith(tag) for tag in container_tags)
+        return self._tag_matches(element, container_tags)
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # Check if container is empty (no children and no significant attributes)
@@ -213,7 +213,7 @@ class CollapseGroupsPlugin(PreprocessingPlugin):
     description = "collapses useless groups"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('g')
+        return self._tag_matches(element, 'g')
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # Check if group has only one child and no significant attributes
@@ -265,25 +265,24 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         shape_tags = {'rect', 'circle', 'ellipse', 'line', 'polygon', 'polyline'}
-        return any(element.tag.endswith(tag) for tag in shape_tags)
+        return self._tag_matches(element, shape_tags)
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
         
         path_data = None
         if tag == 'rect':
-            path_data = self._rect_to_path(element)
+            path_data = self._rect_to_path(element, context.precision)
         elif tag == 'circle':
-            path_data = self._circle_to_path(element)
+            path_data = self._circle_to_path(element, context.precision)
         elif tag == 'ellipse':
-            path_data = self._ellipse_to_path(element)
+            path_data = self._ellipse_to_path(element, context.precision)
         elif tag == 'line':
-            path_data = self._line_to_path(element)
+            path_data = self._line_to_path(element, context.precision)
         
         if path_data:
             # Convert element to path
             element.tag = element.tag.replace(tag, 'path')
-            element.set('d', path_data)
             
             # Remove shape-specific attributes
             shape_attrs = {'x', 'y', 'width', 'height', 'cx', 'cy', 'r', 'rx', 'ry', 
@@ -292,12 +291,21 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
                 if attr in element.attrib:
                     del element.attrib[attr]
             
+            # Add path data and sort all attributes for idempotent behavior
+            element.set('d', path_data)
+            
+            # Sort attributes to match SortAttributesPlugin behavior
+            current_attrs = dict(element.attrib)
+            element.clear()
+            for key in sorted(current_attrs.keys()):
+                element.set(key, current_attrs[key])
+            
             context.record_modification(self.name, f"converted_{tag}_to_path")
             return True
         
         return False
     
-    def _rect_to_path(self, element: ET.Element) -> Optional[str]:
+    def _rect_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
         """Convert rectangle to path data."""
         try:
             x = float(element.get('x', 0))
@@ -307,28 +315,42 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             rx = float(element.get('rx', 0))
             ry = float(element.get('ry', 0))
             
+            # Helper to format number with precision
+            def fmt(num):
+                if num == int(num):
+                    return str(int(num))
+                else:
+                    return f"{num:.{precision}f}".rstrip('0').rstrip('.')
+            
             if rx == 0 and ry == 0:
                 # Simple rectangle
-                return f"M{x},{y}h{width}v{height}h{-width}z"
+                return f"M{fmt(x)},{fmt(y)}h{fmt(width)}v{fmt(height)}h{fmt(-width)}z"
             else:
                 # Rounded rectangle - simplified version
-                return f"M{x+rx},{y}h{width-2*rx}a{rx},{ry} 0 0 1 {rx},{ry}v{height-2*ry}a{rx},{ry} 0 0 1 {-rx},{ry}h{-width+2*rx}a{rx},{ry} 0 0 1 {-rx},{-ry}v{-height+2*ry}a{rx},{ry} 0 0 1 {rx},{-ry}z"
+                return f"M{fmt(x+rx)},{fmt(y)}h{fmt(width-2*rx)}a{fmt(rx)},{fmt(ry)} 0 0 1 {fmt(rx)},{fmt(ry)}v{fmt(height-2*ry)}a{fmt(rx)},{fmt(ry)} 0 0 1 {fmt(-rx)},{fmt(ry)}h{fmt(-width+2*rx)}a{fmt(rx)},{fmt(ry)} 0 0 1 {fmt(-rx)},{fmt(-ry)}v{fmt(-height+2*ry)}a{fmt(rx)},{fmt(ry)} 0 0 1 {fmt(rx)},{fmt(-ry)}z"
         except (ValueError, TypeError):
             return None
     
-    def _circle_to_path(self, element: ET.Element) -> Optional[str]:
+    def _circle_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
         """Convert circle to path data."""
         try:
             cx = float(element.get('cx', 0))
             cy = float(element.get('cy', 0))
             r = float(element.get('r', 0))
             
+            # Helper to format number with precision
+            def fmt(num):
+                if num == int(num):
+                    return str(int(num))
+                else:
+                    return f"{num:.{precision}f}".rstrip('0').rstrip('.')
+            
             # Circle as two semicircle arcs
-            return f"M{cx-r},{cy}A{r},{r} 0 1 1 {cx+r},{cy}A{r},{r} 0 1 1 {cx-r},{cy}z"
+            return f"M{fmt(cx-r)},{fmt(cy)}A{fmt(r)},{fmt(r)} 0 1 1 {fmt(cx+r)},{fmt(cy)}A{fmt(r)},{fmt(r)} 0 1 1 {fmt(cx-r)},{fmt(cy)}z"
         except (ValueError, TypeError):
             return None
     
-    def _ellipse_to_path(self, element: ET.Element) -> Optional[str]:
+    def _ellipse_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
         """Convert ellipse to path data."""
         try:
             cx = float(element.get('cx', 0))
@@ -336,12 +358,19 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             rx = float(element.get('rx', 0))
             ry = float(element.get('ry', 0))
             
+            # Helper to format number with precision
+            def fmt(num):
+                if num == int(num):
+                    return str(int(num))
+                else:
+                    return f"{num:.{precision}f}".rstrip('0').rstrip('.')
+            
             # Ellipse as two semi-ellipse arcs
-            return f"M{cx-rx},{cy}A{rx},{ry} 0 1 1 {cx+rx},{cy}A{rx},{ry} 0 1 1 {cx-rx},{cy}z"
+            return f"M{fmt(cx-rx)},{fmt(cy)}A{fmt(rx)},{fmt(ry)} 0 1 1 {fmt(cx+rx)},{fmt(cy)}A{fmt(rx)},{fmt(ry)} 0 1 1 {fmt(cx-rx)},{fmt(cy)}z"
         except (ValueError, TypeError):
             return None
     
-    def _line_to_path(self, element: ET.Element) -> Optional[str]:
+    def _line_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
         """Convert line to path data."""
         try:
             x1 = float(element.get('x1', 0))
@@ -349,6 +378,13 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             x2 = float(element.get('x2', 0))
             y2 = float(element.get('y2', 0))
             
-            return f"M{x1},{y1}L{x2},{y2}"
+            # Helper to format number with precision
+            def fmt(num):
+                if num == int(num):
+                    return str(int(num))
+                else:
+                    return f"{num:.{precision}f}".rstrip('0').rstrip('.')
+            
+            return f"M{fmt(x1)},{fmt(y1)}L{fmt(x2)},{fmt(y2)}"
         except (ValueError, TypeError):
             return None

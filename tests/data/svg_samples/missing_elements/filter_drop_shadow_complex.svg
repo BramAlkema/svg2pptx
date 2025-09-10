@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <defs>
+    <filter id="multi-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="2" stdDeviation="1" flood-color="red" flood-opacity="0.3" result="shadow1"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="1" flood-color="blue" flood-opacity="0.3" result="shadow2"/>
+    </filter>
+  </defs>
+  
+  <g filter="url(#multi-shadow)">
+    <rect x="50" y="50" width="80" height="60" fill="white" stroke="black" stroke-width="2"/>
+    <text x="90" y="85" text-anchor="middle" font-family="Arial" font-size="14" fill="black">Multi Shadow</text>
+  </g>
+</svg>

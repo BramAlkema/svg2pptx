@@ -2,7 +2,7 @@
 Main SVG optimizer class that orchestrates preprocessing plugins.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import List, Dict, Any, Optional
 from .base import PreprocessingPlugin, PreprocessingContext, PluginRegistry
 from .plugins import (
@@ -103,8 +103,16 @@ class SVGOptimizer:
     def optimize(self, svg_content: str) -> str:
         """Optimize SVG content using registered plugins."""
         try:
-            # Parse SVG
-            root = ET.fromstring(svg_content)
+            # Parse SVG - handle encoding declaration properly
+            if isinstance(svg_content, str):
+                # If content has XML declaration, encode to bytes first
+                if svg_content.strip().startswith('<?xml'):
+                    svg_bytes = svg_content.encode('utf-8')
+                    root = ET.fromstring(svg_bytes)
+                else:
+                    root = ET.fromstring(svg_content)
+            else:
+                root = ET.fromstring(svg_content)
             
             # Create preprocessing context
             context = PreprocessingContext()
@@ -168,14 +176,14 @@ class SVGOptimizer:
     
     def _element_to_string(self, root: ET.Element) -> str:
         """Convert element tree back to string with proper formatting."""
-        # Register namespaces to avoid ns0: prefixes
+        # Register namespaces to avoid ns0: prefixes (skip empty prefix for lxml)
         namespaces = {
-            '': 'http://www.w3.org/2000/svg',
             'xlink': 'http://www.w3.org/1999/xlink'
         }
         
         for prefix, uri in namespaces.items():
-            ET.register_namespace(prefix, uri)
+            if prefix:  # Skip empty prefix for lxml compatibility
+                ET.register_namespace(prefix, uri)
         
         # Convert to string
         xml_str = ET.tostring(root, encoding='unicode', method='xml')
@@ -184,7 +192,15 @@ class SVGOptimizer:
         if self.config.get('pretty', False):
             return self._prettify_xml(xml_str)
         else:
-            return xml_str.replace('\\n', '').replace('  ', ' ')
+            # Normalize all whitespace for consistent output
+            import re
+            # Remove all newlines and normalize spaces between tags
+            normalized = re.sub(r'\s+', ' ', xml_str.replace('\n', ' '))
+            # Clean up spaces around tag boundaries
+            normalized = re.sub(r'>\s+<', '><', normalized)
+            normalized = re.sub(r'>\s+([^<])', r'>\1', normalized)
+            normalized = re.sub(r'([^>])\s+<', r'\1<', normalized)
+            return normalized.strip()
     
     def _prettify_xml(self, xml_str: str) -> str:
         """Add basic pretty printing to XML."""

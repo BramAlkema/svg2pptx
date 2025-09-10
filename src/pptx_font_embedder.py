@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, List, Optional, BinaryIO
 from dataclasses import dataclass
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pptx import Presentation
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn

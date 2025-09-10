@@ -28,7 +28,7 @@ import math
 from typing import List, Dict, Tuple, Optional, Any, Union
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
@@ -191,27 +191,41 @@ class AnimationDefinition:
             for n1, n2 in zip(nums1, nums2):
                 interpolated.append(n1 + (n2 - n1) * t)
             
-            # Reconstruct transform string
-            if self.transform_type == TransformType.TRANSLATE:
-                if len(interpolated) >= 2:
-                    return f"translate({interpolated[0]}, {interpolated[1]})"
-                else:
-                    return f"translate({interpolated[0]})"
-            elif self.transform_type == TransformType.SCALE:
-                if len(interpolated) >= 2:
-                    return f"scale({interpolated[0]}, {interpolated[1]})"
-                else:
-                    return f"scale({interpolated[0]})"
-            elif self.transform_type == TransformType.ROTATE:
-                if len(interpolated) >= 3:
-                    return f"rotate({interpolated[0]}, {interpolated[1]}, {interpolated[2]})"
-                else:
-                    return f"rotate({interpolated[0]})"
+            # Reconstruct transform string using standardized formatter
+            if self.transform_type:
+                return format_transform_string(self.transform_type, interpolated)
             else:
                 return value1
                 
         except (ValueError, IndexError):
             return value1 if t < 0.5 else value2
+
+
+def format_transform_string(transform_type: TransformType, values: List[float]) -> str:
+    """
+    Format transform values into standardized SVG transform string.
+    
+    Uses consistent formatting that matches TransformParser expectations.
+    This replaces manual string concatenation with standardized formatting.
+    """
+    if transform_type == TransformType.TRANSLATE:
+        if len(values) >= 2:
+            return f"translate({values[0]}, {values[1]})"
+        else:
+            return f"translate({values[0]})"
+    elif transform_type == TransformType.SCALE:
+        if len(values) >= 2:
+            return f"scale({values[0]}, {values[1]})"
+        else:
+            return f"scale({values[0]})"
+    elif transform_type == TransformType.ROTATE:
+        if len(values) >= 3:
+            return f"rotate({values[0]}, {values[1]}, {values[2]})"
+        else:
+            return f"rotate({values[0]})"
+    else:
+        # Fallback for unsupported types
+        return f"{transform_type.value}({', '.join(map(str, values))})"
 
 
 @dataclass

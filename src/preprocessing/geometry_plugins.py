@@ -4,7 +4,7 @@ Geometry-focused preprocessing plugins for advanced shape optimization.
 
 import re
 import math
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Optional, Set, Tuple, Union
 from .base import PreprocessingPlugin, PreprocessingContext
 
@@ -16,7 +16,7 @@ class ConvertEllipseToCirclePlugin(PreprocessingPlugin):
     description = "converts non-eccentric <ellipse>s to <circle>s"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('ellipse')
+        return self._tag_matches(element, 'ellipse')
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         rx = float(element.get('rx', 0))
@@ -48,7 +48,7 @@ class SimplifyPolygonPlugin(PreprocessingPlugin):
     description = "simplifies polygon and polyline points by removing redundant points"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith(('polygon', 'polyline')) and 'points' in element.attrib
+        return self._tag_matches(element, ('polygon', 'polyline')) and 'points' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         points_str = element.attrib.get('points', '')
@@ -185,7 +185,7 @@ class OptimizeViewBoxPlugin(PreprocessingPlugin):
     description = "optimizes viewBox values and removes unnecessary viewBox"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('svg') and 'viewBox' in element.attrib
+        return self._tag_matches(element, 'svg') and 'viewBox' in element.attrib
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         viewbox_str = element.attrib.get('viewBox', '')
@@ -358,7 +358,7 @@ class RemoveEmptyDefsPlugin(PreprocessingPlugin):
     description = "removes empty <defs> elements"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return element.tag.endswith('defs')
+        return self._tag_matches(element, 'defs')
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         # Check if defs is empty (no children)

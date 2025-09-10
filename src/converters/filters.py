@@ -537,9 +537,11 @@ class FilterConverter(BaseConverter):
         
         color = params.get('color')
         if color:
-            color_xml = self.color_parser.to_drawingml(color)
+            color_hex = self.parse_color(color)
+            color_xml = f'<a:srgbClr val="{color_hex}"/>' if color_hex else '<a:srgbClr val="000000"/>'
         else:
-            color_xml = '<a:srgbClr val="000000"/>'
+            black_color = self.parse_color('black')
+            color_xml = f'<a:srgbClr val="{black_color}"/>'
         
         # Convert Cartesian (dx, dy) to polar coordinates for PPTX
         distance = int(math.sqrt(dx*dx + dy*dy))
@@ -556,9 +558,11 @@ class FilterConverter(BaseConverter):
         
         color = params.get('color')
         if color:
-            color_xml = self.color_parser.to_drawingml(color)
+            color_hex = self.parse_color(color)
+            color_xml = f'<a:srgbClr val="{color_hex}"/>' if color_hex else '<a:srgbClr val="FFFFFF"/>'
         else:
-            color_xml = '<a:srgbClr val="FFFFFF"/>'
+            white_color = self.parse_color('white')
+            color_xml = f'<a:srgbClr val="{white_color}"/>'
         
         return f'''<a:glow rad="{blur_radius}">
             {color_xml}

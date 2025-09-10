@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <text x="10" y="30" font-size="14" fill="black">
+    <tspan x="20" y="40">Absolute position</tspan>
+    <tspan dx="5" dy="-10">Relative offset</tspan>
+    <tspan dx="10,5,3" dy="0,2,-1">Multiple deltas</tspan>
+  </text>
+</svg>

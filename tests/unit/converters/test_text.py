@@ -17,6 +17,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from src.converters.text import TextConverter
 from src.converters.base import ConversionContext, CoordinateSystem
+from src.units import UnitConverter
+from src.colors import ColorParser
 
 
 class TestTextConverter:
@@ -300,18 +302,24 @@ class TestTextConverter:
         converter = TextConverter()
         element = ET.fromstring('<text fill="red">Test</text>')
         
-        with patch.object(converter, 'parse_color', return_value='FF0000'):
+        # Use ColorParser to get expected hex value
+        color_parser = ColorParser()
+        expected_red_hex = color_parser.parse('red').hex.upper()
+        with patch.object(converter, 'parse_color', return_value=expected_red_hex):
             result = converter._get_fill_color(element)
-            assert '<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill>' == result
+            assert f'<a:solidFill><a:srgbClr val="{expected_red_hex}"/></a:solidFill>' == result
     
     def test_get_fill_color_from_style(self):
         """Test getting fill color from style attribute."""
         converter = TextConverter()
         element = ET.fromstring('<text style="fill: blue; font-size: 14px;">Test</text>')
         
-        with patch.object(converter, 'parse_color', return_value='0000FF'):
+        # Use ColorParser to get expected hex value
+        color_parser = ColorParser()
+        expected_blue_hex = color_parser.parse('blue').hex.upper()
+        with patch.object(converter, 'parse_color', return_value=expected_blue_hex):
             result = converter._get_fill_color(element)
-            assert '<a:solidFill><a:srgbClr val="0000FF"/></a:solidFill>' == result
+            assert f'<a:solidFill><a:srgbClr val="{expected_blue_hex}"/></a:solidFill>' == result
     
     def test_get_fill_color_none(self):
         """Test getting fill color when set to none."""
@@ -359,7 +367,11 @@ class TestTextConverterIntegration:
         # Mock context with coordinate system
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock(spec=CoordinateSystem)
-        mock_coord_system.svg_to_emu.return_value = (127000, 254000)  # (10 * 12700, 20 * 12700)
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        emu_10pt = unit_converter.to_emu('10pt')
+        emu_20pt = unit_converter.to_emu('20pt')
+        mock_coord_system.svg_to_emu.return_value = (emu_10pt, emu_20pt)  # (10 * 12700, 20 * 12700)
         context.coordinate_system = mock_coord_system
         context.get_next_shape_id.return_value = 1001
         
@@ -378,7 +390,11 @@ class TestTextConverterIntegration:
         
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock(spec=CoordinateSystem)
-        mock_coord_system.svg_to_emu.return_value = (127000, 254000)
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        emu_10pt = unit_converter.to_emu('10pt')
+        emu_20pt = unit_converter.to_emu('20pt')
+        mock_coord_system.svg_to_emu.return_value = (emu_10pt, emu_20pt)
         context.coordinate_system = mock_coord_system
         
         result = converter.convert(element, context)
@@ -396,7 +412,11 @@ class TestTextConverterIntegration:
         
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock(spec=CoordinateSystem)
-        mock_coord_system.svg_to_emu.return_value = (127000, 254000)
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        emu_10pt = unit_converter.to_emu('10pt')
+        emu_20pt = unit_converter.to_emu('20pt')
+        mock_coord_system.svg_to_emu.return_value = (emu_10pt, emu_20pt)
         context.coordinate_system = mock_coord_system
         context.get_next_shape_id.return_value = 1002
         
@@ -417,7 +437,11 @@ class TestTextConverterIntegration:
         
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock(spec=CoordinateSystem)
-        mock_coord_system.svg_to_emu.return_value = (127000, 254000)
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        emu_10pt = unit_converter.to_emu('10pt')
+        emu_20pt = unit_converter.to_emu('20pt')
+        mock_coord_system.svg_to_emu.return_value = (emu_10pt, emu_20pt)
         context.coordinate_system = mock_coord_system
         context.get_next_shape_id.return_value = 1003
         
@@ -435,7 +459,11 @@ class TestTextConverterIntegration:
         
         context = Mock(spec=ConversionContext)
         mock_coord_system = Mock(spec=CoordinateSystem)
-        mock_coord_system.svg_to_emu.return_value = (1270000, 635000)  # (100 * 12700, 50 * 12700)
+        # Use UnitConverter to calculate proper EMU values
+        unit_converter = UnitConverter()
+        emu_100pt = unit_converter.to_emu('100pt')
+        emu_50pt = unit_converter.to_emu('50pt')
+        mock_coord_system.svg_to_emu.return_value = (emu_100pt, emu_50pt)
         context.coordinate_system = mock_coord_system
         context.get_next_shape_id.return_value = 1004
         

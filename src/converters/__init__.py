@@ -17,6 +17,8 @@ from .gradients import GradientConverter
 from .transforms import TransformConverter
 from .styles import StyleProcessor
 from .groups import GroupHandler
+from .image import ImageConverter
+from .style import StyleConverter
 
 __all__ = [
     'BaseConverter',
@@ -39,5 +41,7 @@ __all__ = [
     'GradientConverter',
     'TransformConverter',
     'StyleProcessor',
-    'GroupHandler'
+    'GroupHandler',
+    'ImageConverter',
+    'StyleConverter'
 ]

@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Tuple, Optional, Any, Callable, TypeVar, Generic
 from dataclasses import dataclass, field
 from collections import defaultdict
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import time
 import logging
 from enum import Enum

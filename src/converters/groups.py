@@ -11,7 +11,7 @@ Handles SVG container elements with support for:
 """
 
 from typing import List, Dict, Any, Optional
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from .base import BaseConverter, ConversionContext, ConverterRegistry
 from .transforms import TransformConverter
 
@@ -24,6 +24,11 @@ class GroupHandler(BaseConverter):
     def __init__(self):
         super().__init__()
         self.transform_converter = TransformConverter()
+    
+    def can_convert(self, element: ET.Element) -> bool:
+        """Check if this converter can handle the given element"""
+        tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+        return tag_name in self.supported_elements
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG group element to DrawingML group"""
@@ -47,12 +52,10 @@ class GroupHandler(BaseConverter):
         group_transform = self.transform_converter.get_element_transform(element)
         
         # Create new context with accumulated transform
-        new_context = ConversionContext(
-            coord_system=context.coord_system,
-            svg_root=context.svg_root,
-            converter_registry=context.converter_registry
-        )
-        new_context.id_counter = context.id_counter
+        new_context = ConversionContext(context.svg_root)
+        new_context.coordinate_system = context.coordinate_system
+        new_context.converter_registry = context.converter_registry
+        new_context.shape_id_counter = context.shape_id_counter
         
         # Process all child elements
         child_elements = []
@@ -65,7 +68,7 @@ class GroupHandler(BaseConverter):
             return ""
         
         # Get group properties
-        group_id = element.get('id', f'group_{context.get_next_id()}')
+        group_id = element.get('id', f'group_{context.get_next_shape_id()}')
         
         # If group has transforms or multiple children, wrap in group
         if not group_transform.is_identity() or len(child_elements) > 1:
@@ -73,7 +76,7 @@ class GroupHandler(BaseConverter):
             
             return f"""<a:grpSp>
     <a:nvGrpSpPr>
-        <a:cNvPr id="{context.get_next_id()}" name="{group_id}"/>
+        <a:cNvPr id="{context.get_next_shape_id()}" name="{group_id}"/>
         <a:cNvGrpSpPr/>
     </a:nvGrpSpPr>
     <a:grpSpPr>
@@ -235,17 +238,19 @@ class GroupHandler(BaseConverter):
         from .base import CoordinateSystem
         
         # Parse dimensions
-        svg_width = self._parse_dimension(width, context.coord_system.svg_width)
-        svg_height = self._parse_dimension(height, context.coord_system.svg_height)
+        # Use viewbox dimensions as parent size for percentage calculations
+        parent_width = context.coordinate_system.viewbox[2] if context.coordinate_system else 100
+        parent_height = context.coordinate_system.viewbox[3] if context.coordinate_system else 100
+        
+        svg_width = self._parse_dimension(width, parent_width)
+        svg_height = self._parse_dimension(height, parent_height)
         
         # Create nested context
-        nested_coord_system = CoordinateSystem(svg_width, svg_height)
-        nested_context = ConversionContext(
-            coord_system=nested_coord_system,
-            svg_root=svg_element,
-            converter_registry=context.converter_registry
-        )
-        nested_context.id_counter = context.id_counter
+        nested_coord_system = CoordinateSystem((0, 0, svg_width, svg_height))
+        nested_context = ConversionContext(svg_element)
+        nested_context.coordinate_system = nested_coord_system
+        nested_context.converter_registry = context.converter_registry
+        nested_context.shape_id_counter = context.shape_id_counter
         
         # Process children
         children_xml = self._convert_svg_root(svg_element, nested_context)
@@ -254,14 +259,13 @@ class GroupHandler(BaseConverter):
             return ""
         
         # Wrap in group with positioning
-        x_emu = context.coord_system.svg_to_emu_x(x)
-        y_emu = context.coord_system.svg_to_emu_y(y)
+        x_emu, y_emu = context.coordinate_system.svg_to_emu(x, y)
         width_emu = context.to_emu(f"{svg_width}px", 'x')
         height_emu = context.to_emu(f"{svg_height}px", 'y')
         
         return f"""<a:grpSp>
     <a:nvGrpSpPr>
-        <a:cNvPr id="{context.get_next_id()}" name="NestedSVG"/>
+        <a:cNvPr id="{context.get_next_shape_id()}" name="NestedSVG"/>
         <a:cNvGrpSpPr/>
     </a:nvGrpSpPr>
     <a:grpSpPr>

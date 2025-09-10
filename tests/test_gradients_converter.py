@@ -640,56 +640,60 @@ class TestColorParsing:
     def setup_method(self):
         """Set up test fixtures"""
         self.converter = GradientConverter()
+        from src.colors import hsl_to_rgb
+        self.hsl_to_rgb = hsl_to_rgb
 
     def test_hsl_to_rgb_pure_red(self):
         """Test HSL to RGB conversion for pure red"""
-        r, g, b = self.converter._hsl_to_rgb(0, 1.0, 0.5)
+        r, g, b = self.hsl_to_rgb(0, 100.0, 50.0)
         assert r == 255
         assert g == 0
         assert b == 0
 
     def test_hsl_to_rgb_pure_green(self):
         """Test HSL to RGB conversion for pure green"""
-        r, g, b = self.converter._hsl_to_rgb(120, 1.0, 0.5)
+        r, g, b = self.hsl_to_rgb(120, 100.0, 50.0)
         assert r == 0
         assert g == 255
         assert b == 0
 
     def test_hsl_to_rgb_pure_blue(self):
         """Test HSL to RGB conversion for pure blue"""
-        r, g, b = self.converter._hsl_to_rgb(240, 1.0, 0.5)
+        r, g, b = self.hsl_to_rgb(240, 100.0, 50.0)
         assert r == 0
         assert g == 0
         assert b == 255
 
     def test_hsl_to_rgb_gray(self):
         """Test HSL to RGB conversion for gray (no saturation)"""
-        r, g, b = self.converter._hsl_to_rgb(0, 0.0, 0.5)
+        r, g, b = self.hsl_to_rgb(0, 0.0, 50.0)
         assert r == g == b == 127  # Should be close to 127 (50% gray)
 
     def test_hsl_to_rgb_white(self):
         """Test HSL to RGB conversion for white"""
-        r, g, b = self.converter._hsl_to_rgb(0, 0.0, 1.0)
+        r, g, b = self.hsl_to_rgb(0, 0.0, 100.0)
         assert r == g == b == 255
 
     def test_hsl_to_rgb_black(self):
         """Test HSL to RGB conversion for black"""
-        r, g, b = self.converter._hsl_to_rgb(0, 0.0, 0.0)
+        r, g, b = self.hsl_to_rgb(0, 0.0, 0.0)
         assert r == g == b == 0
 
     def test_hsl_to_rgb_pastel_colors(self):
         """Test HSL to RGB conversion for pastel colors"""
-        # Light blue (hue=200, saturation=0.5, lightness=0.8)
-        r, g, b = self.converter._hsl_to_rgb(200, 0.5, 0.8)
+        # Light blue (hue=200, saturation=50%, lightness=80%)
+        r, g, b = self.hsl_to_rgb(200, 50.0, 80.0)
         # Should be light blue-ish (high lightness, moderate saturation)
         assert r > 150 and g > 150 and b > 200  # Light blue-ish values
 
     def test_hsl_to_rgb_edge_cases(self):
         """Test HSL to RGB conversion edge cases"""
         # Test hue wrapping
-        r1, g1, b1 = self.converter._hsl_to_rgb(360, 1.0, 0.5)  # Same as 0°
-        r2, g2, b2 = self.converter._hsl_to_rgb(0, 1.0, 0.5)
+        r1, g1, b1 = self.hsl_to_rgb(360, 100.0, 50.0)  # Same as 0°
+        r2, g2, b2 = self.hsl_to_rgb(0, 100.0, 50.0)
         assert (r1, g1, b1) == (r2, g2, b2)
+
+
 
 
 class TestPatternColorExtraction:

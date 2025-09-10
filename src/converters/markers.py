@@ -27,7 +27,7 @@ import math
 from typing import List, Dict, Tuple, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
@@ -117,6 +117,11 @@ class MarkerConverter(BaseConverter):
             'square': self._create_square_path(),
             'diamond': self._create_diamond_path(),
         }
+    
+    def can_convert(self, element: ET.Element) -> bool:
+        """Check if this converter can handle the given element."""
+        tag = self.get_element_tag(element)
+        return tag in self.supported_elements
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert marker/symbol element to DrawingML."""
@@ -255,7 +260,7 @@ class MarkerConverter(BaseConverter):
         
         # Parse transform
         transform_str = use_element.get('transform', '')
-        transform_matrix = self.transform_engine.parse_transform(transform_str)
+        transform_matrix = self.transform_parser.parse_to_matrix(transform_str)
         
         # Parse position
         x = float(use_element.get('x', '0'))
@@ -522,12 +527,20 @@ class MarkerConverter(BaseConverter):
     def _is_arrow_polygon(self, content: str) -> bool:
         """Check if polygon content represents an arrow."""
         # Look for typical arrow point patterns
-        return ('points' in content and 
-                (content.count(',') >= 4 or content.count(' ') >= 8))
+        if 'points' in content:
+            # Count coordinate pairs (each pair separated by comma or space)
+            point_matches = re.findall(r'[\d.-]+[,\s]+[\d.-]+', content)
+            # Arrow typically has 3 or more points
+            return len(point_matches) >= 3
+        return False
     
     def _is_diamond_polygon(self, content: str) -> bool:
         """Check if polygon content represents a diamond."""
-        return 'points' in content and '4' in content  # 4-sided polygon
+        if 'points' in content:
+            # Count coordinate pairs for diamond (should be exactly 4)
+            point_matches = re.findall(r'[\d.-]+[,\s]+[\d.-]+', content)
+            return len(point_matches) == 4
+        return False
     
     def _create_arrow_path(self) -> str:
         """Create standard arrow path geometry."""

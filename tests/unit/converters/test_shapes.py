@@ -56,13 +56,26 @@ class TestRectangleConverter:
         converter = RectangleConverter()
         element = ET.fromstring('<rect x="10" y="20" width="100" height="50"/>')
         
+        # Create converter instance to access standardized tools
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        
+        # Use UnitConverter for EMU calculations
+        x_emu = mock_converter.unit_converter.to_emu('10px')
+        y_emu = mock_converter.unit_converter.to_emu('20px') 
+        width_emu = mock_converter.unit_converter.to_emu('100px')
+        height_emu = mock_converter.unit_converter.to_emu('50px')
+        
         # Mock context
         context = Mock(spec=ConversionContext)
         context.batch_convert_to_emu.return_value = {
-            'x': 914400,    # 10 * 91440 (approximate EMU conversion)
-            'y': 1828800,   # 20 * 91440
-            'width': 9144000,   # 100 * 91440  
-            'height': 4572000,  # 50 * 91440
+            'x': x_emu,
+            'y': y_emu,
+            'width': width_emu,
+            'height': height_emu,
             'rx': 0,
             'ry': 0
         }
@@ -76,9 +89,9 @@ class TestRectangleConverter:
         assert 'id="1001"' in result
         assert 'name="Rectangle 1001"' in result
         
-        # Check coordinates
-        assert '<a:off x="914400" y="1828800"/>' in result
-        assert '<a:ext cx="9144000" cy="4572000"/>' in result
+        # Check coordinates using tool-calculated values
+        assert f'<a:off x="{x_emu}" y="{y_emu}"/>' in result
+        assert f'<a:ext cx="{width_emu}" cy="{height_emu}"/>' in result
         
         # Check shape preset (regular rectangle)
         assert '<a:prstGeom prst="rect">' in result
@@ -113,9 +126,17 @@ class TestRectangleConverter:
                   fill="red" stroke="blue" stroke-width="2" opacity="0.8"/>
         ''')
         
+        # Use UnitConverter for EMU calculation  
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        size_emu = mock_converter.unit_converter.to_emu('100px')
+        
         context = Mock(spec=ConversionContext)
         context.batch_convert_to_emu.return_value = {
-            'x': 0, 'y': 0, 'width': 9144000, 'height': 9144000, 'rx': 0, 'ry': 0
+            'x': 0, 'y': 0, 'width': size_emu, 'height': size_emu, 'rx': 0, 'ry': 0
         }
         context.get_next_shape_id.return_value = 1003
         
@@ -138,9 +159,20 @@ class TestRectangleConverter:
         converter = RectangleConverter()
         element = ET.fromstring('<rect x="0" y="0" width="100" height="50" rx="10" ry="5"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        width_emu = mock_converter.unit_converter.to_emu('100px')
+        height_emu = mock_converter.unit_converter.to_emu('50px')
+        rx_emu = mock_converter.unit_converter.to_emu('10px')
+        ry_emu = mock_converter.unit_converter.to_emu('5px')
+        
         context = Mock(spec=ConversionContext)
         context.batch_convert_to_emu.return_value = {
-            'x': 0, 'y': 0, 'width': 9144000, 'height': 4572000, 'rx': 914400, 'ry': 457200
+            'x': 0, 'y': 0, 'width': width_emu, 'height': height_emu, 'rx': rx_emu, 'ry': ry_emu
         }
         context.get_next_shape_id.return_value = 1004
         
@@ -181,11 +213,20 @@ class TestCircleConverter:
         converter = CircleConverter()
         element = ET.fromstring('<circle cx="50" cy="50" r="25"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        center_offset_emu = mock_converter.unit_converter.to_emu('25px')
+        diameter_emu = mock_converter.unit_converter.to_emu('50px')
+        
         # Mock context and coordinate system
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
-        coord_system.svg_to_emu.return_value = (2286000, 2286000)  # (25, 25) in EMU
-        coord_system.svg_length_to_emu.return_value = 4572000  # 50 diameter in EMU
+        coord_system.svg_to_emu.return_value = (center_offset_emu, center_offset_emu)
+        coord_system.svg_length_to_emu.return_value = diameter_emu
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 2001
         
@@ -201,8 +242,8 @@ class TestCircleConverter:
         assert 'name="Circle 2001"' in result
         
         # Check coordinates (should be bounding box: cx-r, cy-r)
-        assert '<a:off x="2286000" y="2286000"/>' in result
-        assert '<a:ext cx="4572000" cy="4572000"/>' in result  # diameter x diameter
+        assert f'<a:off x="{center_offset_emu}" y="{center_offset_emu}"/>' in result
+        assert f'<a:ext cx="{diameter_emu}" cy="{diameter_emu}"/>' in result  # diameter x diameter
         
         # Check shape preset (ellipse for circle)
         assert '<a:prstGeom prst="ellipse">' in result
@@ -259,11 +300,22 @@ class TestEllipseConverter:
         converter = EllipseConverter()
         element = ET.fromstring('<ellipse cx="100" cy="50" rx="60" ry="30"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        x_offset_emu = mock_converter.unit_converter.to_emu('40px')  # cx-rx = 100-60 = 40
+        y_offset_emu = mock_converter.unit_converter.to_emu('20px')  # cy-ry = 50-30 = 20
+        width_emu = mock_converter.unit_converter.to_emu('120px')    # 2*rx = 2*60 = 120
+        height_emu = mock_converter.unit_converter.to_emu('60px')    # 2*ry = 2*30 = 60
+        
         # Mock context and coordinate system
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
-        coord_system.svg_to_emu.return_value = (3657600, 1828800)  # (40, 20) in EMU
-        coord_system.svg_length_to_emu.side_effect = [10972800, 5486400]  # width=120, height=60 in EMU
+        coord_system.svg_to_emu.return_value = (x_offset_emu, y_offset_emu)
+        coord_system.svg_length_to_emu.side_effect = [width_emu, height_emu]
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 3001
         
@@ -278,8 +330,8 @@ class TestEllipseConverter:
         assert 'name="Ellipse 3001"' in result
         
         # Check coordinates (should be bounding box: cx-rx, cy-ry)
-        assert '<a:off x="3657600" y="1828800"/>' in result
-        assert '<a:ext cx="10972800" cy="5486400"/>' in result  # width x height
+        assert f'<a:off x="{x_offset_emu}" y="{y_offset_emu}"/>' in result
+        assert f'<a:ext cx="{width_emu}" cy="{height_emu}"/>' in result  # width x height
         
         # Check shape preset
         assert '<a:prstGeom prst="ellipse">' in result
@@ -367,11 +419,19 @@ class TestPolygonConverter:
         converter = PolygonConverter()
         element = ET.fromstring('<polygon points="0,0 100,0 50,100"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        size_emu = mock_converter.unit_converter.to_emu('100px')
+        
         # Mock context
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
         coord_system.svg_to_emu.return_value = (0, 0)
-        coord_system.svg_length_to_emu.side_effect = [9144000, 9144000]  # width=100, height=100
+        coord_system.svg_length_to_emu.side_effect = [size_emu, size_emu]
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 4001
         
@@ -397,10 +457,19 @@ class TestPolygonConverter:
         converter = PolygonConverter()
         element = ET.fromstring('<polyline points="0,0 50,50 100,0"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        width_emu = mock_converter.unit_converter.to_emu('100px')
+        height_emu = mock_converter.unit_converter.to_emu('50px')
+        
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
         coord_system.svg_to_emu.return_value = (0, 0)
-        coord_system.svg_length_to_emu.side_effect = [9144000, 4572000]
+        coord_system.svg_length_to_emu.side_effect = [width_emu, height_emu]
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 4002
         
@@ -471,11 +540,20 @@ class TestLineConverter:
         converter = LineConverter()
         element = ET.fromstring('<line x1="0" y1="0" x2="100" y2="50"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        width_emu = mock_converter.unit_converter.to_emu('100px')
+        height_emu = mock_converter.unit_converter.to_emu('50px')
+        
         # Mock context
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
         coord_system.svg_to_emu.return_value = (0, 0)
-        coord_system.svg_length_to_emu.side_effect = [9144000, 4572000]  # width=100, height=50
+        coord_system.svg_length_to_emu.side_effect = [width_emu, height_emu]
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 5001
         
@@ -491,7 +569,7 @@ class TestLineConverter:
         
         # Check coordinates
         assert '<a:off x="0" y="0"/>' in result
-        assert '<a:ext cx="9144000" cy="4572000"/>' in result
+        assert f'<a:ext cx="{width_emu}" cy="{height_emu}"/>' in result
         
         # Check custom geometry with path
         assert '<a:custGeom>' in result
@@ -507,9 +585,17 @@ class TestLineConverter:
         converter = LineConverter()
         element = ET.fromstring('<line x1="50" y1="0" x2="50" y2="100"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        x_emu = mock_converter.unit_converter.to_emu('50px')
+        
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
-        coord_system.svg_to_emu.return_value = (4572000, 0)  # x=50
+        coord_system.svg_to_emu.return_value = (x_emu, 0)
         coord_system.svg_length_to_emu.side_effect = [1, 1]  # Both width and height become 1 (min values)
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 5002
@@ -526,10 +612,19 @@ class TestLineConverter:
         converter = LineConverter()
         element = ET.fromstring('<line x1="0" y1="50" x2="100" y2="50"/>')
         
+        # Use UnitConverter for EMU calculations
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        y_emu = mock_converter.unit_converter.to_emu('50px')
+        width_emu = mock_converter.unit_converter.to_emu('100px')
+        
         context = Mock(spec=ConversionContext)
         coord_system = Mock()
-        coord_system.svg_to_emu.return_value = (0, 4572000)  # y=50
-        coord_system.svg_length_to_emu.side_effect = [9144000, 1]  # width=100, height=0->1
+        coord_system.svg_to_emu.return_value = (0, y_emu)
+        coord_system.svg_length_to_emu.side_effect = [width_emu, 1]  # width=100, height=0->1
         context.coordinate_system = coord_system
         context.get_next_shape_id.return_value = 5003
         
@@ -538,7 +633,7 @@ class TestLineConverter:
         result = converter.convert(element, context)
         
         # Should handle zero height by using minimum of 1
-        assert '<a:ext cx="9144000" cy="1"/>' in result
+        assert f'<a:ext cx="{width_emu}" cy="1"/>' in result
 
 
 class TestShapeConverterIntegration:

@@ -266,8 +266,9 @@ class ConversionService:
                 coord_system = CoordinateSystem((0, 0, width, height))
             
             # Step 4: Convert SVG using modular converters
-            context = ConversionContext()
+            context = ConversionContext(root)
             context.coordinate_system = coord_system
+            context.converter_registry = registry
             
             logger.info("Converting SVG using modular converter system")
             drawingml_elements = []

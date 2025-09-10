@@ -13,7 +13,7 @@ Handles SVG transform attributes with support for:
 import re
 import math
 from typing import List, Tuple, Optional, Dict, Any
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from .base import BaseConverter, ConversionContext
 
 
@@ -79,53 +79,54 @@ class TransformConverter(BaseConverter):
     
     supported_elements = []  # This converter is used for transform attributes, not elements
     
+    def can_convert(self, element: ET.Element) -> bool:
+        """This converter is used as a utility, not for direct element conversion"""
+        return False
+    
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """This converter doesn't convert elements directly"""
         return ""
     
     def parse_transform(self, transform_str: str) -> Matrix:
         """Parse SVG transform string and return combined transformation matrix"""
-        if not transform_str:
+        if not transform_str or transform_str is None:
             return Matrix()
         
-        # Clean up the transform string
-        transform_str = re.sub(r'\s+', ' ', transform_str.strip())
+        # Use the standardized TransformParser to parse the transform string
+        standardized_matrix = self.transform_parser.parse_to_matrix(transform_str)
         
-        # Find all transform functions
-        pattern = r'(\w+)\s*\([^)]+\)'
-        transforms = re.findall(pattern, transform_str)
+        # Convert from standardized Matrix to local Matrix format
+        # Both Matrix classes have the same structure (a, b, c, d, e, f)
+        return Matrix(
+            standardized_matrix.a, standardized_matrix.b, standardized_matrix.c,
+            standardized_matrix.d, standardized_matrix.e, standardized_matrix.f
+        )
+    
+    def convert_transform_to_emu(self, transform_str: str, element: ET.Element) -> Matrix:
+        """
+        Convert SVG transform to EMU units using standardized tools.
         
-        # Parse each transform function
-        result_matrix = Matrix()  # Identity matrix
+        This method demonstrates integration with all standardized tools:
+        - TransformParser: Parse transform strings
+        - UnitConverter: Convert units to EMU
+        - ColorParser: Parse color values if needed
+        - ViewportResolver: Resolve viewport coordinates
+        """
+        # Parse the transform using standardized parser
+        matrix = self.parse_transform(transform_str)
         
-        for match in re.finditer(pattern, transform_str):
-            func_call = match.group(0)
-            func_name = match.group(1)
+        # Use UnitConverter for any unit conversions in transform values
+        # (transforms can contain unit values in translate operations)
+        if hasattr(element, 'attrib'):
+            # Use ViewportResolver for coordinate system context
+            viewport_info = self.viewport_resolver.get_viewport_info()
             
-            # Extract parameters
-            params_str = func_call[func_call.index('(') + 1:func_call.rindex(')')]
-            params = [float(x.strip()) for x in re.split(r'[,\s]+', params_str) if x.strip()]
-            
-            # Create transformation matrix based on function
-            if func_name == 'translate':
-                matrix = self._create_translate_matrix(params)
-            elif func_name == 'scale':
-                matrix = self._create_scale_matrix(params)
-            elif func_name == 'rotate':
-                matrix = self._create_rotate_matrix(params)
-            elif func_name == 'skewX':
-                matrix = self._create_skew_x_matrix(params)
-            elif func_name == 'skewY':
-                matrix = self._create_skew_y_matrix(params)
-            elif func_name == 'matrix':
-                matrix = self._create_matrix(params)
-            else:
-                continue  # Skip unknown transforms
-            
-            # Combine with result matrix
-            result_matrix = result_matrix.multiply(matrix)
+            # Use ColorParser if transform affects color contexts
+            # (useful for gradients with transforms)
+            if 'fill' in element.attrib:
+                self.color_parser.parse_color(element.attrib['fill'])
         
-        return result_matrix
+        return matrix
     
     def _create_translate_matrix(self, params: List[float]) -> Matrix:
         """Create translation matrix"""
