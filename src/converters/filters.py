@@ -27,7 +27,7 @@ import math
 from typing import List, Dict, Tuple, Optional, Any, Union
 from dataclasses import dataclass
 from enum import Enum
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
@@ -176,6 +176,15 @@ class FilterConverter(BaseConverter):
         
         # Complexity thresholds for rasterization decisions
         self.rasterization_threshold = 3.0  # Complexity score above which to rasterize
+    
+    def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:
+        """Check if element can be converted by this converter."""
+        if element.tag.endswith(('filter', 'defs')):
+            return True
+        
+        # Check if element has filter applied
+        filter_attr = element.get('filter', '')
+        return filter_attr.startswith('url(#') and filter_attr.endswith(')')
         
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert filter element or process filtered elements."""

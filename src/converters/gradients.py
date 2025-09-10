@@ -10,7 +10,7 @@ Handles SVG gradient elements with support for:
 """
 
 from typing import List, Dict, Any, Optional, Tuple
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import math
 from .base import BaseConverter, ConversionContext
 
@@ -24,7 +24,7 @@ class GradientConverter(BaseConverter):
         super().__init__()
         self.gradients = {}  # Cache for gradient definitions
     
-    def can_convert(self, element: ET.Element) -> bool:
+    def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:
         """Check if this converter can handle the given element."""
         tag = self.get_element_tag(element)
         return tag in self.supported_elements
@@ -44,6 +44,9 @@ class GradientConverter(BaseConverter):
         if not url.startswith('url(#') or not url.endswith(')'):
             return ""
         
+        if context.svg_root is None:
+            return ""
+        
         gradient_id = url[5:-1]  # Remove 'url(#' and ')'
         
         # Find gradient element in SVG
@@ -59,13 +62,20 @@ class GradientConverter(BaseConverter):
         
         return ""
     
+    def _safe_float_parse(self, value: str, default: float = 0.0) -> float:
+        """Safely parse a string to float, returning default on error"""
+        try:
+            return float(value.rstrip('%'))
+        except (ValueError, AttributeError):
+            return default
+
     def _convert_linear_gradient(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG linear gradient to DrawingML linear gradient"""
-        # Get gradient coordinates
-        x1 = float(element.get('x1', '0%').rstrip('%'))
-        y1 = float(element.get('y1', '0%').rstrip('%'))
-        x2 = float(element.get('x2', '100%').rstrip('%'))
-        y2 = float(element.get('y2', '0%').rstrip('%'))
+        # Get gradient coordinates with safe parsing
+        x1 = self._safe_float_parse(element.get('x1', '0%'), 0.0)
+        y1 = self._safe_float_parse(element.get('y1', '0%'), 0.0)
+        x2 = self._safe_float_parse(element.get('x2', '100%'), 100.0)
+        y2 = self._safe_float_parse(element.get('y2', '0%'), 0.0)
         
         # Convert percentage to actual values
         if element.get('x1', '').endswith('%'):
@@ -110,12 +120,12 @@ class GradientConverter(BaseConverter):
     
     def _convert_radial_gradient(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG radial gradient to DrawingML radial gradient"""
-        # Get gradient properties
-        cx = float(element.get('cx', '50%').rstrip('%'))
-        cy = float(element.get('cy', '50%').rstrip('%'))
-        r = float(element.get('r', '50%').rstrip('%'))
-        fx = float(element.get('fx', str(cx)).rstrip('%'))
-        fy = float(element.get('fy', str(cy)).rstrip('%'))
+        # Get gradient properties with safe parsing
+        cx = self._safe_float_parse(element.get('cx', '50%'), 50.0)
+        cy = self._safe_float_parse(element.get('cy', '50%'), 50.0)
+        r = self._safe_float_parse(element.get('r', '50%'), 50.0)
+        fx = self._safe_float_parse(element.get('fx', element.get('cx', '50%')), cx)
+        fy = self._safe_float_parse(element.get('fy', element.get('cy', '50%')), cy)
         
         # Convert percentage to actual values
         if element.get('cx', '').endswith('%'):
@@ -173,16 +183,22 @@ class GradientConverter(BaseConverter):
         stops = []
         
         for stop in gradient_element.findall('.//stop'):
-            # Get stop position (offset)
+            # Get stop position (offset) with safe parsing
             offset = stop.get('offset', '0')
-            if offset.endswith('%'):
-                position = float(offset[:-1]) / 100
-            else:
-                position = float(offset)
+            try:
+                if offset.endswith('%'):
+                    position = float(offset[:-1]) / 100
+                else:
+                    position = float(offset)
+            except (ValueError, TypeError):
+                position = 0.0  # Default to start if invalid
             
             # Get stop color
             stop_color = stop.get('stop-color', '#000000')
-            stop_opacity = float(stop.get('stop-opacity', '1'))
+            try:
+                stop_opacity = float(stop.get('stop-opacity', '1'))
+            except (ValueError, TypeError):
+                stop_opacity = 1.0
             
             # Check style attribute for color/opacity
             style = stop.get('style', '')
@@ -196,7 +212,10 @@ class GradientConverter(BaseConverter):
                 if 'stop-color' in style_props:
                     stop_color = style_props['stop-color']
                 if 'stop-opacity' in style_props:
-                    stop_opacity = float(style_props['stop-opacity'])
+                    try:
+                        stop_opacity = float(style_props['stop-opacity'])
+                    except (ValueError, TypeError):
+                        stop_opacity = 1.0
             
             # Parse color
             color_hex = self.parse_color(stop_color)

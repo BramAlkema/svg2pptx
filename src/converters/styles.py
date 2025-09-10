@@ -11,10 +11,11 @@ Handles SVG styling with support for:
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import re
-from .base import BaseConverter, ConversionContext
+from .base import ConversionContext
 from .gradients import GradientConverter
+from ..colors import ColorParser
 
 
 class StyleProcessor:
@@ -22,6 +23,7 @@ class StyleProcessor:
     
     def __init__(self):
         self.gradient_converter = GradientConverter()
+        self.color_parser = ColorParser()
         self.css_rules = {}  # Store CSS rules from <style> elements
     
     def process_element_styles(self, element: ET.Element, context: ConversionContext) -> Dict[str, Any]:
@@ -185,13 +187,13 @@ class StyleProcessor:
                 return gradient_fill
         
         # Solid color fill
-        color_hex = self.parse_color(fill_value)
-        if color_hex:
+        color_info = self.color_parser.parse(fill_value)
+        if color_info:
             if fill_opacity < 1.0:
                 alpha = int(fill_opacity * 100000)
-                return f'<a:solidFill><a:srgbClr val="{color_hex}" alpha="{alpha}"/></a:solidFill>'
+                return f'<a:solidFill><a:srgbClr val="{color_info.hex}" alpha="{alpha}"/></a:solidFill>'
             else:
-                return f'<a:solidFill><a:srgbClr val="{color_hex}"/></a:solidFill>'
+                return f'<a:solidFill><a:srgbClr val="{color_info.hex}"/></a:solidFill>'
         
         return None
     
@@ -219,13 +221,13 @@ class StyleProcessor:
                 stroke_fill = gradient_fill
         else:
             # Solid color stroke
-            color_hex = self.parse_color(stroke_value)
-            if color_hex:
+            color_info = self.color_parser.parse(stroke_value)
+            if color_info:
                 if stroke_opacity < 1.0:
                     alpha = int(stroke_opacity * 100000)
-                    stroke_fill = f'<a:solidFill><a:srgbClr val="{color_hex}" alpha="{alpha}"/></a:solidFill>'
+                    stroke_fill = f'<a:solidFill><a:srgbClr val="{color_info.hex}" alpha="{alpha}"/></a:solidFill>'
                 else:
-                    stroke_fill = f'<a:solidFill><a:srgbClr val="{color_hex}"/></a:solidFill>'
+                    stroke_fill = f'<a:solidFill><a:srgbClr val="{color_info.hex}"/></a:solidFill>'
         
         # Line caps
         cap_map = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
