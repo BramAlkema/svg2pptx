@@ -5,7 +5,7 @@ Shape converters for SVG to DrawingML conversion.
 Handles basic shapes: rectangle, circle, ellipse, polygon, polyline.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from typing import Dict, List, Tuple, Optional
 import math
 import re
@@ -296,8 +296,8 @@ class PolygonConverter(BaseConverter):
         width = max_x - min_x
         height = max_y - min_y
         
-        # Convert bounding box to EMUs
-        emu_x, emu_y = context.coordinate_system.svg_to_emu(min_x, min_y)
+        # Convert bounding box to EMUs using viewport-aware mapping if available  
+        emu_x, emu_y = self._convert_svg_to_drawingml_coords(min_x, min_y, context)
         emu_width = context.coordinate_system.svg_length_to_emu(width, 'x')
         emu_height = context.coordinate_system.svg_length_to_emu(height, 'y')
         
@@ -351,18 +351,30 @@ class PolygonConverter(BaseConverter):
         </p:sp>'''
     
     def _parse_points(self, points_str: str) -> List[Tuple[float, float]]:
-        """Parse SVG points string into list of coordinate tuples."""
+        """Parse SVG points string into list of coordinate tuples with validation."""
         points = []
-        # Replace commas with spaces and split
+        # Replace commas with spaces and split, handling multiple separators
         coords = re.split(r'[\s,]+', points_str.strip())
+        
+        # Filter empty strings
+        coords = [coord for coord in coords if coord]
         
         # Group into pairs
         for i in range(0, len(coords) - 1, 2):
             try:
                 x = float(coords[i])
                 y = float(coords[i + 1])
-                points.append((x, y))
+                
+                # Validate coordinates - filter out NaN and Infinity for robustness
+                import math
+                if math.isfinite(x) and math.isfinite(y):
+                    points.append((x, y))
+                else:
+                    # Skip invalid coordinates but continue parsing
+                    continue
+                    
             except (ValueError, IndexError):
+                # Skip invalid coordinates and continue
                 continue
         
         return points
@@ -376,6 +388,7 @@ class PolygonConverter(BaseConverter):
             return ''
         
         # Scale points to path coordinate space (21600x21600 is standard)
+        # Handle zero dimensions gracefully
         scale_x = 21600 / width if width > 0 else 1
         scale_y = 21600 / height if height > 0 else 1
         
@@ -407,6 +420,15 @@ class PolygonConverter(BaseConverter):
                         <a:path w="21600" h="21600">
                             {''.join(path_commands)}
                         </a:path>'''
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""
+        # Check if ViewportResolver mapping is available in context
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            return context.viewport_mapping.svg_to_emu(x, y)
+        
+        # Fallback to standard coordinate system conversion
+        return context.coordinate_system.svg_to_emu(x, y)
 
 
 class LineConverter(BaseConverter):
@@ -421,11 +443,17 @@ class LineConverter(BaseConverter):
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG line to DrawingML."""
-        # Extract attributes
-        x1 = self.parse_length(element.get('x1', '0'))
-        y1 = self.parse_length(element.get('y1', '0'))
-        x2 = self.parse_length(element.get('x2', '0'))
-        y2 = self.parse_length(element.get('y2', '0'))
+        # Extract attributes as strings for unit parsing
+        x1_str = element.get('x1', '0')
+        y1_str = element.get('y1', '0')
+        x2_str = element.get('x2', '0')
+        y2_str = element.get('y2', '0')
+        
+        # Parse lengths with unit handling
+        x1 = self.parse_length(x1_str)
+        y1 = self.parse_length(y1_str)
+        x2 = self.parse_length(x2_str)
+        y2 = self.parse_length(y2_str)
         
         # Calculate bounding box
         min_x = min(x1, x2)
@@ -437,10 +465,23 @@ class LineConverter(BaseConverter):
         if width == 0 and height == 0:
             return '<!-- Zero-length line -->'
         
-        # Convert to EMUs
-        emu_x, emu_y = context.coordinate_system.svg_to_emu(min_x, min_y)
-        emu_width = context.coordinate_system.svg_length_to_emu(width, 'x') if width > 0 else 1
-        emu_height = context.coordinate_system.svg_length_to_emu(height, 'y') if height > 0 else 1
+        # Convert coordinates using viewport-aware mapping if available
+        emu_x, emu_y = self._convert_svg_to_drawingml_coords(min_x, min_y, context)
+        
+        # Convert dimensions preserving actual values
+        # Handle width
+        if width > 0:
+            emu_width = context.coordinate_system.svg_length_to_emu(width, 'x')
+        else:
+            # For zero-width lines (vertical), use minimal width
+            emu_width = 1
+            
+        # Handle height  
+        if height > 0:
+            emu_height = context.coordinate_system.svg_length_to_emu(height, 'y')
+        else:
+            # For zero-height lines (horizontal), use minimal height
+            emu_height = 1
         
         # Get style attributes (lines typically only have stroke)
         stroke = self.get_attribute_with_style(element, 'stroke', 'black')
@@ -501,3 +542,12 @@ class LineConverter(BaseConverter):
                 {self.generate_stroke(stroke, stroke_width, stroke_opacity, context)}
             </p:spPr>
         </p:cxnSp>'''
+    
+    def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
+        """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""
+        # Check if ViewportResolver mapping is available in context
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            return context.viewport_mapping.svg_to_emu(x, y)
+        
+        # Fallback to standard coordinate system conversion
+        return context.coordinate_system.svg_to_emu(x, y)
