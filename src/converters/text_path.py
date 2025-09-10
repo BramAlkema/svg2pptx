@@ -330,10 +330,6 @@ class TextPathConverter(BaseConverter):
     
     def __init__(self):
         super().__init__()
-        self.color_parser = ColorParser()
-        self.unit_converter = UnitConverter()
-        self.transform_engine = TransformParser()
-        self.viewport_handler = ViewportResolver()
         self.path_sampler = PathSampler()
         self.path_definitions: Dict[str, str] = {}  # Cache path definitions
         
@@ -609,13 +605,13 @@ class TextPathConverter(BaseConverter):
                                 textpath_info: TextPathInfo, shape_id: int) -> str:
         """Generate DrawingML for single character."""
         
-        # Convert position to EMU
-        x_emu = int(placement.x * 9525)
-        y_emu = int(placement.y * 9525)
+        # Convert position to EMU using proper unit converter
+        x_emu = self.to_emu(f"{placement.x}px")
+        y_emu = self.to_emu(f"{placement.y}px")
         
         # Character size in EMU
-        char_width_emu = int(placement.advance * 9525)
-        char_height_emu = int(textpath_info.font_size * 9525)
+        char_width_emu = self.to_emu(f"{placement.advance}px")
+        char_height_emu = self.to_emu(f"{textpath_info.font_size}px")
         
         # Generate color
         color_xml = ""

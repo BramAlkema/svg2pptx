@@ -109,10 +109,6 @@ class MarkerConverter(BaseConverter):
         super().__init__()
         self.markers: Dict[str, MarkerDefinition] = {}
         self.symbols: Dict[str, SymbolDefinition] = {}
-        self.unit_converter = UnitConverter()
-        self.transform_engine = TransformParser()
-        self.color_parser = ColorParser()
-        self.viewport_handler = ViewportResolver()
         
         # Common arrowhead geometries for PowerPoint compatibility
         self.standard_arrows = {
@@ -635,8 +631,8 @@ class MarkerConverter(BaseConverter):
         elements = []
         
         if abs(decomp['translateX']) > 1e-6 or abs(decomp['translateY']) > 1e-6:
-            tx_emu = int(decomp['translateX'] * 9525)
-            ty_emu = int(decomp['translateY'] * 9525)
+            tx_emu = self.to_emu(f"{decomp['translateX']}px")
+            ty_emu = self.to_emu(f"{decomp['translateY']}px")
             elements.append(f'<a:off x="{tx_emu}" y="{ty_emu}"/>')
         
         if abs(decomp['rotation']) > 1e-6:

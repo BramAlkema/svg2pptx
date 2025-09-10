@@ -73,28 +73,6 @@ class CoordinateSystem:
         scale = self.scale_x if axis == 'x' else self.scale_y
         return int(length * scale)
     
-    def apply_transform(self, transform: str, x: float, y: float) -> Tuple[float, float]:
-        """Apply SVG transform to coordinates."""
-        # Parse transform string (simplified - full implementation needed)
-        if 'translate' in transform:
-            match = re.search(r'translate\(([^,]+),?\s*([^)]*)\)', transform)
-            if match:
-                tx = float(match.group(1))
-                ty = float(match.group(2)) if match.group(2) else 0
-                x += tx
-                y += ty
-        
-        if 'scale' in transform:
-            match = re.search(r'scale\(([^,]+),?\s*([^)]*)\)', transform)
-            if match:
-                sx = float(match.group(1))
-                sy = float(match.group(2)) if match.group(2) else sx
-                x *= sx
-                y *= sy
-        
-        # TODO: Add rotate, skew, matrix transforms
-        
-        return x, y
 
 
 class ConversionContext:
@@ -141,7 +119,7 @@ class ConversionContext:
     
     def to_emu(self, value, axis: str = 'x') -> int:
         """Convert SVG length to EMUs using the context's unit converter."""
-        return self.unit_converter.convert_to_emu(value, self.viewport_context, axis)
+        return self.unit_converter.to_emu(value, self.viewport_context, axis)
     
     def to_pixels(self, value, axis: str = 'x') -> float:
         """Convert SVG length to pixels using the context's unit converter."""
@@ -166,6 +144,10 @@ class BaseConverter(ABC):
     
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.unit_converter = UnitConverter()
+        self.transform_parser = TransformParser()
+        self.color_parser = ColorParser()
+        self.viewport_resolver = ViewportResolver()
         
     @abstractmethod
     def can_convert(self, element: ET.Element) -> bool:
@@ -234,92 +216,51 @@ class BaseConverter(ABC):
         
         return default
     
+    def apply_transform(self, transform: str, x: float, y: float, 
+                       viewport_context: Optional = None) -> Tuple[float, float]:
+        """Apply SVG transform to coordinates using the universal TransformParser."""
+        if not transform:
+            return x, y
+        
+        # Parse transform to matrix using the sophisticated TransformParser
+        matrix = self.transform_parser.parse_to_matrix(transform, viewport_context)
+        
+        # Apply matrix transformation to point
+        return matrix.transform_point(x, y)
+    
+    def get_element_transform_matrix(self, element: ET.Element, viewport_context: Optional = None):
+        """Get the transformation matrix for an SVG element."""
+        transform_attr = element.get('transform', '')
+        if not transform_attr:
+            return self.transform_parser.parse_to_matrix('', viewport_context)  # Identity matrix
+        
+        return self.transform_parser.parse_to_matrix(transform_attr, viewport_context)
+    
     def parse_color(self, color: str) -> str:
-        """Parse SVG color to DrawingML hex format."""
+        """Parse SVG color to DrawingML hex format using ColorParser."""
         if not color or color == 'none':
             return None
             
-        if color.startswith('#'):
-            # Hex color
-            hex_color = color[1:].upper()
-            if len(hex_color) == 3:
-                # Convert 3-digit to 6-digit hex
-                hex_color = ''.join([c*2 for c in hex_color])
-            return hex_color
-            
-        elif color.startswith('rgb(') or color.startswith('rgba('):
-            # RGB/RGBA color
-            match = re.match(r'rgba?\(([^)]+)\)', color)
-            if match:
-                parts = [p.strip() for p in match.group(1).split(',')]
-                if len(parts) >= 3:
-                    r = int(float(parts[0]))
-                    g = int(float(parts[1]))
-                    b = int(float(parts[2]))
-                    return f'{r:02X}{g:02X}{b:02X}'
-        
-        elif color.startswith('url('):
-            # Reference to gradient or pattern
+        # Handle gradient/pattern references directly
+        if color.startswith('url('):
             return color
+        
+        # Use the sophisticated ColorParser for all other colors
+        color_info = self.color_parser.parse(color)
+        if color_info is None:
+            return None
             
-        else:
-            # Named color
-            return self.named_color_to_hex(color)
+        # Handle transparent colors
+        if color_info.alpha == 0:
+            return None
+            
+        # Return hex format compatible with existing code
+        return f'{color_info.red:02X}{color_info.green:02X}{color_info.blue:02X}'
     
-    def named_color_to_hex(self, name: str) -> str:
-        """Convert named SVG color to hex."""
-        colors = {
-            'aliceblue': 'F0F8FF', 'antiquewhite': 'FAEBD7', 'aqua': '00FFFF',
-            'aquamarine': '7FFFD4', 'azure': 'F0FFFF', 'beige': 'F5F5DC',
-            'bisque': 'FFE4C4', 'black': '000000', 'blanchedalmond': 'FFEBCD',
-            'blue': '0000FF', 'blueviolet': '8A2BE2', 'brown': 'A52A2A',
-            'burlywood': 'DEB887', 'cadetblue': '5F9EA0', 'chartreuse': '7FFF00',
-            'chocolate': 'D2691E', 'coral': 'FF7F50', 'cornflowerblue': '6495ED',
-            'cornsilk': 'FFF8DC', 'crimson': 'DC143C', 'cyan': '00FFFF',
-            'darkblue': '00008B', 'darkcyan': '008B8B', 'darkgoldenrod': 'B8860B',
-            'darkgray': 'A9A9A9', 'darkgrey': 'A9A9A9', 'darkgreen': '006400',
-            'darkkhaki': 'BDB76B', 'darkmagenta': '8B008B', 'darkolivegreen': '556B2F',
-            'darkorange': 'FF8C00', 'darkorchid': '9932CC', 'darkred': '8B0000',
-            'darksalmon': 'E9967A', 'darkseagreen': '8FBC8F', 'darkslateblue': '483D8B',
-            'darkslategray': '2F4F4F', 'darkslategrey': '2F4F4F', 'darkturquoise': '00CED1',
-            'darkviolet': '9400D3', 'deeppink': 'FF1493', 'deepskyblue': '00BFFF',
-            'dimgray': '696969', 'dimgrey': '696969', 'dodgerblue': '1E90FF',
-            'firebrick': 'B22222', 'floralwhite': 'FFFAF0', 'forestgreen': '228B22',
-            'fuchsia': 'FF00FF', 'gainsboro': 'DCDCDC', 'ghostwhite': 'F8F8FF',
-            'gold': 'FFD700', 'goldenrod': 'DAA520', 'gray': '808080',
-            'grey': '808080', 'green': '008000', 'greenyellow': 'ADFF2F',
-            'honeydew': 'F0FFF0', 'hotpink': 'FF69B4', 'indianred': 'CD5C5C',
-            'indigo': '4B0082', 'ivory': 'FFFFF0', 'khaki': 'F0E68C',
-            'lavender': 'E6E6FA', 'lavenderblush': 'FFF0F5', 'lawngreen': '7CFC00',
-            'lemonchiffon': 'FFFACD', 'lightblue': 'ADD8E6', 'lightcoral': 'F08080',
-            'lightcyan': 'E0FFFF', 'lightgoldenrodyellow': 'FAFAD2', 'lightgray': 'D3D3D3',
-            'lightgrey': 'D3D3D3', 'lightgreen': '90EE90', 'lightpink': 'FFB6C1',
-            'lightsalmon': 'FFA07A', 'lightseagreen': '20B2AA', 'lightskyblue': '87CEFA',
-            'lightslategray': '778899', 'lightslategrey': '778899', 'lightsteelblue': 'B0C4DE',
-            'lightyellow': 'FFFFE0', 'lime': '00FF00', 'limegreen': '32CD32',
-            'linen': 'FAF0E6', 'magenta': 'FF00FF', 'maroon': '800000',
-            'mediumaquamarine': '66CDAA', 'mediumblue': '0000CD', 'mediumorchid': 'BA55D3',
-            'mediumpurple': '9370DB', 'mediumseagreen': '3CB371', 'mediumslateblue': '7B68EE',
-            'mediumspringgreen': '00FA9A', 'mediumturquoise': '48D1CC', 'mediumvioletred': 'C71585',
-            'midnightblue': '191970', 'mintcream': 'F5FFFA', 'mistyrose': 'FFE4E1',
-            'moccasin': 'FFE4B5', 'navajowhite': 'FFDEAD', 'navy': '000080',
-            'oldlace': 'FDF5E6', 'olive': '808000', 'olivedrab': '6B8E23',
-            'orange': 'FFA500', 'orangered': 'FF4500', 'orchid': 'DA70D6',
-            'palegoldenrod': 'EEE8AA', 'palegreen': '98FB98', 'paleturquoise': 'AFEEEE',
-            'palevioletred': 'DB7093', 'papayawhip': 'FFEFD5', 'peachpuff': 'FFDAB9',
-            'peru': 'CD853F', 'pink': 'FFC0CB', 'plum': 'DDA0DD',
-            'powderblue': 'B0E0E6', 'purple': '800080', 'red': 'FF0000',
-            'rosybrown': 'BC8F8F', 'royalblue': '4169E1', 'saddlebrown': '8B4513',
-            'salmon': 'FA8072', 'sandybrown': 'F4A460', 'seagreen': '2E8B57',
-            'seashell': 'FFF5EE', 'sienna': 'A0522D', 'silver': 'C0C0C0',
-            'skyblue': '87CEEB', 'slateblue': '6A5ACD', 'slategray': '708090',
-            'slategrey': '708090', 'snow': 'FFFAFA', 'springgreen': '00FF7F',
-            'steelblue': '4682B4', 'tan': 'D2B48C', 'teal': '008080',
-            'thistle': 'D8BFD8', 'tomato': 'FF6347', 'turquoise': '40E0D0',
-            'violet': 'EE82EE', 'wheat': 'F5DEB3', 'white': 'FFFFFF',
-            'whitesmoke': 'F5F5F5', 'yellow': 'FFFF00', 'yellowgreen': '9ACD32'
-        }
-        return colors.get(name.lower(), '000000')
+    
+    def to_emu(self, value: str, axis: str = 'x') -> int:
+        """Convert SVG length to EMUs using the unit converter."""
+        return self.unit_converter.to_emu(value, axis=axis)
     
     def parse_length(self, value: str, viewport_size: float = 100) -> float:
         """Parse SVG length value with units."""
@@ -408,9 +349,8 @@ class BaseConverter(ABC):
         if not color:
             return ''
             
-        # Convert stroke width to EMUs (1px = 12700 EMUs)
-        width = self.parse_length(stroke_width)
-        width_emu = int(width * 12700)
+        # Convert stroke width to EMUs using proper unit converter
+        width_emu = self.unit_converter.to_emu(f"{stroke_width}px")
         
         alpha = int(float(opacity) * 100000)
         

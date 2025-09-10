@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import re
 import math
+from .units import EMU_PER_POINT
 
 
 class SVGParser:
@@ -477,7 +478,7 @@ class DrawingMLGenerator:
         
         # Handle stroke
         if stroke and stroke != 'none':
-            width_emu = int(float(stroke_width) * 12700)  # Convert to EMUs
+            width_emu = int(float(stroke_width) * EMU_PER_POINT)  # Convert to EMUs
             if stroke.startswith('#'):
                 color = stroke[1:]
                 stroke_xml = f'''<a:ln w="{width_emu}">
@@ -500,7 +501,7 @@ class DrawingMLGenerator:
         stroke = attrs.get('stroke', 'black')
         stroke_width = attrs.get('stroke-width', '1')
         
-        width_emu = int(float(stroke_width) * 12700)
+        width_emu = int(float(stroke_width) * EMU_PER_POINT)
         color = stroke[1:] if stroke.startswith('#') else self._color_name_to_hex(stroke)
         
         return f'''<a:ln w="{width_emu}">

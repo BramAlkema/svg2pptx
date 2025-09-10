@@ -165,10 +165,6 @@ class FilterConverter(BaseConverter):
     def __init__(self):
         super().__init__()
         self.filters: Dict[str, FilterDefinition] = {}
-        self.color_parser = ColorParser()
-        self.unit_converter = UnitConverter()
-        self.transform_engine = TransformParser()
-        self.viewport_handler = ViewportResolver()
         
         # PowerPoint effect mapping
         self.powerpoint_effects = {
@@ -514,15 +510,21 @@ class FilterConverter(BaseConverter):
     
     def _generate_blur_effect(self, params: Dict[str, Any]) -> str:
         """Generate PowerPoint blur effect."""
-        radius = int(params.get('radius', 3) * 12700)  # Convert to EMU
+        radius_value = params.get('radius', 3)
+        radius = self.unit_converter.to_emu(f"{radius_value}px")
         
         return f'<a:blur rad="{radius}"/>'
     
     def _generate_shadow_effect(self, params: Dict[str, Any]) -> str:
         """Generate PowerPoint shadow effect."""
-        dx = int(params.get('dx', 2) * 12700)
-        dy = int(params.get('dy', 2) * 12700)
-        blur_radius = int(params.get('blur', 3) * 12700)
+        dx_value = params.get('dx', 2)
+        dy_value = params.get('dy', 2)
+        blur_value = params.get('blur', 3)
+        
+        # Convert using UnitConverter (assuming px units for SVG filter values)
+        dx = self.unit_converter.to_emu(f"{dx_value}px")
+        dy = self.unit_converter.to_emu(f"{dy_value}px")
+        blur_radius = self.unit_converter.to_emu(f"{blur_value}px")
         
         color = params.get('color')
         if color:
@@ -530,13 +532,18 @@ class FilterConverter(BaseConverter):
         else:
             color_xml = '<a:srgbClr val="000000"/>'
         
-        return f'''<a:outerShdw blurRad="{blur_radius}" dist="{int(math.sqrt(dx*dx + dy*dy))}" dir="{int(math.degrees(math.atan2(dy, dx)) * 60000)}">
+        # Convert Cartesian (dx, dy) to polar coordinates for PPTX
+        distance = int(math.sqrt(dx*dx + dy*dy))
+        direction = int(math.degrees(math.atan2(dy, dx)) * 60000)
+        
+        return f'''<a:outerShdw blurRad="{blur_radius}" dist="{distance}" dir="{direction}">
             {color_xml}
         </a:outerShdw>'''
     
     def _generate_glow_effect(self, params: Dict[str, Any]) -> str:
         """Generate PowerPoint glow effect."""
-        blur_radius = int(params.get('blur', 5) * 12700)
+        blur_value = params.get('blur', 5)
+        blur_radius = self.unit_converter.to_emu(f"{blur_value}px")
         
         color = params.get('color')
         if color:

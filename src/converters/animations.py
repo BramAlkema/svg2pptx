@@ -229,10 +229,6 @@ class AnimationConverter(BaseConverter):
     def __init__(self):
         super().__init__()
         self.animations: List[AnimationDefinition] = []
-        self.color_parser = ColorParser()
-        self.transform_engine = TransformParser()
-        self.unit_converter = UnitConverter()
-        self.viewport_handler = ViewportResolver()
         
         # Animation processing options
         self.max_keyframes = 30  # Maximum keyframes to extract

@@ -87,6 +87,11 @@ class TextConverter(BaseConverter):
         x = float(element.get('x', '0'))
         y = float(element.get('y', '0'))
         
+        # Apply transform to coordinates
+        transform_attr = element.get('transform', '')
+        if transform_attr:
+            x, y = self.apply_transform(transform_attr, x, y, context.viewport_context)
+        
         # Convert coordinates to EMU
         x_emu, y_emu = context.coordinate_system.svg_to_emu(x, y)
         
@@ -109,10 +114,11 @@ class TextConverter(BaseConverter):
         text_height = font_size * 1.2  # Line height approximation
         
         # Adjust position based on text anchor
+        text_width_emu = self.to_emu(f"{text_width}px")
         if text_anchor == 'ctr':
-            x_emu -= int(text_width * 12700 / 2)  # Convert to EMU directly
+            x_emu -= text_width_emu // 2
         elif text_anchor == 'r':
-            x_emu -= int(text_width * 12700)  # Convert to EMU directly
+            x_emu -= text_width_emu
         
         # Create text shape
         return f"""<a:sp>
@@ -123,7 +129,7 @@ class TextConverter(BaseConverter):
     <a:spPr>
         <a:xfrm>
             <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{int(text_width * 12700)}" cy="{int(text_height * 12700)}"/>
+            <a:ext cx="{self.to_emu(f'{text_width}px')}" cy="{self.to_emu(f'{text_height}px')}"/>
         </a:xfrm>
         <a:prstGeom prst="rect">
             <a:avLst/>

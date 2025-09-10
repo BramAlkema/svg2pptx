@@ -217,10 +217,11 @@ class TextToPathConverter(BaseConverter):
             text_height = text_props['font_size'] * 1.2
             
             # Adjust position based on text anchor
+            text_width_emu = self.to_emu(f"{text_width}px")
             if text_props['text_anchor'] == 'middle':
-                x_emu -= int(text_width * 12700 / 2)
+                x_emu -= text_width_emu // 2
             elif text_props['text_anchor'] == 'end':
-                x_emu -= int(text_width * 12700)
+                x_emu -= text_width_emu
             
             # Generate DrawingML text shape
             shape = f"""<a:sp>
@@ -231,7 +232,7 @@ class TextToPathConverter(BaseConverter):
     <a:spPr>
         <a:xfrm>
             <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{int(text_width * 12700)}" cy="{int(text_height * 12700)}"/>
+            <a:ext cx="{self.to_emu(f'{text_width}px')}" cy="{self.to_emu(f'{text_height}px')}"/>
         </a:xfrm>
         <a:prstGeom prst="rect">
             <a:avLst/>

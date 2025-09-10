@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from enum import Enum
 import xml.etree.ElementTree as ET
 
-from .units import UnitConverter, ViewportContext
+from .units import UnitConverter, ViewportContext, EMU_PER_INCH
 
 
 class TransformType(Enum):
@@ -398,8 +398,8 @@ class TransformParser:
                     # Convert using unit converter
                     if viewport_context:
                         emu_value = self.unit_converter.to_emu(match, viewport_context)
-                        # Convert EMU back to user units (typically pixels)
-                        pixel_value = emu_value / 9525  # EMU to pixels at 96 DPI
+                        # Convert EMU back to user units (typically pixels at 96 DPI)
+                        pixel_value = emu_value / (EMU_PER_INCH / 96)
                         values.append(pixel_value)
                     else:
                         values.append(float(match.rstrip('pxPXptPTmMinIncmCMemExEx%')))
@@ -489,8 +489,8 @@ class TransformParser:
         
         # Translation (in EMU)
         if abs(components['translateX']) > 1e-6 or abs(components['translateY']) > 1e-6:
-            tx_emu = int(components['translateX'] * 9525)  # Convert to EMU
-            ty_emu = int(components['translateY'] * 9525)
+            tx_emu = self.unit_converter.to_emu(f"{components['translateX']}px")
+            ty_emu = self.unit_converter.to_emu(f"{components['translateY']}px")
             transform_parts.append(f'<a:off x="{tx_emu}" y="{ty_emu}"/>')
         
         # Rotation

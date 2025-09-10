@@ -65,7 +65,7 @@ class PathConverter(BaseConverter):
         return tag == 'path'
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG path to DrawingML custom geometry"""
+        """Convert SVG path to DrawingML custom geometry with transform support"""
         path_data = element.get('d', '')
         if not path_data:
             return ""
@@ -78,8 +78,12 @@ class PathConverter(BaseConverter):
         # Parse path data
         path = PathData(path_data)
         
+        # Handle transforms
+        transform_matrix = self.get_element_transform_matrix(element, context.viewport_context)
+        transform_xml = self._get_transform_xml(transform_matrix, context)
+        
         # Convert to DrawingML path geometry
-        geometry_xml = self._create_custom_geometry(path, context)
+        geometry_xml = self._create_custom_geometry(path, context, transform_matrix)
         
         # Get style attributes
         style_attrs = self._get_style_attributes(element, context)
@@ -90,16 +94,21 @@ class PathConverter(BaseConverter):
         <a:cNvSpPr/>
     </a:nvSpPr>
     <a:spPr>
-        <a:xfrm>
-            <a:off x="0" y="0"/>
-            <a:ext cx="21600" cy="21600"/>
-        </a:xfrm>
+        {transform_xml}
         {geometry_xml}
         {style_attrs}
     </a:spPr>
 </a:sp>"""
     
-    def _create_custom_geometry(self, path: PathData, context: ConversionContext) -> str:
+    def _get_transform_xml(self, matrix, context: ConversionContext) -> str:
+        """Generate DrawingML transform XML from matrix"""
+        if matrix.is_identity():
+            return '<a:xfrm><a:off x="0" y="0"/><a:ext cx="21600" cy="21600"/></a:xfrm>'
+        
+        # Use the transform parser to generate DrawingML transform
+        return self.transform_parser.to_drawingml_transform(matrix)
+    
+    def _create_custom_geometry(self, path: PathData, context: ConversionContext, transform_matrix=None) -> str:
         """Create DrawingML custom geometry from parsed path data"""
         path_commands = []
         

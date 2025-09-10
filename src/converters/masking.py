@@ -108,10 +108,6 @@ class MaskingConverter(BaseConverter):
     
     def __init__(self):
         super().__init__()
-        self.unit_converter = UnitConverter()
-        self.color_parser = ColorParser()
-        self.transform_engine = TransformParser()
-        self.viewport_handler = ViewportResolver()
         
         # Storage for mask and clipPath definitions
         self.mask_definitions: Dict[str, MaskDefinition] = {}
