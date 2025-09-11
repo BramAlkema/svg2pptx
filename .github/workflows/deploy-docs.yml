@@ -35,13 +35,74 @@ jobs:
       - name: Build documentation
         run: cd docs && npm run build
         
+      - name: Create root index.html redirect
+        run: |
+          cat > docs/build/index_root.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta http-equiv="refresh" content="0; url=./docs/">
+              <title>SVG2PPTX Documentation</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      height: 100vh;
+                      margin: 0;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      text-align: center;
+                  }
+                  .container { max-width: 600px; padding: 2rem; }
+                  h1 { margin-bottom: 1rem; }
+                  p { margin-bottom: 2rem; opacity: 0.9; }
+                  .button {
+                      display: inline-block;
+                      padding: 12px 24px;
+                      background: rgba(255,255,255,0.2);
+                      color: white;
+                      text-decoration: none;
+                      border-radius: 8px;
+                      border: 1px solid rgba(255,255,255,0.3);
+                      transition: all 0.3s ease;
+                  }
+                  .button:hover {
+                      background: rgba(255,255,255,0.3);
+                      transform: translateY(-2px);
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>SVG2PPTX Documentation</h1>
+                  <p>Redirecting you to the documentation...</p>
+                  <p>If you're not redirected automatically, click the button below:</p>
+                  <a href="./docs/" class="button">View Documentation</a>
+              </div>
+              
+              <script>
+                  setTimeout(() => { window.location.href = './docs/'; }, 1000);
+              </script>
+          </body>
+          </html>
+          EOF
+          
+          # Create final structure
+          mkdir -p docs/build_final
+          cp docs/build/index_root.html docs/build_final/index.html
+          mv docs/build docs/build_final/docs
+        
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build
+          path: docs/build_final
 
   deploy:
     environment:

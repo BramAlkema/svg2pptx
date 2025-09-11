@@ -15,15 +15,15 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://svg2pptx.github.io',
+  url: 'https://bramalkema.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
-  // For organization site, use root path
-  baseUrl: '/',
+  // For docs subdirectory in GitHub Pages
+  baseUrl: '/docs/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'svg2pptx', // Usually your GitHub org/user name.
-  projectName: 'svg2pptx.github.io', // Repository name for organization site
+  organizationName: 'BramAlkema', // Usually your GitHub org/user name.
+  projectName: 'svg2pptx', // Repository name
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',

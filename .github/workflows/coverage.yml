@@ -1,0 +1,229 @@
+name: Coverage Analysis and Reporting
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  coverage-analysis:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Needed for coverage trend analysis
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-cov coverage[toml] pytest-html pytest-json-report
+
+    - name: Install project in development mode
+      run: |
+        pip install -e .
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest \
+          --cov=src \
+          --cov-report=xml:coverage.xml \
+          --cov-report=html:htmlcov \
+          --cov-report=term-missing \
+          --cov-fail-under=90 \
+          --html=pytest_report.html \
+          --self-contained-html \
+          --json-report \
+          --json-report-file=pytest_report.json \
+          --tb=short \
+          -v
+
+    - name: Generate enhanced coverage report
+      if: always()
+      run: |
+        python tools/coverage_utils.py
+
+    - name: Upload coverage reports to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+
+    - name: Upload coverage to Code Climate
+      if: matrix.python-version == '3.11'
+      uses: paambaati/codeclimate-action@v5.0.0
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      with:
+        coverageLocations: |
+          ${{github.workspace}}/coverage.xml:coverage.py
+
+    - name: Archive coverage reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          coverage.xml
+          coverage_enhanced.html
+          pytest_report.html
+          pytest_report.json
+
+    - name: Archive coverage history
+      if: matrix.python-version == '3.11' && github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-history
+        path: coverage_history.db
+
+    - name: Comment PR with coverage report
+      if: github.event_name == 'pull_request' && matrix.python-version == '3.11'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        message: |
+          ## 📊 Coverage Report
+          
+          Coverage analysis completed for commit ${{ github.sha }}.
+          
+          **Results:**
+          - ✅ Tests passed with coverage analysis
+          - 📈 Enhanced coverage report generated
+          - 🎯 Target: 90% minimum coverage
+          
+          [View detailed coverage report in the artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  coverage-gate:
+    runs-on: ubuntu-latest
+    needs: coverage-analysis
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-report-3.11
+        path: ./coverage
+
+    - name: Check coverage threshold
+      run: |
+        # Parse coverage.xml to check if threshold is met
+        python -c "
+        import xml.etree.ElementTree as ET
+        import sys
+        
+        tree = ET.parse('./coverage/coverage.xml')
+        root = tree.getroot()
+        
+        line_rate = float(root.get('line-rate', 0)) * 100
+        branch_rate = float(root.get('branch-rate', 0)) * 100
+        
+        print(f'Line Coverage: {line_rate:.2f}%')
+        print(f'Branch Coverage: {branch_rate:.2f}%')
+        
+        if line_rate < 90.0:
+            print(f'❌ Line coverage {line_rate:.2f}% is below 90% threshold')
+            sys.exit(1)
+        
+        if branch_rate < 85.0:  # Slightly lower threshold for branch coverage
+            print(f'⚠️ Branch coverage {branch_rate:.2f}% is below 85% threshold')
+            # Don't fail on branch coverage for now, just warn
+        
+        print('✅ Coverage thresholds met!')
+        "
+
+  coverage-trend:
+    runs-on: ubuntu-latest
+    needs: coverage-analysis
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Download coverage history
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-history
+        path: ./
+
+    - name: Download coverage data
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-report-3.11
+        path: ./coverage
+
+    - name: Update coverage trends
+      run: |
+        python -c "
+        import sys
+        import os
+        sys.path.insert(0, '.')
+        
+        # Install dependencies if needed
+        os.system('pip install -e .')
+        
+        from tools.coverage_utils import CoverageAnalyzer, CoverageTrendTracker
+        import subprocess
+        
+        # Load coverage data
+        analyzer = CoverageAnalyzer('./coverage/coverage.xml')
+        coverage_data = analyzer.load_coverage_data()
+        
+        # Get git information
+        commit_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], 
+                                   capture_output=True, text=True).stdout.strip()
+        branch_name = 'main'
+        
+        # Update trends
+        tracker = CoverageTrendTracker()
+        coverage_id = tracker.record_coverage(coverage_data, commit_hash, branch_name)
+        
+        print(f'✅ Coverage trend updated (ID: {coverage_id})')
+        
+        # Check for regressions
+        regression = tracker.detect_coverage_regression()
+        if regression:
+            print(f'⚠️ Coverage regression detected!')
+            print(f'Line: -{regression[\"line_regression\"]:.2f}%')
+            print(f'Branch: -{regression[\"branch_regression\"]:.2f}%')
+        else:
+            print('📈 No coverage regression detected')
+        "
+
+    - name: Commit coverage history
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add coverage_history.db || true
+        git commit -m "Update coverage history [skip ci]" || exit 0
+        git push
