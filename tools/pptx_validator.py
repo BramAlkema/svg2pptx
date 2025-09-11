@@ -11,6 +11,7 @@ import zipfile
 import hashlib
 import difflib
 import re
+from lxml import etree as ET
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict

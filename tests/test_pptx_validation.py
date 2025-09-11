@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, List, Any
 import json
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 from tools.pptx_validator import (
     PPTXValidator,
@@ -33,11 +33,11 @@ class TestPPTXValidator:
         validator_standard = PPTXValidator(ValidationLevel.STANDARD)
         assert validator_standard.validation_level == ValidationLevel.STANDARD
         
-        validator_strict = PPTXValidator(ValidationLevel.STRICT)
-        assert validator_strict.validation_level == ValidationLevel.STRICT
+        validator_comprehensive = PPTXValidator(ValidationLevel.COMPREHENSIVE)
+        assert validator_comprehensive.validation_level == ValidationLevel.COMPREHENSIVE
         
-        validator_lenient = PPTXValidator(ValidationLevel.LENIENT)
-        assert validator_lenient.validation_level == ValidationLevel.LENIENT
+        validator_minimal = PPTXValidator(ValidationLevel.MINIMAL)
+        assert validator_minimal.validation_level == ValidationLevel.MINIMAL
     
     def test_validate_nonexistent_file(self):
         """Test validation of non-existent PPTX file."""
