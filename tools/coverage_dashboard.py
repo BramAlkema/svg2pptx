@@ -6,14 +6,14 @@ This script provides a simple web-based dashboard for monitoring
 coverage metrics and trends in real-time.
 """
 
-import json
-import sqlite3
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List
 
-from coverage_utils import CoverageAnalyzer, CoverageTrendTracker
+from tools.base_utilities import DatabaseManager, HTMLReportGenerator
+from tools.reporting_utilities import CoverageMetrics, CoverageReporter
+from tools.coverage_utils import CoverageAnalyzer, CoverageTrendTracker
 
 
 class CoverageDashboard:
@@ -25,7 +25,9 @@ class CoverageDashboard:
         Args:
             db_path: Path to coverage history database
         """
-        self.db_path = db_path
+        self.db_path = Path(db_path)
+        self.db_manager = DatabaseManager(self.db_path)
+        self.html_generator = HTMLReportGenerator()
         self.tracker = CoverageTrendTracker(db_path)
     
     def get_dashboard_data(self) -> Dict:
@@ -34,20 +36,17 @@ class CoverageDashboard:
         Returns:
             Dictionary containing dashboard metrics
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Get latest coverage
-        cursor.execute('''
+        # Get latest coverage using database manager
+        latest_results = self.db_manager.execute_query('''
             SELECT * FROM coverage_history 
             ORDER BY timestamp DESC 
             LIMIT 1
         ''')
-        latest = cursor.fetchone()
         
-        if not latest:
-            conn.close()
+        if not latest_results:
             return {'no_data': True}
+        
+        latest = latest_results[0]
         
         # Get trend data (last 30 days)
         cutoff_date = (datetime.now() - timedelta(days=30)).isoformat()

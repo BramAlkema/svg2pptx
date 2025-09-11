@@ -6,15 +6,16 @@ This module provides utilities for analyzing coverage data, generating
 enhanced reports, and tracking coverage trends over time.
 """
 
-import json
-import os
-import sqlite3
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import subprocess
 import sys
+
+# Use new consolidated utilities
+from tools.base_utilities import DatabaseManager, HTMLReportGenerator, FileUtilities
+from tools.reporting_utilities import CoverageMetrics, CoverageReporter
 
 
 class CoverageAnalyzer:
@@ -35,20 +36,26 @@ class CoverageAnalyzer:
         Returns:
             Dictionary containing coverage metrics
         """
-        if not os.path.exists(self.coverage_file):
+        coverage_path = Path(self.coverage_file)
+        if not coverage_path.exists():
             raise FileNotFoundError(f"Coverage file not found: {self.coverage_file}")
         
         tree = ET.parse(self.coverage_file)
         root = tree.getroot()
         
+        # Create CoverageMetrics object
+        metrics = CoverageMetrics(
+            line_rate=float(root.get('line-rate', 0)) * 100,
+            branch_rate=float(root.get('branch-rate', 0)) * 100,
+            lines_covered=int(root.get('lines-covered', 0)),
+            lines_valid=int(root.get('lines-valid', 0)),
+            branches_covered=int(root.get('branches-covered', 0)),
+            branches_valid=int(root.get('branches-valid', 0))
+        )
+        
         coverage_data = {
             'timestamp': datetime.now().isoformat(),
-            'line_rate': float(root.get('line-rate', 0)) * 100,
-            'branch_rate': float(root.get('branch-rate', 0)) * 100,
-            'lines_covered': int(root.get('lines-covered', 0)),
-            'lines_valid': int(root.get('lines-valid', 0)),
-            'branches_covered': int(root.get('branches-covered', 0)),
-            'branches_valid': int(root.get('branches-valid', 0)),
+            'metrics': metrics,
             'complexity': float(root.get('complexity', 0)),
             'packages': []
         }

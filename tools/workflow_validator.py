@@ -7,7 +7,6 @@ ensuring accuracy and data integrity at each step of the SVG to PowerPoint
 conversion process.
 """
 
-import json
 import time
 import hashlib
 import tempfile
@@ -15,17 +14,16 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
-import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import subprocess
 
-# Import our validation tools
-try:
-    from .pptx_validator import PPTXValidator, ValidationResult, ComparisonResult
-    from .visual_regression_tester import VisualRegressionTester, RegressionTestResult
-except ImportError:
-    from pptx_validator import PPTXValidator, ValidationResult, ComparisonResult
-    from visual_regression_tester import VisualRegressionTester, RegressionTestResult
+# Import new utilities
+from tools.base_utilities import FileUtilities, HTMLReportGenerator
+from tools.validation_utilities import (
+    SVGValidator, PPTXValidator, WorkflowValidator as BaseWorkflowValidator,
+    ValidationLevel, ValidationResult, ValidationIssue
+)
+from tools.visual_regression_tester import VisualRegressionTester, RegressionTestResult
 
 
 class PipelineStage(Enum):

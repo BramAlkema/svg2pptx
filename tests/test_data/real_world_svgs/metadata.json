@@ -1,0 +1,456 @@
+{
+  "columns.svg": {
+    "filename": "columns.svg",
+    "source_tool": "web",
+    "complexity": "low",
+    "features": [
+      "paths"
+    ],
+    "converter_modules": [
+      "paths"
+    ],
+    "file_size": 288,
+    "element_count": 2,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 24.0,
+      "height": 24.0
+    },
+    "description": "From GitHub repo: feather",
+    "tags": [
+      "github",
+      "open_source"
+    ]
+  },
+  "basic_ellipse.svg": {
+    "filename": "basic_ellipse.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 300,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_ellipse.svg",
+    "tags": []
+  },
+  "basic_circle.svg": {
+    "filename": "basic_circle.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 296,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_circle.svg",
+    "tags": []
+  },
+  "basic_polyline.svg": {
+    "filename": "basic_polyline.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 331,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_polyline.svg",
+    "tags": []
+  },
+  "basic_polygon.svg": {
+    "filename": "basic_polygon.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 316,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_polygon.svg",
+    "tags": []
+  },
+  "basic_line.svg": {
+    "filename": "basic_line.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 299,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_line.svg",
+    "tags": []
+  },
+  "basic_rectangle.svg": {
+    "filename": "basic_rectangle.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 308,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - basic_shapes/basic_rectangle.svg",
+    "tags": []
+  },
+  "linear_gradient.svg": {
+    "filename": "linear_gradient.svg",
+    "source_tool": "inkscape",
+    "complexity": "medium",
+    "features": [
+      "gradients",
+      "shapes"
+    ],
+    "converter_modules": [
+      "gradients",
+      "shapes"
+    ],
+    "file_size": 524,
+    "element_count": 7,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - gradients/linear_gradient.svg",
+    "tags": []
+  },
+  "radial_gradient.svg": {
+    "filename": "radial_gradient.svg",
+    "source_tool": "inkscape",
+    "complexity": "medium",
+    "features": [
+      "gradients",
+      "shapes"
+    ],
+    "converter_modules": [
+      "gradients",
+      "shapes"
+    ],
+    "file_size": 590,
+    "element_count": 8,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - gradients/radial_gradient.svg",
+    "tags": []
+  },
+  "drop_shadow.svg": {
+    "filename": "drop_shadow.svg",
+    "source_tool": "inkscape",
+    "complexity": "high",
+    "features": [
+      "filters",
+      "shapes"
+    ],
+    "converter_modules": [
+      "filters",
+      "shapes"
+    ],
+    "file_size": 442,
+    "element_count": 6,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - filters/drop_shadow.svg",
+    "tags": []
+  },
+  "gaussian_blur.svg": {
+    "filename": "gaussian_blur.svg",
+    "source_tool": "inkscape",
+    "complexity": "high",
+    "features": [
+      "filters",
+      "shapes"
+    ],
+    "converter_modules": [
+      "filters",
+      "shapes"
+    ],
+    "file_size": 360,
+    "element_count": 6,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - filters/gaussian_blur.svg",
+    "tags": []
+  },
+  "many_elements.svg": {
+    "filename": "many_elements.svg",
+    "source_tool": "inkscape",
+    "complexity": "high",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 8186,
+    "element_count": 102,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 400.0,
+      "height": 400.0
+    },
+    "description": "Comprehensive test corpus - stress_tests/many_elements.svg",
+    "tags": []
+  },
+  "zero_dimensions.svg": {
+    "filename": "zero_dimensions.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 466,
+    "element_count": 5,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - edge_cases/zero_dimensions.svg",
+    "tags": []
+  },
+  "extreme_coordinates.svg": {
+    "filename": "extreme_coordinates.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 401,
+    "element_count": 5,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - edge_cases/extreme_coordinates.svg",
+    "tags": []
+  },
+  "nested_groups.svg": {
+    "filename": "nested_groups.svg",
+    "source_tool": "inkscape",
+    "complexity": "medium",
+    "features": [
+      "shapes",
+      "transforms"
+    ],
+    "converter_modules": [
+      "groups",
+      "shapes"
+    ],
+    "file_size": 575,
+    "element_count": 9,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - groups/nested_groups.svg",
+    "tags": []
+  },
+  "complex_transforms.svg": {
+    "filename": "complex_transforms.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "shapes"
+    ],
+    "converter_modules": [
+      "shapes"
+    ],
+    "file_size": 615,
+    "element_count": 6,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 300.0,
+      "height": 300.0
+    },
+    "description": "Comprehensive test corpus - transforms/complex_transforms.svg",
+    "tags": []
+  },
+  "simple_text.svg": {
+    "filename": "simple_text.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "text"
+    ],
+    "converter_modules": [
+      "text"
+    ],
+    "file_size": 337,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 300.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - text/simple_text.svg",
+    "tags": []
+  },
+  "styled_text.svg": {
+    "filename": "styled_text.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "text"
+    ],
+    "converter_modules": [
+      "text"
+    ],
+    "file_size": 741,
+    "element_count": 6,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 400.0,
+      "height": 300.0
+    },
+    "description": "Comprehensive test corpus - text/styled_text.svg",
+    "tags": []
+  },
+  "bezier_curves.svg": {
+    "filename": "bezier_curves.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "paths"
+    ],
+    "converter_modules": [
+      "paths"
+    ],
+    "file_size": 326,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - complex_paths/bezier_curves.svg",
+    "tags": []
+  },
+  "arc_segments.svg": {
+    "filename": "arc_segments.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "paths"
+    ],
+    "converter_modules": [
+      "paths"
+    ],
+    "file_size": 341,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - complex_paths/arc_segments.svg",
+    "tags": []
+  },
+  "mixed_path_commands.svg": {
+    "filename": "mixed_path_commands.svg",
+    "source_tool": "inkscape",
+    "complexity": "low",
+    "features": [
+      "paths"
+    ],
+    "converter_modules": [
+      "paths"
+    ],
+    "file_size": 343,
+    "element_count": 3,
+    "viewport": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 200.0,
+      "height": 200.0
+    },
+    "description": "Comprehensive test corpus - complex_paths/mixed_path_commands.svg",
+    "tags": []
+  }
+}

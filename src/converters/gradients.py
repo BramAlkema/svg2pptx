@@ -167,16 +167,37 @@ class GradientConverter(BaseConverter):
         </a:gradFill>"""
     
     def _convert_pattern(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG pattern to DrawingML pattern fill (simplified)"""
-        # For now, convert pattern to solid fill with dominant color
-        # This is a fallback - full pattern support would require more complex implementation
+        """Convert SVG pattern to DrawingML pattern fill with full pattern support."""
+        pattern_id = element.get('id', '')
         
-        # Try to extract a representative color from pattern content
-        fill_color = self._extract_pattern_color(element)
-        if fill_color:
-            return f'<a:solidFill><a:srgbClr val="{fill_color}"/></a:solidFill>'
+        # Extract pattern properties
+        pattern_units = element.get('patternUnits', 'objectBoundingBox')
+        pattern_transform = element.get('patternTransform', '')
         
-        return ""
+        # Get pattern dimensions
+        width = self._parse_pattern_dimension(element.get('width', '0'), context)
+        height = self._parse_pattern_dimension(element.get('height', '0'), context)
+        
+        if width <= 0 or height <= 0:
+            # Invalid pattern dimensions, fallback to solid color
+            fill_color = self._extract_pattern_color(element)
+            if fill_color:
+                return f'<a:solidFill><a:srgbClr val="{fill_color}"/></a:solidFill>'
+            return ""
+        
+        # Analyze pattern content to determine best PowerPoint representation
+        pattern_analysis = self._analyze_pattern_content(element, context)
+        
+        # Choose conversion strategy based on pattern complexity
+        if pattern_analysis['is_simple_texture']:
+            return self._convert_simple_pattern(element, pattern_analysis, context)
+        elif pattern_analysis['is_geometric']:
+            return self._convert_geometric_pattern(element, pattern_analysis, context)
+        elif pattern_analysis['has_gradients']:
+            return self._convert_gradient_pattern(element, pattern_analysis, context)
+        else:
+            # Complex pattern - generate texture image
+            return self._convert_complex_pattern(element, pattern_analysis, context)
     
     def _get_gradient_stops(self, gradient_element: ET.Element) -> List[Tuple[float, str, float]]:
         """Extract gradient stops with position, color, and opacity"""
@@ -248,3 +269,141 @@ class GradientConverter(BaseConverter):
                                 return color
         
         return None
+    
+    def _parse_pattern_dimension(self, dimension_str: str, context: ConversionContext) -> float:
+        """Parse pattern dimension string to float value."""
+        if not dimension_str:
+            return 0.0
+        
+        try:
+            # Remove units and parse
+            clean_str = dimension_str.replace('px', '').replace('pt', '').replace('%', '')
+            return float(clean_str)
+        except (ValueError, TypeError):
+            return 0.0
+    
+    def _analyze_pattern_content(self, pattern_element: ET.Element, context: ConversionContext) -> Dict[str, Any]:
+        """Analyze pattern content to determine conversion strategy."""
+        analysis = {
+            'is_simple_texture': False,
+            'is_geometric': False,
+            'has_gradients': False,
+            'element_count': 0,
+            'dominant_shapes': [],
+            'color_count': 0,
+            'complexity_score': 0
+        }
+        
+        # Count elements and analyze shapes
+        all_elements = list(pattern_element.iter())
+        shape_counts = {}
+        colors = set()
+        
+        for elem in all_elements:
+            tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+            
+            if tag in ['rect', 'circle', 'ellipse', 'path', 'polygon', 'line']:
+                analysis['element_count'] += 1
+                shape_counts[tag] = shape_counts.get(tag, 0) + 1
+                
+                # Extract colors
+                fill = elem.get('fill', '')
+                stroke = elem.get('stroke', '')
+                if fill and fill != 'none':
+                    colors.add(fill)
+                if stroke and stroke != 'none':
+                    colors.add(stroke)
+            
+            elif tag in ['linearGradient', 'radialGradient']:
+                analysis['has_gradients'] = True
+        
+        analysis['color_count'] = len(colors)
+        analysis['dominant_shapes'] = sorted(shape_counts.items(), key=lambda x: x[1], reverse=True)
+        
+        # Determine pattern type
+        if analysis['element_count'] <= 2 and not analysis['has_gradients']:
+            analysis['is_simple_texture'] = True
+        elif analysis['element_count'] <= 5 and any(shape in ['rect', 'circle'] for shape, _ in analysis['dominant_shapes']):
+            analysis['is_geometric'] = True
+        
+        # Calculate complexity
+        analysis['complexity_score'] = (
+            analysis['element_count'] * 2 +
+            analysis['color_count'] * 1.5 +
+            (10 if analysis['has_gradients'] else 0)
+        )
+        
+        return analysis
+    
+    def _convert_simple_pattern(self, element: ET.Element, analysis: Dict[str, Any], context: ConversionContext) -> str:
+        """Convert simple patterns to PowerPoint texture fills."""
+        # For simple patterns, use a basic texture approach
+        pattern_color = self._extract_pattern_color(element)
+        if pattern_color:
+            return f'<a:solidFill><a:srgbClr val="{pattern_color}"/></a:solidFill>'
+        
+        # Fallback to default color
+        return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+    
+    def _convert_geometric_pattern(self, element: ET.Element, analysis: Dict[str, Any], context: ConversionContext) -> str:
+        """Convert geometric patterns to PowerPoint pattern fills."""
+        # Map common geometric patterns to PowerPoint presets
+        if analysis['dominant_shapes']:
+            dominant_shape = analysis['dominant_shapes'][0][0]
+            
+            pattern_color = self._extract_pattern_color(element) or "808080"
+            
+            if dominant_shape == 'rect':
+                # Use a checkerboard-like pattern
+                return f'''<a:pattFill prst="shingle">
+                    <a:fgClr><a:srgbClr val="{pattern_color}"/></a:fgClr>
+                    <a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr>
+                </a:pattFill>'''
+            
+            elif dominant_shape == 'circle':
+                # Use a dotted pattern
+                return f'''<a:pattFill prst="dotGrid">
+                    <a:fgClr><a:srgbClr val="{pattern_color}"/></a:fgClr>
+                    <a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr>
+                </a:pattFill>'''
+        
+        # Default geometric pattern
+        pattern_color = self._extract_pattern_color(element) or "808080"
+        return f'''<a:pattFill prst="diagBrick">
+            <a:fgClr><a:srgbClr val="{pattern_color}"/></a:fgClr>
+            <a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr>
+        </a:pattFill>'''
+    
+    def _convert_gradient_pattern(self, element: ET.Element, analysis: Dict[str, Any], context: ConversionContext) -> str:
+        """Convert patterns with gradients to PowerPoint gradient fills."""
+        # Find gradient elements in pattern
+        gradients = element.xpath('.//linearGradient | .//radialGradient')
+        
+        if gradients:
+            # Convert the first gradient found
+            gradient_elem = gradients[0]
+            return self.convert(gradient_elem, context)
+        
+        # Fallback if no gradients found despite analysis
+        pattern_color = self._extract_pattern_color(element) or "808080"
+        return f'<a:solidFill><a:srgbClr val="{pattern_color}"/></a:solidFill>'
+    
+    def _convert_complex_pattern(self, element: ET.Element, analysis: Dict[str, Any], context: ConversionContext) -> str:
+        """Convert complex patterns by generating a representative texture."""
+        # For complex patterns, fall back to a textured fill
+        # This would ideally generate an image texture, but for now use pattern fill
+        
+        pattern_color = self._extract_pattern_color(element) or "808080"
+        
+        # Choose pattern based on complexity
+        if analysis['complexity_score'] > 15:
+            preset = "weave"
+        elif analysis['complexity_score'] > 10:
+            preset = "zigZag"
+        else:
+            preset = "cross"
+        
+        return f'''<a:pattFill prst="{preset}">
+            <a:fgClr><a:srgbClr val="{pattern_color}"/></a:fgClr>
+            <a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr>
+        </a:pattFill>'''

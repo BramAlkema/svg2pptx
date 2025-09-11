@@ -1,0 +1,272 @@
+{
+  "created": "2025-09-11",
+  "corpus_path": "tests/test_data/svg_corpus",
+  "references": {
+    "basic_shapes/basic_rectangle.pptx": {
+      "svg_source": "basic_shapes/basic_rectangle.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "rectangle",
+        "fill",
+        "stroke"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_rectangle.pptx",
+      "validation_notes": []
+    },
+    "basic_shapes/basic_circle.pptx": {
+      "svg_source": "basic_shapes/basic_circle.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "circle",
+        "fill",
+        "stroke"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_circle.pptx",
+      "validation_notes": []
+    },
+    "basic_shapes/basic_ellipse.pptx": {
+      "svg_source": "basic_shapes/basic_ellipse.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "ellipse",
+        "fill",
+        "stroke"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_ellipse.pptx",
+      "validation_notes": []
+    },
+    "basic_shapes/basic_line.pptx": {
+      "svg_source": "basic_shapes/basic_line.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "line",
+        "stroke",
+        "stroke-linecap"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_line.pptx",
+      "validation_notes": []
+    },
+    "basic_shapes/basic_polygon.pptx": {
+      "svg_source": "basic_shapes/basic_polygon.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "polygon",
+        "fill",
+        "stroke"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_polygon.pptx",
+      "validation_notes": []
+    },
+    "basic_shapes/basic_polyline.pptx": {
+      "svg_source": "basic_shapes/basic_polyline.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "polyline",
+        "stroke",
+        "stroke-linejoin"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/basic_shapes/basic_polyline.pptx",
+      "validation_notes": []
+    },
+    "complex_paths/bezier_curves.pptx": {
+      "svg_source": "complex_paths/bezier_curves.svg",
+      "expected_elements": 1,
+      "complexity": "advanced",
+      "features": [
+        "path",
+        "bezier_curves",
+        "quadratic_curves",
+        "cubic_curves"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/complex_paths/bezier_curves.pptx",
+      "validation_notes": []
+    },
+    "complex_paths/arc_segments.pptx": {
+      "svg_source": "complex_paths/arc_segments.svg",
+      "expected_elements": 1,
+      "complexity": "advanced",
+      "features": [
+        "path",
+        "elliptical_arcs"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/complex_paths/arc_segments.pptx",
+      "validation_notes": []
+    },
+    "complex_paths/mixed_path_commands.pptx": {
+      "svg_source": "complex_paths/mixed_path_commands.svg",
+      "expected_elements": 1,
+      "complexity": "intermediate",
+      "features": [
+        "path",
+        "line_commands",
+        "curve_commands",
+        "mixed_commands"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/complex_paths/mixed_path_commands.pptx",
+      "validation_notes": []
+    },
+    "text/simple_text.pptx": {
+      "svg_source": "text/simple_text.svg",
+      "expected_elements": 1,
+      "complexity": "basic",
+      "features": [
+        "text",
+        "font-family",
+        "font-size",
+        "text-anchor"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/text/simple_text.pptx",
+      "validation_notes": []
+    },
+    "text/styled_text.pptx": {
+      "svg_source": "text/styled_text.svg",
+      "expected_elements": 4,
+      "complexity": "intermediate",
+      "features": [
+        "text",
+        "font_variations",
+        "font-weight",
+        "font-style",
+        "opacity"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/text/styled_text.pptx",
+      "validation_notes": []
+    },
+    "gradients/linear_gradient.pptx": {
+      "svg_source": "gradients/linear_gradient.svg",
+      "expected_elements": 1,
+      "complexity": "intermediate",
+      "features": [
+        "linear_gradient",
+        "gradient_stops",
+        "defs"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/gradients/linear_gradient.pptx",
+      "validation_notes": []
+    },
+    "gradients/radial_gradient.pptx": {
+      "svg_source": "gradients/radial_gradient.svg",
+      "expected_elements": 1,
+      "complexity": "intermediate",
+      "features": [
+        "radial_gradient",
+        "multiple_stops",
+        "defs"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/gradients/radial_gradient.pptx",
+      "validation_notes": []
+    },
+    "transforms/complex_transforms.pptx": {
+      "svg_source": "transforms/complex_transforms.svg",
+      "expected_elements": 4,
+      "complexity": "advanced",
+      "features": [
+        "transforms",
+        "translate",
+        "rotate",
+        "scale",
+        "combined_transforms"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/transforms/complex_transforms.pptx",
+      "validation_notes": []
+    },
+    "groups/nested_groups.pptx": {
+      "svg_source": "groups/nested_groups.svg",
+      "expected_elements": 3,
+      "complexity": "advanced",
+      "features": [
+        "groups",
+        "nested_groups",
+        "group_transforms",
+        "group_attributes"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/groups/nested_groups.pptx",
+      "validation_notes": []
+    },
+    "filters/drop_shadow.pptx": {
+      "svg_source": "filters/drop_shadow.svg",
+      "expected_elements": 1,
+      "complexity": "advanced",
+      "features": [
+        "filters",
+        "drop_shadow",
+        "filter_effects"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/filters/drop_shadow.pptx",
+      "validation_notes": []
+    },
+    "filters/gaussian_blur.pptx": {
+      "svg_source": "filters/gaussian_blur.svg",
+      "expected_elements": 1,
+      "complexity": "advanced",
+      "features": [
+        "filters",
+        "gaussian_blur",
+        "filter_effects"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/filters/gaussian_blur.pptx",
+      "validation_notes": []
+    },
+    "edge_cases/zero_dimensions.pptx": {
+      "svg_source": "edge_cases/zero_dimensions.svg",
+      "expected_elements": 3,
+      "complexity": "edge_case",
+      "features": [
+        "zero_dimensions",
+        "edge_cases",
+        "degenerate_shapes"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/edge_cases/zero_dimensions.pptx",
+      "validation_notes": []
+    },
+    "edge_cases/extreme_coordinates.pptx": {
+      "svg_source": "edge_cases/extreme_coordinates.svg",
+      "expected_elements": 3,
+      "complexity": "edge_case",
+      "features": [
+        "extreme_coordinates",
+        "large_numbers",
+        "small_numbers"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/edge_cases/extreme_coordinates.pptx",
+      "validation_notes": []
+    },
+    "stress_tests/many_elements.pptx": {
+      "svg_source": "stress_tests/many_elements.svg",
+      "expected_elements": 100,
+      "complexity": "stress",
+      "features": [
+        "many_elements",
+        "performance_test"
+      ],
+      "accuracy_threshold": 0.85,
+      "reference_file": "references/stress_tests/many_elements.pptx",
+      "validation_notes": []
+    }
+  }
+}

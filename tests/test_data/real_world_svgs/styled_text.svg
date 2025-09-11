@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+    <desc>Text with various font properties</desc>
+    <text x="50" y="50" font-family="serif" font-size="18" font-weight="bold" fill="#e74c3c">
+        Bold Text
+    </text>
+    <text x="50" y="100" font-family="serif" font-size="18" font-style="italic" fill="#3498db">
+        Italic Text
+    </text>
+    <text x="50" y="150" font-family="monospace" font-size="16" text-decoration="underline" fill="#2ecc71">
+        Monospace Underlined Text
+    </text>
+    <text x="50" y="200" font-family="sans-serif" font-size="20" font-weight="300" fill="#9b59b6" opacity="0.8">
+        Light Weight Text
+    </text>
+</svg>

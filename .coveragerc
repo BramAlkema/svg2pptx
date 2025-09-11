@@ -1,0 +1,98 @@
+[run]
+# Coverage.py configuration for SVG2PPTX project
+source = src
+branch = true
+parallel = true
+concurrency = multiprocessing,thread
+
+# Files and patterns to omit from coverage
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */virtualenv/*
+    */.venv/*
+    */site-packages/*
+    setup.py
+    conftest.py
+    */migrations/*
+    */scripts/*
+    */.tox/*
+
+# Include patterns for source files
+include = 
+    src/*
+    src/**/*
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+    
+    # Don't complain about missing debug-only code:
+    def __repr__
+    if self\.debug
+    
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+    
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
+    
+    # Don't complain about abstract methods
+    @(abc\.)?abstractmethod
+    
+    # Don't complain about type checking imports
+    if TYPE_CHECKING:
+    
+    # Don't complain about platform specific code
+    pragma: platform
+    
+    # Don't complain about version specific code  
+    pragma: version
+
+# Coverage reporting options
+precision = 2
+show_missing = true
+skip_covered = false
+skip_empty = false
+sort = -cover
+
+# Minimum coverage thresholds
+fail_under = 90
+
+# Individual file coverage thresholds
+partial_branches_exclude_lines = 
+    pragma: no branch
+
+[html]
+# HTML report configuration
+directory = htmlcov
+title = SVG2PPTX Test Coverage Report
+show_contexts = true
+skip_covered = false
+skip_empty = false
+
+[xml]
+# XML report configuration for CI/CD integration
+output = coverage.xml
+
+[paths]
+# Path mapping for coverage combining
+source =
+    src/
+    */svg2pptx/src/
+    */site-packages/svg2pptx/src/
+
+[json]
+# JSON report configuration
+output = coverage.json
+show_contexts = true
+
+[lcov]
+# LCOV report configuration (for some CI/CD systems)
+output = coverage.lcov

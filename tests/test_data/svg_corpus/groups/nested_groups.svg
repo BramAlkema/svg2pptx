@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <desc>Multiple levels of nesting</desc>
+    <g transform="translate(50, 50)" fill="#3498db">
+        <g transform="rotate(15)">
+            <g transform="scale(0.8)">
+                <rect x="0" y="0" width="40" height="40"/>
+                <circle cx="60" cy="20" r="15"/>
+            </g>
+        </g>
+        <g transform="translate(60, 0)" fill="#e74c3c">
+            <ellipse cx="20" cy="20" rx="15" ry="25"/>
+        </g>
+    </g>
+</svg>

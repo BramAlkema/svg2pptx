@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <desc>Elliptical arc segments</desc>
+    <path d="M30,100 A50,30 0 0,1 100,50 A50,30 0 0,1 170,100 A50,30 0 0,1 100,150 A50,30 0 0,1 30,100 Z"
+          fill="#34495e" stroke="#2c3e50" stroke-width="2"/>
+</svg>

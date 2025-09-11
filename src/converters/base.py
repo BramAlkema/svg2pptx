@@ -520,4 +520,65 @@ class ConverterRegistry:
         except ImportError as e:
             logger.warning(f"Failed to import StyleConverter: {e}")
         
+        try:
+            from .symbols import SymbolConverter
+            self.register_class(SymbolConverter)
+            converters_registered.append('SymbolConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import SymbolConverter: {e}")
+        
+        try:
+            from .filters import FilterConverter
+            self.register_class(FilterConverter)
+            converters_registered.append('FilterConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import FilterConverter: {e}")
+        
         logger.info(f"Registered {len(converters_registered)} converters: {', '.join(converters_registered)}")
+
+
+class ConverterRegistryFactory:
+    """Factory for creating and configuring converter registries."""
+    
+    _registry_instance = None
+    
+    @classmethod
+    def get_registry(cls, force_new: bool = False) -> ConverterRegistry:
+        """Get a configured converter registry instance.
+        
+        Args:
+            force_new: If True, create a new registry instead of using singleton
+            
+        Returns:
+            Configured ConverterRegistry instance
+        """
+        if force_new or cls._registry_instance is None:
+            registry = ConverterRegistry()
+            registry.register_default_converters()
+            
+            if not force_new:
+                cls._registry_instance = registry
+                
+            return registry
+        
+        return cls._registry_instance
+    
+    @classmethod
+    def create_test_registry(cls) -> ConverterRegistry:
+        """Create a registry for testing with minimal converters."""
+        registry = ConverterRegistry()
+        
+        # Register only basic shape converters for testing
+        try:
+            from .shapes import RectangleConverter, CircleConverter
+            registry.register_class(RectangleConverter)
+            registry.register_class(CircleConverter)
+        except ImportError:
+            logger.warning("Failed to import basic shape converters for test registry")
+            
+        return registry
+    
+    @classmethod
+    def reset(cls):
+        """Reset the singleton registry instance."""
+        cls._registry_instance = None

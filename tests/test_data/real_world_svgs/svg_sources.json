@@ -1,0 +1,61 @@
+{
+  "figma_community": {
+    "name": "Figma Community Icons",
+    "description": "SVG icons exported from Figma Community",
+    "urls": [
+      "https://www.figma.com/community/file/1166831539721848736",
+      "https://www.figma.com/community/file/1076268689892988773"
+    ],
+    "source_tool": "figma",
+    "complexity_expected": "low",
+    "license": "MIT"
+  },
+  "heroicons": {
+    "name": "Heroicons",
+    "description": "Beautiful hand-crafted SVG icons from Tailwind CSS team",
+    "url": "https://github.com/tailwindlabs/heroicons",
+    "source_tool": "illustrator",
+    "complexity_expected": "low",
+    "license": "MIT"
+  },
+  "feather_icons": {
+    "name": "Feather Icons",
+    "description": "Simply beautiful open source icons",
+    "url": "https://github.com/feathericons/feather",
+    "source_tool": "illustrator",
+    "complexity_expected": "low",
+    "license": "MIT"
+  },
+  "material_design": {
+    "name": "Material Design Icons",
+    "description": "Google's Material Design icon set",
+    "url": "https://github.com/google/material-design-icons",
+    "source_tool": "illustrator",
+    "complexity_expected": "medium",
+    "license": "Apache-2.0"
+  },
+  "inkscape_gallery": {
+    "name": "Inkscape Gallery",
+    "description": "Community-created artwork from Inkscape",
+    "url": "https://inkscape.org/gallery/",
+    "source_tool": "inkscape",
+    "complexity_expected": "high",
+    "license": "various"
+  },
+  "openclipart": {
+    "name": "OpenClipart",
+    "description": "Public domain clipart collection",
+    "url": "https://openclipart.org/",
+    "source_tool": "inkscape",
+    "complexity_expected": "medium",
+    "license": "public_domain"
+  },
+  "svgrepo": {
+    "name": "SVG Repo",
+    "description": "Free SVG vectors and icons",
+    "url": "https://www.svgrepo.com/",
+    "source_tool": "web",
+    "complexity_expected": "low",
+    "license": "various"
+  }
+}

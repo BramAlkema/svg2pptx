@@ -90,6 +90,7 @@ The following foundational work has been implemented and is production-ready:
 
 ### Planned Features 📋
 
+- [ ] **Gaussian Blur Converters** - Advanced SVG filter effects for blur operations
 - [ ] **Performance Benchmarking** - Conversion speed optimization
 - [ ] **Memory Usage Optimization** - Large file processing improvements
 - [ ] **Error Recovery** - Graceful handling of malformed SVG files

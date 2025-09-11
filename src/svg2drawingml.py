@@ -18,6 +18,7 @@ from typing import Dict, List, Tuple, Optional
 import re
 import math
 from .units import EMU_PER_POINT
+from .converters.base import ConverterRegistryFactory, CoordinateSystem, ConversionContext
 
 
 class SVGParser:
@@ -67,7 +68,7 @@ class SVGParser:
         if tag in ['rect', 'circle', 'ellipse', 'line', 'path', 'polygon', 'polyline']:
             elements.append({
                 'type': tag,
-                'attributes': element.attrib.copy(),
+                'attributes': dict(element.attrib),
                 'element': element
             })
         
@@ -663,14 +664,30 @@ class SVGToDrawingMLConverter:
         # Set up coordinate mapping
         self.coord_mapper = CoordinateMapper(self.parser.viewbox)
         
-        # Set up DrawingML generator with gradient support
-        self.generator = DrawingMLGenerator(self.coord_mapper, self.parser.gradients)
+        # Get the converter registry
+        registry = ConverterRegistryFactory.get_registry()
         
-        # Convert each element
+        # Create conversion context with proper coordinate system
+        svg_root = ET.fromstring(svg_content)
+        coord_sys = CoordinateSystem(self.parser.viewbox)
+        context = ConversionContext(svg_root)
+        context.coordinate_system = coord_sys
+        
+        # Add parsed gradients to context
+        context.gradients = self.parser.gradients
+        
+        # Convert each element using the registry
         drawingml_shapes = []
-        for element in elements:
-            shape_xml = self.generator.generate_shape(element)
-            drawingml_shapes.append(shape_xml)
+        for element_data in elements:
+            # Extract the actual ET.Element from the dict
+            if isinstance(element_data, dict) and 'element' in element_data:
+                element = element_data['element']
+            else:
+                element = element_data
+                
+            shape_xml = registry.convert_element(element, context)
+            if shape_xml:  # Only add non-None results
+                drawingml_shapes.append(shape_xml)
         
         return '\n'.join(drawingml_shapes)
     

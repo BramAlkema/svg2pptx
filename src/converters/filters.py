@@ -149,6 +149,48 @@ class CompositePrimitive(FilterPrimitive):
 
 
 @dataclass
+class MorphologyPrimitive(FilterPrimitive):
+    """Morphology filter primitive (dilate/erode)."""
+    operator: str  # dilate or erode
+    radius_x: float
+    radius_y: float
+
+
+@dataclass
+class ConvolvePrimitive(FilterPrimitive):
+    """Convolution matrix filter primitive."""
+    order_x: int
+    order_y: int
+    kernel_matrix: List[float]
+    divisor: float
+    bias: float
+    edge_mode: str  # duplicate, wrap, none
+    preserve_alpha: bool
+
+
+@dataclass
+class LightingPrimitive(FilterPrimitive):
+    """Lighting effect primitive (diffuse/specular)."""
+    lighting_type: str  # diffuse or specular
+    lighting_color: ColorInfo
+    surface_scale: float
+    diffuse_constant: float
+    specular_constant: float = 1.0
+    specular_exponent: float = 1.0
+
+
+@dataclass
+class TurbulencePrimitive(FilterPrimitive):
+    """Turbulence noise primitive."""
+    base_frequency_x: float
+    base_frequency_y: float
+    num_octaves: int
+    seed: int
+    stitch_tiles: bool
+    turbulence_type: str  # fractalNoise or turbulence
+
+
+@dataclass
 class FilterEffect:
     """Processed filter effect for PowerPoint conversion."""
     effect_type: str  # blur, shadow, glow, etc.
@@ -356,6 +398,83 @@ class FilterConverter(BaseConverter):
                 x=x, y=y, width=width, height=height,
                 input2=input2, operator=operator,
                 k1=k1, k2=k2, k3=k3, k4=k4
+            )
+        
+        elif tag == 'feMorphology':
+            operator = primitive_element.get('operator', 'erode')
+            radius = primitive_element.get('radius', '0')
+            if ' ' in radius:
+                radius_x, radius_y = map(float, radius.split())
+            else:
+                radius_x = radius_y = float(radius)
+            
+            return MorphologyPrimitive(
+                type=FilterPrimitiveType.MORPH,
+                input=input_attr, result=result,
+                x=x, y=y, width=width, height=height,
+                operator=operator, radius_x=radius_x, radius_y=radius_y
+            )
+        
+        elif tag == 'feConvolveMatrix':
+            order = primitive_element.get('order', '3')
+            if ' ' in order:
+                order_x, order_y = map(int, order.split())
+            else:
+                order_x = order_y = int(order)
+            
+            kernel_matrix_str = primitive_element.get('kernelMatrix', '0 0 0 0 1 0 0 0 0')
+            kernel_matrix = [float(v) for v in kernel_matrix_str.split()]
+            
+            divisor = float(primitive_element.get('divisor', '1'))
+            bias = float(primitive_element.get('bias', '0'))
+            edge_mode = primitive_element.get('edgeMode', 'duplicate')
+            preserve_alpha = primitive_element.get('preserveAlpha', 'false').lower() == 'true'
+            
+            return ConvolvePrimitive(
+                type=FilterPrimitiveType.CONVOLVE,
+                input=input_attr, result=result,
+                x=x, y=y, width=width, height=height,
+                order_x=order_x, order_y=order_y,
+                kernel_matrix=kernel_matrix, divisor=divisor, bias=bias,
+                edge_mode=edge_mode, preserve_alpha=preserve_alpha
+            )
+        
+        elif tag in ['feDiffuseLighting', 'feSpecularLighting']:
+            lighting_type = 'diffuse' if tag == 'feDiffuseLighting' else 'specular'
+            lighting_color = self.color_parser.parse(primitive_element.get('lighting-color', 'white'))
+            surface_scale = float(primitive_element.get('surfaceScale', '1'))
+            diffuse_constant = float(primitive_element.get('diffuseConstant', '1'))
+            specular_constant = float(primitive_element.get('specularConstant', '1'))
+            specular_exponent = float(primitive_element.get('specularExponent', '1'))
+            
+            return LightingPrimitive(
+                type=FilterPrimitiveType.LIGHTING,
+                input=input_attr, result=result,
+                x=x, y=y, width=width, height=height,
+                lighting_type=lighting_type, lighting_color=lighting_color,
+                surface_scale=surface_scale, diffuse_constant=diffuse_constant,
+                specular_constant=specular_constant, specular_exponent=specular_exponent
+            )
+        
+        elif tag == 'feTurbulence':
+            base_frequency = primitive_element.get('baseFrequency', '0')
+            if ' ' in base_frequency:
+                base_freq_x, base_freq_y = map(float, base_frequency.split())
+            else:
+                base_freq_x = base_freq_y = float(base_frequency)
+            
+            num_octaves = int(primitive_element.get('numOctaves', '1'))
+            seed = int(primitive_element.get('seed', '0'))
+            stitch_tiles = primitive_element.get('stitchTiles', 'noStitch') == 'stitch'
+            turbulence_type = primitive_element.get('type', 'turbulence')
+            
+            return TurbulencePrimitive(
+                type=FilterPrimitiveType.TURBULENCE,
+                input=input_attr, result=result,
+                x=x, y=y, width=width, height=height,
+                base_frequency_x=base_freq_x, base_frequency_y=base_freq_y,
+                num_octaves=num_octaves, seed=seed,
+                stitch_tiles=stitch_tiles, turbulence_type=turbulence_type
             )
         
         return None  # Unsupported primitive
@@ -585,10 +704,16 @@ class FilterConverter(BaseConverter):
                 complexity += 0.8
             elif primitive.type == FilterPrimitiveType.DROP_SHADOW:
                 complexity += 1.0
+            elif primitive.type == FilterPrimitiveType.OFFSET:
+                complexity += 0.5
+            elif primitive.type == FilterPrimitiveType.FLOOD:
+                complexity += 0.3
             elif primitive.type == FilterPrimitiveType.COLOR_MATRIX:
                 complexity += 1.2
             elif primitive.type == FilterPrimitiveType.COMPOSITE:
                 complexity += 1.5
+            elif primitive.type == FilterPrimitiveType.MORPH:
+                complexity += 1.8  # Morphology is complex
             elif primitive.type in [FilterPrimitiveType.CONVOLVE, FilterPrimitiveType.LIGHTING]:
                 complexity += 2.0  # Very complex
             elif primitive.type == FilterPrimitiveType.TURBULENCE:
@@ -619,6 +744,61 @@ class FilterConverter(BaseConverter):
                 parameters={'matrix': primitive.values, 'type': primitive.matrix_type.value},
                 requires_rasterization=True,
                 complexity_score=2.0
+            )
+        elif isinstance(primitive, MorphologyPrimitive):
+            # Morphology effects (dilate/erode) are complex - require rasterization
+            return FilterEffect(
+                effect_type='morphology',
+                parameters={
+                    'operator': primitive.operator,
+                    'radius_x': primitive.radius_x,
+                    'radius_y': primitive.radius_y
+                },
+                requires_rasterization=True,
+                complexity_score=1.8
+            )
+        elif isinstance(primitive, ConvolvePrimitive):
+            # Convolution matrices are very complex - require rasterization
+            return FilterEffect(
+                effect_type='convolve',
+                parameters={
+                    'kernel_matrix': primitive.kernel_matrix,
+                    'order_x': primitive.order_x,
+                    'order_y': primitive.order_y,
+                    'divisor': primitive.divisor,
+                    'bias': primitive.bias
+                },
+                requires_rasterization=True,
+                complexity_score=2.5
+            )
+        elif isinstance(primitive, LightingPrimitive):
+            # Lighting effects are complex - require rasterization
+            return FilterEffect(
+                effect_type='lighting',
+                parameters={
+                    'lighting_type': primitive.lighting_type,
+                    'lighting_color': primitive.lighting_color,
+                    'surface_scale': primitive.surface_scale,
+                    'diffuse_constant': primitive.diffuse_constant,
+                    'specular_constant': primitive.specular_constant,
+                    'specular_exponent': primitive.specular_exponent
+                },
+                requires_rasterization=True,
+                complexity_score=2.2
+            )
+        elif isinstance(primitive, TurbulencePrimitive):
+            # Turbulence effects are extremely complex - require rasterization
+            return FilterEffect(
+                effect_type='turbulence',
+                parameters={
+                    'base_frequency_x': primitive.base_frequency_x,
+                    'base_frequency_y': primitive.base_frequency_y,
+                    'num_octaves': primitive.num_octaves,
+                    'seed': primitive.seed,
+                    'turbulence_type': primitive.turbulence_type
+                },
+                requires_rasterization=True,
+                complexity_score=3.0
             )
         
         return None

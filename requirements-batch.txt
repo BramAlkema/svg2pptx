@@ -1,0 +1,15 @@
+# Huey task queue - Pure Python with SQLite backend
+huey==2.5.0
+
+# FastAPI dependencies  
+fastapi==0.104.1
+python-multipart==0.0.6
+uvicorn[standard]==0.24.0
+
+# Utilities
+pydantic==2.5.0
+python-dotenv==1.0.0
+
+# Development/testing (optional)
+pytest==7.4.3
+pytest-asyncio==0.21.1

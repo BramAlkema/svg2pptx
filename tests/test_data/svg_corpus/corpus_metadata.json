@@ -1,0 +1,296 @@
+{
+  "corpus_info": {
+    "generated_by": "SVGTestCorpusGenerator",
+    "total_files": 20,
+    "categories": [
+      "basic_shapes",
+      "gradients",
+      "transforms",
+      "groups",
+      "text",
+      "filters",
+      "edge_cases",
+      "complex_paths",
+      "stress_tests"
+    ],
+    "complexity_levels": [
+      "intermediate",
+      "edge_case",
+      "advanced",
+      "basic",
+      "stress"
+    ],
+    "total_elements": 131
+  },
+  "test_files": {
+    "basic_shapes/basic_rectangle.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "rectangle",
+        "fill",
+        "stroke"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_rectangle.svg",
+      "file_size": 308,
+      "generated": true
+    },
+    "basic_shapes/basic_circle.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "circle",
+        "fill",
+        "stroke"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_circle.svg",
+      "file_size": 296,
+      "generated": true
+    },
+    "basic_shapes/basic_ellipse.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "ellipse",
+        "fill",
+        "stroke"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_ellipse.svg",
+      "file_size": 300,
+      "generated": true
+    },
+    "basic_shapes/basic_line.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "line",
+        "stroke",
+        "stroke-linecap"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_line.svg",
+      "file_size": 299,
+      "generated": true
+    },
+    "basic_shapes/basic_polygon.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "polygon",
+        "fill",
+        "stroke"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_polygon.svg",
+      "file_size": 316,
+      "generated": true
+    },
+    "basic_shapes/basic_polyline.svg": {
+      "category": "basic_shapes",
+      "complexity": "basic",
+      "features": [
+        "polyline",
+        "stroke",
+        "stroke-linejoin"
+      ],
+      "expected_elements": 1,
+      "file_path": "basic_shapes/basic_polyline.svg",
+      "file_size": 331,
+      "generated": true
+    },
+    "complex_paths/bezier_curves.svg": {
+      "category": "complex_paths",
+      "complexity": "advanced",
+      "features": [
+        "path",
+        "bezier_curves",
+        "quadratic_curves",
+        "cubic_curves"
+      ],
+      "expected_elements": 1,
+      "file_path": "complex_paths/bezier_curves.svg",
+      "file_size": 326,
+      "generated": true
+    },
+    "complex_paths/arc_segments.svg": {
+      "category": "complex_paths",
+      "complexity": "advanced",
+      "features": [
+        "path",
+        "elliptical_arcs"
+      ],
+      "expected_elements": 1,
+      "file_path": "complex_paths/arc_segments.svg",
+      "file_size": 341,
+      "generated": true
+    },
+    "complex_paths/mixed_path_commands.svg": {
+      "category": "complex_paths",
+      "complexity": "intermediate",
+      "features": [
+        "path",
+        "line_commands",
+        "curve_commands",
+        "mixed_commands"
+      ],
+      "expected_elements": 1,
+      "file_path": "complex_paths/mixed_path_commands.svg",
+      "file_size": 343,
+      "generated": true
+    },
+    "text/simple_text.svg": {
+      "category": "text",
+      "complexity": "basic",
+      "features": [
+        "text",
+        "font-family",
+        "font-size",
+        "text-anchor"
+      ],
+      "expected_elements": 1,
+      "file_path": "text/simple_text.svg",
+      "file_size": 337,
+      "generated": true
+    },
+    "text/styled_text.svg": {
+      "category": "text",
+      "complexity": "intermediate",
+      "features": [
+        "text",
+        "font_variations",
+        "font-weight",
+        "font-style",
+        "opacity"
+      ],
+      "expected_elements": 4,
+      "file_path": "text/styled_text.svg",
+      "file_size": 741,
+      "generated": true
+    },
+    "gradients/linear_gradient.svg": {
+      "category": "gradients",
+      "complexity": "intermediate",
+      "features": [
+        "linear_gradient",
+        "gradient_stops",
+        "defs"
+      ],
+      "expected_elements": 1,
+      "file_path": "gradients/linear_gradient.svg",
+      "file_size": 524,
+      "generated": true
+    },
+    "gradients/radial_gradient.svg": {
+      "category": "gradients",
+      "complexity": "intermediate",
+      "features": [
+        "radial_gradient",
+        "multiple_stops",
+        "defs"
+      ],
+      "expected_elements": 1,
+      "file_path": "gradients/radial_gradient.svg",
+      "file_size": 590,
+      "generated": true
+    },
+    "transforms/complex_transforms.svg": {
+      "category": "transforms",
+      "complexity": "advanced",
+      "features": [
+        "transforms",
+        "translate",
+        "rotate",
+        "scale",
+        "combined_transforms"
+      ],
+      "expected_elements": 4,
+      "file_path": "transforms/complex_transforms.svg",
+      "file_size": 615,
+      "generated": true
+    },
+    "groups/nested_groups.svg": {
+      "category": "groups",
+      "complexity": "advanced",
+      "features": [
+        "groups",
+        "nested_groups",
+        "group_transforms",
+        "group_attributes"
+      ],
+      "expected_elements": 3,
+      "file_path": "groups/nested_groups.svg",
+      "file_size": 575,
+      "generated": true
+    },
+    "filters/drop_shadow.svg": {
+      "category": "filters",
+      "complexity": "advanced",
+      "features": [
+        "filters",
+        "drop_shadow",
+        "filter_effects"
+      ],
+      "expected_elements": 1,
+      "file_path": "filters/drop_shadow.svg",
+      "file_size": 442,
+      "generated": true
+    },
+    "filters/gaussian_blur.svg": {
+      "category": "filters",
+      "complexity": "advanced",
+      "features": [
+        "filters",
+        "gaussian_blur",
+        "filter_effects"
+      ],
+      "expected_elements": 1,
+      "file_path": "filters/gaussian_blur.svg",
+      "file_size": 360,
+      "generated": true
+    },
+    "edge_cases/zero_dimensions.svg": {
+      "category": "edge_cases",
+      "complexity": "edge_case",
+      "features": [
+        "zero_dimensions",
+        "edge_cases",
+        "degenerate_shapes"
+      ],
+      "expected_elements": 3,
+      "expected_behavior": "graceful_degradation",
+      "file_path": "edge_cases/zero_dimensions.svg",
+      "file_size": 466,
+      "generated": true
+    },
+    "edge_cases/extreme_coordinates.svg": {
+      "category": "edge_cases",
+      "complexity": "edge_case",
+      "features": [
+        "extreme_coordinates",
+        "large_numbers",
+        "small_numbers"
+      ],
+      "expected_elements": 3,
+      "expected_behavior": "coordinate_normalization",
+      "file_path": "edge_cases/extreme_coordinates.svg",
+      "file_size": 401,
+      "generated": true
+    },
+    "stress_tests/many_elements.svg": {
+      "category": "stress_tests",
+      "complexity": "stress",
+      "features": [
+        "many_elements",
+        "performance_test"
+      ],
+      "expected_elements": 100,
+      "performance_threshold": 5.0,
+      "file_path": "stress_tests/many_elements.svg",
+      "file_size": 8186,
+      "generated": true
+    }
+  }
+}

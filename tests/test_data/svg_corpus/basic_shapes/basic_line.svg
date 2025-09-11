@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <desc>Single line with stroke properties</desc>
+    <line x1="20" y1="20" x2="180" y2="180" 
+          stroke="#9b59b6" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+    <desc>Multiple combined transformations</desc>
+    <rect x="100" y="100" width="40" height="40" fill="#3498db"/>
+    <rect x="100" y="100" width="40" height="40" fill="#e74c3c" 
+          transform="translate(50, 20) rotate(45)"/>
+    <rect x="100" y="100" width="40" height="40" fill="#2ecc71" 
+          transform="scale(1.5) translate(30, 40)"/>
+    <rect x="100" y="100" width="40" height="40" fill="#f39c12" 
+          transform="translate(80, 80) rotate(30) scale(0.8)"/>
+</svg>

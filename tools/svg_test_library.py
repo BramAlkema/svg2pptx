@@ -6,13 +6,16 @@ This module provides tools for managing, validating, and categorizing
 real-world SVG files used in E2E testing of the conversion pipeline.
 """
 
-import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Set, Optional, Any
 from dataclasses import dataclass, asdict
 from enum import Enum
 from lxml import etree as ET
+
+# Use consolidated utilities
+from tools.base_utilities import FileUtilities
+from tools.validation_utilities import SVGValidator, ValidationLevel
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +79,7 @@ class SVGTestLibrary:
         """Load metadata from JSON file."""
         if self.metadata_file.exists():
             try:
-                with open(self.metadata_file, 'r') as f:
-                    metadata_dict = json.load(f)
+                metadata_dict = FileUtilities.load_json(self.metadata_file)
                 
                 # Convert dict to SVGMetadata objects
                 for filename, data in metadata_dict.items():
@@ -97,8 +99,7 @@ class SVGTestLibrary:
                 for filename, metadata in self.metadata.items()
             }
             
-            with open(self.metadata_file, 'w') as f:
-                json.dump(metadata_dict, f, indent=2)
+            FileUtilities.save_json(metadata_dict, self.metadata_file)
                 
             logger.info(f"Saved metadata for {len(self.metadata)} SVG files")
         except Exception as e:

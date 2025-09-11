@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Expand end-to-end test coverage with real-world SVG files through comprehensive full workflow testing from file upload to PowerPoint download. This initiative will establish robust regression prevention by testing actual design tool outputs (Figma, Illustrator, Inkscape) through the complete conversion pipeline, ensuring production reliability and catching breaking changes before deployment.

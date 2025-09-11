@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <desc>Very large or very small coordinates</desc>
+    <rect x="1000000" y="50" width="50" height="50" fill="#3498db"/>
+    <circle cx="-500" cy="100" r="30" fill="#e74c3c"/>
+    <line x1="0.001" y1="0.001" x2="0.002" y2="0.002" stroke="#2ecc71" stroke-width="1"/>
+</svg>

@@ -8,22 +8,16 @@ against reference files.
 """
 
 import zipfile
-import xml.etree.ElementTree as ET
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-import json
 import hashlib
 import difflib
+import re
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from enum import Enum
-import re
 
-
-class ValidationLevel(Enum):
-    """Validation strictness levels."""
-    STRICT = "strict"
-    STANDARD = "standard" 
-    LENIENT = "lenient"
+from tools.validation_utilities import ValidationLevel, ValidationResult, PPTXValidator as BasePPTXValidator
+from tools.base_utilities import HTMLReportGenerator, FileUtilities
 
 
 class ComparisonResult(Enum):

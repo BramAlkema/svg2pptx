@@ -11,6 +11,8 @@ from .pools import ConverterPool, UtilityPool
 from .batch import BatchProcessor
 from .profiler import PerformanceProfiler
 from .optimizer import PerformanceOptimizer
+from .speedrun_cache import SpeedrunCache, get_speedrun_cache, enable_speedrun_mode as enable_cache_speedrun
+from .speedrun_optimizer import SVGSpeedrunOptimizer, SpeedrunMode, get_speedrun_optimizer, enable_speedrun_mode
 
 __all__ = [
     'ConversionCache',
@@ -21,5 +23,12 @@ __all__ = [
     'UtilityPool',
     'BatchProcessor',
     'PerformanceProfiler',
-    'PerformanceOptimizer'
+    'PerformanceOptimizer',
+    'SpeedrunCache',
+    'SVGSpeedrunOptimizer',
+    'SpeedrunMode',
+    'get_speedrun_cache',
+    'get_speedrun_optimizer',
+    'enable_speedrun_mode',
+    'enable_cache_speedrun'
 ]
