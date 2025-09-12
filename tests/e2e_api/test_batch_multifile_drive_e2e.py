@@ -1,0 +1,501 @@
+#!/usr/bin/env python3
+"""
+E2E tests for Multi-file Upload with Drive Organization.
+
+Tests comprehensive multi-file batch processing with Google Drive integration:
+- Multi-file batch creation with various file counts
+- Google Drive folder organization and hierarchy  
+- File naming and structure preservation
+- Batch completion tracking with Drive uploads
+- Complex folder pattern handling
+"""
+
+import pytest
+import tempfile
+import os
+import json
+import time
+from pathlib import Path
+from unittest.mock import Mock, patch, AsyncMock
+from typing import Dict, Any, List
+import httpx
+from fastapi.testclient import TestClient
+from datetime import datetime
+
+# Import test infrastructure
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from api.main import app
+from api.auth import get_current_user
+from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
+from tests.e2e_api.test_batch_drive_e2e import BatchDriveE2EFixtures
+
+
+class TestMultiFileDriveOrganization(BatchDriveE2EFixtures):
+    """Test multi-file upload with Drive folder organization."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        async def override_auth():
+            return {'api_key': 'e2e_multifile_key', 'user_id': 'e2e_multifile_user'}
+        
+        app.dependency_overrides[get_current_user] = override_auth
+    
+    def teardown_method(self):
+        """Clean up after tests."""
+        app.dependency_overrides.clear()
+    
+    def test_small_batch_drive_organization_e2e(self, client, test_db_path):
+        """Test small batch (2-3 files) with Drive organization."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            with patch('src.batch.drive_tasks.coordinate_batch_workflow') as mock_task:
+                urls = [
+                    "https://example.com/icons/home.svg",
+                    "https://example.com/icons/user.svg",
+                    "https://example.com/icons/settings.svg"
+                ]
+                
+                request_data = {
+                    "urls": urls,
+                    "drive_integration_enabled": True,
+                    "drive_folder_pattern": "SmallBatch-{job_id}-{date}",
+                    "preprocessing_preset": "minimal",
+                    "generate_previews": True
+                }
+                
+                response = client.post("/batch/jobs", json=request_data)
+                
+                assert response.status_code == 200
+                data = response.json()
+                assert data["success"] is True
+                assert data["total_files"] == 3
+                assert data["drive_integration_enabled"] is True
+                
+                # Verify job created with correct parameters
+                job_id = data["job_id"]
+                assert job_id.startswith("batch_")
+                
+                # Verify task was scheduled with correct parameters
+                mock_task.assert_called_once()
+                call_args = mock_task.call_args
+                assert call_args[0][0] == job_id  # job_id parameter
+                assert len(call_args[0][1]) == 3  # urls parameter
+    
+    def test_medium_batch_drive_organization_e2e(self, client, test_db_path):
+        """Test medium batch (10-15 files) with Drive organization."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            with patch('src.batch.drive_tasks.coordinate_batch_workflow') as mock_task:
+                # Generate medium-sized batch
+                urls = [f"https://example.com/medium/file_{i:02d}.svg" for i in range(12)]
+                
+                request_data = {
+                    "urls": urls,
+                    "drive_integration_enabled": True,
+                    "drive_folder_pattern": "MediumBatch/{date}/{job_id}/",
+                    "preprocessing_preset": "default",
+                    "generate_previews": True
+                }
+                
+                response = client.post("/batch/jobs", json=request_data)
+                
+                assert response.status_code == 200
+                data = response.json()
+                assert data["success"] is True
+                assert data["total_files"] == 12
+                assert data["drive_integration_enabled"] is True
+                
+                # Verify proper handling of medium batch
+                mock_task.assert_called_once()
+    
+    def test_drive_folder_pattern_variations_e2e(self, client, test_db_path):
+        """Test various Drive folder pattern configurations."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            with patch('src.batch.drive_tasks.coordinate_batch_workflow'):
+                test_patterns = [
+                    "Custom-{job_id}",
+                    "Projects/{date}/Batch-{job_id}",
+                    "SVG2PPTX/{user_id}/{date}/batch-{job_id}/converted",
+                    "{job_id}-{timestamp}",
+                    "Archive/{year}/{month}/batch_{job_id}"
+                ]
+                
+                urls = ["https://example.com/test1.svg", "https://example.com/test2.svg"]
+                
+                for pattern in test_patterns:
+                    request_data = {
+                        "urls": urls,
+                        "drive_integration_enabled": True,
+                        "drive_folder_pattern": pattern,
+                        "preprocessing_preset": "minimal"
+                    }
+                    
+                    response = client.post("/batch/jobs", json=request_data)
+                    
+                    assert response.status_code == 200
+                    data = response.json()
+                    assert data["success"] is True
+                    assert data["drive_integration_enabled"] is True
+    
+    def test_batch_with_mixed_file_sources_e2e(self, client, test_db_path):
+        """Test batch with files from different sources/domains."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            with patch('src.batch.drive_tasks.coordinate_batch_workflow'):
+                urls = [
+                    "https://cdn1.example.com/icons/home.svg",
+                    "https://cdn2.different.com/graphics/logo.svg",
+                    "https://assets.another.org/diagrams/flow.svg",
+                    "https://static.mysite.io/images/banner.svg"
+                ]
+                
+                request_data = {
+                    "urls": urls,
+                    "drive_integration_enabled": True,
+                    "drive_folder_pattern": "MixedSources-{job_id}",
+                    "preprocessing_preset": "default",
+                    "generate_previews": False  # Skip previews for speed
+                }
+                
+                response = client.post("/batch/jobs", json=request_data)
+                
+                assert response.status_code == 200
+                data = response.json()
+                assert data["success"] is True
+                assert data["total_files"] == 4
+                assert data["drive_integration_enabled"] is True
+    
+    def test_drive_upload_workflow_coordination_e2e(self, client, test_db_path):
+        """Test coordination between batch creation and Drive upload workflow."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            # Step 1: Create batch job
+            with patch('src.batch.drive_tasks.coordinate_batch_workflow') as mock_create:
+                urls = [
+                    "https://example.com/workflow/step1.svg",
+                    "https://example.com/workflow/step2.svg"
+                ]
+                
+                request_data = {
+                    "urls": urls,
+                    "drive_integration_enabled": True,
+                    "drive_folder_pattern": "Workflow-{job_id}",
+                    "preprocessing_preset": "default",
+                    "generate_previews": True
+                }
+                
+                create_response = client.post("/batch/jobs", json=request_data)
+                assert create_response.status_code == 200
+                job_id = create_response.json()["job_id"]
+                
+                # Verify creation task called
+                mock_create.assert_called_once()
+            
+            # Step 2: Simulate completion and check status
+            # First create a completed job manually for testing
+            batch_job = BatchJob(
+                job_id=job_id,
+                status="completed",
+                total_files=2,
+                completed_files=2,
+                failed_files=0,
+                drive_integration_enabled=True,
+                drive_folder_pattern="Workflow-{job_id}"
+            )
+            batch_job.save(test_db_path)
+            
+            # Check status shows completion
+            status_response = client.get(f"/batch/jobs/{job_id}")
+            assert status_response.status_code == 200
+            status_data = status_response.json()
+            assert status_data["status"] == "completed"
+            assert status_data["completed_files"] == 2
+            assert status_data["drive_integration_enabled"] is True
+            
+            # Step 3: Test additional Drive upload
+            with patch('src.batch.drive_tasks.coordinate_upload_only_workflow') as mock_upload:
+                upload_data = {
+                    "folder_pattern": "AdditionalUpload-{job_id}",
+                    "generate_previews": True,
+                    "parallel_uploads": True
+                }
+                
+                upload_response = client.post(f"/batch/jobs/{job_id}/upload-to-drive", json=upload_data)
+                assert upload_response.status_code == 200
+                
+                # Verify upload task called
+                mock_upload.assert_called_once()
+
+
+class TestDriveFolderStructureE2E(BatchDriveE2EFixtures):
+    """Test Google Drive folder structure creation and organization."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        async def override_auth():
+            return {'api_key': 'e2e_structure_key', 'user_id': 'e2e_structure_user'}
+        
+        app.dependency_overrides[get_current_user] = override_auth
+    
+    def teardown_method(self):
+        """Clean up after tests."""
+        app.dependency_overrides.clear()
+    
+    def test_hierarchical_folder_structure_e2e(self, client, test_db_path):
+        """Test creation of hierarchical folder structures."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            # Create job with Drive metadata to simulate completed upload
+            job_id = "hierarchy_test_001"
+            batch_job = BatchJob(
+                job_id=job_id,
+                status="completed",
+                total_files=3,
+                completed_files=3,
+                drive_integration_enabled=True,
+                drive_folder_pattern="Projects/{date}/SVG-Conversion/batch-{job_id}"
+            )
+            batch_job.save(test_db_path)
+            
+            # Add Drive folder metadata
+            drive_metadata = BatchDriveMetadata(
+                batch_job_id=job_id,
+                drive_folder_id="folder_hierarchy_123",
+                drive_folder_url="https://drive.google.com/drive/folders/folder_hierarchy_123",
+                folder_name="batch-hierarchy_test_001",
+                parent_folder_structure="Projects/2024-09-12/SVG-Conversion"
+            )
+            drive_metadata.save(test_db_path)
+            
+            # Add file metadata showing hierarchical organization
+            files_data = [
+                ("home.svg", "home.pptx", "file_home_123"),
+                ("user.svg", "user.pptx", "file_user_456"),  
+                ("settings.svg", "settings.pptx", "file_settings_789")
+            ]
+            
+            for original, converted, file_id in files_data:
+                file_metadata = BatchFileDriveMetadata(
+                    batch_job_id=job_id,
+                    original_filename=original,
+                    converted_filename=converted,
+                    drive_file_id=file_id,
+                    drive_file_url=f"https://drive.google.com/file/d/{file_id}/view",
+                    upload_status="completed",
+                    file_size=1024
+                )
+                file_metadata.save(test_db_path)
+            
+            # Test retrieval of structured information
+            response = client.get(f"/batch/jobs/{job_id}/drive-info")
+            assert response.status_code == 200
+            
+            data = response.json()
+            assert data["drive_folder_id"] == "folder_hierarchy_123"
+            assert len(data["files"]) == 3
+            assert data["folder_structure"] == "Projects/2024-09-12/SVG-Conversion/batch-hierarchy_test_001"
+    
+    def test_folder_naming_consistency_e2e(self, client, test_db_path):
+        """Test consistent folder naming across different batch sizes."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            test_cases = [
+                (2, "TwoBatch"),
+                (5, "FiveBatch"), 
+                (10, "TenBatch")
+            ]
+            
+            for file_count, batch_type in test_cases:
+                # Create job
+                job_id = f"naming_test_{batch_type.lower()}"
+                batch_job = BatchJob(
+                    job_id=job_id,
+                    status="completed",
+                    total_files=file_count,
+                    completed_files=file_count,
+                    drive_integration_enabled=True,
+                    drive_folder_pattern=f"{batch_type}-{{job_id}}"
+                )
+                batch_job.save(test_db_path)
+                
+                # Add Drive metadata
+                drive_metadata = BatchDriveMetadata(
+                    batch_job_id=job_id,
+                    drive_folder_id=f"folder_{batch_type.lower()}_123",
+                    drive_folder_url=f"https://drive.google.com/drive/folders/folder_{batch_type.lower()}_123",
+                    folder_name=f"{batch_type}-{job_id}"
+                )
+                drive_metadata.save(test_db_path)
+                
+                # Test folder info retrieval
+                response = client.get(f"/batch/jobs/{job_id}/drive-info")
+                assert response.status_code == 200
+                
+                data = response.json()
+                assert data["folder_name"] == f"{batch_type}-{job_id}"
+                assert f"{batch_type.lower()}" in data["drive_folder_id"]
+    
+    def test_concurrent_batch_folder_isolation_e2e(self, client, test_db_path):
+        """Test that concurrent batches create isolated folder structures."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            # Create multiple concurrent batches
+            batch_configs = [
+                ("concurrent_batch_a", "ConcurrentA-{job_id}", 3),
+                ("concurrent_batch_b", "ConcurrentB-{job_id}", 4),
+                ("concurrent_batch_c", "ConcurrentC-{job_id}", 2)
+            ]
+            
+            for job_id, pattern, file_count in batch_configs:
+                # Create batch job
+                batch_job = BatchJob(
+                    job_id=job_id,
+                    status="completed",
+                    total_files=file_count,
+                    completed_files=file_count,
+                    drive_integration_enabled=True,
+                    drive_folder_pattern=pattern
+                )
+                batch_job.save(test_db_path)
+                
+                # Add unique Drive metadata for each
+                drive_metadata = BatchDriveMetadata(
+                    batch_job_id=job_id,
+                    drive_folder_id=f"folder_{job_id}",
+                    drive_folder_url=f"https://drive.google.com/drive/folders/folder_{job_id}",
+                    folder_name=pattern.format(job_id=job_id)
+                )
+                drive_metadata.save(test_db_path)
+            
+            # Verify each batch has isolated folder structure
+            for job_id, pattern, file_count in batch_configs:
+                response = client.get(f"/batch/jobs/{job_id}/drive-info")
+                assert response.status_code == 200
+                
+                data = response.json()
+                assert data["drive_folder_id"] == f"folder_{job_id}"
+                expected_name = pattern.format(job_id=job_id)
+                assert data["folder_name"] == expected_name
+                
+                # Verify isolation - no cross-contamination
+                other_job_ids = [other_id for other_id, _, _ in batch_configs if other_id != job_id]
+                for other_id in other_job_ids:
+                    assert other_id not in data["drive_folder_id"]
+                    assert other_id not in data["folder_name"]
+
+
+class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
+    """Test progress tracking for multi-file batches with Drive integration."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        async def override_auth():
+            return {'api_key': 'e2e_progress_key', 'user_id': 'e2e_progress_user'}
+        
+        app.dependency_overrides[get_current_user] = override_auth
+    
+    def teardown_method(self):
+        """Clean up after tests."""
+        app.dependency_overrides.clear()
+    
+    def test_batch_progress_states_e2e(self, client, test_db_path):
+        """Test batch progress through different states."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            job_id = "progress_test_batch"
+            
+            # Test: Created state
+            batch_job = BatchJob(
+                job_id=job_id,
+                status="created",
+                total_files=5,
+                completed_files=0,
+                failed_files=0,
+                drive_integration_enabled=True
+            )
+            batch_job.save(test_db_path)
+            
+            response = client.get(f"/batch/jobs/{job_id}")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "created"
+            assert data["completed_files"] == 0
+            
+            # Test: Processing state  
+            batch_job.status = "processing"
+            batch_job.completed_files = 2
+            batch_job.save(test_db_path)
+            
+            response = client.get(f"/batch/jobs/{job_id}")
+            data = response.json()
+            assert data["status"] == "processing"
+            assert data["completed_files"] == 2
+            
+            # Test: Completed state
+            batch_job.status = "completed"
+            batch_job.completed_files = 5
+            batch_job.save(test_db_path)
+            
+            response = client.get(f"/batch/jobs/{job_id}")
+            data = response.json()
+            assert data["status"] == "completed"
+            assert data["completed_files"] == 5
+            
+            # Test: Uploading state (Drive specific)
+            batch_job.status = "uploading"
+            batch_job.save(test_db_path)
+            
+            response = client.get(f"/batch/jobs/{job_id}")
+            data = response.json()
+            assert data["status"] == "uploading"
+            assert data["drive_integration_enabled"] is True
+    
+    def test_partial_completion_tracking_e2e(self, client, test_db_path):
+        """Test tracking of partial batch completion scenarios."""
+        with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
+            job_id = "partial_completion_test"
+            
+            # Create batch with some failures
+            batch_job = BatchJob(
+                job_id=job_id,
+                status="completed",  # Overall completed but with failures
+                total_files=10,
+                completed_files=7,
+                failed_files=3,
+                drive_integration_enabled=True
+            )
+            batch_job.save(test_db_path)
+            
+            # Add Drive metadata for successful files only
+            drive_metadata = BatchDriveMetadata(
+                batch_job_id=job_id,
+                drive_folder_id="partial_folder_123",
+                drive_folder_url="https://drive.google.com/drive/folders/partial_folder_123"
+            )
+            drive_metadata.save(test_db_path)
+            
+            # Add file metadata for completed files
+            for i in range(7):  # Only successful files
+                file_metadata = BatchFileDriveMetadata(
+                    batch_job_id=job_id,
+                    original_filename=f"file_{i:02d}.svg",
+                    converted_filename=f"file_{i:02d}.pptx",
+                    drive_file_id=f"success_file_{i}",
+                    upload_status="completed"
+                )
+                file_metadata.save(test_db_path)
+            
+            # Test status reflects partial completion
+            response = client.get(f"/batch/jobs/{job_id}")
+            assert response.status_code == 200
+            
+            data = response.json()
+            assert data["status"] == "completed"
+            assert data["total_files"] == 10
+            assert data["completed_files"] == 7
+            assert data["failed_files"] == 3
+            
+            # Test Drive info shows only successful uploads
+            drive_response = client.get(f"/batch/jobs/{job_id}/drive-info")
+            assert drive_response.status_code == 200
+            
+            drive_data = drive_response.json()
+            assert len(drive_data["files"]) == 7  # Only successful files in Drive
+            assert all(f["upload_status"] == "completed" for f in drive_data["files"])
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

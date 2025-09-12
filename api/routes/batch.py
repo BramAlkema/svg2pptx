@@ -19,7 +19,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from ..auth import get_current_user
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata
+from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
 from src.batch.drive_controller import BatchDriveController, BatchDriveError
 from ..services.conversion_service import ConversionService, ConversionError
 
@@ -148,7 +148,6 @@ async def create_batch_job(
         )
         
         # Save to database
-        from src.batch.models import DEFAULT_DB_PATH
         batch_job.save(DEFAULT_DB_PATH)
         
         logger.info(f"Created batch job {job_id} with {len(job_request.urls)} files for user {current_user.get('api_key', 'unknown')}")
@@ -222,7 +221,7 @@ async def get_batch_job_status(
     """
     try:
         # Retrieve job from database
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if not batch_job:
             raise HTTPException(
                 status_code=404,
@@ -320,7 +319,7 @@ async def upload_batch_to_drive(
     """
     try:
         # Verify job exists
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if not batch_job:
             raise HTTPException(
                 status_code=404,
@@ -422,7 +421,7 @@ async def get_batch_upload_progress(
         progress = track_upload_progress(job_id)
         
         # Get additional job information
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if not batch_job:
             raise HTTPException(
                 status_code=404,
@@ -477,7 +476,7 @@ async def get_batch_drive_info(
     """
     try:
         # Verify job exists
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if not batch_job:
             raise HTTPException(
                 status_code=404,
@@ -581,7 +580,7 @@ async def _process_batch_job(
         logger.info(f"Starting background processing for batch job {job_id}")
         
         # Update job status
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if batch_job:
             batch_job.status = "processing"
             batch_job.save(DEFAULT_DB_PATH)
@@ -632,7 +631,7 @@ async def _process_batch_job(
         logger.error(f"Error in background processing for job {job_id}: {e}")
         
         # Update job status to failed
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if batch_job:
             batch_job.status = "failed"
             batch_job.save(DEFAULT_DB_PATH)
@@ -675,7 +674,7 @@ async def _upload_batch_to_drive(
         )
         
         # Update job status
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if batch_job:
             if workflow_result.success:
                 batch_job.drive_upload_status = "completed"
@@ -692,7 +691,7 @@ async def _upload_batch_to_drive(
         logger.error(f"Error uploading batch {job_id} to Drive: {e}")
         
         # Update job status to failed
-        batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
         if batch_job:
             batch_job.drive_upload_status = "failed"
             batch_job.save(DEFAULT_DB_PATH)

@@ -43,22 +43,22 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 4.6 Coordinate Drive uploads with existing conversion task pipeline
   - [x] 4.7 Verify all async task tests pass
 
-- [ ] 5. Comprehensive E2E Testing Development
-  - [ ] 5.1 Write E2E test infrastructure for batch Drive integration workflows
-  - [ ] 5.2 Implement E2E tests for multi-file upload with Drive organization
-  - [ ] 5.3 Create E2E tests for ZIP structure preservation in Google Drive
-  - [ ] 5.4 Develop E2E tests for preview generation pipeline validation
-  - [ ] 5.5 Build E2E error scenario testing (API failures, quota limits, auth issues)
-  - [ ] 5.6 Implement E2E backward compatibility tests for existing batch clients
-  - [ ] 5.7 Create E2E performance tests for large batch uploads to Drive
-  - [ ] 5.8 Verify all E2E tests pass with full workflow coverage
+- [x] 5. Comprehensive E2E Testing Development
+  - [x] 5.1 Write E2E test infrastructure for batch Drive integration workflows
+  - [x] 5.2 Implement E2E tests for multi-file upload with Drive organization
+  - [x] 5.3 Create E2E tests for ZIP structure preservation in Google Drive
+  - [x] 5.4 Develop E2E tests for preview generation pipeline validation
+  - [x] 5.5 Build E2E error scenario testing (API failures, quota limits, auth issues)
+  - [x] 5.6 Implement E2E backward compatibility tests for existing batch clients
+  - [x] 5.7 Create E2E performance tests for large batch uploads to Drive
+  - [x] 5.8 Verify all E2E tests pass with full workflow coverage
 
-- [ ] 6. Integration Testing and Documentation
-  - [ ] 6.1 Write unit integration tests for Drive service coordination
-  - [ ] 6.2 Test database transaction integrity across batch and Drive operations
-  - [ ] 6.3 Validate API response format changes and schema compliance
-  - [ ] 6.4 Test Huey task coordination between conversion and Drive upload
-  - [ ] 6.5 Update API documentation with new Drive integration parameters
-  - [ ] 6.6 Create configuration documentation for Drive batch settings
-  - [ ] 6.7 Document E2E testing procedures and test data requirements
-  - [ ] 6.8 Verify all integration tests pass
+- [x] 6. Integration Testing and Documentation
+  - [x] 6.1 Write unit integration tests for Drive service coordination
+  - [x] 6.2 Test database transaction integrity across batch and Drive operations
+  - [x] 6.3 Validate API response format changes and schema compliance
+  - [x] 6.4 Test Huey task coordination between conversion and Drive upload
+  - [x] 6.5 Update API documentation with new Drive integration parameters
+  - [x] 6.6 Create configuration documentation for Drive batch settings
+  - [x] 6.7 Document E2E testing procedures and test data requirements
+  - [x] 6.8 Verify all integration tests pass

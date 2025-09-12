@@ -40,15 +40,18 @@ class TestBatchRoutes:
         from src.batch.models import init_database
         init_database(self.test_db_path)
         
-        # Mock database path in models
+        # Mock database path in models and API routes
         self.db_path_patcher = patch('src.batch.models.DEFAULT_DB_PATH', self.test_db_path)
+        self.api_db_path_patcher = patch('api.routes.batch.DEFAULT_DB_PATH', self.test_db_path)
         self.db_path_patcher.start()
+        self.api_db_path_patcher.start()
     
     def teardown_method(self):
         """Clean up after each test."""
         # Clean up dependency overrides
         app.dependency_overrides.clear()
         self.db_path_patcher.stop()
+        self.api_db_path_patcher.stop()
     
     def test_create_batch_job_success(self):
         """Test successful batch job creation."""
@@ -62,7 +65,7 @@ class TestBatchRoutes:
             "generate_previews": True
         }
         
-        with patch('api.routes.batch.BackgroundTasks.add_task') as mock_bg_task:
+        with patch('src.batch.drive_tasks.coordinate_batch_workflow') as mock_huey_task:
             response = self.client.post("/batch/jobs", json=request_data)
         
         assert response.status_code == 200
@@ -73,8 +76,8 @@ class TestBatchRoutes:
         assert data["total_files"] == 2
         assert data["drive_integration_enabled"] is True
         
-        # Verify background task was added
-        mock_bg_task.assert_called_once()
+        # Verify Huey task was scheduled
+        mock_huey_task.assert_called_once()
     
     def test_create_batch_job_invalid_urls(self):
         """Test batch job creation with invalid URLs."""
@@ -91,7 +94,7 @@ class TestBatchRoutes:
         response_data = response.json()
         # Check if it's the custom error format or direct detail
         if "detail" in response_data:
-            assert "Invalid URL format" in response_data["detail"]
+            assert "Invalid URL format" in response_data["message"]
         elif "message" in response_data:
             assert "Invalid URL format" in response_data["message"]
         else:
@@ -162,7 +165,7 @@ class TestBatchRoutes:
         response = self.client.get("/batch/jobs/non_existent_job")
         
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"]
+        assert "not found" in response.json()["message"]
     
     def test_upload_batch_to_drive_success(self):
         """Test successful Drive upload initiation."""
@@ -183,7 +186,7 @@ class TestBatchRoutes:
             "max_workers": 5
         }
         
-        with patch('api.routes.batch.BackgroundTasks.add_task') as mock_bg_task:
+        with patch('src.batch.drive_tasks.coordinate_upload_only_workflow') as mock_huey_task:
             response = self.client.post(f"/batch/jobs/{job_id}/upload-to-drive", json=request_data)
         
         assert response.status_code == 200
@@ -191,11 +194,11 @@ class TestBatchRoutes:
         assert data["success"] is True
         assert data["status"] == "uploading"
         
-        # Verify background task was added
-        mock_bg_task.assert_called_once()
+        # Verify Huey task was scheduled
+        mock_huey_task.assert_called_once()
         
         # Verify job was updated
-        updated_job = BatchJob.get_by_id(job_id, self.test_db_path)
+        updated_job = BatchJob.get_by_id(self.test_db_path, job_id)
         assert updated_job.drive_integration_enabled is True
     
     def test_upload_batch_to_drive_job_not_ready(self):
@@ -214,7 +217,7 @@ class TestBatchRoutes:
         response = self.client.post(f"/batch/jobs/{job_id}/upload-to-drive", json=request_data)
         
         assert response.status_code == 400
-        assert "not ready for upload" in response.json()["detail"]
+        assert "not ready for upload" in response.json()["message"]
     
     def test_upload_batch_to_drive_job_not_found(self):
         """Test Drive upload for non-existent job."""
@@ -223,7 +226,7 @@ class TestBatchRoutes:
         response = self.client.post("/batch/jobs/non_existent/upload-to-drive", json=request_data)
         
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"]
+        assert "not found" in response.json()["message"]
     
     def test_get_batch_drive_info_success(self):
         """Test successful Drive info retrieval."""
@@ -292,14 +295,14 @@ class TestBatchRoutes:
         response = self.client.get(f"/batch/jobs/{job_id}/drive-info")
         
         assert response.status_code == 400
-        assert "Drive integration is not enabled" in response.json()["detail"]
+        assert "Drive integration is not enabled" in response.json()["message"]
     
     def test_get_batch_drive_info_job_not_found(self):
         """Test Drive info for non-existent job."""
         response = self.client.get("/batch/jobs/non_existent/drive-info")
         
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"]
+        assert "not found" in response.json()["message"]
 
 
 class TestBatchRouteValidation:
@@ -418,7 +421,7 @@ class TestBatchBackgroundTasks:
             )
         
         # Verify job status was updated
-        updated_job = BatchJob.get_by_id(job_id, self.test_db_path)
+        updated_job = BatchJob.get_by_id(self.test_db_path, job_id)
         assert updated_job.status == "completed"
     
     @pytest.mark.asyncio
@@ -453,7 +456,7 @@ class TestBatchBackgroundTasks:
             )
         
         # Verify job status was updated
-        updated_job = BatchJob.get_by_id(job_id, self.test_db_path)
+        updated_job = BatchJob.get_by_id(self.test_db_path, job_id)
         assert updated_job.drive_upload_status == "completed"
 
 
@@ -485,7 +488,7 @@ class TestBatchErrorHandling:
             response = self.client.post("/batch/jobs", json=request_data)
         
         assert response.status_code == 500
-        assert "Internal server error" in response.json()["detail"]
+        assert "Internal server error" in response.json()["message"]
     
     def test_conversion_service_error(self):
         """Test handling of conversion service errors."""
@@ -509,7 +512,7 @@ class TestBatchErrorHandling:
             response = self.client.post("/batch/jobs/invalid_job/upload-to-drive", json=request_data)
         
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"]
+        assert "not found" in response.json()["message"]
 
 
 if __name__ == "__main__":
