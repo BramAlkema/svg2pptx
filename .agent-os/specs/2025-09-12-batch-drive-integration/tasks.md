@@ -7,22 +7,22 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ## Tasks
 
-- [ ] 1. Database Schema Implementation and Models
-  - [ ] 1.1 Write tests for new database models (batch_drive_metadata, batch_file_drive_metadata)
-  - [ ] 1.2 Create database migration script for Google Drive integration tables
-  - [ ] 1.3 Implement BatchDriveMetadata and BatchFileDriveMetadata model classes
-  - [ ] 1.4 Add Drive integration columns to existing BatchJob model
-  - [ ] 1.5 Create database indexes for performance optimization
-  - [ ] 1.6 Verify all database tests pass
+- [x] 1. Database Schema Implementation and Models
+  - [x] 1.1 Write tests for new database models (batch_drive_metadata, batch_file_drive_metadata)
+  - [x] 1.2 Create database migration script for Google Drive integration tables
+  - [x] 1.3 Implement BatchDriveMetadata and BatchFileDriveMetadata model classes
+  - [x] 1.4 Add Drive integration columns to existing BatchJob model
+  - [x] 1.5 Create database indexes for performance optimization
+  - [x] 1.6 Verify all database tests pass
 
-- [ ] 2. Google Drive Service Integration
-  - [ ] 2.1 Write tests for BatchDriveController and Drive folder management
-  - [ ] 2.2 Implement BatchDriveController with folder creation logic
-  - [ ] 2.3 Integrate existing GoogleDriveService for batch file uploads
-  - [ ] 2.4 Add batch folder organization with hierarchical structure
-  - [ ] 2.5 Implement parallel file upload with error handling
-  - [ ] 2.6 Add Google Slides API integration for batch preview generation
-  - [ ] 2.7 Verify all Drive service tests pass
+- [x] 2. Google Drive Service Integration
+  - [x] 2.1 Write tests for BatchDriveController and Drive folder management
+  - [x] 2.2 Implement BatchDriveController with folder creation logic
+  - [x] 2.3 Integrate existing GoogleDriveService for batch file uploads
+  - [x] 2.4 Add batch folder organization with hierarchical structure
+  - [x] 2.5 Implement parallel file upload with error handling
+  - [x] 2.6 Add Google Slides API integration for batch preview generation
+  - [x] 2.7 Verify all Drive service tests pass
 
 - [ ] 3. Batch API Endpoint Enhancements
   - [ ] 3.1 Write tests for enhanced batch endpoints with Drive parameters
