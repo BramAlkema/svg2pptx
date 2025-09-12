@@ -24,17 +24,7 @@ huey = SqliteHuey(
     immediate=os.getenv('HUEY_IMMEDIATE', 'false').lower() == 'true',  # Sync mode for testing
     results=True,  # Store task results
     store_none=False,  # Don't store None results
-    utc=True,  # Use UTC timestamps
-    # Consumer settings
-    consumer={
-        'workers': int(os.getenv('HUEY_WORKERS', '4')),
-        'worker_type': 'thread',  # Use threads for I/O bound tasks
-        'initial_delay': 0.1,
-        'backoff': 1.15,
-        'max_delay': 10.0,
-        'check_worker_health': True,
-        'health_check_interval': 1,
-    }
+    utc=True  # Use UTC timestamps
 )
 
 # Export for use in tasks

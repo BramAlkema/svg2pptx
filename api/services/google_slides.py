@@ -288,6 +288,47 @@ class GoogleSlidesService:
             pass
         
         return str(error)
+    
+    def generate_preview(self, presentation_id: str) -> Dict[str, Any]:
+        """
+        Generate preview URLs for a presentation.
+        
+        Args:
+            presentation_id: Google Drive file ID of the presentation
+            
+        Returns:
+            Dictionary with preview information
+        """
+        try:
+            # Use existing thumbnail generation method
+            thumbnails_result = self.get_slide_thumbnails(presentation_id)
+            
+            if thumbnails_result.get('success'):
+                thumbnail_urls = thumbnails_result.get('thumbnails', [])
+                
+                # Create preview URLs (Drive thumbnail API format)
+                preview_url = f"https://drive.google.com/thumbnail?id={presentation_id}"
+                thumbnail_url = thumbnail_urls[0] if thumbnail_urls else preview_url
+                
+                return {
+                    'success': True,
+                    'fileId': presentation_id,
+                    'previewUrl': preview_url,
+                    'thumbnailUrl': thumbnail_url,
+                    'allThumbnails': thumbnail_urls
+                }
+            else:
+                # Fallback to basic Drive preview
+                return {
+                    'success': True,
+                    'fileId': presentation_id,
+                    'previewUrl': f"https://drive.google.com/thumbnail?id={presentation_id}",
+                    'thumbnailUrl': f"https://drive.google.com/thumbnail?id={presentation_id}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to generate preview for {presentation_id}: {e}")
+            raise GoogleSlidesError(f"Preview generation failed: {e}")
 
 
 # Utility functions for easier access
