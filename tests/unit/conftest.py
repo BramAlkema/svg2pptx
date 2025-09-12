@@ -8,7 +8,7 @@ This conftest.py provides fixtures specific to unit testing of individual compon
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 from pathlib import Path
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 @pytest.fixture

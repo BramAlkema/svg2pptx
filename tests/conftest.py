@@ -12,7 +12,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from typing import Dict, Any, Generator
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 import pytest
 

@@ -4,11 +4,66 @@ This is the technical specification for the spec detailed in @.agent-os/specs/20
 
 ## Technical Requirements
 
-- **Real-World SVG Test Library**: Curated collection of 50+ SVG files exported from Figma, Adobe Illustrator, Inkscape, and web-based tools covering diverse design patterns (geometric shapes, complex paths, text elements, gradients, filters, animations)
-- **FastAPI E2E Test Framework**: Comprehensive test suite using pytest and httpx to test complete API workflows including multipart file upload, conversion processing, status polling, and PPTX download endpoints
-- **Visual Fidelity Validation System**: Automated comparison framework using python-pptx to extract and validate converted content against expected outputs, including shape properties, text content, color values, and positioning
-- **Converter Module Integration Testing**: Enhanced test scenarios that exercise all converter modules (shapes, paths, text, gradients, filters, animations, masking, markers) through real-world SVG files rather than synthetic test data
-- **Regression Detection Pipeline**: CI/CD integration using GitHub Actions to run the complete E2E test suite on every pull request and commit, with failure notifications and coverage reporting
-- **Coverage Tracking and Reporting**: Enhanced pytest-cov configuration to track converter module execution paths during E2E tests, generating detailed coverage reports showing which real-world scenarios exercise which code paths
-- **Test Data Management**: Structured organization of SVG test files with metadata describing source tool, design complexity, and expected converter module usage for systematic testing
-- **Error Scenario Validation**: Comprehensive testing of edge cases including malformed SVG files, unsupported features, large file handling, and proper error response formats through the API
+### Coverage Metrics and Targets
+- **Overall E2E Coverage**: 90% minimum across all modules
+- **API Endpoints**: 95% coverage including error paths and authentication flows
+- **Core Conversion Logic**: 92% coverage of SVG parsing and PPTX generation
+- **Integration Services**: 88% coverage of Google Drive and Slides API interactions
+- **Error Handling**: 85% coverage of failure scenarios and edge cases
+
+### Test Infrastructure Enhancements
+- **Pytest Framework**: Leverage existing pytest configuration with E2E test markers
+- **Test Data Management**: Comprehensive SVG sample library with real-world examples
+- **Mocking Strategy**: Enhanced Google API mocks and network condition simulation
+- **Parallel Execution**: Optimize test suite to run in under 10 minutes
+- **Coverage Monitoring**: Automated pre-commit hooks and CI pipeline integration
+
+### API Layer Testing Requirements
+- **FastAPI Endpoints**: Complete coverage of /convert, /previews, and authentication routes
+- **Request Validation**: Test all parameter combinations and validation errors
+- **Authentication**: OAuth flow testing and API key validation scenarios
+- **Rate Limiting**: Throttling behavior and quota management testing
+- **CORS and Security**: Header validation and security policy enforcement
+
+### Conversion Engine Testing Requirements
+- **SVG Parser**: Valid and malformed SVG document handling
+- **Element Converters**: All converter modules (shapes, paths, text, gradients, transforms)
+- **Converter Registry**: Registration, lookup, and fallback behavior testing
+- **Context Passing**: Data flow validation between converter stages
+- **PPTX Generation**: Output structure and formatting validation
+
+### Integration Testing Requirements
+- **Google Services**: Drive API, Slides API, and OAuth authentication flows
+- **File Operations**: Upload, download, and metadata management
+- **Concurrent Processing**: Multi-threaded conversion and resource management
+- **Error Propagation**: Service failure handling and recovery workflows
+- **Performance Validation**: Memory usage and processing time thresholds
+
+### Error Handling Testing Requirements
+- **Input Validation**: Invalid SVG syntax and unsupported feature handling
+- **System Errors**: Network failures, API quota limits, and resource exhaustion
+- **Graceful Degradation**: Partial failure recovery and cleanup procedures
+- **Security Testing**: Malicious input handling and injection prevention
+
+### Performance and Quality Requirements
+- **Test Execution Time**: Complete E2E suite runs in under 10 minutes
+- **Memory Management**: Tests validate memory usage and cleanup
+- **Flaky Test Prevention**: Deterministic test execution with proper setup/teardown
+- **Coverage Quality**: Focus on meaningful scenarios rather than line coverage alone
+- **Regression Prevention**: Automated coverage threshold enforcement in CI
+
+### Monitoring and Reporting Requirements
+- **Coverage Dashboard**: Real-time coverage metrics and trend analysis
+- **HTML Reports**: Detailed coverage reports with drill-down capabilities
+- **CI Integration**: Pull request coverage reporting and regression alerts
+- **Team Notifications**: Coverage threshold violations and quality metrics
+
+## External Dependencies (Conditional)
+
+This specification builds upon existing testing infrastructure and does not require new external dependencies. The implementation will leverage:
+
+- **pytest**: Already configured with comprehensive marker system
+- **pytest-cov**: Existing coverage measurement and reporting
+- **pytest-xdist**: For parallel test execution optimization
+- **httpx**: For FastAPI client testing (already in use)
+- **Google API libraries**: Already integrated for service testing

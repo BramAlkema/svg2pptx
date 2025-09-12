@@ -6,7 +6,7 @@ This module provides specialized validation classes and utilities that extend
 the base validation framework for SVG, PPTX, and workflow validation tasks.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional, Set

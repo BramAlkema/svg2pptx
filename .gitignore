@@ -54,4 +54,4 @@ temp/
 
 # OS generated files
 *.tmp
-*.log
+*.logdata/*.db
