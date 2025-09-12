@@ -34,14 +34,14 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [ ] 3.7 Implement backward compatibility and parameter validation
   - [ ] 3.8 Verify all API endpoint tests pass
 
-- [ ] 4. Huey Task Queue Integration
-  - [ ] 4.1 Write tests for async Drive upload tasks and job coordination
-  - [ ] 4.2 Implement async Google Drive upload tasks in Huey queue
-  - [ ] 4.3 Add Drive upload status tracking to existing job monitoring
-  - [ ] 4.4 Implement error recovery and retry logic for failed uploads
-  - [ ] 4.5 Add Drive API rate limiting and quota management
-  - [ ] 4.6 Coordinate Drive uploads with existing conversion task pipeline
-  - [ ] 4.7 Verify all async task tests pass
+- [x] 4. Huey Task Queue Integration
+  - [x] 4.1 Write tests for async Drive upload tasks and job coordination
+  - [x] 4.2 Implement async Google Drive upload tasks in Huey queue
+  - [x] 4.3 Add Drive upload status tracking to existing job monitoring
+  - [x] 4.4 Implement error recovery and retry logic for failed uploads
+  - [x] 4.5 Add Drive API rate limiting and quota management
+  - [x] 4.6 Coordinate Drive uploads with existing conversion task pipeline
+  - [x] 4.7 Verify all async task tests pass
 
 - [ ] 5. Comprehensive E2E Testing Development
   - [ ] 5.1 Write E2E test infrastructure for batch Drive integration workflows
