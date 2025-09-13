@@ -149,39 +149,83 @@ include = [
 # Development tool configurations
 
 [tool.pytest.ini_options]
+# Test discovery - Optimized for consolidated directory structure
 testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
+python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+# Test execution options - Enhanced for better output and monitoring
 addopts = [
+    # Strict validation
     "--strict-markers",
     "--strict-config",
+    
+    # Coverage configuration
     "--cov=src",
+    "--cov=api",
     "--cov-report=html:htmlcov",
     "--cov-report=xml:coverage.xml", 
-    "--cov-report=term-missing",
-    "--cov-fail-under=80",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=85",
+    
+    # Output formatting
     "--tb=short",
     "--no-header",
-    "--showlocals"
+    "--showlocals",
+    "--durations=10",
+    "--durations-min=1.0",
+    
+    # Performance and monitoring
+    "--maxfail=5",
+    "--disable-warnings"
 ]
+
+# Test markers - Updated for consolidated structure
 markers = [
-    "unit: Unit tests for individual components",
-    "integration: Integration tests for multiple components",
-    "visual: Visual regression tests for SVG-to-PPTX conversion",
-    "benchmark: Performance benchmark tests",
+    # Primary test categories (aligned with directory structure)
+    "unit: Unit tests for individual components (tests/unit/)",
+    "integration: Integration tests for multiple components (tests/integration/)",
+    "e2e: End-to-end tests (tests/e2e/)",
+    "visual: Visual regression tests (tests/visual/)",
+    "benchmark: Performance benchmark tests (tests/performance/benchmarks/)",
+    "architecture: Architecture and consistency tests (tests/quality/architecture/)",
+    "coverage: Coverage analysis tests (tests/quality/coverage/)",
+    
+    # Test characteristics
     "slow: Tests that take more than 10 seconds",
+    
+    # Component-specific markers
     "converter: Tests for converter modules",
-    "utils: Tests for utility modules", 
-    "performance: Tests for performance optimization modules",
+    "validation: Tests for validation components",
+    "processing: Tests for core processing components",
+    "utils: Tests for utility modules",
+    "batch: Tests for batch processing",
     "api: Tests for API endpoints",
     "db: Tests requiring database operations",
+    
+    # Legacy markers for SVG elements (maintained for compatibility)
     "missing_elements: Tests for missing SVG elements (polyline, tspan, image, symbol, use, pattern, feGaussianBlur, feDropShadow, defs, style)",
     "critical_missing: Tests for critical priority missing elements (image, feDropShadow, tspan)",
     "high_missing: Tests for high priority missing elements (polyline, symbol, use, feGaussianBlur)",
     "medium_missing: Tests for medium priority missing elements (pattern, style, defs, svg)"
 ]
-minversion = "6.0"
+
+# Version and plugin requirements
+minversion = "7.0"
+required_plugins = [
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0", 
+    "pytest-benchmark>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "pytest-html>=3.2.0"
+]
+
+# Test execution configuration
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
 
 [tool.coverage.run]
 source = ["src"]

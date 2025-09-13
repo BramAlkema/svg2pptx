@@ -8,7 +8,7 @@ converter modules.
 
 import pytest
 from unittest.mock import Mock, patch
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 @pytest.fixture

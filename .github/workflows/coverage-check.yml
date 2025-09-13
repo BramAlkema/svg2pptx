@@ -1,0 +1,60 @@
+name: Coverage Regression Check
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  coverage-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch full history for coverage comparison
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests with coverage
+      run: |
+        PYTHONPATH=. pytest tests/unit/converters/ tests/integration/ tests/e2e_library/ \
+          --cov=src --cov-report=xml --cov-report=term-missing \
+          --cov-fail-under=38 --tb=short
+    
+    - name: Check coverage regression
+      run: |
+        python tools/coverage_regression_check.py \
+          --current-coverage coverage.xml \
+          --baseline-coverage 38.35 \
+          --regression-threshold 2.0 \
+          --target-coverage 90.0
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+    
+    - name: Generate coverage report
+      if: always()
+      run: |
+        python tools/coverage_utils.py --generate-report --output coverage-report.html
+    
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage-report.html

@@ -175,6 +175,7 @@ class TestPathConverter:
         converter = PathConverter()
         element = ET.fromstring('<path d=""/>')
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         
         result = converter.convert(element, context)
         assert result == ""
@@ -184,6 +185,7 @@ class TestPathConverter:
         converter = PathConverter()
         element = ET.fromstring('<path/>')
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         
         result = converter.convert(element, context)
         assert result == ""
@@ -195,6 +197,7 @@ class TestPathConverter:
         
         # Mock context with required attributes
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         context.get_next_shape_id.return_value = 1001
         context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
@@ -239,6 +242,7 @@ class TestPathConverter:
         expected_y = int((20.0 / 100) * 21600)
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -262,6 +266,7 @@ class TestPathConverter:
         converter.current_pos = [5.0, 10.0]  # Set current position
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -277,6 +282,7 @@ class TestPathConverter:
         """Test handling move command with multiple coordinate pairs."""
         converter = PathConverter()
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -299,6 +305,7 @@ class TestPathConverter:
         expected_y = int((40.0 / 100) * 21600)
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -321,6 +328,7 @@ class TestPathConverter:
         converter.current_pos = [10.0, 20.0]
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -341,6 +349,7 @@ class TestPathConverter:
         expected_y = int((20.0 / 100) * 21600)  # Y unchanged from current position
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -366,6 +375,7 @@ class TestPathConverter:
         expected_y = int((60.0 / 100) * 21600)  # New Y position
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -387,6 +397,7 @@ class TestPathConverter:
         converter.current_pos = [0.0, 0.0]
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -411,6 +422,7 @@ class TestPathConverter:
         converter.current_pos = [10.0, 10.0]
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -431,6 +443,7 @@ class TestPathConverter:
         converter.last_control = [15.0, 25.0]  # Previous control point
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -453,6 +466,7 @@ class TestPathConverter:
         converter.last_control = None
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -470,6 +484,7 @@ class TestPathConverter:
         converter.current_pos = [10.0, 10.0]
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -492,6 +507,7 @@ class TestPathConverter:
         converter.last_control = [15.0, 10.0]  # Previous quadratic control
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -511,6 +527,7 @@ class TestPathConverter:
         converter.current_pos = [10.0, 10.0]
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -532,6 +549,7 @@ class TestPathConverter:
         path_data = PathData("M10,10 L20,20 Z")
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -550,6 +568,7 @@ class TestPathConverter:
         expected_y = int((50.0 / 100) * 21600)   # (50/100)*21600=10800
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 200  # SVG is 200 units wide
         mock_coord_system.svg_height = 100  # SVG is 100 units tall
@@ -572,6 +591,7 @@ class TestPathConverter:
         
         element = ET.fromstring('<path d="M0,0 L10,10"/>')
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         context.get_next_shape_id.return_value = 1001
         context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
@@ -602,6 +622,7 @@ class TestPathConverterIntegration:
         element = ET.fromstring('<path d="M10,10 L20,10 Q25,5 30,10 C35,5 45,5 50,10 Z"/>')
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         context.get_next_shape_id.return_value = 2001
         context.viewport_context = Mock()  # Add missing viewport_context
         mock_coord_system = Mock()
@@ -630,6 +651,7 @@ class TestPathConverterIntegration:
         converter = PathConverter()
         
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100
@@ -662,6 +684,7 @@ class TestPathConverterIntegration:
         """Test handling of commands with insufficient coordinates."""
         converter = PathConverter()
         context = Mock(spec=ConversionContext)
+        context.svg_root = Mock()  # Add missing svg_root
         mock_coord_system = Mock()
         mock_coord_system.svg_width = 100
         mock_coord_system.svg_height = 100

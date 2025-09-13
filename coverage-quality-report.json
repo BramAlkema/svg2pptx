@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-09-11T23:56:01.061987",
+  "metrics": {
+    "line_rate": 42.29,
+    "branch_rate": 28.58,
+    "lines_covered": 4556,
+    "lines_valid": 10774,
+    "branches_covered": 1240,
+    "branches_valid": 4338
+  },
+  "baseline_coverage": 38.35,
+  "target_coverage": 90.0,
+  "progress_to_target": 7.628267182962242,
+  "quality_gates": {
+    "minimum_coverage": {
+      "threshold": 36.35,
+      "current": 42.29,
+      "passed": true,
+      "description": "Coverage must not drop below 36.4%"
+    },
+    "regression_check": {
+      "threshold": 2.0,
+      "current": 0,
+      "passed": true,
+      "description": "Coverage regression must not exceed 2.0%"
+    },
+    "improvement_trend": {
+      "threshold": 38.35,
+      "current": 42.29,
+      "passed": true,
+      "description": "Coverage should improve over time"
+    }
+  },
+  "overall_status": true
+}

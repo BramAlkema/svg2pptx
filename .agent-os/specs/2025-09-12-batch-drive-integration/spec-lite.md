@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Extend the existing batch processing API with Google Drive integration to automatically upload converted PowerPoint files and organize them in structured folders. This feature will provide the same Google Drive capabilities available in single-file conversion to batch processing users, enabling seamless workflow integration with Google Workspace and eliminating manual file management for batch operations.

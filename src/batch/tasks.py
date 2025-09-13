@@ -420,7 +420,7 @@ def extract_and_process_zip(zip_content: bytes, conversion_options: Dict[str, An
 
 
 # Periodic cleanup task
-@huey.periodic_task(cron_str='0 2 * * *')  # Run daily at 2 AM
+@huey.periodic_task(cron_str='0 2 * * *', validate_datetime=True)  # Run daily at 2 AM
 def periodic_cleanup():
     """
     Periodic cleanup of old temporary files and completed jobs.
