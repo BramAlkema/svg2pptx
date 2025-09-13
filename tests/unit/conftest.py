@@ -76,19 +76,5 @@ def unit_test_svg_elements():
     }
 
 
-@pytest.fixture
-def mock_conversion_context():
-    """Enhanced mock conversion context for unit tests."""
-    mock = Mock()
-    mock.get_next_shape_id.return_value = 1001
-    mock.coordinate_system = None
-    mock.gradients = {}
-    mock.patterns = {}
-    mock.clips = {}
-    mock.fonts = {}
-    mock.group_stack = []
-    mock.style_stack = []
-    mock.current_transform = None
-    mock.to_emu.return_value = 914400
-    mock.to_pixels.return_value = 96.0
-    return mock
+# Note: mock_conversion_context fixture is now imported from tests.fixtures.mock_objects
+# If you need unit-test-specific enhancements, override it locally in individual test files

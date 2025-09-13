@@ -168,7 +168,8 @@ def main():
 # API Functions for integration tests and external use
 def convert_svg_to_pptx(svg_input, output_path: str = None, 
                        slide_width: float = 10, slide_height: float = 7.5,
-                       preprocessing_config: dict = None) -> str:
+                       preprocessing_config: dict = None,
+                       title: str = None, author: str = None) -> str:
     """
     Convert SVG content or file to PowerPoint presentation.
     

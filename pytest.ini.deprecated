@@ -1,9 +1,15 @@
 [tool:pytest]
-# Test discovery
+# Test discovery - Enforces naming conventions
 testpaths = tests
-python_files = test_*.py *_test.py
+python_files = test_*.py
 python_classes = Test*
 python_functions = test_*
+
+# Test file naming validation
+# Only test_*.py files are collected (no *_test.py support)
+# E2E tests must have _e2e suffix: test_*_e2e.py
+# Visual tests must have _visual suffix: test_*_visual.py  
+# Benchmark tests must have _benchmark suffix: test_*_benchmark.py
 
 # Test execution options
 addopts = 
@@ -18,18 +24,28 @@ addopts =
     --no-header
     --showlocals
 
-# Markers for test categorization
+# Markers for test categorization - Updated for standardized naming
 markers =
-    unit: Unit tests for individual components
-    integration: Integration tests for multiple components
-    visual: Visual regression tests for SVG-to-PPTX conversion
-    benchmark: Performance benchmark tests
+    # Primary test categories
+    unit: Unit tests for individual components (tests/unit/)
+    integration: Integration tests for multiple components (tests/integration/)  
+    e2e: End-to-end tests (tests/e2e_*/)
+    visual: Visual regression tests (tests/visual/)
+    benchmark: Performance benchmark tests (tests/benchmarks/)
+    architecture: Architecture and consistency tests (tests/architecture/)
+    coverage: Coverage analysis tests (tests/coverage/)
+    
+    # Test characteristics
     slow: Tests that take more than 10 seconds
+    
+    # Component-specific markers
     converter: Tests for converter modules
     utils: Tests for utility modules
-    performance: Tests for performance optimization modules
     api: Tests for API endpoints
+    batch: Tests for batch processing
     db: Tests requiring database operations
+    
+    # Legacy markers for SVG elements
     missing_elements: Tests for missing SVG elements (polyline, tspan, image, symbol, use, pattern, feGaussianBlur, feDropShadow, defs, style)
     critical_missing: Tests for critical priority missing elements (image, feDropShadow, tspan)
     high_missing: Tests for high priority missing elements (polyline, symbol, use, feGaussianBlur)

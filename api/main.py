@@ -176,6 +176,7 @@ async def http_exception_handler(request, exc):
             "error": True,
             "status_code": exc.status_code,
             "message": exc.detail,
+            "detail": exc.detail,  # Include detail field for consistency
             "path": str(request.url.path),
             "method": request.method
         }

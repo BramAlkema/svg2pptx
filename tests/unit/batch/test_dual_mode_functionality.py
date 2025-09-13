@@ -17,9 +17,11 @@ os.environ['HUEY_IMMEDIATE'] = 'true'
 from src.batch.api import create_batch_router
 
 
+# Note: sample_svg_content fixture is imported from tests.fixtures.svg_content
+# This returns a byte string for compatibility
 @pytest.fixture
-def sample_svg_content():
-    """Sample SVG content for testing."""
+def sample_svg_content_bytes():
+    """Sample SVG content as bytes for testing."""
     return b'<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>'
 
 
