@@ -24,7 +24,10 @@ from src.converters.filters import (
     FilterPrimitiveType, FilterUnits, ColorMatrixType
 )
 from src.converters.base import ConversionContext
-from src.colors import ColorInfo
+from src.colors import ColorInfo, ColorFormat
+
+# Import centralized fixtures
+from tests.fixtures import *
 
 
 class TestFilterEnums:
@@ -121,7 +124,10 @@ class TestFilterDataClasses:
     
     def test_drop_shadow_primitive(self):
         """Test DropShadowPrimitive functionality."""
-        color = ColorInfo(red=128, green=128, blue=128, alpha=0.8)
+        color = ColorInfo(
+            red=128, green=128, blue=128, alpha=0.8,
+            format=ColorFormat.RGBA, original="rgba(128,128,128,0.8)"
+        )
         shadow = DropShadowPrimitive(
             type=FilterPrimitiveType.DROP_SHADOW,
             input="SourceGraphic", result="shadow1",
@@ -193,7 +199,9 @@ class TestFilterConverter:
         
         # Mock dependencies
         self.converter.color_parser = Mock()
-        self.converter.color_parser.parse.return_value = ColorInfo(255, 0, 0, 1.0)
+        self.converter.color_parser.parse.return_value = ColorInfo(
+            255, 0, 0, 1.0, ColorFormat.RGB, "rgb(255,0,0)"
+        )
         self.converter.unit_converter = Mock()
         self.converter.unit_converter.convert_to_emu.return_value = 914400
         self.converter.transform_parser = Mock()
@@ -262,7 +270,7 @@ class TestFilterDefinitionParsing:
         """Setup test fixtures."""
         self.converter = FilterConverter()
         self.converter.color_parser = Mock()
-        self.converter.color_parser.parse.return_value = ColorInfo(0, 0, 0, 1.0)
+        self.converter.color_parser.parse.return_value = ColorInfo(0, 0, 0, 1.0, ColorFormat.RGB, "rgb(0,0,0)")
     
     def test_extract_filter_definition_basic(self):
         """Test basic filter definition extraction."""
@@ -349,7 +357,7 @@ class TestFilterPrimitiveParsing:
         """Setup test fixtures."""
         self.converter = FilterConverter()
         self.converter.color_parser = Mock()
-        self.converter.color_parser.parse.return_value = ColorInfo(128, 128, 128, 0.5)
+        self.converter.color_parser.parse.return_value = ColorInfo(128, 128, 128, 0.5, ColorFormat.RGBA, "rgba(128,128,128,0.5)")
     
     def test_parse_gaussian_blur_primitive(self):
         """Test parsing feGaussianBlur primitive."""
@@ -681,7 +689,7 @@ class TestFilterIntegrationScenarios:
         self.converter = FilterConverter()
         self.context = Mock()
         self.converter.color_parser = Mock()
-        self.converter.color_parser.parse.return_value = ColorInfo(0, 0, 0, 1.0)
+        self.converter.color_parser.parse.return_value = ColorInfo(0, 0, 0, 1.0, ColorFormat.RGB, "rgb(0,0,0)")
     
     def test_complete_filter_workflow(self):
         """Test complete filter processing workflow."""

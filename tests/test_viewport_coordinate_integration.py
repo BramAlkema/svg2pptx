@@ -2,6 +2,12 @@
 """
 Test suite for viewport-aware coordinate conversion integration.
 
+# Centralized fixtures
+from tests.fixtures.common import *
+from tests.fixtures.mock_objects import *
+from tests.fixtures.svg_content import *
+
+
 Tests that coordinate-heavy converters properly integrate with ViewportResolver
 for consistent viewport-aware coordinate mapping across all SVG elements.
 
@@ -10,7 +16,6 @@ in coordinate-heavy converters (paths.py, shapes.py, text.py).
 """
 
 import pytest
-from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 from src.converters.base import ConversionContext, CoordinateSystem

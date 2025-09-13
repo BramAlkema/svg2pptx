@@ -16,11 +16,21 @@ def mock_conversion_context():
     Returns:
         Configured ConversionContext instance for testing.
     """
-    from src.context import ConversionContext
+    from src.converters.base import ConversionContext, CoordinateSystem
+    from unittest.mock import Mock
+    
+    # Create a mock coordinate system
+    mock_coord_system = Mock()
+    mock_coord_system.svg_width = 100
+    mock_coord_system.svg_height = 100
+    mock_coord_system.scale_x = 1.0
+    mock_coord_system.scale_y = 1.0
+    mock_coord_system.translate_x = 0
+    mock_coord_system.translate_y = 0
     
     context = ConversionContext()
     context.shape_id_counter = 1000
-    context.coordinate_system = None
+    context.coordinate_system = mock_coord_system
     context.gradients = {}
     context.patterns = {}
     context.clips = {}
