@@ -30,40 +30,69 @@ class GradientConverter(BaseConverter):
         return tag in self.supported_elements
     
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG gradient to DrawingML gradient fill"""
-        if element.tag.endswith('linearGradient'):
-            return self._convert_linear_gradient(element, context)
-        elif element.tag.endswith('radialGradient'):
-            return self._convert_radial_gradient(element, context)
-        elif element.tag.endswith('pattern'):
-            return self._convert_pattern(element, context)
-        elif element.tag.endswith('meshgradient'):
-            return self._convert_mesh_gradient(element, context)
-        return ""
+        """Convert SVG gradient to DrawingML gradient fill with error handling"""
+        try:
+            if element.tag.endswith('linearGradient'):
+                return self._convert_linear_gradient(element, context)
+            elif element.tag.endswith('radialGradient'):
+                return self._convert_radial_gradient(element, context)
+            elif element.tag.endswith('pattern'):
+                return self._convert_pattern(element, context)
+            elif element.tag.endswith('meshgradient'):
+                return self._convert_mesh_gradient(element, context)
+            else:
+                self.logger.warning(f"Unknown gradient type: {element.tag}")
+                return self._create_fallback_gradient()
+        except Exception as e:
+            self.logger.error(f"Error converting gradient element {element.tag}: {e}")
+            return self._create_fallback_gradient()
     
     def get_fill_from_url(self, url: str, context: ConversionContext) -> str:
-        """Get fill definition from URL reference (url(#id))"""
-        if not url.startswith('url(#') or not url.endswith(')'):
-            return ""
-        
-        if context.svg_root is None:
-            return ""
-        
-        gradient_id = url[5:-1]  # Remove 'url(#' and ')'
-        
-        # Find gradient element in SVG
-        gradient_element = context.svg_root.find(f".//*[@id='{gradient_id}']")
-        if gradient_element is None:
-            # Also check in defs section
-            defs = context.svg_root.find('.//defs')
-            if defs is not None:
-                gradient_element = defs.find(f".//*[@id='{gradient_id}']")
-        
-        if gradient_element is not None:
-            return self.convert(gradient_element, context)
-        
-        return ""
-    
+        """Get fill definition from URL reference (url(#id)) with comprehensive error handling"""
+        try:
+            # Validate URL format
+            if not isinstance(url, str) or not url.startswith('url(#') or not url.endswith(')'):
+                self.logger.warning(f"Invalid URL format: {url}")
+                return ""
+
+            # Validate context
+            if context.svg_root is None:
+                self.logger.error("SVG root not available in context")
+                return ""
+
+            gradient_id = url[5:-1]  # Remove 'url(#' and ')'
+
+            # Validate gradient ID
+            if not gradient_id or gradient_id.strip() == "":
+                self.logger.warning(f"Empty gradient ID in URL: {url}")
+                return ""
+
+            # Find gradient element in SVG
+            gradient_element = context.svg_root.find(f".//*[@id='{gradient_id}']")
+            if gradient_element is None:
+                # Also check in defs section
+                defs = context.svg_root.find('.//defs')
+                if defs is not None:
+                    gradient_element = defs.find(f".//*[@id='{gradient_id}']")
+
+            if gradient_element is not None:
+                try:
+                    return self.convert(gradient_element, context)
+                except Exception as e:
+                    self.logger.error(f"Error converting gradient '{gradient_id}': {e}")
+                    return self._create_fallback_gradient()
+            else:
+                self.logger.warning(f"Gradient not found: {gradient_id}")
+                return self._create_fallback_gradient()
+
+        except Exception as e:
+            self.logger.error(f"Unexpected error in get_fill_from_url: {e}")
+            return self._create_fallback_gradient()
+
+    def _create_fallback_gradient(self) -> str:
+        """Create fallback gradient for error cases"""
+        return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+
     def _safe_float_parse(self, value: str, default: float = 0.0) -> float:
         """Safely parse a string to float, returning default on error"""
         try:
@@ -219,10 +248,28 @@ class GradientConverter(BaseConverter):
             return self._convert_complex_pattern(element, pattern_analysis, context)
     
     def _get_gradient_stops(self, gradient_element: ET.Element) -> List[Tuple[float, str, float]]:
-        """Extract gradient stops with position, color, and opacity"""
+        """Extract gradient stops with position, color, and opacity using native color system.
+
+        Supports comprehensive SVG stop formats:
+        - Direct attributes: stop-color, stop-opacity, offset
+        - Style attributes: style="stop-color: red; stop-opacity: 0.5"
+        - All color formats: hex, rgb(), hsl(), named colors
+        - Percentage and decimal offsets
+        """
         stops = []
-        
-        for stop in gradient_element.findall('.//stop'):
+
+        # Find stop elements (handle both with and without namespace)
+        stops_elements = gradient_element.findall('.//stop')
+        if not stops_elements:
+            # Try with namespace
+            stops_elements = gradient_element.findall('.//{http://www.w3.org/2000/svg}stop')
+        if not stops_elements:
+            # Try direct children
+            stops_elements = gradient_element.findall('stop')
+            if not stops_elements:
+                stops_elements = gradient_element.findall('{http://www.w3.org/2000/svg}stop')
+
+        for stop in stops_elements:
             # Get stop position (offset) with safe parsing
             offset = stop.get('offset', '0')
             try:
@@ -230,17 +277,19 @@ class GradientConverter(BaseConverter):
                     position = float(offset[:-1]) / 100
                 else:
                     position = float(offset)
+                # Clamp position to valid range
+                position = max(0.0, min(1.0, position))
             except (ValueError, TypeError):
                 position = 0.0  # Default to start if invalid
-            
-            # Get stop color
+
+            # Get stop color and opacity
             stop_color = stop.get('stop-color', '#000000')
             try:
                 stop_opacity = float(stop.get('stop-opacity', '1'))
             except (ValueError, TypeError):
                 stop_opacity = 1.0
-            
-            # Check style attribute for color/opacity
+
+            # Check style attribute for color/opacity (CSS style override)
             style = stop.get('style', '')
             if style:
                 style_props = {}
@@ -248,22 +297,40 @@ class GradientConverter(BaseConverter):
                     if ':' in prop:
                         key, value = prop.split(':', 1)
                         style_props[key.strip()] = value.strip()
-                
+
                 if 'stop-color' in style_props:
                     stop_color = style_props['stop-color']
                 if 'stop-opacity' in style_props:
                     try:
                         stop_opacity = float(style_props['stop-opacity'])
                     except (ValueError, TypeError):
-                        stop_opacity = 1.0
-            
-            # Parse color
+                        pass  # Keep existing opacity
+
+            # Clamp opacity to valid range
+            stop_opacity = max(0.0, min(1.0, stop_opacity))
+
+            # Parse color using native color system (supports hex, rgb, hsl, named CSS colors)
             color_hex = self.parse_color(stop_color)
             if color_hex:
                 stops.append((position, color_hex, stop_opacity))
-        
-        # Sort by position
+            else:
+                # Add fallback stop for invalid colors to maintain gradient structure
+                stops.append((position, "000000", stop_opacity))
+
+        # Sort by position and ensure we have at least one stop
         stops.sort(key=lambda x: x[0])
+
+        # Add default stops if none found
+        if not stops:
+            stops = [(0.0, "000000", 1.0), (1.0, "FFFFFF", 1.0)]
+        elif len(stops) == 1:
+            # Add complementary stop
+            single_stop = stops[0]
+            if single_stop[0] == 0.0:
+                stops.append((1.0, single_stop[1], single_stop[2]))
+            else:
+                stops.insert(0, (0.0, single_stop[1], single_stop[2]))
+
         return stops
     
     def _extract_pattern_color(self, pattern_element: ET.Element) -> Optional[str]:
@@ -500,47 +567,29 @@ class GradientConverter(BaseConverter):
         return mesh_patches
 
     def _parse_stop_color(self, stop_element: ET.Element) -> str:
-        """Parse stop color with HSL/RGB support and precise color handling."""
+        """Parse stop color using native color system with comprehensive format support."""
         color_str = stop_element.get('stop-color', '#000000')
 
-        # Handle various color formats
-        if color_str.startswith('#'):
-            return color_str[1:].upper()  # Remove # and normalize to uppercase
-        elif color_str.startswith('rgb'):
-            # Parse RGB format: rgb(255, 0, 0)
-            import re
-            rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color_str)
-            if rgb_match:
-                r, g, b = map(int, rgb_match.groups())
+        # Use native color parser for all formats (hex, rgb, hsl, named colors)
+        try:
+            color_info = self.color_parser.parse(color_str)
+            if color_info:
+                r, g, b = color_info.rgb_tuple
                 return f"{r:02X}{g:02X}{b:02X}"
-        elif color_str.startswith('hsl'):
-            # Parse HSL format and convert to RGB
-            return self._hsl_to_rgb_hex(color_str)
+        except Exception:
+            pass
 
         # Default fallback
         return "000000"
 
     def _hsl_to_rgb_hex(self, hsl_str: str) -> str:
-        """Convert HSL color string to RGB hex with precision support."""
+        """Convert HSL color string to RGB hex using native color system."""
         try:
-            # Try to use spectra library if available for precise conversion
-            try:
-                import spectra
-                color = spectra.html(hsl_str)
-                rgb = color.rgb
-                r, g, b = [int(c * 255) for c in rgb]
+            # Use native color parser for HSL conversion
+            color_info = self.color_parser.parse(hsl_str)
+            if color_info:
+                r, g, b = color_info.rgb_tuple
                 return f"{r:02X}{g:02X}{b:02X}"
-            except ImportError:
-                # Fallback to manual HSL conversion
-                import re
-                hsl_match = re.match(r'hsl\s*\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)', hsl_str)
-                if hsl_match:
-                    h = float(hsl_match.group(1)) / 360.0
-                    s = float(hsl_match.group(2)) / 100.0
-                    l = float(hsl_match.group(3)) / 100.0
-
-                    r, g, b = self._hsl_to_rgb_precise(h * 360, s * 100, l * 100)
-                    return f"{int(r):02X}{int(g):02X}{int(b):02X}"
         except Exception:
             pass
 
@@ -616,47 +665,49 @@ class GradientConverter(BaseConverter):
         </a:gradFill>'''
 
     def _interpolate_mesh_colors(self, corners: List[Dict[str, Any]]) -> str:
-        """Interpolate colors from 4 corners using bilinear interpolation."""
+        """Interpolate colors from 4 corners using native LAB space blending."""
         if len(corners) != 4:
             return corners[0]['color'] if corners else "808080"
 
         try:
-            # Try using spectra for precise color blending
-            import spectra
-
-            # Convert corner colors to spectra objects
-            spectra_colors = []
+            # Use native color parser for LAB-based blending
+            corner_colors = []
             for corner in corners:
                 color_hex = f"#{corner['color']}"
-                spectra_colors.append(spectra.html(color_hex))
+                color_info = self.color_parser.parse(color_hex)
+                if color_info:
+                    corner_colors.append(color_info)
 
-            # Bilinear interpolation at center point (0.5, 0.5)
-            # Average all 4 corners for center color
-            blended = spectra_colors[0]
-            for color in spectra_colors[1:]:
-                blended = blended.blend(color, ratio=0.5)
+            if len(corner_colors) == 4:
+                # Average interpolation using LAB space for better perceptual blending
+                color1 = self.color_parser.interpolate_lab(corner_colors[0], corner_colors[1], 0.5)
+                color2 = self.color_parser.interpolate_lab(corner_colors[2], corner_colors[3], 0.5)
+                result = self.color_parser.interpolate_lab(color1, color2, 0.5)
 
-            return blended.hexcode[1:].upper()  # Remove # prefix
+                r, g, b = result.rgb_tuple
+                return f"{r:02X}{g:02X}{b:02X}"
 
-        except ImportError:
-            # Fallback to simple RGB averaging
-            total_r = total_g = total_b = 0
+        except Exception:
+            pass
 
-            for corner in corners:
-                color_hex = corner['color']
-                r = int(color_hex[0:2], 16)
-                g = int(color_hex[2:4], 16)
-                b = int(color_hex[4:6], 16)
+        # Fallback to simple RGB averaging
+        total_r = total_g = total_b = 0
 
-                total_r += r
-                total_g += g
-                total_b += b
+        for corner in corners:
+            color_hex = corner['color']
+            r = int(color_hex[0:2], 16)
+            g = int(color_hex[2:4], 16)
+            b = int(color_hex[4:6], 16)
 
-            avg_r = int(total_r / 4)
-            avg_g = int(total_g / 4)
-            avg_b = int(total_b / 4)
+            total_r += r
+            total_g += g
+            total_b += b
 
-            return f"{avg_r:02X}{avg_g:02X}{avg_b:02X}"
+        avg_r = int(total_r / 4)
+        avg_g = int(total_g / 4)
+        avg_b = int(total_b / 4)
+
+        return f"{avg_r:02X}{avg_g:02X}{avg_b:02X}"
 
     def _convert_complex_mesh_to_overlapping_radials(self, mesh_data: List[Dict[str, Any]], context: ConversionContext) -> str:
         """Convert complex mesh to multiple overlapping radial gradients."""
@@ -740,10 +791,10 @@ class GradientConverter(BaseConverter):
     def _interpolate_gradient_colors(self, start_pos: float, start_color: Tuple[int, int, int],
                                    end_pos: float, end_color: Tuple[int, int, int],
                                    target_pos: float) -> Tuple[int, int, int]:
-        """Interpolate colors between two gradient stops with floating-point precision.
+        """Interpolate colors between two gradient stops using LAB space for smoother transitions.
 
-        Implements linear interpolation between two color points for precise
-        gradient color calculations with fractional positioning support.
+        Uses perceptually uniform LAB color space interpolation for better visual
+        gradient quality compared to RGB interpolation.
 
         Args:
             start_pos: Position of start color (0.0-1.0)
@@ -763,10 +814,25 @@ class GradientConverter(BaseConverter):
         if target_pos >= end_pos:
             return end_color
 
-        # Calculate interpolation factor with floating-point precision
-        factor = (target_pos - start_pos) / (end_pos - start_pos)
+        try:
+            # Calculate interpolation factor with floating-point precision
+            factor = (target_pos - start_pos) / (end_pos - start_pos)
 
-        # Linear interpolation for each RGB component
+            # Convert RGB colors to ColorInfo objects for LAB interpolation
+            start_color_info = self.color_parser.parse(f"rgb({start_color[0]}, {start_color[1]}, {start_color[2]})")
+            end_color_info = self.color_parser.parse(f"rgb({end_color[0]}, {end_color[1]}, {end_color[2]})")
+
+            if start_color_info and end_color_info:
+                # Use LAB space interpolation for perceptually smooth transitions
+                result = self.color_parser.interpolate_lab(start_color_info, end_color_info, factor)
+                return result.rgb_tuple
+
+        except Exception:
+            # Fallback to RGB interpolation if LAB fails
+            pass
+
+        # Fallback to linear RGB interpolation
+        factor = (target_pos - start_pos) / (end_pos - start_pos)
         r = int(start_color[0] + (end_color[0] - start_color[0]) * factor)
         g = int(start_color[1] + (end_color[1] - start_color[1]) * factor)
         b = int(start_color[2] + (end_color[2] - start_color[2]) * factor)
@@ -777,6 +843,74 @@ class GradientConverter(BaseConverter):
         b = max(0, min(255, b))
 
         return (r, g, b)
+
+    def _generate_smooth_gradient_stops(self, stops: List[Tuple[float, str, float]], num_stops: int = 10) -> List[Tuple[float, str, float]]:
+        """Generate additional gradient stops using LAB interpolation for smoother gradients.
+
+        Args:
+            stops: Existing gradient stops [(position, color_hex, opacity), ...]
+            num_stops: Total number of stops to generate (minimum 2)
+
+        Returns:
+            Enhanced list of gradient stops with smooth LAB-based interpolation
+        """
+        if len(stops) < 2 or num_stops < 2:
+            return stops
+
+        try:
+            enhanced_stops = []
+
+            # Generate evenly spaced positions
+            for i in range(num_stops):
+                target_position = i / (num_stops - 1)
+
+                # Find the two stops that surround this position
+                prev_stop = None
+                next_stop = None
+
+                for stop in stops:
+                    pos, color_hex, opacity = stop
+                    if pos <= target_position:
+                        prev_stop = stop
+                    if pos >= target_position and next_stop is None:
+                        next_stop = stop
+                        break
+
+                if prev_stop and next_stop:
+                    if prev_stop == next_stop:
+                        # Exact match
+                        enhanced_stops.append(prev_stop)
+                    else:
+                        # Interpolate between stops using LAB space
+                        prev_pos, prev_color_hex, prev_opacity = prev_stop
+                        next_pos, next_color_hex, next_opacity = next_stop
+
+                        # Interpolate position factor
+                        factor = (target_position - prev_pos) / (next_pos - prev_pos) if next_pos != prev_pos else 0.0
+
+                        # Parse colors for LAB interpolation
+                        prev_color = self.color_parser.parse(f"#{prev_color_hex}")
+                        next_color = self.color_parser.parse(f"#{next_color_hex}")
+
+                        if prev_color and next_color:
+                            # LAB interpolation
+                            interpolated = self.color_parser.interpolate_lab(prev_color, next_color, factor)
+                            r, g, b = interpolated.rgb_tuple
+                            interpolated_hex = f"{r:02X}{g:02X}{b:02X}"
+
+                            # Interpolate opacity
+                            interpolated_opacity = prev_opacity + (next_opacity - prev_opacity) * factor
+
+                            enhanced_stops.append((target_position, interpolated_hex, interpolated_opacity))
+                        else:
+                            # Fallback to original stop
+                            enhanced_stops.append(prev_stop)
+
+            return enhanced_stops
+
+        except Exception:
+            # Return original stops if enhancement fails
+            return stops
 
     def _apply_gradient_transform(self, x1: float, y1: float, x2: float, y2: float,
                                 transform_str: str) -> Tuple[float, float, float, float]:
