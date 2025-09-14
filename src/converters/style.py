@@ -3,7 +3,7 @@ StyleConverter for handling SVG <style> elements.
 Processes CSS styles and applies them to SVG elements.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import re
 from typing import Dict, List, Optional, Tuple
 from .base import BaseConverter, ConversionContext

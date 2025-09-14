@@ -162,7 +162,7 @@ def mock_coordinate_system():
 @pytest.fixture
 def mock_batch_job_data() -> Dict[str, Any]:
     """Create mock batch job data for testing.
-    
+
     Returns:
         Dictionary containing sample batch job data.
     """
@@ -177,3 +177,62 @@ def mock_batch_job_data() -> Dict[str, Any]:
             "project": "test-project"
         }
     }
+
+
+# Additional mock fixtures consolidated from scattered conftest files
+
+@pytest.fixture
+def mock_unit_converter():
+    """Mock UniversalUnitConverter for unit tests."""
+    from unittest.mock import Mock
+    mock = Mock()
+    mock.convert_to_emu.return_value = 914400  # 1 inch in EMU
+    mock.convert_to_pixels.return_value = 96.0
+    mock.to_user_units.return_value = 1.0
+    return mock
+
+
+@pytest.fixture
+def mock_color_parser():
+    """Mock UniversalColorParser for unit tests."""
+    from unittest.mock import Mock
+    mock = Mock()
+    mock.parse_color.return_value = (255, 0, 0, 1.0)  # Red, fully opaque
+    mock.to_hex.return_value = "#FF0000"
+    mock.to_rgb.return_value = "rgb(255,0,0)"
+    return mock
+
+
+@pytest.fixture
+def mock_transform_engine():
+    """Mock UniversalTransformEngine for unit tests."""
+    from unittest.mock import Mock
+    mock = Mock()
+    mock.parse_transform.return_value = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]  # Identity matrix
+    mock.apply_transform.return_value = (10.0, 20.0)  # Sample transformed coordinates
+    return mock
+
+
+@pytest.fixture
+def mock_viewport_handler():
+    """Mock ViewportHandler for unit tests."""
+    from unittest.mock import Mock
+    mock = Mock()
+    mock.create_viewport_context.return_value = Mock()
+    mock.get_default_context.return_value = Mock()
+    return mock
+
+
+@pytest.fixture
+def mock_base_converter():
+    """Mock base converter with common functionality."""
+    from unittest.mock import Mock
+    from src.converters.base import BaseConverter
+
+    mock = Mock(spec=BaseConverter)
+    mock.can_convert.return_value = True
+    mock.convert.return_value = "<mock_output/>"
+    mock.reset.return_value = None
+    mock.supported_elements = ['rect', 'circle', 'path', 'text']
+
+    return mock

@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import patch, Mock, mock_open
 import subprocess
 import json
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 
 class TestCoverageConfiguration:

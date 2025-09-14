@@ -8,7 +8,7 @@ Polygon, Polyline, and Line converters.
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pathlib import Path
 import sys
 

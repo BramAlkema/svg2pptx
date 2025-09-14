@@ -11,7 +11,7 @@ import os
 import tempfile
 from pathlib import Path
 from typing import List, Tuple, Optional
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from zipfile import ZipFile
 
 # Test data paths

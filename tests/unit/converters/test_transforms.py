@@ -8,7 +8,7 @@ following the standardized architecture pattern.
 
 import pytest
 import math
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 import sys

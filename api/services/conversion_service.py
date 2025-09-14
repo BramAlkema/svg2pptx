@@ -226,7 +226,7 @@ class ConversionService:
             from testbench import PPTXBuilder
             import tempfile
             import os
-            import xml.etree.ElementTree as ET
+            from lxml import etree as ET
             
             logger.info(f"Starting SVG to PPTX conversion for content from {source_url}")
             

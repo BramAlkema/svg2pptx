@@ -6,7 +6,7 @@ instead of converting to paths when possible.
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import base64
 from unittest.mock import Mock, patch, mock_open
 from pathlib import Path

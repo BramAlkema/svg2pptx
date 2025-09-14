@@ -8,7 +8,7 @@ including font properties, styling, positioning, and text content extraction.
 
 import pytest
 from unittest.mock import Mock, patch
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pathlib import Path
 import sys
 

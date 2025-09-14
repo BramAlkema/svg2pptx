@@ -1,0 +1,42 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Tool Dependency Analysis</title>
+            <meta charset="utf-8">
+            
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+            .header { background: #f4f4f4; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+            .metric { margin: 10px 0; padding: 10px; background: #f9f9f9; border-left: 4px solid #333; }
+            .success { border-left-color: #4CAF50; }
+            .warning { border-left-color: #FF9800; }
+            .error { border-left-color: #f44336; }
+            .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .table th { background-color: #f2f2f2; }
+            .chart { margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 5px; }
+            .timestamp { color: #666; font-size: 0.9em; }
+        </style>
+        
+            
+        </head>
+        <body>
+            <div class="header">
+                <h1>Tool Dependency Analysis</h1>
+                <p class="timestamp">Generated: 2025-09-13 22:38:00</p>
+            </div>
+            <h2>Dependency Analysis Summary</h2><div class="metric info"><strong>Files Analyzed:</strong> 3</div><div class="metric info"><strong>Unique Imports:</strong> 21</div><div class="metric warning"><strong>Consolidation Opportunities:</strong> 2</div><h3>Most Common Imports</h3>
+        <table class="table">
+            <thead><tr><th>Import</th><th>Usage Count</th></tr></thead>
+            <tbody><tr><td>typing</td><td>3</td></tr><tr><td>pathlib</td><td>3</td></tr><tr><td>logging</td><td>2</td></tr><tr><td>svg_test_library</td><td>2</td></tr><tr><td>argparse</td><td>2</td></tr><tr><td>json</td><td>2</td></tr><tr><td>collections</td><td>2</td></tr><tr><td>re</td><td>2</td></tr><tr><td>dataclasses</td><td>1</td></tr><tr><td>subprocess</td><td>1</td></tr><tr><td>hashlib</td><td>1</td></tr><tr><td>urllib.parse</td><td>1</td></tr><tr><td>datetime</td><td>1</td></tr><tr><td>tempfile</td><td>1</td></tr><tr><td>os</td><td>1</td></tr></tbody>
+        </table>
+        <h3>Consolidation Candidates</h3>
+        <table class="table">
+            <thead><tr><th>Import</th><th>Count</th><th>Potential</th><th>Files</th></tr></thead>
+            <tbody><tr><td>typing</td><td>3</td><td>medium</td><td>analyze_svg_library.py, collect_real_world_svgs.py, dependency_analyzer.py</td></tr><tr><td>pathlib</td><td>3</td><td>medium</td><td>analyze_svg_library.py, collect_real_world_svgs.py, dependency_analyzer.py</td></tr></tbody>
+        </table>
+        <h3>Refactoring Recommendations</h3><p>No specific recommendations at this time.</p>
+        </body>
+        </html>
+        

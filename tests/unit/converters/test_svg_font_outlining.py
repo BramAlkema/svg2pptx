@@ -6,7 +6,7 @@ based on the approach in one_big_method.py
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from unittest.mock import Mock, patch
 import math
 

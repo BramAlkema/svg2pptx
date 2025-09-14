@@ -189,6 +189,7 @@ markers = [
     "e2e: End-to-end tests (tests/e2e/)",
     "visual: Visual regression tests (tests/visual/)",
     "benchmark: Performance benchmark tests (tests/performance/benchmarks/)",
+    "performance: Performance-related tests",
     "architecture: Architecture and consistency tests (tests/quality/architecture/)",
     "coverage: Coverage analysis tests (tests/quality/coverage/)",
     

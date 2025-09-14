@@ -3,7 +3,7 @@ ImageConverter for handling SVG <image> elements.
 Converts SVG images to PowerPoint image shapes with proper positioning and scaling.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import base64
 import os
 from typing import Optional, Tuple

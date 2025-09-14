@@ -10,11 +10,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from datetime import datetime
 
-from tools.accuracy_measurement import AccuracyMeasurementEngine, AccuracyLevel
-from tools.accuracy_reporter import AccuracyReporter
-from tools.workflow_validator import WorkflowValidator
-from tools.visual_regression_tester import VisualRegressionTester, ComparisonMethod
-from tools.pptx_validator import PPTXValidator
+from tools.reporting.accuracy_measurement import AccuracyMeasurementEngine, AccuracyLevel
+from tools.reporting.accuracy_reporter import AccuracyReporter
+from tools.validation.workflow_validator import WorkflowValidator
+from tools.testing.visual_regression_tester import VisualRegressionTester, ComparisonMethod
+from tools.validation.pptx_validator import PPTXValidator
 
 
 class TestEndToEndVerification:
@@ -104,9 +104,9 @@ class TestEndToEndVerification:
             pptx_path.write_text("Dummy PPTX content")
             
             # Mock external dependencies
-            with patch('tools.workflow_validator.WorkflowValidator') as mock_wf, \
-                 patch('tools.visual_regression_tester.VisualRegressionTester') as mock_vr, \
-                 patch('tools.pptx_validator.PPTXValidator') as mock_pptx:
+            with patch('tools.validation.workflow_validator.WorkflowValidator') as mock_wf, \
+                 patch('tools.testing.visual_regression_tester.VisualRegressionTester') as mock_vr, \
+                 patch('tools.validation.pptx_validator.PPTXValidator') as mock_pptx:
                 
                 # Setup mocks with reasonable values
                 mock_wf_result = Mock()
@@ -152,9 +152,9 @@ class TestEndToEndVerification:
             pptx_path.write_text("Test PPTX")
             
             # Mock dependencies and create a report
-            with patch('tools.workflow_validator.WorkflowValidator') as mock_wf, \
-                 patch('tools.visual_regression_tester.VisualRegressionTester') as mock_vr, \
-                 patch('tools.pptx_validator.PPTXValidator') as mock_pptx:
+            with patch('tools.validation.workflow_validator.WorkflowValidator') as mock_wf, \
+                 patch('tools.testing.visual_regression_tester.VisualRegressionTester') as mock_vr, \
+                 patch('tools.validation.pptx_validator.PPTXValidator') as mock_pptx:
                 
                 # Setup mocks
                 mock_wf_result = Mock()
@@ -217,9 +217,9 @@ class TestEndToEndVerification:
             reporter = AccuracyReporter(db_path)
             
             # Mock all external dependencies for complete workflow
-            with patch('tools.workflow_validator.WorkflowValidator') as mock_wf, \
-                 patch('tools.visual_regression_tester.VisualRegressionTester') as mock_vr, \
-                 patch('tools.pptx_validator.PPTXValidator') as mock_pptx:
+            with patch('tools.validation.workflow_validator.WorkflowValidator') as mock_wf, \
+                 patch('tools.testing.visual_regression_tester.VisualRegressionTester') as mock_vr, \
+                 patch('tools.validation.pptx_validator.PPTXValidator') as mock_pptx:
                 
                 # Setup comprehensive mocks
                 mock_wf_result = Mock()
@@ -307,9 +307,9 @@ class TestEndToEndVerification:
             pptx_path.write_text("Performance test PPTX")
             
             # Mock for performance test
-            with patch('tools.workflow_validator.WorkflowValidator') as mock_wf, \
-                 patch('tools.visual_regression_tester.VisualRegressionTester') as mock_vr, \
-                 patch('tools.pptx_validator.PPTXValidator') as mock_pptx:
+            with patch('tools.validation.workflow_validator.WorkflowValidator') as mock_wf, \
+                 patch('tools.testing.visual_regression_tester.VisualRegressionTester') as mock_vr, \
+                 patch('tools.validation.pptx_validator.PPTXValidator') as mock_pptx:
                 
                 # Quick mocks
                 mock_wf_result = Mock()

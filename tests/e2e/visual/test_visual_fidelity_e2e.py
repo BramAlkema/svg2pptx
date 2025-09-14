@@ -17,14 +17,14 @@ import sys
 
 # Import existing tools and E2E test infrastructure
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from tools.visual_regression_tester import (
+from tools.testing.visual_regression_tester import (
     VisualRegressionTester,
     LibreOfficeRenderer,
     ImageComparator,
     ComparisonMethod,
     VisualComparisonResult
 )
-from tools.svg_test_library import SVGTestLibrary
+from tools.testing.svg_test_library import SVGTestLibrary
 
 
 class TestVisualFidelityE2E:
@@ -61,7 +61,7 @@ class TestVisualFidelityE2E:
     def _create_mock_pptx(self, pptx_path: Path):
         """Create a minimal mock PPTX file for testing."""
         import zipfile
-        import xml.etree.ElementTree as ET
+        from lxml import etree as ET
         
         # Create minimal PPTX structure
         with zipfile.ZipFile(pptx_path, 'w') as zf:

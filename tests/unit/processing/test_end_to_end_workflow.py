@@ -11,7 +11,7 @@ import pytest
 import os
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pathlib import Path
 from unittest.mock import patch, Mock, MagicMock
 from typing import Dict, List, Optional, Tuple

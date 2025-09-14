@@ -2,7 +2,8 @@
 # svg2pptx_json_v2.py
 # Robust: accepts minimalpptx.txt JSON as list OR dict, patches slide1.xml with DrawingML.
 
-import argparse, base64, io, json, zipfile, xml.etree.ElementTree as ET
+import argparse, base64, io, json, zipfile
+from lxml import etree as ET
 from typing import Any, Dict, List, Union, Iterable, Tuple
 
 # pip install svgelements

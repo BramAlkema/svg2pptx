@@ -26,7 +26,7 @@ Test Categories:
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import tempfile
 import os
 from pathlib import Path
@@ -261,7 +261,7 @@ def parse_svg_elements(svg_content: str) -> List[Dict[str, Any]]:
         def extract_element_info(element):
             info = {
                 'tag': element.tag.split('}')[-1] if '}' in element.tag else element.tag,
-                'attributes': element.attrib.copy(),
+                'attributes': dict(element.attrib),
                 'text': element.text,
                 'children': []
             }

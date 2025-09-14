@@ -10,7 +10,7 @@ import pytest
 import tempfile
 import os
 from pathlib import Path
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from zipfile import ZipFile
 
 

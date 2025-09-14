@@ -6,7 +6,7 @@ Provides reusable utility functions, fixtures, and helpers for comprehensive
 testing of missing SVG elements in the SVG2PPTX converter.
 """
 
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import tempfile
 import shutil
 from pathlib import Path

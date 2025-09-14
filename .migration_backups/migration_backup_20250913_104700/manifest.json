@@ -1,0 +1,9 @@
+{
+  "backup_id": "migration_backup_20250913_104700",
+  "timestamp": "20250913_104700",
+  "description": "Pre-migration backup of converter test",
+  "files": [
+    "test_unit_converter_comprehensive.py"
+  ],
+  "project_root": "/Users/ynse/projects/svg2pptx"
+}

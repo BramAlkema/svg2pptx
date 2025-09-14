@@ -16,8 +16,8 @@ import sys
 
 # Import test infrastructure
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from tools.svg_test_library import SVGTestLibrary
-from tools.coverage_utils import CoverageAnalyzer
+from tools.testing.svg_test_library import SVGTestLibrary
+from tools.testing.coverage_utils import CoverageAnalyzer
 
 
 class TestConverterModuleCoverage:

@@ -631,7 +631,7 @@ class TestRealWorldSVGsE2E:
     @pytest.fixture
     def real_world_svgs(self):
         """Load real-world SVG files from test library."""
-        from tools.svg_test_library import SVGTestLibrary
+        from tools.testing.svg_test_library import SVGTestLibrary
         from pathlib import Path
         
         library_path = Path("tests/test_data/real_world_svgs")

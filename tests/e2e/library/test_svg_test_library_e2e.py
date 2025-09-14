@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Import the test library management system (to be implemented)
-# from tools.svg_test_library import SVGTestLibrary, SVGMetadata, SVGCategory
+# from tools.testing.svg_test_library import SVGTestLibrary, SVGMetadata, SVGCategory
 
 
 class TestSVGTestLibrary:

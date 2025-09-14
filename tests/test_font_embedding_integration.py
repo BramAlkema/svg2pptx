@@ -5,7 +5,7 @@ Tests the complete three-tier font strategy implementation
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import base64
 import tempfile
 from pathlib import Path
