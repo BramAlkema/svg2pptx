@@ -90,7 +90,8 @@ class RectangleConverter(BaseConverter):
                     <a:avLst/>
                 </a:prstGeom>'''
         
-        return f'''
+        # Generate base DrawingML content
+        base_content = f'''
         <p:sp>
             <p:nvSpPr>
                 <p:cNvPr id="{shape_id}" name="Rectangle {shape_id}"/>
@@ -116,6 +117,16 @@ class RectangleConverter(BaseConverter):
                 </a:p>
             </p:txBody>
         </p:sp>'''
+
+        # Apply filter effects if present
+        shape_bounds = {
+            'x': float(emu_x),
+            'y': float(emu_y),
+            'width': float(emu_width),
+            'height': float(emu_height)
+        }
+
+        return self.apply_filter_to_shape(element, shape_bounds, base_content, context)
     
     def _generate_transform(self, transform: str, context: ConversionContext) -> str:
         """Generate DrawingML transform from SVG transform."""
@@ -169,7 +180,8 @@ class CircleConverter(BaseConverter):
         # Get shape ID
         shape_id = context.get_next_shape_id()
         
-        return f'''
+        # Generate base DrawingML content
+        base_content = f'''
         <p:sp>
             <p:nvSpPr>
                 <p:cNvPr id="{shape_id}" name="Circle {shape_id}"/>
@@ -196,6 +208,16 @@ class CircleConverter(BaseConverter):
                 </a:p>
             </p:txBody>
         </p:sp>'''
+
+        # Apply filter effects if present
+        shape_bounds = {
+            'x': float(emu_x),
+            'y': float(emu_y),
+            'width': float(emu_diameter),
+            'height': float(emu_diameter)
+        }
+
+        return self.apply_filter_to_shape(element, shape_bounds, base_content, context)
     
     def _convert_svg_to_drawingml_coords(self, x: float, y: float, context: ConversionContext) -> tuple[int, int]:
         """Convert SVG coordinates to DrawingML EMUs using viewport-aware mapping if available."""

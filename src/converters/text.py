@@ -168,10 +168,11 @@ class TextConverter(BaseConverter):
         elif text_anchor == 'r':
             x_emu -= text_width_emu
         
-        # Create text shape
-        return f"""<a:sp>
+        # Generate base text shape content
+        shape_id = context.get_next_shape_id()
+        base_content = f"""<a:sp>
     <a:nvSpPr>
-        <a:cNvPr id="{context.get_next_shape_id()}" name="Text"/>
+        <a:cNvPr id="{shape_id}" name="Text"/>
         <a:cNvSpPr txBox="1"/>
     </a:nvSpPr>
     <a:spPr>
@@ -202,6 +203,16 @@ class TextConverter(BaseConverter):
         </a:p>
     </a:txBody>
 </a:sp>"""
+
+        # Apply filter effects if present
+        text_bounds = {
+            'x': float(x_emu),
+            'y': float(y_emu),
+            'width': float(self.to_emu(f'{text_width}px')),
+            'height': float(self.to_emu(f'{text_height}px'))
+        }
+
+        return self.apply_filter_to_shape(element, text_bounds, base_content, context)
     
     def _extract_text_content(self, element: ET.Element) -> str:
         """Extract text content from element including nested tspan elements"""
