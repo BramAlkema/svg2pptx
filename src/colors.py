@@ -160,6 +160,274 @@ class ColorInfo:
         darker = min(l1, l2)
         return (lighter + 0.05) / (darker + 0.05)
 
+    def to_xyz(self) -> Tuple[float, float, float]:
+        """
+        Convert RGB to CIE XYZ color space using D65 white point.
+
+        Returns:
+            Tuple of (X, Y, Z) values normalized to D65 white point
+
+        References:
+            - CIE 1931 XYZ color space
+            - sRGB to XYZ transformation matrix for D65 illuminant
+
+        Raises:
+            ValueError: If RGB values are outside valid range
+        """
+        # Validate RGB input values
+        if not (0 <= self.red <= 255 and 0 <= self.green <= 255 and 0 <= self.blue <= 255):
+            raise ValueError(f"RGB values must be in range [0, 255]. Got: ({self.red}, {self.green}, {self.blue})")
+
+        # Convert RGB [0-255] to [0-1] and apply gamma correction
+        def gamma_correct(c):
+            """Apply sRGB gamma correction with bounds checking."""
+            c = c / 255.0
+            c = max(0.0, min(1.0, c))  # Clamp to valid range
+            if c <= 0.04045:
+                return c / 12.92
+            else:
+                return math.pow((c + 0.055) / 1.055, 2.4)
+
+        r_linear = gamma_correct(self.red)
+        g_linear = gamma_correct(self.green)
+        b_linear = gamma_correct(self.blue)
+
+        # sRGB to XYZ transformation matrix (D65 white point)
+        # Reference: https://www.image-engineering.de/library/technotes/958-how-to-convert-between-srgb-and-ciexyz
+        x = 0.4124564 * r_linear + 0.3575761 * g_linear + 0.1804375 * b_linear
+        y = 0.2126729 * r_linear + 0.7151522 * g_linear + 0.0721750 * b_linear
+        z = 0.0193339 * r_linear + 0.1191920 * g_linear + 0.9503041 * b_linear
+
+        # Ensure non-negative values
+        return (max(0.0, x), max(0.0, y), max(0.0, z))
+
+    def to_lab(self) -> Tuple[float, float, float]:
+        """
+        Convert RGB to CIE LAB color space via XYZ.
+
+        Returns:
+            Tuple of (L*, a*, b*) values
+            L*: Lightness [0-100]
+            a*: Green-Red axis [-128 to +127 typically]
+            b*: Blue-Yellow axis [-128 to +127 typically]
+
+        References:
+            - CIE 1976 L*a*b* color space
+            - D65 reference white point
+        """
+        x, y, z = self.to_xyz()
+
+        # D65 reference white point (normalized)
+        xn, yn, zn = 0.95047, 1.00000, 1.08883
+
+        # Normalize to reference white
+        fx = x / xn
+        fy = y / yn
+        fz = z / zn
+
+        # Apply CIE LAB transformation function
+        def lab_function(t):
+            """CIE LAB transformation function."""
+            delta = 6.0 / 29.0  # (6/29)^3 = 216/24389 ≈ 0.008856
+            if t > (delta ** 3):
+                return math.pow(t, 1.0/3.0)
+            else:
+                return t / (3.0 * delta * delta) + 4.0/29.0
+
+        fx = lab_function(fx)
+        fy = lab_function(fy)
+        fz = lab_function(fz)
+
+        # Calculate L*a*b* values
+        l_star = 116.0 * fy - 16.0
+        a_star = 500.0 * (fx - fy)
+        b_star = 200.0 * (fy - fz)
+
+        return (l_star, a_star, b_star)
+
+    def to_lch(self) -> Tuple[float, float, float]:
+        """
+        Convert RGB to CIE LCH color space via LAB.
+
+        Returns:
+            Tuple of (L*, C*, h°) values
+            L*: Lightness [0-100]
+            C*: Chroma [0+]
+            h°: Hue angle [0-360) degrees
+
+        References:
+            - CIE LCHab color space (cylindrical LAB)
+            - Polar coordinates of LAB color space
+        """
+        l_star, a_star, b_star = self.to_lab()
+
+        # Calculate chroma (distance from neutral axis)
+        c_star = math.sqrt(a_star * a_star + b_star * b_star)
+
+        # Calculate hue angle in degrees
+        if c_star < 1e-10:  # Very small chroma, hue is undefined
+            h_degrees = 0.0
+        else:
+            h_radians = math.atan2(b_star, a_star)
+            h_degrees = math.degrees(h_radians)
+
+            # Normalize to [0, 360) range
+            if h_degrees < 0:
+                h_degrees += 360.0
+
+        return (l_star, c_star, h_degrees)
+
+    @classmethod
+    def from_xyz(cls, x: float, y: float, z: float, alpha: float = 1.0) -> 'ColorInfo':
+        """
+        Create ColorInfo from XYZ color space values.
+
+        Args:
+            x, y, z: XYZ color space coordinates (should be non-negative)
+            alpha: Alpha channel [0.0-1.0]
+
+        Returns:
+            ColorInfo instance with RGB values
+
+        Raises:
+            ValueError: If XYZ values are invalid or alpha is out of range
+        """
+        # Validate input values
+        if x < 0 or y < 0 or z < 0:
+            raise ValueError(f"XYZ values must be non-negative. Got: ({x:.6f}, {y:.6f}, {z:.6f})")
+
+        if not (0.0 <= alpha <= 1.0):
+            raise ValueError(f"Alpha must be in range [0.0, 1.0]. Got: {alpha}")
+
+        # Check for unreasonably large XYZ values (likely input errors)
+        if x > 2.0 or y > 2.0 or z > 2.0:
+            raise ValueError(f"XYZ values seem unusually large. Got: ({x:.6f}, {y:.6f}, {z:.6f}). "
+                           "Expected range roughly [0.0, 1.0] for typical colors.")
+        # XYZ to linear RGB transformation matrix (D65 white point)
+        # Inverse of the RGB to XYZ matrix
+        r_linear = 3.2404542 * x - 1.5371385 * y - 0.4985314 * z
+        g_linear = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z
+        b_linear = 0.0556434 * x - 0.2040259 * y + 1.0572252 * z
+
+        # Apply inverse gamma correction (linear to sRGB)
+        def gamma_expand(c):
+            """Convert linear RGB to sRGB with gamma correction."""
+            if c <= 0.0031308:
+                return 12.92 * c
+            else:
+                return 1.055 * math.pow(c, 1.0/2.4) - 0.055
+
+        r_gamma = gamma_expand(r_linear)
+        g_gamma = gamma_expand(g_linear)
+        b_gamma = gamma_expand(b_linear)
+
+        # Convert to [0-255] and clamp
+        r = max(0, min(255, int(round(r_gamma * 255))))
+        g = max(0, min(255, int(round(g_gamma * 255))))
+        b = max(0, min(255, int(round(b_gamma * 255))))
+
+        return cls(r, g, b, alpha, ColorFormat.RGB, f"xyz({x:.3f},{y:.3f},{z:.3f})")
+
+    @classmethod
+    def from_lab(cls, l_star: float, a_star: float, b_star: float, alpha: float = 1.0) -> 'ColorInfo':
+        """
+        Create ColorInfo from CIE LAB color space values.
+
+        Args:
+            l_star: Lightness [0-100]
+            a_star: Green-Red axis (typically -128 to +127)
+            b_star: Blue-Yellow axis (typically -128 to +127)
+            alpha: Alpha channel [0.0-1.0]
+
+        Returns:
+            ColorInfo instance with RGB values
+
+        Raises:
+            ValueError: If LAB values are invalid or alpha is out of range
+        """
+        # Validate input values (allow for tiny floating-point precision errors)
+        if l_star < -0.001 or l_star > 100.001:
+            raise ValueError(f"L* must be in range [0, 100]. Got: {l_star:.3f}")
+
+        if not (0.0 <= alpha <= 1.0):
+            raise ValueError(f"Alpha must be in range [0.0, 1.0]. Got: {alpha}")
+
+        # Check for reasonable a* and b* values (can exceed typical range but warn for extreme values)
+        if abs(a_star) > 200 or abs(b_star) > 200:
+            raise ValueError(f"a* and b* values seem extreme. Got: a*={a_star:.3f}, b*={b_star:.3f}. "
+                           "Typical range is approximately [-128, +127].")
+
+        # Clamp L* to valid range to handle floating-point precision errors
+        l_star = max(0.0, min(100.0, l_star))
+        # Convert LAB to XYZ first
+        # D65 reference white point
+        xn, yn, zn = 0.95047, 1.00000, 1.08883
+
+        # Calculate intermediate values
+        fy = (l_star + 16.0) / 116.0
+        fx = (a_star / 500.0) + fy
+        fz = fy - (b_star / 200.0)
+
+        # Apply inverse LAB transformation function
+        def inv_lab_function(t):
+            """Inverse CIE LAB transformation function."""
+            delta = 6.0 / 29.0  # (6/29)^3 = 216/24389 ≈ 0.008856
+            if t > delta:
+                return math.pow(t, 3.0)
+            else:
+                return 3.0 * delta * delta * (t - 4.0/29.0)
+
+        x = xn * inv_lab_function(fx)
+        y = yn * inv_lab_function(fy)
+        z = zn * inv_lab_function(fz)
+
+        return cls.from_xyz(x, y, z, alpha)
+
+    @classmethod
+    def from_lch(cls, l_star: float, c_star: float, h_degrees: float, alpha: float = 1.0) -> 'ColorInfo':
+        """
+        Create ColorInfo from CIE LCH color space values.
+
+        Args:
+            l_star: Lightness [0-100]
+            c_star: Chroma [0+]
+            h_degrees: Hue angle [0-360) degrees
+            alpha: Alpha channel [0.0-1.0]
+
+        Returns:
+            ColorInfo instance with RGB values
+
+        Raises:
+            ValueError: If LCH values are invalid or alpha is out of range
+        """
+        # Validate input values (allow for tiny floating-point precision errors)
+        if l_star < -0.001 or l_star > 100.001:
+            raise ValueError(f"L* must be in range [0, 100]. Got: {l_star:.3f}")
+
+        if c_star < 0:
+            raise ValueError(f"Chroma must be non-negative. Got: {c_star:.3f}")
+
+        if not (0.0 <= alpha <= 1.0):
+            raise ValueError(f"Alpha must be in range [0.0, 1.0]. Got: {alpha}")
+
+        # Check for reasonable chroma values
+        if c_star > 200:
+            raise ValueError(f"Chroma value seems extreme. Got: {c_star:.3f}. "
+                           "Typical maximum chroma for sRGB colors is around 130.")
+
+        # Clamp L* to valid range to handle floating-point precision errors
+        l_star = max(0.0, min(100.0, l_star))
+
+        # Normalize hue angle to [0, 360) range
+        h_degrees = h_degrees % 360.0
+        # Convert LCH to LAB first
+        h_radians = math.radians(h_degrees)
+
+        a_star = c_star * math.cos(h_radians)
+        b_star = c_star * math.sin(h_radians)
+
+        return cls.from_lab(l_star, a_star, b_star, alpha)
+
 
 class ColorParser:
     """Universal color parser for SVG and CSS colors."""
