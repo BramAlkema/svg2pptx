@@ -292,17 +292,18 @@ class ColorInfo:
         Raises:
             ValueError: If XYZ values are invalid or alpha is out of range
         """
-        # Validate input values
-        if x < 0 or y < 0 or z < 0:
-            raise ValueError(f"XYZ values must be non-negative. Got: ({x:.6f}, {y:.6f}, {z:.6f})")
+        # Clamp negative values to zero (out-of-gamut handling)
+        x = max(0.0, x)
+        y = max(0.0, y)
+        z = max(0.0, z)
 
         if not (0.0 <= alpha <= 1.0):
             raise ValueError(f"Alpha must be in range [0.0, 1.0]. Got: {alpha}")
 
-        # Check for unreasonably large XYZ values (likely input errors)
-        if x > 2.0 or y > 2.0 or z > 2.0:
-            raise ValueError(f"XYZ values seem unusually large. Got: ({x:.6f}, {y:.6f}, {z:.6f}). "
-                           "Expected range roughly [0.0, 1.0] for typical colors.")
+        # Clamp extremely large XYZ values to prevent overflow
+        x = min(x, 2.0)
+        y = min(y, 2.0)
+        z = min(z, 2.0)
         # XYZ to linear RGB transformation matrix (D65 white point)
         # Inverse of the RGB to XYZ matrix
         r_linear = 3.2404542 * x - 1.5371385 * y - 0.4985314 * z
@@ -718,6 +719,611 @@ class ColorParser:
             'drawingml': self.to_drawingml(color_info),
             'solid_fill': self.create_solid_fill(color_info)
         }
+
+    # Advanced Color Interpolation Methods
+
+    def interpolate_lab(self, color1: ColorInfo, color2: ColorInfo, ratio: float) -> ColorInfo:
+        """
+        Interpolate between two colors in LAB color space for perceptually uniform transitions.
+
+        Args:
+            color1: First color (at ratio=0.0)
+            color2: Second color (at ratio=1.0)
+            ratio: Interpolation ratio [0.0-1.0]
+
+        Returns:
+            Interpolated ColorInfo
+
+        Raises:
+            ValueError: If ratio is outside [0.0, 1.0] or colors are invalid
+            TypeError: If input colors are not ColorInfo instances
+        """
+        # Validate inputs
+        if not isinstance(color1, ColorInfo) or not isinstance(color2, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        if not (0.0 <= ratio <= 1.0):
+            raise ValueError(f"Ratio must be in range [0.0, 1.0]. Got: {ratio}")
+
+        # Handle edge cases
+        if ratio == 0.0:
+            return ColorInfo(color1.red, color1.green, color1.blue, color1.alpha, color1.format, color1.original)
+        if ratio == 1.0:
+            return ColorInfo(color2.red, color2.green, color2.blue, color2.alpha, color2.format, color2.original)
+
+        # Convert both colors to LAB space
+        lab1 = color1.to_lab()
+        lab2 = color2.to_lab()
+
+        # Interpolate in LAB space
+        l_interp = lab1[0] + (lab2[0] - lab1[0]) * ratio
+        a_interp = lab1[1] + (lab2[1] - lab1[1]) * ratio
+        b_interp = lab1[2] + (lab2[2] - lab1[2]) * ratio
+
+        # Interpolate alpha channel
+        alpha_interp = color1.alpha + (color2.alpha - color1.alpha) * ratio
+
+        # Convert back to RGB
+        result = ColorInfo.from_lab(l_interp, a_interp, b_interp, alpha_interp)
+        result.original = f"lab_interp({color1.original}, {color2.original}, {ratio:.3f})"
+
+        return result
+
+    def interpolate_lch(self, color1: ColorInfo, color2: ColorInfo, ratio: float) -> ColorInfo:
+        """
+        Interpolate between two colors in LCH color space with proper hue angle handling.
+
+        Uses shortest path for hue interpolation to avoid unwanted color shifts.
+
+        Args:
+            color1: First color (at ratio=0.0)
+            color2: Second color (at ratio=1.0)
+            ratio: Interpolation ratio [0.0-1.0]
+
+        Returns:
+            Interpolated ColorInfo
+
+        Raises:
+            ValueError: If ratio is outside [0.0, 1.0] or colors are invalid
+            TypeError: If input colors are not ColorInfo instances
+        """
+        # Validate inputs
+        if not isinstance(color1, ColorInfo) or not isinstance(color2, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        if not (0.0 <= ratio <= 1.0):
+            raise ValueError(f"Ratio must be in range [0.0, 1.0]. Got: {ratio}")
+
+        # Handle edge cases
+        if ratio == 0.0:
+            return ColorInfo(color1.red, color1.green, color1.blue, color1.alpha, color1.format, color1.original)
+        if ratio == 1.0:
+            return ColorInfo(color2.red, color2.green, color2.blue, color2.alpha, color2.format, color2.original)
+
+        # Convert both colors to LCH space
+        lch1 = color1.to_lch()
+        lch2 = color2.to_lch()
+
+        # Interpolate lightness and chroma linearly
+        l_interp = lch1[0] + (lch2[0] - lch1[0]) * ratio
+        c_interp = lch1[1] + (lch2[1] - lch1[1]) * ratio
+
+        # Handle hue interpolation with shortest path
+        h1, h2 = lch1[2], lch2[2]
+
+        # If either color is neutral (very low chroma), use the other's hue
+        if lch1[1] < 1e-6:  # color1 is neutral
+            h_interp = h2
+        elif lch2[1] < 1e-6:  # color2 is neutral
+            h_interp = h1
+        else:
+            # Calculate shortest path between hue angles
+            h_diff = h2 - h1
+
+            # Normalize to [-180, 180] range for shortest path
+            while h_diff > 180:
+                h_diff -= 360
+            while h_diff < -180:
+                h_diff += 360
+
+            h_interp = h1 + h_diff * ratio
+
+            # Normalize to [0, 360) range
+            h_interp = h_interp % 360
+
+        # Interpolate alpha channel
+        alpha_interp = color1.alpha + (color2.alpha - color1.alpha) * ratio
+
+        # Convert back to RGB
+        result = ColorInfo.from_lch(l_interp, c_interp, h_interp, alpha_interp)
+        result.original = f"lch_interp({color1.original}, {color2.original}, {ratio:.3f})"
+
+        return result
+
+    def interpolate_rgb(self, color1: ColorInfo, color2: ColorInfo, ratio: float) -> ColorInfo:
+        """
+        Simple RGB linear interpolation (fallback method).
+
+        Args:
+            color1: First color (at ratio=0.0)
+            color2: Second color (at ratio=1.0)
+            ratio: Interpolation ratio [0.0-1.0]
+
+        Returns:
+            Interpolated ColorInfo
+        """
+        # Validate inputs
+        if not isinstance(color1, ColorInfo) or not isinstance(color2, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        if not (0.0 <= ratio <= 1.0):
+            raise ValueError(f"Ratio must be in range [0.0, 1.0]. Got: {ratio}")
+
+        # Linear interpolation in RGB space
+        r = int(color1.red + (color2.red - color1.red) * ratio)
+        g = int(color1.green + (color2.green - color1.green) * ratio)
+        b = int(color1.blue + (color2.blue - color1.blue) * ratio)
+        a = color1.alpha + (color2.alpha - color1.alpha) * ratio
+
+        return ColorInfo(r, g, b, a, ColorFormat.RGB, f"rgb_interp({color1.original}, {color2.original}, {ratio:.3f})")
+
+    def interpolate_bezier(self, control_points: List[ColorInfo], t: float, method: str = 'lab') -> ColorInfo:
+        """
+        Interpolate colors along a bezier curve path.
+
+        Args:
+            control_points: List of ColorInfo objects defining the bezier curve (2-4 points supported)
+            t: Parameter value [0.0-1.0] along the curve
+            method: Interpolation method ('lab', 'lch', 'rgb')
+
+        Returns:
+            Interpolated ColorInfo
+
+        Raises:
+            ValueError: If t is outside [0.0, 1.0] or invalid control points
+            TypeError: If control_points contains non-ColorInfo objects
+        """
+        # Validate inputs
+        if not isinstance(control_points, list) or len(control_points) < 2:
+            raise ValueError("control_points must be a list with at least 2 ColorInfo objects")
+
+        for i, point in enumerate(control_points):
+            if not isinstance(point, ColorInfo):
+                raise TypeError(f"control_points[{i}] must be a ColorInfo instance")
+
+        if not (0.0 <= t <= 1.0):
+            raise ValueError(f"Parameter t must be in range [0.0, 1.0]. Got: {t}")
+
+        # Handle edge cases
+        if t == 0.0:
+            return control_points[0]
+        if t == 1.0:
+            return control_points[-1]
+
+        # Select interpolation method
+        if method == 'lab':
+            interp_func = self.interpolate_lab
+        elif method == 'lch':
+            interp_func = self.interpolate_lch
+        elif method == 'rgb':
+            interp_func = self.interpolate_rgb
+        else:
+            raise ValueError(f"Unknown interpolation method: {method}")
+
+        # Implement De Casteljau's algorithm for bezier curves
+        points = control_points.copy()
+
+        # Recursively interpolate until we have a single point
+        while len(points) > 1:
+            new_points = []
+            for i in range(len(points) - 1):
+                interpolated = interp_func(points[i], points[i + 1], t)
+                new_points.append(interpolated)
+            points = new_points
+
+        result = points[0]
+        result.original = f"bezier_{method}({len(control_points)}_points, t={t:.3f})"
+        return result
+
+    # Color Harmony Generation Methods
+
+    def generate_complementary(self, base_color: ColorInfo) -> List[ColorInfo]:
+        """
+        Generate complementary color harmony.
+
+        Args:
+            base_color: Base color for harmony generation
+
+        Returns:
+            List containing base color and its complement
+        """
+        if not isinstance(base_color, ColorInfo):
+            raise TypeError("base_color must be a ColorInfo instance")
+
+        # Convert to LCH for hue manipulation
+        lch = base_color.to_lch()
+
+        # Complement is 180° opposite in hue
+        complement_hue = (lch[2] + 180) % 360
+
+        complement = ColorInfo.from_lch(lch[0], lch[1], complement_hue, base_color.alpha)
+        complement.original = f"complement_of_{base_color.original}"
+
+        return [base_color, complement]
+
+    def generate_triadic(self, base_color: ColorInfo) -> List[ColorInfo]:
+        """
+        Generate triadic color harmony (120° intervals).
+
+        Args:
+            base_color: Base color for harmony generation
+
+        Returns:
+            List of three colors in triadic harmony
+        """
+        if not isinstance(base_color, ColorInfo):
+            raise TypeError("base_color must be a ColorInfo instance")
+
+        lch = base_color.to_lch()
+        base_hue = lch[2]
+
+        # Triadic colors are at 120° intervals
+        triadic_1 = ColorInfo.from_lch(lch[0], lch[1], (base_hue + 120) % 360, base_color.alpha)
+        triadic_2 = ColorInfo.from_lch(lch[0], lch[1], (base_hue + 240) % 360, base_color.alpha)
+
+        triadic_1.original = f"triadic1_of_{base_color.original}"
+        triadic_2.original = f"triadic2_of_{base_color.original}"
+
+        return [base_color, triadic_1, triadic_2]
+
+    def generate_analogous(self, base_color: ColorInfo, count: int = 5, spread: float = 30.0) -> List[ColorInfo]:
+        """
+        Generate analogous color harmony (adjacent hues).
+
+        Args:
+            base_color: Base color for harmony generation
+            count: Number of colors to generate (odd numbers work best)
+            spread: Total hue spread in degrees
+
+        Returns:
+            List of analogous colors
+        """
+        if not isinstance(base_color, ColorInfo):
+            raise TypeError("base_color must be a ColorInfo instance")
+
+        if count < 3:
+            raise ValueError("count must be at least 3")
+
+        lch = base_color.to_lch()
+        base_hue = lch[2]
+
+        colors = []
+        step = spread / (count - 1)
+        start_hue = base_hue - spread / 2
+
+        for i in range(count):
+            hue = (start_hue + i * step) % 360
+            color = ColorInfo.from_lch(lch[0], lch[1], hue, base_color.alpha)
+            color.original = f"analogous{i}_of_{base_color.original}"
+            colors.append(color)
+
+        return colors
+
+    def generate_split_complementary(self, base_color: ColorInfo, spread: float = 30.0) -> List[ColorInfo]:
+        """
+        Generate split-complementary harmony.
+
+        Args:
+            base_color: Base color for harmony generation
+            spread: Angle spread from complement in degrees
+
+        Returns:
+            List of three colors (base + two split complements)
+        """
+        if not isinstance(base_color, ColorInfo):
+            raise TypeError("base_color must be a ColorInfo instance")
+
+        lch = base_color.to_lch()
+        base_hue = lch[2]
+        complement_hue = (base_hue + 180) % 360
+
+        # Split complements are spread around the complement
+        split_1_hue = (complement_hue - spread) % 360
+        split_2_hue = (complement_hue + spread) % 360
+
+        split_1 = ColorInfo.from_lch(lch[0], lch[1], split_1_hue, base_color.alpha)
+        split_2 = ColorInfo.from_lch(lch[0], lch[1], split_2_hue, base_color.alpha)
+
+        split_1.original = f"split_comp1_of_{base_color.original}"
+        split_2.original = f"split_comp2_of_{base_color.original}"
+
+        return [base_color, split_1, split_2]
+
+    # Color Temperature and Adjustment Methods
+
+    def adjust_temperature(self, color: ColorInfo, target_temp: float) -> ColorInfo:
+        """
+        Adjust color temperature using blackbody radiation approximation.
+
+        Args:
+            color: Color to adjust
+            target_temp: Target color temperature in Kelvin (1000-40000)
+
+        Returns:
+            Temperature-adjusted ColorInfo
+        """
+        if not isinstance(color, ColorInfo):
+            raise TypeError("color must be a ColorInfo instance")
+
+        if not (1000 <= target_temp <= 40000):
+            raise ValueError(f"Temperature must be between 1000K and 40000K. Got: {target_temp}")
+
+        # Convert temperature to RGB white point using Planckian locus approximation
+        temp_k = target_temp
+
+        if temp_k <= 6600:
+            # Red component
+            if temp_k >= 6600:
+                temp_red = 255
+            else:
+                temp_red = 329.698727446 * (temp_k / 100) ** -0.1332047592
+                temp_red = max(0, min(255, temp_red))
+
+            # Green component
+            if temp_k <= 1000:
+                temp_green = 0
+            elif temp_k <= 6600:
+                temp_green = 99.4708025861 * math.log(temp_k / 100) - 161.1195681661
+                temp_green = max(0, min(255, temp_green))
+            else:
+                temp_green = 288.1221695283 * (temp_k / 100) ** -0.0755148492
+                temp_green = max(0, min(255, temp_green))
+
+            # Blue component
+            if temp_k >= 6600:
+                temp_blue = 255
+            elif temp_k <= 1900:
+                temp_blue = 0
+            else:
+                temp_blue = 138.5177312231 * math.log(temp_k / 100 - 10) - 305.0447927307
+                temp_blue = max(0, min(255, temp_blue))
+        else:
+            # High temperature approximation (> 6600K)
+            temp_red = 329.698727446 * (temp_k / 100) ** -0.1332047592
+            temp_green = 288.1221695283 * (temp_k / 100) ** -0.0755148492
+            temp_blue = 255
+
+        # Normalize the white point
+        temp_red = max(0, min(255, int(temp_red)))
+        temp_green = max(0, min(255, int(temp_green)))
+        temp_blue = max(0, min(255, int(temp_blue)))
+
+        # Apply temperature adjustment as color balance
+        adjusted_r = int((color.red / 255.0) * (temp_red / 255.0) * 255)
+        adjusted_g = int((color.green / 255.0) * (temp_green / 255.0) * 255)
+        adjusted_b = int((color.blue / 255.0) * (temp_blue / 255.0) * 255)
+
+        adjusted_r = max(0, min(255, adjusted_r))
+        adjusted_g = max(0, min(255, adjusted_g))
+        adjusted_b = max(0, min(255, adjusted_b))
+
+        result = ColorInfo(adjusted_r, adjusted_g, adjusted_b, color.alpha, color.format,
+                          f"temp_adjusted_{color.original}_{target_temp}K")
+        return result
+
+    def adjust_tint(self, color: ColorInfo, tint: float) -> ColorInfo:
+        """
+        Adjust color tint (green-magenta balance).
+
+        Args:
+            color: Color to adjust
+            tint: Tint adjustment (-100 to +100, negative = green, positive = magenta)
+
+        Returns:
+            Tint-adjusted ColorInfo
+        """
+        if not isinstance(color, ColorInfo):
+            raise TypeError("color must be a ColorInfo instance")
+
+        if not (-100 <= tint <= 100):
+            raise ValueError(f"Tint must be between -100 and +100. Got: {tint}")
+
+        # Convert to LAB space for tint adjustment
+        lab = color.to_lab()
+
+        # Adjust the a* component (green-red axis)
+        tint_factor = tint * 0.5  # Scale to reasonable adjustment range
+        adjusted_a = lab[1] + tint_factor
+
+        result = ColorInfo.from_lab(lab[0], adjusted_a, lab[2], color.alpha)
+        result.original = f"tint_adjusted_{color.original}_{tint:+.1f}"
+        return result
+
+    # Accessibility and Contrast Methods
+
+    def calculate_contrast_ratio(self, color1: ColorInfo, color2: ColorInfo) -> float:
+        """
+        Calculate WCAG 2.1 contrast ratio between two colors.
+
+        Args:
+            color1: First color (typically text)
+            color2: Second color (typically background)
+
+        Returns:
+            Contrast ratio (1.0 to 21.0)
+        """
+        if not isinstance(color1, ColorInfo) or not isinstance(color2, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        # Use existing luminance calculation from ColorInfo
+        l1 = color1.luminance
+        l2 = color2.luminance
+
+        # WCAG formula: (lighter + 0.05) / (darker + 0.05)
+        lighter = max(l1, l2)
+        darker = min(l1, l2)
+
+        return (lighter + 0.05) / (darker + 0.05)
+
+    def check_wcag_compliance(self, text_color: ColorInfo, bg_color: ColorInfo, level: str = "AA") -> Dict[str, bool]:
+        """
+        Check WCAG 2.1 compliance for color combination.
+
+        Args:
+            text_color: Text color
+            bg_color: Background color
+            level: WCAG level ("AA" or "AAA")
+
+        Returns:
+            Dict with compliance results for normal and large text
+        """
+        if not isinstance(text_color, ColorInfo) or not isinstance(bg_color, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        if level not in ["AA", "AAA"]:
+            raise ValueError(f"Level must be 'AA' or 'AAA'. Got: {level}")
+
+        contrast_ratio = self.calculate_contrast_ratio(text_color, bg_color)
+
+        # WCAG 2.1 requirements
+        if level == "AA":
+            normal_threshold = 4.5
+            large_threshold = 3.0
+        else:  # AAA
+            normal_threshold = 7.0
+            large_threshold = 4.5
+
+        return {
+            'contrast_ratio': contrast_ratio,
+            'normal_text_compliant': contrast_ratio >= normal_threshold,
+            'large_text_compliant': contrast_ratio >= large_threshold,
+            'level': level,
+            'normal_threshold': normal_threshold,
+            'large_threshold': large_threshold
+        }
+
+    def find_accessible_color(self, base_color: ColorInfo, background: ColorInfo,
+                             min_contrast: float = 4.5, max_iterations: int = 50) -> ColorInfo:
+        """
+        Find an accessible variant of a color that meets contrast requirements.
+
+        Args:
+            base_color: Starting color
+            background: Background color to contrast against
+            min_contrast: Minimum required contrast ratio
+            max_iterations: Maximum adjustment iterations
+
+        Returns:
+            Accessible ColorInfo that meets contrast requirements
+        """
+        if not isinstance(base_color, ColorInfo) or not isinstance(background, ColorInfo):
+            raise TypeError("Both colors must be ColorInfo instances")
+
+        if min_contrast < 1.0:
+            raise ValueError(f"min_contrast must be >= 1.0. Got: {min_contrast}")
+
+        current_color = ColorInfo(base_color.red, base_color.green, base_color.blue,
+                                 base_color.alpha, base_color.format, base_color.original)
+
+        # Check if already meets requirements
+        current_contrast = self.calculate_contrast_ratio(current_color, background)
+        if current_contrast >= min_contrast:
+            return current_color
+
+        # Convert to LAB for perceptual adjustments
+        lab = current_color.to_lab()
+        bg_luminance = background.luminance
+
+        # Determine whether to lighten or darken
+        if current_color.luminance > bg_luminance:
+            # Text is lighter, try lightening more
+            direction = 1
+        else:
+            # Text is darker, try darkening more
+            direction = -1
+
+        # Iteratively adjust lightness
+        for i in range(max_iterations):
+            # Adjust L* component
+            adjustment = (i + 1) * 2.0 * direction
+            new_l = max(0, min(100, lab[0] + adjustment))
+
+            adjusted_color = ColorInfo.from_lab(new_l, lab[1], lab[2], base_color.alpha)
+            contrast = self.calculate_contrast_ratio(adjusted_color, background)
+
+            if contrast >= min_contrast:
+                adjusted_color.original = f"accessible_{base_color.original}_contrast_{contrast:.2f}"
+                return adjusted_color
+
+            # If we hit a boundary, try the opposite direction
+            if new_l <= 0 or new_l >= 100:
+                direction *= -1
+
+        # If still not found, return the best attempt
+        result = ColorInfo.from_lab(new_l, lab[1], lab[2], base_color.alpha)
+        result.original = f"accessible_attempt_{base_color.original}"
+        return result
+
+    # Utility Methods for Batch Processing
+
+    def batch_interpolate(self, colors: List[ColorInfo], ratios: List[float], method: str = 'lab') -> List[ColorInfo]:
+        """
+        Perform batch color interpolations.
+
+        Args:
+            colors: List of color pairs (even number of colors)
+            ratios: List of interpolation ratios
+            method: Interpolation method ('lab', 'lch', 'rgb')
+
+        Returns:
+            List of interpolated colors
+        """
+        if len(colors) % 2 != 0:
+            raise ValueError("colors list must contain an even number of colors (pairs)")
+
+        if method not in ['lab', 'lch', 'rgb']:
+            raise ValueError(f"Unknown method: {method}")
+
+        interp_func = getattr(self, f'interpolate_{method}')
+        results = []
+
+        color_pairs = [(colors[i], colors[i + 1]) for i in range(0, len(colors), 2)]
+
+        for (c1, c2), ratio in zip(color_pairs, ratios):
+            result = interp_func(c1, c2, ratio)
+            results.append(result)
+
+        return results
+
+    def generate_gradient(self, start_color: ColorInfo, end_color: ColorInfo,
+                         num_stops: int, method: str = 'lab') -> List[ColorInfo]:
+        """
+        Generate smooth gradient with specified number of stops.
+
+        Args:
+            start_color: Starting color
+            end_color: Ending color
+            num_stops: Number of gradient stops to generate
+            method: Interpolation method ('lab', 'lch', 'rgb')
+
+        Returns:
+            List of gradient stop colors
+        """
+        if num_stops < 2:
+            raise ValueError("num_stops must be at least 2")
+
+        if method not in ['lab', 'lch', 'rgb']:
+            raise ValueError(f"Unknown method: {method}")
+
+        interp_func = getattr(self, f'interpolate_{method}')
+        gradient_colors = []
+
+        for i in range(num_stops):
+            ratio = i / (num_stops - 1)
+            color = interp_func(start_color, end_color, ratio)
+            gradient_colors.append(color)
+
+        return gradient_colors
 
 
 def rgb_to_hsl(r: int, g: int, b: int) -> Tuple[float, float, float]:
