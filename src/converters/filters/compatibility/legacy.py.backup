@@ -1,0 +1,36 @@
+"""
+Backward compatibility layer for original filters.py.
+
+This module provides backward compatibility imports to ensure existing
+code continues to work during the transition from monolithic filters.py
+to the modular filter system.
+"""
+
+# Import the legacy classes from the monolithic filters.py
+# Use sys.modules to avoid circular import issues
+import sys
+import importlib.util
+import os
+
+# Get the path to the monolithic filters.py file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+filters_py_path = os.path.join(current_dir, '..', '..', 'filters.py')
+filters_py_path = os.path.abspath(filters_py_path)
+
+# Load the module directly
+spec = importlib.util.spec_from_file_location("filters_module", filters_py_path)
+filters_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(filters_module)
+
+# Extract the classes we need
+FilterConverter = filters_module.FilterConverter
+FilterPipeline = filters_module.FilterPipeline
+FilterIntegrator = filters_module.FilterIntegrator
+CompositingEngine = filters_module.CompositingEngine
+
+__all__ = [
+    'FilterConverter',
+    'FilterPipeline', 
+    'FilterIntegrator',
+    'CompositingEngine'
+]
