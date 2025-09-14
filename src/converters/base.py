@@ -11,6 +11,8 @@ from typing import Dict, List, Tuple, Optional, Any, Type
 from lxml import etree as ET
 import logging
 import re
+import time
+import math
 
 # Import the utilities from src level
 from ..units import UnitConverter
@@ -93,15 +95,67 @@ class ConversionContext:
         self.current_transform: Optional[str] = None
         self.style_stack: List[Dict] = []
         self.svg_root = svg_root
-        
+
         # Initialize unit converter and viewport context
         self.unit_converter = UnitConverter()
         self.viewport_handler = ViewportResolver()
         # Simplified viewport context initialization
         self.viewport_context = None
-        
+
         # Initialize converter registry for nested conversions
         self.converter_registry: Optional[ConverterRegistry] = None
+
+        # Initialize filter processing components
+        self._filter_processors: Dict[str, Any] = {}
+        self._filter_cache: Dict[str, Any] = {}
+        self._filter_context_stack: List[Dict] = []
+
+    def set_filter_processor(self, processor_name: str, processor: Any):
+        """Register a filter processor component."""
+        self._filter_processors[processor_name] = processor
+
+    def get_filter_processor(self, processor_name: str) -> Optional[Any]:
+        """Get a registered filter processor component."""
+        return self._filter_processors.get(processor_name)
+
+    def push_filter_context(self, filter_info: Dict):
+        """Push filter context onto the stack for nested processing."""
+        self._filter_context_stack.append(filter_info)
+
+    def pop_filter_context(self) -> Optional[Dict]:
+        """Pop filter context from the stack."""
+        return self._filter_context_stack.pop() if self._filter_context_stack else None
+
+    def get_current_filter_context(self) -> Optional[Dict]:
+        """Get the current filter context without popping."""
+        return self._filter_context_stack[-1] if self._filter_context_stack else None
+
+    def get_filter_context_depth(self) -> int:
+        """Get the current depth of filter context nesting."""
+        return len(self._filter_context_stack)
+
+    def clear_filter_context_stack(self):
+        """Clear all filter contexts (for cleanup)."""
+        self._filter_context_stack.clear()
+
+    def get_filter_cache_stats(self) -> Dict[str, Any]:
+        """Get filter cache statistics for debugging."""
+        return {
+            'cache_size': len(self._filter_cache),
+            'context_stack_depth': len(self._filter_context_stack),
+            'processor_count': len(self._filter_processors),
+            'cached_keys': list(self._filter_cache.keys()) if len(self._filter_cache) < 10 else f"{len(self._filter_cache)} keys"
+        }
+
+    def add_filter_debug_info(self, key: str, value: Any):
+        """Add debugging information about filter processing."""
+        if 'debug_info' not in self._filter_cache:
+            self._filter_cache['debug_info'] = {}
+        self._filter_cache['debug_info'][key] = value
+
+    def get_filter_debug_info(self) -> Dict[str, Any]:
+        """Get all filter debugging information."""
+        return self._filter_cache.get('debug_info', {})
         
     def get_next_shape_id(self) -> int:
         """Get the next available shape ID."""
@@ -156,6 +210,12 @@ class BaseConverter(ABC):
         self.transform_parser = TransformParser()
         self.color_parser = ColorParser()
         self.viewport_resolver = ViewportResolver()
+
+        # Initialize filter components
+        self._filter_complexity_analyzer = None
+        self._filter_optimization_strategy = None
+        self._filter_fallback_chain = None
+        self._filter_bounds_calculator = None
         
     @abstractmethod
     def can_convert(self, element: ET.Element) -> bool:
@@ -389,6 +449,739 @@ class BaseConverter(ABC):
         # This is a placeholder - patterns are complex in DrawingML
         gray_color = self.parse_color('gray')
         return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
+
+    # Filter processing methods
+
+    def initialize_filter_components(self, context: ConversionContext):
+        """
+        Initialize filter processing components if not already done.
+
+        Args:
+            context: Conversion context with filter processors
+        """
+        if self._filter_complexity_analyzer is None:
+            self._filter_complexity_analyzer = context.get_filter_processor('complexity_analyzer')
+
+        if self._filter_optimization_strategy is None:
+            self._filter_optimization_strategy = context.get_filter_processor('optimization_strategy')
+
+        if self._filter_fallback_chain is None:
+            self._filter_fallback_chain = context.get_filter_processor('fallback_chain')
+
+        if self._filter_bounds_calculator is None:
+            self._filter_bounds_calculator = context.get_filter_processor('bounds_calculator')
+
+    def extract_filter_attributes(self, element: ET.Element) -> Optional[Dict[str, Any]]:
+        """
+        Extract filter-related attributes from an SVG element.
+
+        Args:
+            element: SVG element to analyze
+
+        Returns:
+            Dictionary of filter attributes or None if no filters
+        """
+        filter_attr = element.get('filter')
+        if not filter_attr:
+            return None
+
+        # Handle filter reference (e.g., "url(#filter-id)")
+        if filter_attr.startswith('url(') and filter_attr.endswith(')'):
+            filter_id = filter_attr[5:-1]  # Remove 'url(' and ')'
+            if filter_id.startswith('#'):
+                filter_id = filter_id[1:]  # Remove '#'
+
+            return {
+                'type': 'reference',
+                'filter_id': filter_id,
+                'original_attr': filter_attr
+            }
+
+        # Handle direct filter effects (if supported)
+        return {
+            'type': 'direct',
+            'filter_value': filter_attr,
+            'original_attr': filter_attr
+        }
+
+    def resolve_filter_definition(self, filter_ref: Dict[str, Any], context: ConversionContext) -> Optional[Dict[str, Any]]:
+        """
+        Resolve filter reference to actual filter definition.
+
+        Args:
+            filter_ref: Filter reference information
+            context: Conversion context with filter definitions
+
+        Returns:
+            Resolved filter definition or None if not found
+        """
+        if filter_ref['type'] != 'reference':
+            return None
+
+        filter_id = filter_ref['filter_id']
+
+        # Look for filter definition in SVG document
+        if context.svg_root is not None:
+            # Find filter definition by ID
+            filter_elements = context.svg_root.xpath(f"//svg:filter[@id='{filter_id}']",
+                                                  namespaces={'svg': 'http://www.w3.org/2000/svg'})
+            if filter_elements:
+                return self._parse_filter_element(filter_elements[0])
+
+            # Also check without namespace
+            filter_elements = context.svg_root.xpath(f"//*[@id='{filter_id}']")
+            for elem in filter_elements:
+                if elem.tag.endswith('filter'):
+                    return self._parse_filter_element(elem)
+
+        return None
+
+    def _parse_filter_element(self, filter_element: ET.Element) -> Dict[str, Any]:
+        """
+        Parse SVG filter element into internal representation.
+
+        Args:
+            filter_element: SVG filter element
+
+        Returns:
+            Internal filter definition
+        """
+        primitives = []
+
+        for child in filter_element:
+            tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+
+            if tag == 'feGaussianBlur':
+                primitives.append({
+                    'type': 'feGaussianBlur',
+                    'stdDeviation': child.get('stdDeviation', '0'),
+                    'in': child.get('in', 'SourceGraphic'),
+                    'result': child.get('result', '')
+                })
+            elif tag == 'feOffset':
+                primitives.append({
+                    'type': 'feOffset',
+                    'dx': child.get('dx', '0'),
+                    'dy': child.get('dy', '0'),
+                    'in': child.get('in', 'SourceGraphic'),
+                    'result': child.get('result', '')
+                })
+            elif tag == 'feDropShadow':
+                primitives.append({
+                    'type': 'feDropShadow',
+                    'dx': child.get('dx', '0'),
+                    'dy': child.get('dy', '0'),
+                    'stdDeviation': child.get('stdDeviation', '0'),
+                    'flood-color': child.get('flood-color', 'black'),
+                    'flood-opacity': child.get('flood-opacity', '1'),
+                    'result': child.get('result', '')
+                })
+            elif tag == 'feColorMatrix':
+                primitives.append({
+                    'type': 'feColorMatrix',
+                    'type': child.get('type', 'matrix'),
+                    'values': child.get('values', '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0'),
+                    'in': child.get('in', 'SourceGraphic'),
+                    'result': child.get('result', '')
+                })
+            elif tag == 'feComposite':
+                primitives.append({
+                    'type': 'feComposite',
+                    'operator': child.get('operator', 'over'),
+                    'in': child.get('in', 'SourceGraphic'),
+                    'in2': child.get('in2', ''),
+                    'result': child.get('result', '')
+                })
+
+        if len(primitives) == 1:
+            return primitives[0]
+        elif len(primitives) > 1:
+            return {
+                'type': 'chain',
+                'primitives': primitives,
+                'primitive_count': len(primitives)
+            }
+        else:
+            return {'type': 'empty', 'primitives': [], 'primitive_count': 0}
+
+    def apply_filter_to_shape(self, element: ET.Element, shape_bounds: Dict[str, float],
+                            drawingml_content: str, context: ConversionContext) -> str:
+        """
+        Apply filter effects to a shape during rendering.
+
+        Args:
+            element: Original SVG element
+            shape_bounds: Calculated bounds of the shape
+            drawingml_content: Generated DrawingML content
+            context: Conversion context
+
+        Returns:
+            Modified DrawingML content with filter effects applied
+        """
+        # Extract filter attributes
+        filter_attributes = self.extract_filter_attributes(element)
+        if not filter_attributes:
+            return drawingml_content
+
+        # Initialize filter components
+        self.initialize_filter_components(context)
+        if not self._filter_complexity_analyzer:
+            self.logger.warning("Filter complexity analyzer not available")
+            return drawingml_content
+
+        # Resolve filter definition
+        filter_definition = self.resolve_filter_definition(filter_attributes, context)
+        if not filter_definition:
+            self.logger.warning(f"Could not resolve filter: {filter_attributes}")
+            return drawingml_content
+
+        # Calculate filter complexity and select strategy
+        complexity = self._filter_complexity_analyzer.calculate_complexity_score(filter_definition)
+        strategy = None
+        if self._filter_optimization_strategy:
+            strategy = self._filter_optimization_strategy.select_strategy(filter_definition, complexity_score=complexity)
+
+        # Calculate expanded bounds for filter effects
+        expanded_bounds = shape_bounds
+        if self._filter_bounds_calculator:
+            expanded_bounds = self._filter_bounds_calculator.calculate_filter_bounds(shape_bounds, filter_definition)
+
+        # Track filter processing for debugging
+        self.track_filter_processing(filter_definition, strategy, context)
+
+        # Push filter context for nested processing
+        filter_context = {
+            'definition': filter_definition,
+            'complexity': complexity,
+            'strategy': strategy,
+            'original_bounds': shape_bounds,
+            'expanded_bounds': expanded_bounds,
+            'start_time': time.time()
+        }
+        context.push_filter_context(filter_context)
+
+        try:
+            # Validate pipeline state before processing
+            issues = self.validate_filter_pipeline_state(context)
+            if issues:
+                self.logger.warning(f"Filter pipeline validation issues: {issues}")
+
+            # Apply filter based on strategy
+            result_content = drawingml_content
+            if strategy and hasattr(strategy, 'name'):
+                if strategy.name == 'NATIVE_DML':
+                    result_content = self._apply_native_dml_filter(filter_definition, drawingml_content, context)
+                elif strategy.name == 'DML_HACK':
+                    result_content = self._apply_dml_hack_filter(filter_definition, drawingml_content, context)
+                elif strategy.name == 'RASTERIZE':
+                    result_content = self._apply_rasterization_filter(filter_definition, drawingml_content, context)
+                else:
+                    result_content = self._apply_default_filter(filter_definition, drawingml_content, context)
+            else:
+                # Fallback to default filter application
+                result_content = self._apply_default_filter(filter_definition, drawingml_content, context)
+
+            # Add processing time to debug info
+            end_time = time.time()
+            processing_time = end_time - filter_context['start_time']
+            context.add_filter_debug_info(f'processing_time_{id(filter_definition)}', processing_time)
+
+            return result_content
+
+        finally:
+            # Always pop filter context
+            context.pop_filter_context()
+
+    def _apply_native_dml_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply filter using native DrawingML effects."""
+        if filter_def['type'] == 'feGaussianBlur':
+            blur_radius = float(filter_def.get('stdDeviation', '0'))
+            blur_radius_emu = int(blur_radius * 12700)  # Convert to EMUs
+
+            return content.replace(
+                '</a:spPr>',
+                f'<a:effectLst><a:blur rad="{blur_radius_emu}"/></a:effectLst></a:spPr>'
+            )
+        elif filter_def['type'] == 'feDropShadow':
+            dx = float(filter_def.get('dx', '0'))
+            dy = float(filter_def.get('dy', '0'))
+            blur = float(filter_def.get('stdDeviation', '0'))
+
+            dx_emu = int(dx * 12700)
+            dy_emu = int(dy * 12700)
+            blur_emu = int(blur * 12700)
+
+            return content.replace(
+                '</a:spPr>',
+                f'<a:effectLst><a:outerShdw blurRad="{blur_emu}" dist="{int((dx_emu**2 + dy_emu**2)**0.5)}" dir="{int(math.atan2(dy, dx) * 180 / math.pi * 60000)}"><a:srgbClr val="000000"><a:alpha val="50000"/></a:srgbClr></a:outerShdw></a:effectLst></a:spPr>'
+            )
+        elif filter_def['type'] == 'feColorMatrix':
+            return self._apply_color_matrix_filter(filter_def, content, context)
+        elif filter_def['type'] == 'feComposite':
+            return self._apply_composite_filter(filter_def, content, context)
+        elif filter_def['type'] == 'chain':
+            return self._apply_filter_chain(filter_def, content, context)
+
+        return content
+
+    def _apply_color_matrix_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply color matrix effects using DrawingML."""
+        matrix_type = filter_def.get('type', 'matrix')
+
+        if matrix_type == 'saturate':
+            saturation_value = float(filter_def.get('values', '1'))
+            saturation_pct = int(saturation_value * 100000)  # Convert to percentage in EMUs
+
+            # Use DrawingML color effects for saturation
+            effect_xml = f'<a:duotone><a:srgbClr val="000000"><a:sat val="{saturation_pct}"/></a:srgbClr><a:srgbClr val="FFFFFF"><a:sat val="{saturation_pct}"/></a:srgbClr></a:duotone>'
+
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif matrix_type == 'hueRotate':
+            hue_rotation = float(filter_def.get('values', '0'))
+            hue_rotation_deg = int(hue_rotation * 60000)  # Convert to DrawingML units
+
+            effect_xml = f'<a:recolor><a:clrTo><a:hslClr hue="{hue_rotation_deg}" sat="100000" lum="50000"/></a:clrTo></a:recolor>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif matrix_type == 'luminanceToAlpha':
+            # Convert to grayscale with alpha
+            effect_xml = '<a:grayscl/>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+
+        return content
+
+    def _apply_composite_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply composite operations and blending modes."""
+        operator = filter_def.get('operator', 'over')
+
+        # DrawingML has limited blending mode support, but we can approximate
+        if operator == 'multiply':
+            # Use shadow with multiply blend mode approximation
+            effect_xml = '<a:innerShdw blurRad="0" dist="0"><a:srgbClr val="000000"><a:alpha val="25000"/></a:srgbClr></a:innerShdw>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif operator == 'screen':
+            # Use glow effect for screen-like blending
+            effect_xml = '<a:glow rad="25400"><a:srgbClr val="FFFFFF"><a:alpha val="50000"/></a:srgbClr></a:glow>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif operator == 'darken':
+            # Use inner shadow for darkening
+            effect_xml = '<a:innerShdw blurRad="12700" dist="0"><a:srgbClr val="000000"><a:alpha val="40000"/></a:srgbClr></a:innerShdw>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif operator == 'lighten':
+            # Use outer glow for lightening
+            effect_xml = '<a:outerShdw blurRad="25400" dist="0"><a:srgbClr val="FFFFFF"><a:alpha val="30000"/></a:srgbClr></a:outerShdw>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+        elif operator in ['over', 'atop', 'in', 'out', 'xor']:
+            # For standard compositing operations, apply transparency effects
+            alpha_val = 75000 if operator == 'over' else 50000  # Different alpha based on operation
+            effect_xml = f'<a:glow rad="0"><a:srgbClr val="FFFFFF"><a:alpha val="{alpha_val}"/></a:srgbClr></a:glow>'
+            return content.replace('</a:spPr>', f'<a:effectLst>{effect_xml}</a:effectLst></a:spPr>')
+
+        return content
+
+    def _apply_filter_chain(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply complex filter chain with multiple effects and blending."""
+        primitives = filter_def.get('primitives', [])
+        if not primitives:
+            return content
+
+        current_content = content
+        effect_elements = []
+
+        # Process each primitive in the chain
+        for i, primitive in enumerate(primitives):
+            if primitive['type'] == 'feGaussianBlur':
+                blur_radius = float(primitive.get('stdDeviation', '0'))
+                blur_radius_emu = int(blur_radius * 12700)
+                effect_elements.append(f'<a:blur rad="{blur_radius_emu}"/>')
+
+            elif primitive['type'] == 'feOffset':
+                dx = float(primitive.get('dx', '0'))
+                dy = float(primitive.get('dy', '0'))
+                dx_emu = int(dx * 12700)
+                dy_emu = int(dy * 12700)
+
+                # Offset is typically combined with shadow effects
+                if i < len(primitives) - 1 and primitives[i + 1]['type'] in ['feDropShadow', 'feComposite']:
+                    # Will be handled by the next effect
+                    continue
+                else:
+                    # Standalone offset - use shadow with offset
+                    effect_elements.append(f'<a:outerShdw blurRad="0" dist="{int((dx_emu**2 + dy_emu**2)**0.5)}" dir="{int(math.atan2(dy, dx) * 180 / math.pi * 60000)}"><a:srgbClr val="000000"><a:alpha val="25000"/></a:srgbClr></a:outerShdw>')
+
+            elif primitive['type'] == 'feDropShadow':
+                dx = float(primitive.get('dx', '0'))
+                dy = float(primitive.get('dy', '0'))
+                blur = float(primitive.get('stdDeviation', '0'))
+
+                dx_emu = int(dx * 12700)
+                dy_emu = int(dy * 12700)
+                blur_emu = int(blur * 12700)
+
+                effect_elements.append(f'<a:outerShdw blurRad="{blur_emu}" dist="{int((dx_emu**2 + dy_emu**2)**0.5)}" dir="{int(math.atan2(dy, dx) * 180 / math.pi * 60000)}"><a:srgbClr val="000000"><a:alpha val="50000"/></a:srgbClr></a:outerShdw>')
+
+            elif primitive['type'] == 'feColorMatrix':
+                matrix_type = primitive.get('type', 'matrix')
+                if matrix_type == 'saturate':
+                    saturation_value = float(primitive.get('values', '1'))
+                    saturation_pct = int(saturation_value * 100000)
+                    effect_elements.append(f'<a:duotone><a:srgbClr val="000000"><a:sat val="{saturation_pct}"/></a:srgbClr><a:srgbClr val="FFFFFF"><a:sat val="{saturation_pct}"/></a:srgbClr></a:duotone>')
+
+            elif primitive['type'] == 'feComposite':
+                operator = primitive.get('operator', 'over')
+                if operator == 'multiply':
+                    effect_elements.append('<a:innerShdw blurRad="0" dist="0"><a:srgbClr val="000000"><a:alpha val="25000"/></a:srgbClr></a:innerShdw>')
+                elif operator == 'screen':
+                    effect_elements.append('<a:glow rad="25400"><a:srgbClr val="FFFFFF"><a:alpha val="50000"/></a:srgbClr></a:glow>')
+
+        # Combine all effects
+        if effect_elements:
+            effects_xml = ''.join(effect_elements)
+            return current_content.replace('</a:spPr>', f'<a:effectLst>{effects_xml}</a:effectLst></a:spPr>')
+
+        return current_content
+
+    def _apply_dml_hack_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply filter using DrawingML hacks and workarounds."""
+        # Implement creative DrawingML solutions for unsupported effects
+        self.logger.info(f"Applying DML hack for filter: {filter_def.get('type', 'unknown')}")
+        return content
+
+    def _apply_rasterization_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply filter using rasterization fallback."""
+        # This would involve rasterizing the content with filter applied
+        self.logger.info(f"Applying rasterization for filter: {filter_def.get('type', 'unknown')}")
+        return content
+
+    def _apply_default_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
+        """Apply default filter processing."""
+        return self._apply_native_dml_filter(filter_def, content, context)
+
+    # Pipeline coordination and state management methods
+
+    def track_filter_processing(self, filter_definition: Dict[str, Any], strategy: Any, context: ConversionContext):
+        """Track filter processing for debugging and monitoring."""
+        filter_id = id(filter_definition)
+        filter_type = filter_definition.get('type', 'unknown')
+        strategy_name = getattr(strategy, 'name', str(strategy)) if strategy else 'none'
+
+        debug_info = {
+            'filter_id': filter_id,
+            'filter_type': filter_type,
+            'strategy_used': strategy_name,
+            'context_depth': context.get_filter_context_depth(),
+            'timestamp': time.time()
+        }
+
+        context.add_filter_debug_info(f'filter_{filter_id}', debug_info)
+
+    def cleanup_filter_resources(self, context: ConversionContext):
+        """Clean up filter-related resources."""
+        # Clear filter component references
+        self._filter_complexity_analyzer = None
+        self._filter_optimization_strategy = None
+        self._filter_fallback_chain = None
+        self._filter_bounds_calculator = None
+
+        # Clear filter context if it exists
+        if context:
+            context.clear_filter_context_stack()
+
+        self.logger.debug("Filter resources cleaned up")
+
+    def get_filter_processing_stats(self, context: ConversionContext) -> Dict[str, Any]:
+        """Get comprehensive filter processing statistics."""
+        stats = {
+            'pipeline_state': 'active' if context.get_filter_context_depth() > 0 else 'idle',
+            'context_depth': context.get_filter_context_depth(),
+            'cache_stats': context.get_filter_cache_stats(),
+            'debug_info_count': len(context.get_filter_debug_info()),
+            'components_initialized': {
+                'complexity_analyzer': self._filter_complexity_analyzer is not None,
+                'optimization_strategy': self._filter_optimization_strategy is not None,
+                'fallback_chain': self._filter_fallback_chain is not None,
+                'bounds_calculator': self._filter_bounds_calculator is not None,
+            }
+        }
+        return stats
+
+    def validate_filter_pipeline_state(self, context: ConversionContext) -> List[str]:
+        """Validate the current state of the filter pipeline and return any issues."""
+        issues = []
+
+        # Check for context stack imbalance
+        if context.get_filter_context_depth() > 10:
+            issues.append(f"Filter context stack is very deep ({context.get_filter_context_depth()} levels) - possible memory leak")
+
+        # Check for uninitialized components when they should be available
+        current_context = context.get_current_filter_context()
+        if current_context:
+            if not self._filter_complexity_analyzer and context.get_filter_processor('complexity_analyzer'):
+                issues.append("Complexity analyzer not initialized despite being available in context")
+
+            if not self._filter_optimization_strategy and context.get_filter_processor('optimization_strategy'):
+                issues.append("Optimization strategy not initialized despite being available in context")
+
+        # Check cache size
+        cache_stats = context.get_filter_cache_stats()
+        if cache_stats['cache_size'] > 1000:
+            issues.append(f"Filter cache is large ({cache_stats['cache_size']} entries) - consider cleanup")
+
+        return issues
+
+    def create_filter_processing_report(self, context: ConversionContext) -> str:
+        """Create a comprehensive filter processing report for debugging."""
+        stats = self.get_filter_processing_stats(context)
+        issues = self.validate_filter_pipeline_state(context)
+        debug_info = context.get_filter_debug_info()
+
+        report_lines = [
+            "=== Filter Pipeline Processing Report ===",
+            f"Pipeline State: {stats['pipeline_state']}",
+            f"Context Depth: {stats['context_depth']}",
+            f"Cache Size: {stats['cache_stats']['cache_size']}",
+            f"Processors: {stats['cache_stats']['processor_count']}",
+            "",
+            "Component Status:",
+        ]
+
+        for component, initialized in stats['components_initialized'].items():
+            status = "✓ Initialized" if initialized else "✗ Not initialized"
+            report_lines.append(f"  {component}: {status}")
+
+        if issues:
+            report_lines.extend([
+                "",
+                "Issues Found:",
+            ])
+            for issue in issues:
+                report_lines.append(f"  ⚠ {issue}")
+
+        if debug_info:
+            report_lines.extend([
+                "",
+                "Debug Information:",
+            ])
+            for key, value in debug_info.items():
+                if isinstance(value, dict) and 'filter_type' in value:
+                    report_lines.append(f"  {key}: {value['filter_type']} ({value.get('strategy_used', 'unknown')})")
+                else:
+                    report_lines.append(f"  {key}: {value}")
+
+        return "\n".join(report_lines)
+
+    # Performance optimization methods
+
+    def batch_filter_operations(self, elements_with_filters: List[Tuple[ET.Element, Dict, str]],
+                               context: ConversionContext) -> List[str]:
+        """
+        Process multiple filtered elements in an optimized batch.
+
+        Args:
+            elements_with_filters: List of (element, bounds, content) tuples
+            context: Conversion context
+
+        Returns:
+            List of processed DrawingML content strings
+        """
+        if not elements_with_filters:
+            return []
+
+        # Group elements by filter type for batch processing
+        filter_groups = {}
+        for element, bounds, content in elements_with_filters:
+            filter_attributes = self.extract_filter_attributes(element)
+            if filter_attributes:
+                filter_definition = self.resolve_filter_definition(filter_attributes, context)
+                if filter_definition:
+                    filter_type = filter_definition.get('type', 'unknown')
+                    if filter_type not in filter_groups:
+                        filter_groups[filter_type] = []
+                    filter_groups[filter_type].append((element, bounds, content, filter_definition))
+
+        # Process each group optimally
+        results = []
+        for filter_type, group_items in filter_groups.items():
+            if filter_type in ['feGaussianBlur', 'feDropShadow']:
+                # These can be batched efficiently
+                batch_results = self._batch_process_simple_filters(group_items, context)
+                results.extend(batch_results)
+            else:
+                # Process individually for complex filters
+                for element, bounds, content, filter_def in group_items:
+                    result = self.apply_filter_to_shape(element, bounds, content, context)
+                    results.append(result)
+
+        return results
+
+    def _batch_process_simple_filters(self, group_items: List[Tuple], context: ConversionContext) -> List[str]:
+        """Process simple filters (blur, drop shadow) in batch for better performance."""
+        results = []
+
+        # Initialize filter components once for the batch
+        self.initialize_filter_components(context)
+
+        for element, bounds, content, filter_definition in group_items:
+            # Use cached complexity calculation if available
+            complexity = None
+            if self._filter_complexity_analyzer:
+                complexity = self._filter_complexity_analyzer.calculate_complexity_score(filter_definition)
+
+            # Apply optimized filter processing
+            result = self._apply_native_dml_filter(filter_definition, content, context)
+            results.append(result)
+
+        return results
+
+    def optimize_filter_chain_processing(self, filter_definition: Dict[str, Any], context: ConversionContext) -> Dict[str, Any]:
+        """
+        Optimize complex filter chain processing by reordering and combining operations.
+
+        Args:
+            filter_definition: Filter chain definition
+            context: Conversion context
+
+        Returns:
+            Optimized filter definition
+        """
+        if filter_definition.get('type') != 'chain':
+            return filter_definition
+
+        primitives = filter_definition.get('primitives', [])
+        if len(primitives) <= 1:
+            return filter_definition
+
+        optimized_primitives = []
+        i = 0
+
+        while i < len(primitives):
+            current = primitives[i]
+
+            # Combine consecutive blur operations
+            if current['type'] == 'feGaussianBlur' and i + 1 < len(primitives):
+                next_primitive = primitives[i + 1]
+                if next_primitive['type'] == 'feGaussianBlur':
+                    # Combine blur radii (approximate)
+                    curr_radius = float(current.get('stdDeviation', '0'))
+                    next_radius = float(next_primitive.get('stdDeviation', '0'))
+                    combined_radius = (curr_radius**2 + next_radius**2)**0.5
+
+                    optimized_primitives.append({
+                        'type': 'feGaussianBlur',
+                        'stdDeviation': str(combined_radius),
+                        'in': current.get('in', 'SourceGraphic'),
+                        'result': next_primitive.get('result', '')
+                    })
+                    i += 2  # Skip next primitive
+                    continue
+
+            # Merge offset + blur into drop shadow
+            if (current['type'] == 'feOffset' and
+                i + 1 < len(primitives) and
+                primitives[i + 1]['type'] == 'feGaussianBlur'):
+
+                offset = primitives[i]
+                blur = primitives[i + 1]
+
+                optimized_primitives.append({
+                    'type': 'feDropShadow',
+                    'dx': offset.get('dx', '0'),
+                    'dy': offset.get('dy', '0'),
+                    'stdDeviation': blur.get('stdDeviation', '0'),
+                    'flood-color': 'black',
+                    'result': blur.get('result', '')
+                })
+                i += 2
+                continue
+
+            # Keep primitive as-is
+            optimized_primitives.append(current)
+            i += 1
+
+        return {
+            'type': 'chain',
+            'primitives': optimized_primitives,
+            'primitive_count': len(optimized_primitives)
+        }
+
+    def implement_filter_caching_strategy(self, context: ConversionContext):
+        """
+        Implement intelligent caching strategy for filter operations.
+        """
+        cache_stats = context.get_filter_cache_stats()
+
+        # Clear old cache entries if cache is getting large
+        if cache_stats['cache_size'] > 500:
+            debug_info = context.get_filter_debug_info()
+            current_time = time.time()
+
+            # Remove entries older than 5 minutes
+            expired_keys = []
+            for key, value in debug_info.items():
+                if isinstance(value, dict) and 'timestamp' in value:
+                    if current_time - value['timestamp'] > 300:  # 5 minutes
+                        expired_keys.append(key)
+
+            for key in expired_keys:
+                debug_info.pop(key, None)
+
+            self.logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
+
+    def monitor_memory_usage(self, context: ConversionContext) -> Dict[str, Any]:
+        """
+        Monitor memory usage during filter processing.
+
+        Returns:
+            Memory usage statistics
+        """
+        try:
+            import psutil
+            import os
+
+            process = psutil.Process(os.getpid())
+            memory_info = process.memory_info()
+
+            stats = {
+                'rss_mb': memory_info.rss / 1024 / 1024,  # Resident memory in MB
+                'vms_mb': memory_info.vms / 1024 / 1024,  # Virtual memory in MB
+                'filter_cache_size': context.get_filter_cache_stats()['cache_size'],
+                'context_stack_depth': context.get_filter_context_depth(),
+            }
+
+            # Add warning if memory usage is high
+            if stats['rss_mb'] > 1000:  # 1GB
+                self.logger.warning(f"High memory usage detected: {stats['rss_mb']:.1f}MB RSS")
+
+            return stats
+
+        except ImportError:
+            # psutil not available, return basic stats
+            return {
+                'rss_mb': 'unavailable',
+                'vms_mb': 'unavailable',
+                'filter_cache_size': context.get_filter_cache_stats()['cache_size'],
+                'context_stack_depth': context.get_filter_context_depth(),
+            }
+
+    def optimize_drawingml_output(self, content: str) -> str:
+        """
+        Optimize generated DrawingML content for better performance.
+
+        Args:
+            content: Raw DrawingML content
+
+        Returns:
+            Optimized DrawingML content
+        """
+        # Remove redundant whitespace
+        optimized = re.sub(r'\s+', ' ', content)
+
+        # Remove empty effect lists
+        optimized = re.sub(r'<a:effectLst\s*></a:effectLst>', '', optimized)
+
+        # Combine consecutive similar effects (basic optimization)
+        # This is a simplified optimization - real implementation would be more complex
+
+        return optimized.strip()
 
 
 class ConverterRegistry:
