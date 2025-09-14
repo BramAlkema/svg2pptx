@@ -204,6 +204,7 @@ markers = [
     "batch: Tests for batch processing",
     "api: Tests for API endpoints",
     "db: Tests requiring database operations",
+    "precision: Tests for mathematical precision and fractional coordinate systems",
     
     # Legacy markers for SVG elements (maintained for compatibility)
     "missing_elements: Tests for missing SVG elements (polyline, tspan, image, symbol, use, pattern, feGaussianBlur, feDropShadow, defs, style)",
