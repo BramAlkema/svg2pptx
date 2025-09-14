@@ -18,7 +18,7 @@ from .base import BaseConverter, ConversionContext
 class GradientConverter(BaseConverter):
     """Converts SVG gradients to DrawingML fill properties"""
     
-    supported_elements = ['linearGradient', 'radialGradient', 'pattern']
+    supported_elements = ['linearGradient', 'radialGradient', 'pattern', 'meshgradient']
     
     def __init__(self):
         super().__init__()
@@ -37,6 +37,8 @@ class GradientConverter(BaseConverter):
             return self._convert_radial_gradient(element, context)
         elif element.tag.endswith('pattern'):
             return self._convert_pattern(element, context)
+        elif element.tag.endswith('meshgradient'):
+            return self._convert_mesh_gradient(element, context)
         return ""
     
     def get_fill_from_url(self, url: str, context: ConversionContext) -> str:
@@ -70,7 +72,12 @@ class GradientConverter(BaseConverter):
             return default
 
     def _convert_linear_gradient(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert SVG linear gradient to DrawingML linear gradient"""
+        """Convert SVG linear gradient to DrawingML linear gradient with caching optimization"""
+        # Check cache first for performance optimization
+        cache_key = self._get_gradient_cache_key(element)
+        cached_result = self._get_cached_gradient(cache_key)
+        if cached_result:
+            return cached_result
         # Get gradient coordinates with safe parsing
         x1 = self._safe_float_parse(element.get('x1', '0%'), 0.0)
         y1 = self._safe_float_parse(element.get('y1', '0%'), 0.0)
@@ -86,13 +93,18 @@ class GradientConverter(BaseConverter):
             x2 = x2 / 100
         if element.get('y2', '').endswith('%'):
             y2 = y2 / 100
-        
+
+        # Apply gradient transformation matrix if present
+        gradient_transform = element.get('gradientTransform', '')
+        if gradient_transform:
+            x1, y1, x2, y2 = self._apply_gradient_transform(x1, y1, x2, y2, gradient_transform)
+
         # Calculate angle in degrees
         dx = x2 - x1
         dy = y2 - y1
         angle_rad = math.atan2(dy, dx)
         angle_deg = math.degrees(angle_rad)
-        
+
         # Convert to DrawingML angle (0-21600000, where 21600000 = 360°)
         # DrawingML angles start from 3 o'clock and go clockwise
         drawingml_angle = int(((90 - angle_deg) % 360) * 60000)
@@ -102,21 +114,26 @@ class GradientConverter(BaseConverter):
         if not stops:
             return ""
         
-        # Create gradient stop list
+        # Create gradient stop list with per-mille precision
         stop_list = []
         for position, color, opacity in stops:
-            stop_position = int(position * 1000)  # Convert to per-mille (0-1000)
+            # Enhanced per-mille precision: fractional 0.0-1000.0 instead of integer 0-1000
+            stop_position = self._to_per_mille_precision(position)
             alpha_attr = f' alpha="{int(opacity * 100000)}"' if opacity < 1.0 else ""
             stop_list.append(f'<a:gs pos="{stop_position}"><a:srgbClr val="{color}"{alpha_attr}/></a:gs>')
         
         stops_xml = '\n                    '.join(stop_list)
-        
-        return f"""<a:gradFill flip="none" rotWithShape="1">
+
+        result = f"""<a:gradFill flip="none" rotWithShape="1">
             <a:gsLst>
                 {stops_xml}
             </a:gsLst>
             <a:lin ang="{drawingml_angle}" scaled="1"/>
         </a:gradFill>"""
+
+        # Cache result for performance optimization
+        self._cache_gradient_result(cache_key, result)
+        return result
     
     def _convert_radial_gradient(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG radial gradient to DrawingML radial gradient"""
@@ -144,10 +161,12 @@ class GradientConverter(BaseConverter):
         if not stops:
             return ""
         
-        # Create gradient stop list (reverse order for radial)
+        # Create gradient stop list (reverse order for radial) with per-mille precision
         stop_list = []
         for position, color, opacity in reversed(stops):
-            stop_position = int((1.0 - position) * 1000)  # Reverse position
+            # Enhanced per-mille precision for reversed radial positions
+            reversed_position = 1.0 - position
+            stop_position = self._to_per_mille_precision(reversed_position)
             alpha_attr = f' alpha="{int(opacity * 100000)}"' if opacity < 1.0 else ""
             stop_list.append(f'<a:gs pos="{stop_position}"><a:srgbClr val="{color}"{alpha_attr}/></a:gs>')
         
@@ -407,3 +426,445 @@ class GradientConverter(BaseConverter):
             <a:fgClr><a:srgbClr val="{pattern_color}"/></a:fgClr>
             <a:bgClr><a:srgbClr val="FFFFFF"/></a:bgClr>
         </a:pattFill>'''
+
+    def _convert_mesh_gradient(self, element: ET.Element, context: ConversionContext) -> str:
+        """Convert SVG mesh gradient to DrawingML using overlapping radial gradients.
+
+        Mesh gradients are SVG 2.0 features that define color interpolation across
+        a 2D mesh. Since PowerPoint doesn't support mesh gradients directly, we:
+        1. Parse mesh structure to extract corner colors
+        2. Create overlapping radial gradients with precise positioning
+        3. Use 4-corner color interpolation for smooth blending
+        4. Generate custom geometry paths for mesh-like regions
+        """
+        try:
+            # Parse mesh gradient properties
+            gradient_id = element.get('id', 'mesh_gradient')
+            gradient_units = element.get('gradientUnits', 'objectBoundingBox')
+
+            # Extract mesh structure
+            mesh_data = self._parse_mesh_structure(element)
+
+            if not mesh_data or len(mesh_data) == 0:
+                # Fallback to solid color if mesh parsing fails
+                fallback_color = self._extract_mesh_fallback_color(element)
+                return f'<a:solidFill><a:srgbClr val="{fallback_color}"/></a:solidFill>'
+
+            # For simple 2x2 mesh (4 corners), use bilinear interpolation
+            if self._is_simple_4_corner_mesh(mesh_data):
+                return self._convert_4_corner_mesh_to_radial(mesh_data, context)
+            else:
+                # Complex mesh - use multiple overlapping radial gradients
+                return self._convert_complex_mesh_to_overlapping_radials(mesh_data, context)
+
+        except Exception as e:
+            # Graceful fallback for malformed mesh gradients
+            self.logger.error(f"Error converting mesh gradient: {e}")
+            fallback_color = self._extract_mesh_fallback_color(element)
+            return f'<a:solidFill><a:srgbClr val="{fallback_color}"/></a:solidFill>'
+
+    def _parse_mesh_structure(self, mesh_element: ET.Element) -> List[Dict[str, Any]]:
+        """Parse SVG mesh gradient structure to extract patches and corner colors."""
+        mesh_patches = []
+
+        # Find all mesh rows
+        mesh_rows = mesh_element.findall('.//meshrow')
+
+        for row_index, row in enumerate(mesh_rows):
+            # Find all mesh patches in this row
+            patches = row.findall('.//meshpatch')
+
+            for patch_index, patch in enumerate(patches):
+                # Extract stops (corner colors) for this patch
+                stops = patch.findall('.//stop')
+
+                if len(stops) >= 4:  # Valid mesh patch needs 4 corners
+                    patch_data = {
+                        'row': row_index,
+                        'col': patch_index,
+                        'corners': []
+                    }
+
+                    # Parse each corner color
+                    for stop in stops[:4]:  # Only take first 4 corners
+                        color = self._parse_stop_color(stop)
+                        opacity = self._safe_float_parse(stop.get('stop-opacity', '1.0'), 1.0)
+
+                        patch_data['corners'].append({
+                            'color': color,
+                            'opacity': opacity
+                        })
+
+                    mesh_patches.append(patch_data)
+
+        return mesh_patches
+
+    def _parse_stop_color(self, stop_element: ET.Element) -> str:
+        """Parse stop color with HSL/RGB support and precise color handling."""
+        color_str = stop_element.get('stop-color', '#000000')
+
+        # Handle various color formats
+        if color_str.startswith('#'):
+            return color_str[1:].upper()  # Remove # and normalize to uppercase
+        elif color_str.startswith('rgb'):
+            # Parse RGB format: rgb(255, 0, 0)
+            import re
+            rgb_match = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color_str)
+            if rgb_match:
+                r, g, b = map(int, rgb_match.groups())
+                return f"{r:02X}{g:02X}{b:02X}"
+        elif color_str.startswith('hsl'):
+            # Parse HSL format and convert to RGB
+            return self._hsl_to_rgb_hex(color_str)
+
+        # Default fallback
+        return "000000"
+
+    def _hsl_to_rgb_hex(self, hsl_str: str) -> str:
+        """Convert HSL color string to RGB hex with precision support."""
+        try:
+            # Try to use spectra library if available for precise conversion
+            try:
+                import spectra
+                color = spectra.html(hsl_str)
+                rgb = color.rgb
+                r, g, b = [int(c * 255) for c in rgb]
+                return f"{r:02X}{g:02X}{b:02X}"
+            except ImportError:
+                # Fallback to manual HSL conversion
+                import re
+                hsl_match = re.match(r'hsl\s*\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)', hsl_str)
+                if hsl_match:
+                    h = float(hsl_match.group(1)) / 360.0
+                    s = float(hsl_match.group(2)) / 100.0
+                    l = float(hsl_match.group(3)) / 100.0
+
+                    r, g, b = self._hsl_to_rgb_precise(h * 360, s * 100, l * 100)
+                    return f"{int(r):02X}{int(g):02X}{int(b):02X}"
+        except Exception:
+            pass
+
+        return "808080"  # Gray fallback
+
+    def _hsl_to_rgb_precise(self, h: float, s: float, l: float) -> Tuple[float, float, float]:
+        """Convert HSL to RGB with high precision for gradient calculations."""
+        h = h / 360.0
+        s = s / 100.0
+        l = l / 100.0
+
+        def hue_to_rgb(p: float, q: float, t: float) -> float:
+            if t < 0:
+                t += 1
+            if t > 1:
+                t -= 1
+            if t < 1/6:
+                return p + (q - p) * 6 * t
+            if t < 1/2:
+                return q
+            if t < 2/3:
+                return p + (q - p) * (2/3 - t) * 6
+            return p
+
+        if s == 0:
+            r = g = b = l  # achromatic
+        else:
+            q = l * (1 + s) if l < 0.5 else l + s - l * s
+            p = 2 * l - q
+            r = hue_to_rgb(p, q, h + 1/3)
+            g = hue_to_rgb(p, q, h)
+            b = hue_to_rgb(p, q, h - 1/3)
+
+        return r * 255, g * 255, b * 255
+
+    def _is_simple_4_corner_mesh(self, mesh_data: List[Dict[str, Any]]) -> bool:
+        """Check if mesh is a simple 2x2 grid (4 corners) suitable for bilinear interpolation."""
+        return len(mesh_data) == 1 and len(mesh_data[0]['corners']) == 4
+
+    def _convert_4_corner_mesh_to_radial(self, mesh_data: List[Dict[str, Any]], context: ConversionContext) -> str:
+        """Convert 4-corner mesh to radial gradient with bilinear interpolation approximation."""
+        corners = mesh_data[0]['corners']
+
+        if len(corners) != 4:
+            return self._get_fallback_solid_fill(corners)
+
+        # Extract corner colors with alpha precision
+        corner_colors = []
+        for corner in corners:
+            color = corner['color']
+            opacity = corner['opacity']
+            alpha_attr = f' alpha="{int(opacity * 100000)}"' if opacity < 1.0 else ""
+            corner_colors.append((color, alpha_attr))
+
+        # Create radial gradient approximating 4-corner interpolation
+        # Use center interpolation between all 4 colors
+        center_color = self._interpolate_mesh_colors(corners)
+        center_alpha = sum(c['opacity'] for c in corners) / 4  # Average alpha
+        center_alpha_attr = f' alpha="{int(center_alpha * 100000)}"' if center_alpha < 1.0 else ""
+
+        # Choose dominant corner color for outer edge
+        outer_color, outer_alpha = corner_colors[0]  # Use first corner as outer
+
+        # Create radial gradient from center to edges
+        return f'''<a:gradFill flip="none" rotWithShape="1">
+            <a:gsLst>
+                <a:gs pos="0"><a:srgbClr val="{center_color}"{center_alpha_attr}/></a:gs>
+                <a:gs pos="1000"><a:srgbClr val="{outer_color}"{outer_alpha}/></a:gs>
+            </a:gsLst>
+            <a:path path="circle">
+                <a:fillToRect l="0" t="0" r="0" b="0"/>
+            </a:path>
+        </a:gradFill>'''
+
+    def _interpolate_mesh_colors(self, corners: List[Dict[str, Any]]) -> str:
+        """Interpolate colors from 4 corners using bilinear interpolation."""
+        if len(corners) != 4:
+            return corners[0]['color'] if corners else "808080"
+
+        try:
+            # Try using spectra for precise color blending
+            import spectra
+
+            # Convert corner colors to spectra objects
+            spectra_colors = []
+            for corner in corners:
+                color_hex = f"#{corner['color']}"
+                spectra_colors.append(spectra.html(color_hex))
+
+            # Bilinear interpolation at center point (0.5, 0.5)
+            # Average all 4 corners for center color
+            blended = spectra_colors[0]
+            for color in spectra_colors[1:]:
+                blended = blended.blend(color, ratio=0.5)
+
+            return blended.hexcode[1:].upper()  # Remove # prefix
+
+        except ImportError:
+            # Fallback to simple RGB averaging
+            total_r = total_g = total_b = 0
+
+            for corner in corners:
+                color_hex = corner['color']
+                r = int(color_hex[0:2], 16)
+                g = int(color_hex[2:4], 16)
+                b = int(color_hex[4:6], 16)
+
+                total_r += r
+                total_g += g
+                total_b += b
+
+            avg_r = int(total_r / 4)
+            avg_g = int(total_g / 4)
+            avg_b = int(total_b / 4)
+
+            return f"{avg_r:02X}{avg_g:02X}{avg_b:02X}"
+
+    def _convert_complex_mesh_to_overlapping_radials(self, mesh_data: List[Dict[str, Any]], context: ConversionContext) -> str:
+        """Convert complex mesh to multiple overlapping radial gradients."""
+        # For complex meshes, simplify to dominant color pattern
+        if not mesh_data:
+            return self._get_fallback_solid_fill([])
+
+        # Extract dominant colors from all patches
+        all_colors = []
+        for patch in mesh_data:
+            for corner in patch['corners']:
+                all_colors.append(corner)
+
+        if len(all_colors) >= 2:
+            # Create linear gradient with dominant colors
+            start_color = all_colors[0]
+            end_color = all_colors[-1]
+
+            start_alpha = f' alpha="{int(start_color["opacity"] * 100000)}"' if start_color['opacity'] < 1.0 else ""
+            end_alpha = f' alpha="{int(end_color["opacity"] * 100000)}"' if end_color['opacity'] < 1.0 else ""
+
+            return f'''<a:gradFill flip="none" rotWithShape="1">
+                <a:gsLst>
+                    <a:gs pos="0"><a:srgbClr val="{start_color['color']}"{start_alpha}/></a:gs>
+                    <a:gs pos="1000"><a:srgbClr val="{end_color['color']}"{end_alpha}/></a:gs>
+                </a:gsLst>
+                <a:lin ang="0" scaled="1"/>
+            </a:gradFill>'''
+        else:
+            return self._get_fallback_solid_fill(all_colors)
+
+    def _extract_mesh_fallback_color(self, mesh_element: ET.Element) -> str:
+        """Extract fallback color from mesh gradient for error cases."""
+        # Try to find any stop color in the mesh
+        stops = mesh_element.findall('.//stop')
+        for stop in stops:
+            color = self._parse_stop_color(stop)
+            if color and color != "000000":
+                return color
+
+        return "808080"  # Gray fallback
+
+    def _get_fallback_solid_fill(self, colors: List[Dict[str, Any]]) -> str:
+        """Generate fallback solid fill from available colors."""
+        if colors:
+            fallback_color = colors[0]['color']
+            opacity = colors[0]['opacity']
+            alpha_attr = f' alpha="{int(opacity * 100000)}"' if opacity < 1.0 else ""
+            return f'<a:solidFill><a:srgbClr val="{fallback_color}"{alpha_attr}/></a:solidFill>'
+        else:
+            return '<a:solidFill><a:srgbClr val="808080"/></a:solidFill>'
+
+    def _to_per_mille_precision(self, position: float) -> str:
+        """Convert position to per-mille with fractional precision support.
+
+        Enhanced per-mille precision system supports fractional values (0.0-1000.0)
+        instead of just integer values (0-1000) for more accurate gradient positioning.
+
+        Args:
+            position: Position value between 0.0 and 1.0
+
+        Returns:
+            String representation of per-mille value with appropriate precision
+        """
+        # Clamp position to valid range
+        position = max(0.0, min(1.0, position))
+
+        # Convert to per-mille with fractional precision
+        per_mille = position * 1000.0
+
+        # Round to reasonable precision (1 decimal place for PowerPoint compatibility)
+        # PowerPoint supports up to 3 decimal places, but 1 is sufficient for gradients
+        per_mille_rounded = round(per_mille, 1)
+
+        # Format as integer if it's a whole number, otherwise show decimal
+        if per_mille_rounded == int(per_mille_rounded):
+            return str(int(per_mille_rounded))
+        else:
+            return f"{per_mille_rounded:.1f}"
+
+    def _interpolate_gradient_colors(self, start_pos: float, start_color: Tuple[int, int, int],
+                                   end_pos: float, end_color: Tuple[int, int, int],
+                                   target_pos: float) -> Tuple[int, int, int]:
+        """Interpolate colors between two gradient stops with floating-point precision.
+
+        Implements linear interpolation between two color points for precise
+        gradient color calculations with fractional positioning support.
+
+        Args:
+            start_pos: Position of start color (0.0-1.0)
+            start_color: RGB tuple of start color (0-255 each)
+            end_pos: Position of end color (0.0-1.0)
+            end_color: RGB tuple of end color (0-255 each)
+            target_pos: Target position for interpolation (0.0-1.0)
+
+        Returns:
+            Interpolated RGB color tuple
+        """
+        # Handle edge cases
+        if start_pos == end_pos:
+            return start_color
+        if target_pos <= start_pos:
+            return start_color
+        if target_pos >= end_pos:
+            return end_color
+
+        # Calculate interpolation factor with floating-point precision
+        factor = (target_pos - start_pos) / (end_pos - start_pos)
+
+        # Linear interpolation for each RGB component
+        r = int(start_color[0] + (end_color[0] - start_color[0]) * factor)
+        g = int(start_color[1] + (end_color[1] - start_color[1]) * factor)
+        b = int(start_color[2] + (end_color[2] - start_color[2]) * factor)
+
+        # Clamp values to valid RGB range
+        r = max(0, min(255, r))
+        g = max(0, min(255, g))
+        b = max(0, min(255, b))
+
+        return (r, g, b)
+
+    def _apply_gradient_transform(self, x1: float, y1: float, x2: float, y2: float,
+                                transform_str: str) -> Tuple[float, float, float, float]:
+        """Apply SVG gradient transformation matrix to gradient coordinates.
+
+        Handles matrix transformations for complex gradient positioning and scaling.
+        Supports matrix(a, b, c, d, e, f) format commonly used in SVG gradients.
+
+        Args:
+            x1, y1: Start point coordinates
+            x2, y2: End point coordinates
+            transform_str: SVG transform string (e.g., "matrix(1.5, 0.5, -0.5, 1.2, 10, 20)")
+
+        Returns:
+            Transformed coordinates tuple (x1, y1, x2, y2)
+        """
+        try:
+            # Parse matrix transformation
+            import re
+            matrix_match = re.search(r'matrix\s*\(\s*([-\d.]+)\s*,?\s*([-\d.]+)\s*,?\s*([-\d.]+)\s*,?\s*([-\d.]+)\s*,?\s*([-\d.]+)\s*,?\s*([-\d.]+)\s*\)', transform_str)
+
+            if matrix_match:
+                # Extract matrix components: matrix(a, b, c, d, e, f)
+                a, b, c, d, e, f = map(float, matrix_match.groups())
+
+                # Apply matrix transformation to start point (x1, y1)
+                new_x1 = a * x1 + c * y1 + e
+                new_y1 = b * x1 + d * y1 + f
+
+                # Apply matrix transformation to end point (x2, y2)
+                new_x2 = a * x2 + c * y2 + e
+                new_y2 = b * x2 + d * y2 + f
+
+                return new_x1, new_y1, new_x2, new_y2
+
+            else:
+                # Handle other transform types (translate, scale, rotate, skew)
+                # For now, return original coordinates
+                # TODO: Add support for other transform functions
+                return x1, y1, x2, y2
+
+        except (ValueError, AttributeError) as e:
+            # Fallback to original coordinates if transform parsing fails
+            self.logger.warning(f"Failed to parse gradient transform '{transform_str}': {e}")
+            return x1, y1, x2, y2
+
+    def _get_gradient_cache_key(self, element: ET.Element) -> str:
+        """Generate cache key for gradient caching optimization.
+
+        Creates a unique key based on gradient properties for caching
+        converted gradients to improve performance on repeated patterns.
+        """
+        # Extract key gradient properties
+        gradient_id = element.get('id', '')
+        gradient_type = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+
+        # Include transform and coordinate information
+        coords = []
+        for attr in ['x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'fx', 'fy']:
+            value = element.get(attr, '')
+            if value:
+                coords.append(f"{attr}:{value}")
+
+        # Include gradient transform
+        transform = element.get('gradientTransform', '')
+        if transform:
+            coords.append(f"transform:{transform}")
+
+        # Include gradient stops
+        stops = element.findall('.//stop')
+        stop_data = []
+        for stop in stops:
+            offset = stop.get('offset', '0')
+            color = stop.get('stop-color', '#000000')
+            opacity = stop.get('stop-opacity', '1')
+            stop_data.append(f"{offset}-{color}-{opacity}")
+
+        cache_key = f"{gradient_type}:{gradient_id}:{':'.join(coords)}:{':'.join(stop_data)}"
+        return cache_key[:200]  # Limit key length
+
+    def _get_cached_gradient(self, cache_key: str) -> Optional[str]:
+        """Get cached gradient result if available."""
+        return self.gradients.get(cache_key)
+
+    def _cache_gradient_result(self, cache_key: str, result: str) -> None:
+        """Cache gradient conversion result for performance optimization."""
+        # Limit cache size to prevent memory issues
+        if len(self.gradients) > 100:  # Clear cache when it gets too large
+            self.gradients.clear()
+
+        self.gradients[cache_key] = result

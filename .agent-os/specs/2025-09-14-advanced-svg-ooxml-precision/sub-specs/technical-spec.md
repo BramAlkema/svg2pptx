@@ -106,8 +106,9 @@ class AdvancedCoordinateSystem:
 - **`lxml`** version >= 4.9.0 - Enhanced XML generation with decimal precision support
   - **Justification**: Current XML generation may not handle floating-point coordinates with sufficient precision for advanced OOXML features
 
-- **`numpy`** version >= 1.21.0 - Advanced mathematical operations for mesh gradient calculations
-  - **Justification**: Mesh gradient interpolation requires matrix operations and color space calculations that are more efficient with NumPy
+- **`spectra`** version >= 0.0.11 - Advanced color space operations and interpolation for mesh gradients
+  - **Justification**: Mesh gradient interpolation requires precise color blending, HSL/RGB conversions, and color space calculations. Spectra provides a clean API for color manipulation and interpolation that's more focused than NumPy for color operations
+  - **GitHub**: https://github.com/jsvine/spectra
 
 ### Optional Performance Enhancement
 
