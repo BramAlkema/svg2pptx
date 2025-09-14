@@ -8,7 +8,7 @@ Polygon, Polyline, and Line converters.
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from pathlib import Path
 import sys
 
@@ -81,6 +81,13 @@ class TestRectangleConverter:
         }
         context.get_next_shape_id.return_value = 1001
         
+        # Mock coordinate system for svg_to_emu conversion
+        mock_coord_system = Mock()
+        mock_coord_system.svg_to_emu.return_value = (x_emu, y_emu)
+        # Use the actual unit converter for consistent EMU conversions
+        mock_coord_system.svg_length_to_emu.side_effect = lambda value, direction: mock_converter.unit_converter.to_emu(f'{value}px')
+        context.coordinate_system = mock_coord_system
+        
         result = converter.convert(element, context)
         
         # Check basic structure
@@ -97,7 +104,6 @@ class TestRectangleConverter:
         assert '<a:prstGeom prst="rect">' in result
         
         # Verify context method calls
-        context.batch_convert_to_emu.assert_called_once()
         context.get_next_shape_id.assert_called_once()
     
     def test_convert_rectangle_with_defaults(self):
@@ -110,6 +116,18 @@ class TestRectangleConverter:
             'x': 0, 'y': 0, 'width': 0, 'height': 0, 'rx': 0, 'ry': 0
         }
         context.get_next_shape_id.return_value = 1002
+        
+        # Mock coordinate system for svg_to_emu conversion  
+        mock_coord_system = Mock()
+        mock_coord_system.svg_to_emu.return_value = (0, 0)
+        # Use the actual unit converter for consistent EMU conversions
+        from src.converters.base import BaseConverter
+        class MockConverter(BaseConverter):
+            def can_convert(self, element): return True
+            def convert(self, element, context): return ""
+        mock_converter = MockConverter()
+        mock_coord_system.svg_length_to_emu.side_effect = lambda value, direction: mock_converter.unit_converter.to_emu(f'{value}px')
+        context.coordinate_system = mock_coord_system
         
         result = converter.convert(element, context)
         
@@ -139,6 +157,13 @@ class TestRectangleConverter:
             'x': 0, 'y': 0, 'width': size_emu, 'height': size_emu, 'rx': 0, 'ry': 0
         }
         context.get_next_shape_id.return_value = 1003
+        
+        # Mock coordinate system for svg_to_emu conversion
+        mock_coord_system = Mock()
+        mock_coord_system.svg_to_emu.return_value = (0, 0)
+        # Use the actual unit converter for consistent EMU conversions
+        mock_coord_system.svg_length_to_emu.side_effect = lambda value, direction: mock_converter.unit_converter.to_emu(f'{value}px')
+        context.coordinate_system = mock_coord_system
         
         # Mock the style generation methods
         converter.generate_fill = Mock(return_value='<mock-fill/>')
@@ -175,6 +200,13 @@ class TestRectangleConverter:
             'x': 0, 'y': 0, 'width': width_emu, 'height': height_emu, 'rx': rx_emu, 'ry': ry_emu
         }
         context.get_next_shape_id.return_value = 1004
+        
+        # Mock coordinate system for svg_to_emu conversion
+        mock_coord_system = Mock()
+        mock_coord_system.svg_to_emu.return_value = (0, 0)
+        # Use the actual unit converter for consistent EMU conversions
+        mock_coord_system.svg_length_to_emu.side_effect = lambda value, direction: mock_converter.unit_converter.to_emu(f'{value}px')
+        context.coordinate_system = mock_coord_system
         
         result = converter.convert(element, context)
         

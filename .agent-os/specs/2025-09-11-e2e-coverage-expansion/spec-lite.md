@@ -1,3 +1,3 @@
 # Spec Summary (Lite)
 
-Expand end-to-end test coverage with real-world SVG files through comprehensive full workflow testing from file upload to PowerPoint download. This initiative will establish robust regression prevention by testing actual design tool outputs (Figma, Illustrator, Inkscape) through the complete conversion pipeline, ensuring production reliability and catching breaking changes before deployment.
+Expand End-to-End test coverage for the SVG2PPTX project to achieve the target of 90% coverage across all critical system components. This initiative will strengthen quality assurance, reduce production bugs, and ensure comprehensive validation of conversion workflows from SVG input to PowerPoint output. The expansion covers API endpoints, core conversion logic, integration services, error handling scenarios, and performance validation to provide complete coverage of user journeys and system reliability.

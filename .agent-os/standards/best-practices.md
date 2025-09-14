@@ -32,6 +32,35 @@ ELSE:
 - Keep files focused on a single responsibility
 - Group related functionality together
 - Use consistent naming conventions
+
+## 🚨 MANDATORY TESTING STANDARDS (Updated 2025-09-13)
+
+### Unified Testing System - NO EXCEPTIONS
+- ✅ **MANDATORY**: `source venv/bin/activate` before ALL test operations
+- ✅ **ONLY** use `/tests/` unified structure with systematic templates
+- ✅ **ONLY** execute tests via `./venv/bin/python tests/run_tests.py`
+- ❌ **FORBIDDEN**: Adhoc test scripts anywhere in project
+- ❌ **FORBIDDEN**: Root directory test clutter or scattered test files
+- ❌ **FORBIDDEN**: Custom test runners or direct pytest calls
+- ❌ **FORBIDDEN**: System Python or non-venv test execution
+
+### Template-Based Development
+- **MANDATORY**: Use `/tests/templates/` for all new test creation
+- **MANDATORY**: Follow TODO placeholder structure in templates
+- **MANDATORY**: Validate structure with `--check-structure` before development
+- **MANDATORY**: Place tests in correct category directories
+
+### Zero Tolerance Policy
+Any violations result in immediate cleanup:
+- Adhoc test scripts → **DELETED**
+- Root directory clutter → **REMOVED**
+- Non-unified testing → **RESTRUCTURED**
+
+### Current Standards
+- 155 organized test files (consolidated from 273 scattered)
+- Systematic templates for consistent development
+- Tool-standardized architecture maintained
+- Unified execution system enforced
 </conditional-block>
 
 <conditional-block context-check="dependencies" task-condition="choosing-external-library">

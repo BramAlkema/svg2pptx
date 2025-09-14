@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .tasks import process_svg_batch, extract_and_process_zip, cleanup_temp_files
-from .huey_app import huey
+from .huey_app import huey, DB_PATH
 from .simple_api import convert_single_svg_sync, merge_presentations_sync
 
 logger = logging.getLogger(__name__)

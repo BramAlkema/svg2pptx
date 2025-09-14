@@ -1,7 +1,7 @@
 # Technical Stack
 
-> Last Updated: 2025-09-09
-> Version: 1.0.0
+> Last Updated: 2025-09-13
+> Version: 1.1.0
 
 ## Application Framework
 
@@ -24,7 +24,7 @@
 
 ### Python Engine
 - **python-pptx**: PowerPoint file generation and manipulation
-- **SVG parsing libraries**: For vector graphics processing
+- **lxml**: XML and SVG parsing (REQUIRED - see XML Parsing Standards below)
 - **DrawML conversion engine**: Map SVG elements to PowerPoint's Drawing Markup Language
 - **LibreOffice reference**: Leverage open-source SVG-to-DrawML conversion algorithms
 - **FastAPI/Flask**: For API endpoints (cloud deployment)
@@ -33,6 +33,35 @@
 - **Google Apps Script**: Client-side integration for Google Workspace
 - **Google Drive API**: File handling and storage integration
 - **Google Slides API**: Direct presentation creation capabilities
+
+## XML Parsing Standards
+
+### REQUIRED Library
+- **lxml**: The ONLY approved XML parsing library for this project
+  - Use `from lxml import etree` for XML/SVG parsing
+  - Provides robust namespace handling required for SVG processing
+  - Superior performance and memory management for large XML files
+  - Full XPath support for complex SVG element queries
+
+### PROHIBITED Libraries
+- **xml.etree.ElementTree**: NEVER use this library
+  - Inadequate namespace handling for SVG files
+  - Poor performance with complex XML structures
+  - Limited XPath support
+  - Security vulnerabilities with untrusted XML
+
+### Code Standards
+```python
+# CORRECT - Use lxml
+from lxml import etree
+
+# Parse SVG content
+parser = etree.XMLParser(ns_clean=True, recover=True)
+root = etree.fromstring(svg_content, parser)
+
+# INCORRECT - Never use ElementTree
+# from xml.etree import ElementTree  # FORBIDDEN
+```
 
 ## Deployment Options
 

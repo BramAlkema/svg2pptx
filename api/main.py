@@ -15,6 +15,7 @@ from .config import get_settings
 from .auth import validate_api_key, extract_bearer_token, get_current_user
 from .services.conversion_service import ConversionService, ConversionError
 from .routes.previews import router as previews_router
+from .routes.batch import router as batch_router
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -39,6 +40,9 @@ app.add_middleware(
 
 # Include preview routes
 app.include_router(previews_router)
+
+# Include batch routes
+app.include_router(batch_router)
 
 
 
@@ -172,6 +176,7 @@ async def http_exception_handler(request, exc):
             "error": True,
             "status_code": exc.status_code,
             "message": exc.detail,
+            "detail": exc.detail,  # Include detail field for consistency
             "path": str(request.url.path),
             "method": request.method
         }

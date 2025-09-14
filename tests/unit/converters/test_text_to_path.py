@@ -5,7 +5,7 @@ Comprehensive test suite for text-to-path fallback system and integration testin
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from unittest.mock import Mock, patch, MagicMock
 
 from src.converters.text_to_path import TextToPathConverter

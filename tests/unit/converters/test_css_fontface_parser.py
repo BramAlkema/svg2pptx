@@ -6,7 +6,7 @@ from SVG <style> elements, based on one_big_method.py approach.
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import base64
 import re
 from unittest.mock import Mock, patch

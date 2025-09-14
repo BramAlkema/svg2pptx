@@ -395,6 +395,49 @@ class GoogleDriveService:
             pass
         
         return str(error)
+    
+    def create_folder(self, folder_name: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Create a folder in Google Drive.
+        
+        Args:
+            folder_name: Name of the folder to create
+            parent_id: Optional parent folder ID
+            
+        Returns:
+            Dictionary with folder information
+        """
+        try:
+            folder_metadata = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            
+            if parent_id:
+                folder_metadata['parents'] = [parent_id]
+            
+            folder = self.service.files().create(
+                body=folder_metadata,
+                fields='id,name,webViewLink'
+            ).execute()
+            
+            logger.info(f"Created folder '{folder_name}' with ID: {folder['id']}")
+            
+            return {
+                'success': True,
+                'folderId': folder['id'],
+                'folderName': folder['name'],
+                'folderUrl': folder.get('webViewLink', f"https://drive.google.com/drive/folders/{folder['id']}")
+            }
+            
+        except HttpError as e:
+            error_msg = self._extract_error_message(e)
+            logger.error(f"HTTP error during folder creation: {error_msg}")
+            raise GoogleDriveError(f"Folder creation failed: {error_msg}", e.resp.status)
+        
+        except Exception as e:
+            logger.error(f"Unexpected error during folder creation: {e}")
+            raise GoogleDriveError(f"Folder creation failed: {e}")
 
 
 # Convenience function for quick testing

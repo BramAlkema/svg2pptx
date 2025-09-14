@@ -192,7 +192,7 @@ jobs:
         # Install dependencies if needed
         os.system('pip install -e .')
         
-        from tools.coverage_utils import CoverageAnalyzer, CoverageTrendTracker
+        from tools.tools.testing.coverage_utils import CoverageAnalyzer, CoverageTrendTracker
         import subprocess
         
         # Load coverage data

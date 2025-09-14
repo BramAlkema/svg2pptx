@@ -1,5 +1,29 @@
 # SVG2PPTX Testing Architecture
 
+## 🚨 MANDATORY UNIFIED TESTING SYSTEM
+
+> **CRITICAL UPDATE**: As of 2025-09-13, all testing must follow the unified structure in `/tests/`. NO adhoc testing allowed.
+
+### **ENFORCEMENT RULES**
+- ✅ **USE**: Only `/tests/` unified structure with templates
+- ✅ **USE**: `./venv/bin/python tests/run_tests.py` for ALL test execution (VENV MANDATORY)
+- ✅ **USE**: `source venv/bin/activate` before any test commands
+- ❌ **FORBIDDEN**: Adhoc test scripts, root directory test files
+- ❌ **FORBIDDEN**: Scattered test utilities or custom runners
+- ❌ **FORBIDDEN**: Direct pytest calls without unified runner
+- ❌ **FORBIDDEN**: System Python or non-venv execution
+
+### **UNIFIED TESTING STRUCTURE**
+```
+tests/                          # ONLY approved testing location
+├── templates/                  # MANDATORY systematic templates
+├── unit/converters/           # Tool-standardized unit tests
+├── integration/              # Multi-component tests
+├── e2e/                     # Complete workflow tests
+├── run_tests.py            # ONLY approved test runner
+└── README.md              # MANDATORY compliance guide
+```
+
 ## Standardized Tool Integration Strategy
 
 ### Core Principle
@@ -133,4 +157,26 @@ assert f'<a:ext cx="{expected_emu}">' in result
 3. Establish performance benchmarks using standardized tool measurements
 4. Create comprehensive tool interaction testing patterns
 
-This systematized architecture ensures that our expanding test suite (currently 538 tests) maintains consistency and accurately reflects production behavior as the SVG2PPTX codebase evolves.
+This systematized architecture ensures that our unified test suite (155 organized files, down from 273 scattered tests) maintains consistency and accurately reflects production behavior as the SVG2PPTX codebase evolves.
+
+## 🎯 UPDATED COMPLIANCE REQUIREMENTS (2025-09-13)
+
+### **Mandatory Testing Process**
+1. **ALWAYS** activate venv: `source venv/bin/activate`
+2. **ONLY** use templates from `/tests/templates/` for new tests
+3. **ALWAYS** run `./venv/bin/python tests/run_tests.py --check-structure` before development
+4. **NEVER** create test files outside the unified structure
+5. **NEVER** execute tests without venv activation
+6. **IMMEDIATELY** clean up any adhoc test files found
+
+### **Violation Response**
+- Any adhoc test scripts will be **DELETED WITHOUT WARNING**
+- Root directory test clutter will be **REMOVED IMMEDIATELY**
+- Non-compliant testing will result in **MANDATORY RESTRUCTURING**
+
+### **Current Status**
+- ✅ **155 organized test files** (consolidated from 273 scattered tests)
+- ✅ **Systematic templates** with TODO placeholders for new development
+- ✅ **Unified test runner** with category-specific execution
+- ✅ **Tool-standardized architecture** maintained in unified structure
+- ✅ **Zero tolerance** for non-compliance with unified system

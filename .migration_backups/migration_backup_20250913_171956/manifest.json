@@ -1,0 +1,10 @@
+{
+  "backup_id": "migration_backup_20250913_171956",
+  "timestamp": "20250913_171956",
+  "description": "Pre-cleanup backup of scattered conftest files",
+  "files": [
+    "tests/unit/conftest.py",
+    "tests/unit/converters/conftest.py"
+  ],
+  "project_root": "/Users/ynse/projects/svg2pptx"
+}

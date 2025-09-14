@@ -11,7 +11,7 @@ This module extends the existing cache system with:
 """
 
 import pickle
-import zstd
+import pyzstd as zstd
 import hashlib
 import sqlite3
 import threading

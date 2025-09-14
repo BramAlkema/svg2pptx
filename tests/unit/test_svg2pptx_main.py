@@ -8,7 +8,7 @@ following the standardized architecture pattern.
 
 import pytest
 import tempfile
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from unittest.mock import Mock, patch, mock_open, MagicMock
 from pathlib import Path
 from pptx import Presentation
