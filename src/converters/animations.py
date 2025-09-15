@@ -158,9 +158,8 @@ class AnimationDefinition:
     
     def _interpolate_colors(self, color1: str, color2: str, t: float) -> str:
         """Interpolate between two colors."""
-        parser = ColorParser()
-        c1 = parser.parse(color1)
-        c2 = parser.parse(color2)
+        c1 = self.color_parser.parse(color1)
+        c2 = self.color_parser.parse(color2)
         
         if not c1 or not c2:
             return color1

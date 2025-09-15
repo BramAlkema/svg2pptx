@@ -84,8 +84,8 @@ class CoordinateSystem:
 
 class ConversionContext:
     """Context object passed through the conversion pipeline."""
-    
-    def __init__(self, svg_root: Optional[ET.Element] = None):
+
+    def __init__(self, svg_root: Optional[ET.Element] = None, services: Optional[ConversionServices] = None):
         self.coordinate_system: Optional[CoordinateSystem] = None
         self.gradients: Dict[str, Dict] = {}
         self.patterns: Dict[str, Dict] = {}
@@ -97,9 +97,14 @@ class ConversionContext:
         self.style_stack: List[Dict] = []
         self.svg_root = svg_root
 
-        # Initialize unit converter and viewport context
-        self.unit_converter = UnitConverter()
-        self.viewport_handler = ViewportResolver()
+        # Use services if provided, otherwise create default for backward compatibility
+        if services is not None:
+            self.unit_converter = services.unit_converter
+            self.viewport_handler = services.viewport_resolver
+        else:
+            # Fallback for backward compatibility
+            self.unit_converter = UnitConverter()
+            self.viewport_handler = ViewportResolver()
         # Simplified viewport context initialization
         self.viewport_context = None
 

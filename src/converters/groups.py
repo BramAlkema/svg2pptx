@@ -18,12 +18,12 @@ from .transforms import TransformConverter
 
 class GroupHandler(BaseConverter):
     """Handles SVG group elements and nested structure"""
-    
+
     supported_elements = ['g', 'svg', 'symbol', 'defs', 'marker']
-    
-    def __init__(self):
-        super().__init__()
-        self.transform_converter = TransformConverter()
+
+    def __init__(self, services):
+        super().__init__(services)
+        self.transform_converter = TransformConverter(services)
     
     def can_convert(self, element: ET.Element) -> bool:
         """Check if this converter can handle the given element"""
@@ -52,7 +52,7 @@ class GroupHandler(BaseConverter):
         group_transform = self.transform_converter.get_element_transform(element)
         
         # Create new context with accumulated transform
-        new_context = ConversionContext(context.svg_root)
+        new_context = ConversionContext(context.svg_root, services=self.services)
         new_context.coordinate_system = context.coordinate_system
         new_context.converter_registry = context.converter_registry
         new_context.shape_id_counter = context.shape_id_counter
@@ -247,7 +247,7 @@ class GroupHandler(BaseConverter):
         
         # Create nested context
         nested_coord_system = CoordinateSystem((0, 0, svg_width, svg_height))
-        nested_context = ConversionContext(svg_element)
+        nested_context = ConversionContext(svg_element, services=self.services)
         nested_context.coordinate_system = nested_coord_system
         nested_context.converter_registry = context.converter_registry
         nested_context.shape_id_counter = context.shape_id_counter

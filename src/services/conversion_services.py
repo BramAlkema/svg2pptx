@@ -82,6 +82,7 @@ class ConversionServices:
     color_parser: ColorParser
     transform_parser: TransformParser
     viewport_resolver: ViewportResolver
+    config: ConversionConfig = None
 
     # Class-level singleton instance
     _default_instance: ClassVar[Optional['ConversionServices']] = None
@@ -116,7 +117,8 @@ class ConversionServices:
                 unit_converter=unit_converter,
                 color_parser=color_parser,
                 transform_parser=transform_parser,
-                viewport_resolver=viewport_resolver
+                viewport_resolver=viewport_resolver,
+                config=config
             )
 
         except Exception as e:
@@ -167,7 +169,8 @@ class ConversionServices:
                 unit_converter=unit_converter,
                 color_parser=color_parser,
                 transform_parser=transform_parser,
-                viewport_resolver=viewport_resolver
+                viewport_resolver=viewport_resolver,
+                config=config
             )
 
         except Exception as e:
@@ -233,9 +236,9 @@ class ConversionServices:
 
             # Test basic functionality of each service
             self.unit_converter.to_emu("10px")
-            self.color_parser.parse_color("#000000")
-            self.transform_parser.parse_transform("translate(10,20)")
-            self.viewport_resolver.resolve_viewport("0 0 100 100")
+            self.color_parser.parse("#000000")
+            self.transform_parser.parse("translate(10,20)")
+            self.viewport_resolver.parse_viewbox("0 0 100 100")
 
             return True
 

@@ -27,9 +27,8 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 # Import existing architecture components
-from ....colors import ColorParser, ColorInfo
-from ....units import UnitConverter
-from ....transforms import TransformParser
+from ....colors import ColorInfo
+from ....services.conversion_services import ConversionServices
 
 
 class FilterParsingException(Exception):
@@ -61,22 +60,22 @@ class FilterPrimitiveParser:
         'feDisplacementMap', 'feImage', 'feTile', 'feMerge'
     }
 
-    def __init__(self, color_parser: ColorParser, unit_converter: UnitConverter):
+    def __init__(self, services: ConversionServices):
         """
-        Initialize FilterPrimitiveParser with architecture dependencies.
+        Initialize FilterPrimitiveParser with ConversionServices.
 
         Args:
-            color_parser: ColorParser for parsing color attributes
-            unit_converter: UnitConverter for length/coordinate conversion
+            services: ConversionServices container with all needed services
 
         Raises:
-            FilterParsingException: If dependencies are invalid
+            FilterParsingException: If services are invalid
         """
-        if not color_parser or not unit_converter:
-            raise FilterParsingException("ColorParser and UnitConverter are required")
+        if not services or not services.validate_services():
+            raise FilterParsingException("Valid ConversionServices are required")
 
-        self.color_parser = color_parser
-        self.unit_converter = unit_converter
+        self.services = services
+        self.color_parser = services.color_parser
+        self.unit_converter = services.unit_converter
 
         # Primitive-specific parsers
         self.primitive_parsers = {

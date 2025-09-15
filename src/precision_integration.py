@@ -138,7 +138,8 @@ class PrecisionConversionContext(ConversionContext):
     def __init__(self,
                  svg_root: Optional[ET.Element] = None,
                  precision_mode: PrecisionMode = PrecisionMode.SUBPIXEL,
-                 enable_fractional_emu: bool = True):
+                 enable_fractional_emu: bool = True,
+                 services=None):
         """
         Initialize precision-aware conversion context.
 
@@ -146,8 +147,9 @@ class PrecisionConversionContext(ConversionContext):
             svg_root: Root SVG element
             precision_mode: Precision level for calculations
             enable_fractional_emu: Whether to enable fractional EMU precision
+            services: ConversionServices instance
         """
-        super().__init__(svg_root)
+        super().__init__(svg_root, services=services)
 
         self.precision_mode = precision_mode
         self.enable_fractional_emu = enable_fractional_emu
@@ -366,7 +368,8 @@ class PrecisionAwareConverter(BaseConverter):
 
 def create_precision_conversion_context(svg_root: Optional[ET.Element] = None,
                                        precision_mode: str = "subpixel",
-                                       enable_fractional_emu: bool = True) -> PrecisionConversionContext:
+                                       enable_fractional_emu: bool = True,
+                                       services=None) -> PrecisionConversionContext:
     """
     Create a precision-aware conversion context.
 
@@ -374,6 +377,7 @@ def create_precision_conversion_context(svg_root: Optional[ET.Element] = None,
         svg_root: Root SVG element
         precision_mode: "standard", "subpixel", "high", or "ultra"
         enable_fractional_emu: Whether to enable fractional EMU precision
+        services: ConversionServices instance
 
     Returns:
         Configured PrecisionConversionContext instance
@@ -381,7 +385,8 @@ def create_precision_conversion_context(svg_root: Optional[ET.Element] = None,
     return PrecisionConversionContext(
         svg_root=svg_root,
         precision_mode=PrecisionMode(precision_mode),
-        enable_fractional_emu=enable_fractional_emu
+        enable_fractional_emu=enable_fractional_emu,
+        services=services
     )
 
 
