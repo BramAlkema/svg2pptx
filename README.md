@@ -224,6 +224,53 @@ uvicorn api.main:app --host 127.0.0.1 --port 8002 &
 curl -H "Authorization: Bearer dev-api-key-12345" http://127.0.0.1:8002/convert?url=data:image/svg+xml,<svg>...</svg>
 ```
 
+## 📚 Documentation
+
+### Dependency Injection System
+
+The SVG2PPTX converter uses a modern dependency injection architecture for service management:
+
+- **[Migration Guide](docs/dependency-injection-migration-guide.md)** - Complete guide for migrating to the new dependency injection system
+- **[API Reference](docs/api/conversion-services-api.md)** - Detailed API documentation for ConversionServices
+- **[Quick Reference](docs/quick-reference/dependency-injection-cheatsheet.md)** - Cheat sheet for common patterns
+- **[Examples](examples/dependency-injection-examples.py)** - Working code examples
+
+### Key Features
+
+- **Centralized service management** through `ConversionServices`
+- **Improved testability** with service mocking
+- **Consistent configuration** across all converters
+- **Clean separation of concerns** between service creation and usage
+
+### Quick Example
+
+```python
+from src.services.conversion_services import ConversionServices
+from src.converters.shapes import RectangleConverter
+
+# Create services container
+services = ConversionServices.create_default()
+
+# Create converter with dependency injection
+converter = RectangleConverter(services=services)
+
+# Use converter (backward compatible API)
+result = converter.unit_converter.to_emu("10px")
+```
+
+### Migration from Legacy Code
+
+```python
+# Old pattern (deprecated)
+converter = RectangleConverter()
+
+# New pattern (recommended)
+services = ConversionServices.create_default()
+converter = RectangleConverter(services=services)
+```
+
+See the [Migration Guide](docs/dependency-injection-migration-guide.md) for detailed migration instructions.
+
 ## 🐛 Troubleshooting
 
 ### PowerPoint Repair Issues
