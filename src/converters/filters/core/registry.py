@@ -313,7 +313,6 @@ class FilterRegistry:
         # from ..image.blur import GaussianBlurFilter, MotionBlurFilter
         # from ..image.color import ColorMatrixFilter, FloodFilter
         # from ..geometric.transforms import OffsetFilter, TurbulenceFilter
-        # from ..geometric.tile import TileFilter
         #
         # default_filters = [
         #     GaussianBlurFilter(),
@@ -322,7 +321,6 @@ class FilterRegistry:
         #     FloodFilter(),
         #     OffsetFilter(),
         #     TurbulenceFilter(),
-        #     TileFilter(),
         # ]
         #
         # for filter_obj in default_filters:
@@ -362,7 +360,6 @@ class FilterRegistry:
             'turbulence': ['{http://www.w3.org/2000/svg}feTurbulence'],
             'lighting': ['{http://www.w3.org/2000/svg}feDiffuseLighting',
                         '{http://www.w3.org/2000/svg}feSpecularLighting'],
-            'feTile': ['{http://www.w3.org/2000/svg}feTile'],
         }
 
         if filter_type in element_mappings:

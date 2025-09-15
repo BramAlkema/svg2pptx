@@ -25,7 +25,9 @@ from .core.base import Filter, FilterContext, FilterResult
 from .core.registry import FilterRegistry
 from .core.chain import FilterChain
 
-# Note: Legacy compatibility layer removed - use new modular architecture
+# Backward compatibility - maintain original imports
+# This ensures existing code continues to work
+from .compatibility.legacy import *
 
 __version__ = "2.0.0"
 __all__ = [
