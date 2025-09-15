@@ -15,6 +15,7 @@ import math
 from typing import List, Tuple, Dict, Any
 from lxml import etree as ET
 from .base import BaseConverter, ConversionContext
+from ..services.conversion_services import ConversionServices
 
 
 class PathData:
@@ -53,8 +54,14 @@ class PathConverter(BaseConverter):
     
     supported_elements = ['path']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize PathConverter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        super().__init__(services)
         self.current_pos = [0.0, 0.0]  # Current position
         self.last_control = None  # Last control point for smooth curves
         self.start_pos = [0.0, 0.0]  # Path start position for Z command

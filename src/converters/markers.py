@@ -31,10 +31,9 @@ from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
-from ..units import UnitConverter
-from ..colors import ColorParser, ColorInfo
-from ..transforms import TransformParser, Matrix
-from ..viewbox import ViewportResolver
+from ..services.conversion_services import ConversionServices
+from ..colors import ColorInfo
+from ..transforms import Matrix
 
 
 class MarkerPosition(Enum):
@@ -105,11 +104,17 @@ class MarkerConverter(BaseConverter):
     
     supported_elements = ['marker', 'symbol', 'use', 'defs']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize MarkerConverter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        super().__init__(services)
         self.markers: Dict[str, MarkerDefinition] = {}
         self.symbols: Dict[str, SymbolDefinition] = {}
-        
+
         # Common arrowhead geometries for PowerPoint compatibility
         self.standard_arrows = {
             'arrow': self._create_arrow_path(),

@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from lxml import etree as ET
 import math
 from .base import BaseConverter, ConversionContext
+from ..services.conversion_services import ConversionServices
 
 
 class GradientConverter(BaseConverter):
@@ -20,8 +21,14 @@ class GradientConverter(BaseConverter):
     
     supported_elements = ['linearGradient', 'radialGradient', 'pattern', 'meshgradient']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize GradientConverter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        super().__init__(services)
         self.gradients = {}  # Cache for gradient definitions
     
     def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:

@@ -32,10 +32,7 @@ from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
-from ..colors import ColorParser
-from ..transforms import TransformParser
-from ..units import UnitConverter
-from ..viewbox import ViewportResolver
+from ..services.conversion_services import ConversionServices
 
 
 class AnimationType(Enum):
@@ -240,15 +237,26 @@ class AnimationConverter(BaseConverter):
     
     supported_elements = ['animate', 'animateTransform', 'animateColor', 'animateMotion', 'set']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize AnimationConverter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        super().__init__(services)
         self.animations: List[AnimationDefinition] = []
-        
+
         # Animation processing options
         self.max_keyframes = 30  # Maximum keyframes to extract
         self.frame_rate = 24     # Frames per second for analysis
         self.static_time = 0.5   # Time point for static extraction (seconds)
-        
+
+    def can_convert(self, element: ET.Element) -> bool:
+        """Check if this converter can handle the given element."""
+        tag = self.get_element_tag(element)
+        return tag in self.supported_elements
+
     def convert(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert animation element."""
         # Animation elements don't generate direct output
