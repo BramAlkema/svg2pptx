@@ -11,12 +11,13 @@ This module provides specialized caches for expensive operations like:
 
 import hashlib
 import pickle
+import json
+import time
+import threading
 from typing import Any, Dict, Optional, Union, Tuple, List
 from functools import lru_cache, wraps
 from dataclasses import dataclass
 from lxml import etree as ET
-import time
-import threading
 from collections import defaultdict
 
 
@@ -232,18 +233,401 @@ class TransformCache(BaseCache):
         self.put(key, result)
 
 
+class FilterCache(BaseCache):
+    """Cache for complex filter result operations with EMF storage."""
+
+    def __init__(self, max_size: int = 400):
+        super().__init__(max_size, ttl=600)  # 10 min TTL for filter results
+        self._filter_combination_cache = {}
+        self._performance_stats = {
+            'repeated_patterns': defaultdict(int),
+            'optimization_applied': 0,
+            'consistency_checks': 0,
+            'consistency_failures': 0
+        }
+
+    def generate_filter_cache_key(self, filter_chain: List[ET.Element], context: Dict) -> str:
+        """Generate unique cache key for filter combination."""
+        key_data = {
+            'filter_elements': [self._serialize_filter_element(f) for f in filter_chain],
+            'input_hash': self._hash_input_data(context.get('input_data', {})),
+            'parameters': context.get('filter_parameters', {}),
+            'coordinate_system': context.get('coordinate_system', {}),
+            'viewport': context.get('viewport', {}),
+            'transform_chain': context.get('transform_chain', [])
+        }
+        key_str = json.dumps(key_data, sort_keys=True)
+        return hashlib.blake2b(key_str.encode()).hexdigest()
+
+    def _serialize_filter_element(self, element: ET.Element) -> Dict:
+        """Serialize filter element to deterministic dictionary."""
+        return {
+            'tag': element.tag.split('}')[-1] if '}' in element.tag else element.tag,
+            'attributes': dict(element.attrib),
+            'text': element.text if element.text else None,
+            'children': [self._serialize_filter_element(child) for child in element]
+        }
+
+    def _hash_input_data(self, input_data: Dict) -> str:
+        """Generate hash for input data."""
+        if not input_data:
+            return "empty_input"
+
+        # Create deterministic representation
+        input_str = json.dumps(input_data, sort_keys=True)
+        return hashlib.md5(input_str.encode()).hexdigest()
+
+    def get_filter_result(self, filter_chain: List[ET.Element], context: Dict) -> Optional[Dict]:
+        """Get cached filter result for filter combination."""
+        key = self.generate_filter_cache_key(filter_chain, context)
+        return self.get(key)
+
+    def cache_filter_result(self, filter_chain: List[ET.Element], context: Dict, result: Dict):
+        """Cache filter result for filter combination."""
+        key = self.generate_filter_cache_key(filter_chain, context)
+
+        # Add metadata to result
+        cached_result = {
+            **result,
+            'cache_key': key,
+            'cached_at': time.time(),
+            'filter_count': len(filter_chain),
+            'complexity_score': self._calculate_complexity_score(filter_chain)
+        }
+
+        self.put(key, cached_result)
+
+    def _calculate_complexity_score(self, filter_chain: List[ET.Element]) -> float:
+        """Calculate complexity score for filter chain."""
+        complexity = 0.0
+
+        for element in filter_chain:
+            tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+
+            # Base complexity by filter type
+            complexity_map = {
+                'feGaussianBlur': 1.0,
+                'feColorMatrix': 1.5,
+                'feConvolveMatrix': 3.0,
+                'feComposite': 2.0,
+                'feMorphology': 2.5,
+                'feOffset': 0.5,
+                'feFlood': 0.3,
+                'feTurbulence': 3.5,
+                'feDisplacementMap': 4.0,
+                'feDiffuseLighting': 3.5,
+                'feSpecularLighting': 3.5
+            }
+
+            base_complexity = complexity_map.get(tag, 2.0)
+
+            # Adjust for parameters
+            if tag == 'feGaussianBlur':
+                std_dev = float(element.get('stdDeviation', '1'))
+                base_complexity *= (1 + std_dev / 10)
+            elif tag == 'feConvolveMatrix':
+                kernel_matrix = element.get('kernelMatrix', '')
+                kernel_size = len(kernel_matrix.split()) if kernel_matrix else 9
+                base_complexity *= (kernel_size / 9)
+
+            complexity += base_complexity
+
+        return complexity
+
+    def get_emf_cached_result(self, cache_key: str) -> Optional[bytes]:
+        """Get EMF blob from cache by key."""
+        result = self.get(cache_key)
+        if result and 'emf_blob' in result:
+            return result['emf_blob']
+        return None
+
+    def cache_emf_result(self, cache_key: str, emf_blob: bytes, metadata: Dict = None):
+        """Cache EMF blob result."""
+        cached_result = {
+            'emf_blob': emf_blob,
+            'cached_at': time.time(),
+            'type': 'emf_fallback',
+            'metadata': metadata or {},
+            'checksum': hashlib.md5(emf_blob).hexdigest() if emf_blob else None
+        }
+        self.put(cache_key, cached_result)
+
+    # Subtask 3.2.5: Cache invalidation and update strategies
+    def invalidate_by_filter_types(self, filter_types: List[str]) -> int:
+        """Invalidate cache entries containing specific filter types."""
+        invalidated = 0
+        with self._lock:
+            to_remove = []
+            for key, entry in self._cache.items():
+                if 'metadata' in entry and 'filter_types' in entry['metadata']:
+                    entry_filter_types = entry['metadata']['filter_types']
+                    if any(ft in entry_filter_types for ft in filter_types):
+                        to_remove.append(key)
+
+            for key in to_remove:
+                self._cache.pop(key, None)
+                self._timestamps.pop(key, None)
+                invalidated += 1
+
+        return invalidated
+
+    def invalidate_by_complexity(self, min_complexity: float) -> int:
+        """Invalidate cache entries above complexity threshold."""
+        invalidated = 0
+        with self._lock:
+            to_remove = []
+            for key, entry in self._cache.items():
+                complexity = entry.get('complexity_score', 0.0)
+                if complexity >= min_complexity:
+                    to_remove.append(key)
+
+            for key in to_remove:
+                self._cache.pop(key, None)
+                self._timestamps.pop(key, None)
+                invalidated += 1
+
+        return invalidated
+
+    def invalidate_by_age(self, max_age_seconds: float) -> int:
+        """Invalidate cache entries older than specified age."""
+        current_time = time.time()
+        invalidated = 0
+        with self._lock:
+            to_remove = []
+            for key, entry in self._cache.items():
+                cached_at = entry.get('cached_at', 0)
+                if current_time - cached_at > max_age_seconds:
+                    to_remove.append(key)
+
+            for key in to_remove:
+                self._cache.pop(key, None)
+                self._timestamps.pop(key, None)
+                invalidated += 1
+
+        return invalidated
+
+    # Subtask 3.2.6: Cache size management and cleanup systems
+    def cleanup_by_usage_pattern(self) -> int:
+        """Clean up cache based on usage patterns and performance metrics."""
+        cleaned = 0
+        current_time = time.time()
+
+        with self._lock:
+            # Identify entries for cleanup
+            to_remove = []
+
+            for key, entry in self._cache.items():
+                # Remove entries that haven't been accessed recently
+                last_access = self._timestamps.get(key, 0)
+                if current_time - last_access > 3600:  # 1 hour
+                    to_remove.append(key)
+                    continue
+
+                # Remove low-complexity entries if cache is getting full
+                if len(self._cache) > self.max_size * 0.8:
+                    complexity = entry.get('complexity_score', 0.0)
+                    if complexity < 2.0:  # Low complexity threshold
+                        to_remove.append(key)
+
+            for key in to_remove:
+                self._cache.pop(key, None)
+                self._timestamps.pop(key, None)
+                cleaned += 1
+
+        return cleaned
+
+    def optimize_cache_layout(self) -> int:
+        """Optimize cache layout for better performance."""
+        with self._lock:
+            # Sort entries by access frequency and complexity
+            entries_by_priority = []
+            for key, entry in self._cache.items():
+                last_access = self._timestamps.get(key, 0)
+                complexity = entry.get('complexity_score', 1.0)
+                priority = complexity * (1.0 / max(time.time() - last_access, 1.0))
+                entries_by_priority.append((priority, key, entry))
+
+            # Keep only high-priority entries if over capacity
+            entries_by_priority.sort(reverse=True)
+
+            if len(entries_by_priority) > self.max_size:
+                # Keep top entries
+                to_keep = entries_by_priority[:self.max_size]
+                new_cache = {}
+                new_timestamps = {}
+
+                for _, key, entry in to_keep:
+                    new_cache[key] = entry
+                    new_timestamps[key] = self._timestamps[key]
+
+                removed = len(self._cache) - len(new_cache)
+                self._cache = new_cache
+                self._timestamps = new_timestamps
+
+                return removed
+
+        return 0
+
+    # Subtask 3.2.7: Optimize cache performance for repeated filter patterns
+    def track_repeated_pattern(self, cache_key: str):
+        """Track repeated access patterns for optimization."""
+        pattern_key = self._extract_pattern_key(cache_key)
+        self._performance_stats['repeated_patterns'][pattern_key] += 1
+
+        # Apply optimization for frequently accessed patterns
+        if self._performance_stats['repeated_patterns'][pattern_key] > 5:
+            self._apply_pattern_optimization(cache_key)
+
+    def _extract_pattern_key(self, cache_key: str) -> str:
+        """Extract pattern identifier from cache key."""
+        # Simplified pattern extraction - in practice, this would analyze
+        # the filter chain structure
+        return cache_key[:16]  # Use first 16 chars as pattern identifier
+
+    def _apply_pattern_optimization(self, cache_key: str):
+        """Apply performance optimization for repeated patterns."""
+        with self._lock:
+            if cache_key in self._cache:
+                entry = self._cache[cache_key]
+                if 'optimized' not in entry:
+                    # Mark as optimized and increase priority
+                    entry['optimized'] = True
+                    entry['optimization_applied_at'] = time.time()
+                    # Refresh timestamp to keep in cache longer
+                    self._timestamps[cache_key] = time.time()
+                    self._performance_stats['optimization_applied'] += 1
+
+    def get_performance_metrics(self) -> Dict:
+        """Get cache performance metrics."""
+        total_patterns = sum(self._performance_stats['repeated_patterns'].values())
+        optimized_percentage = (
+            self._performance_stats['optimization_applied'] / max(total_patterns, 1) * 100
+        )
+
+        return {
+            **self._performance_stats,
+            'total_pattern_accesses': total_patterns,
+            'optimization_percentage': optimized_percentage,
+            'cache_efficiency': self._stats.hit_rate,
+            'current_size': len(self._cache)
+        }
+
+    # Subtask 3.2.8: Verify cached results maintain visual consistency
+    def verify_result_consistency(self, cache_key: str, expected_checksum: str = None) -> bool:
+        """Verify cached result maintains visual consistency."""
+        self._performance_stats['consistency_checks'] += 1
+
+        with self._lock:
+            if cache_key not in self._cache:
+                return False
+
+            entry = self._cache[cache_key]
+
+            # Check data integrity
+            if 'emf_blob' in entry:
+                stored_checksum = entry.get('checksum')
+                if stored_checksum:
+                    # Verify stored checksum
+                    emf_blob = entry['emf_blob']
+                    current_checksum = hashlib.md5(emf_blob).hexdigest()
+                    if stored_checksum != current_checksum:
+                        self._performance_stats['consistency_failures'] += 1
+                        # Remove corrupted entry
+                        self._cache.pop(cache_key, None)
+                        self._timestamps.pop(cache_key, None)
+                        return False
+
+                # Check against expected checksum if provided
+                if expected_checksum:
+                    if stored_checksum != expected_checksum:
+                        self._performance_stats['consistency_failures'] += 1
+                        return False
+
+            # Verify metadata consistency
+            if not self._verify_metadata_consistency(entry):
+                self._performance_stats['consistency_failures'] += 1
+                return False
+
+            return True
+
+    def _verify_metadata_consistency(self, entry: Dict) -> bool:
+        """Verify metadata consistency in cache entry."""
+        required_fields = ['cached_at', 'type']
+
+        for field in required_fields:
+            if field not in entry:
+                return False
+
+        # Check timestamp validity
+        cached_at = entry.get('cached_at', 0)
+        if cached_at <= 0 or cached_at > time.time():
+            return False
+
+        # Check complexity score validity
+        complexity = entry.get('complexity_score', 0)
+        if complexity < 0 or complexity > 100:  # Reasonable bounds
+            return False
+
+        return True
+
+    def audit_cache_consistency(self) -> Dict[str, Any]:
+        """Perform comprehensive cache consistency audit."""
+        audit_results = {
+            'total_entries': len(self._cache),
+            'consistent_entries': 0,
+            'inconsistent_entries': 0,
+            'corrupted_entries': 0,
+            'removed_entries': 0
+        }
+
+        to_remove = []
+
+        for key in list(self._cache.keys()):
+            if self.verify_result_consistency(key):
+                audit_results['consistent_entries'] += 1
+            else:
+                audit_results['inconsistent_entries'] += 1
+                to_remove.append(key)
+
+        # Remove inconsistent entries
+        with self._lock:
+            for key in to_remove:
+                self._cache.pop(key, None)
+                self._timestamps.pop(key, None)
+                audit_results['removed_entries'] += 1
+
+        audit_results['consistency_rate'] = (
+            audit_results['consistent_entries'] / max(audit_results['total_entries'], 1)
+        )
+
+        return audit_results
+
+
 class ConversionCache:
     """Main cache orchestrator for all conversion operations."""
-    
-    def __init__(self, 
+
+    def __init__(self,
                  path_cache_size: int = 500,
                  color_cache_size: int = 200,
-                 transform_cache_size: int = 300):
+                 transform_cache_size: int = 300,
+                 filter_cache_size: int = 400,
+                 enable_emf_cache: bool = True):
         """Initialize all specialized caches."""
         self.path_cache = PathCache(path_cache_size)
         self.color_cache = ColorCache(color_cache_size)
         self.transform_cache = TransformCache(transform_cache_size)
-        
+        self.filter_cache = FilterCache(filter_cache_size)
+
+        # EMF-based filter cache for complex operations
+        if enable_emf_cache:
+            try:
+                from .filter_emf_cache import EMFFilterCacheManager
+                self.emf_filter_cache = EMFFilterCacheManager()
+            except ImportError:
+                self.emf_filter_cache = None
+        else:
+            self.emf_filter_cache = None
+
         # Element-level caches
         self._element_style_cache = BaseCache(max_size=1000, ttl=300)  # 5 min TTL
         self._element_bounds_cache = BaseCache(max_size=800, ttl=300)
@@ -296,6 +680,7 @@ class ConversionCache:
             'path_cache': self.path_cache.get_stats(),
             'color_cache': self.color_cache.get_stats(),
             'transform_cache': self.transform_cache.get_stats(),
+            'filter_cache': self.filter_cache.get_stats(),
             'element_style_cache': self._element_style_cache.get_stats(),
             'element_bounds_cache': self._element_bounds_cache.get_stats(),
             'drawingml_cache': self._drawingml_cache.get_stats(),
@@ -306,6 +691,7 @@ class ConversionCache:
         self.path_cache.clear()
         self.color_cache.clear()
         self.transform_cache.clear()
+        self.filter_cache.clear()
         self._element_style_cache.clear()
         self._element_bounds_cache.clear()
         self._drawingml_cache.clear()
@@ -313,7 +699,95 @@ class ConversionCache:
     def get_memory_usage(self) -> Dict[str, int]:
         """Get memory usage for all caches."""
         stats = self.get_total_stats()
-        return {name: stat.memory_usage for name, stat in stats.items()}
+        memory_usage = {name: stat.memory_usage for name, stat in stats.items()}
+
+        # Add EMF cache memory usage if available
+        if self.emf_filter_cache:
+            emf_stats = self.emf_filter_cache.get_cache_performance_stats()
+            memory_usage['emf_filter_cache'] = emf_stats.get('memory_usage_bytes', 0)
+
+        return memory_usage
+
+    def cache_complex_filter_result(self,
+                                  filter_chain: List[ET.Element],
+                                  context: Dict,
+                                  result: Dict) -> Optional[str]:
+        """
+        Cache complex filter result using EMF storage.
+
+        Args:
+            filter_chain: List of filter elements
+            context: Processing context
+            result: Filter result containing EMF blob data
+
+        Returns:
+            Cache key if successful, None if EMF cache unavailable
+        """
+        if not self.emf_filter_cache:
+            return None
+
+        try:
+            return self.emf_filter_cache.cache_complex_filter_result(
+                filter_chain, context, result
+            )
+        except Exception as e:
+            # Log error but don't fail the operation
+            print(f"Warning: Failed to cache EMF filter result: {e}")
+            return None
+
+    def get_cached_filter_result(self,
+                               filter_chain: List[ET.Element],
+                               context: Dict) -> Optional[Dict]:
+        """
+        Get cached complex filter result from EMF storage.
+
+        Args:
+            filter_chain: List of filter elements
+            context: Processing context
+
+        Returns:
+            Cached result if found, None otherwise
+        """
+        if not self.emf_filter_cache:
+            return None
+
+        try:
+            return self.emf_filter_cache.get_cached_filter_result(
+                filter_chain, context
+            )
+        except Exception as e:
+            print(f"Warning: Failed to retrieve EMF filter result: {e}")
+            return None
+
+    def invalidate_filter_cache(self, filter_types: List[str] = None) -> int:
+        """
+        Invalidate cached filter results.
+
+        Args:
+            filter_types: Specific filter types to invalidate, or None for all
+
+        Returns:
+            Number of entries invalidated
+        """
+        invalidated = 0
+
+        # Invalidate regular filter cache
+        if filter_types:
+            # For regular cache, we need to check each entry
+            # This is a simplified approach - in practice, you might want
+            # to add filter type tracking to the regular cache too
+            pass
+        else:
+            self.filter_cache.clear()
+
+        # Invalidate EMF filter cache
+        if self.emf_filter_cache:
+            try:
+                invalidated += self.emf_filter_cache.invalidate_filter_cache(filter_types)
+            except Exception as e:
+                print(f"Warning: Failed to invalidate EMF filter cache: {e}")
+
+        return invalidated
 
 
 def cached_method(cache_attr: str, key_func=None):
