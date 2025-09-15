@@ -12,15 +12,15 @@
   - [x] 1.7 Create pytest fixtures for service mocking and test isolation patterns
   - [x] 1.8 Verify all ConversionServices foundation tests pass
 
-- [ ] 2. Refactor BaseConverter for Dependency Injection
-  - [ ] 2.1 Write tests for BaseConverter with dependency injection patterns
-  - [ ] 2.2 Modify BaseConverter constructor to accept ConversionServices parameter
-  - [ ] 2.3 Add property accessors for backward compatibility (unit_converter, color_parser, transform_parser)
-  - [ ] 2.4 Update ConverterRegistry to handle service injection during converter instantiation
-  - [ ] 2.5 Create migration utilities for gradual converter transition to new pattern
-  - [ ] 2.6 Add type hints and documentation for new BaseConverter interface
-  - [ ] 2.7 Test BaseConverter changes with existing converter classes for compatibility
-  - [ ] 2.8 Verify all BaseConverter refactoring tests pass
+- [x] 2. Refactor BaseConverter for Dependency Injection
+  - [x] 2.1 Write tests for BaseConverter with dependency injection patterns
+  - [x] 2.2 Modify BaseConverter constructor to accept ConversionServices parameter
+  - [x] 2.3 Add property accessors for backward compatibility (unit_converter, color_parser, transform_parser)
+  - [x] 2.4 Update ConverterRegistry to handle service injection during converter instantiation
+  - [x] 2.5 Create migration utilities for gradual converter transition to new pattern
+  - [x] 2.6 Add type hints and documentation for new BaseConverter interface
+  - [x] 2.7 Test BaseConverter changes with existing converter classes for compatibility
+  - [x] 2.8 Verify all BaseConverter refactoring tests pass
 
 - [ ] 3. Migrate Core Converter Classes
   - [ ] 3.1 Write tests for migrated converter classes with service injection

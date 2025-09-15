@@ -19,6 +19,7 @@ from ..units import UnitConverter
 from ..colors import ColorParser
 from ..transforms import TransformParser
 from ..viewbox import ViewportResolver
+from ..services.conversion_services import ConversionServices, ConversionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -199,24 +200,105 @@ class ConversionContext:
 
 
 class BaseConverter(ABC):
-    """Abstract base class for all SVG element converters."""
-    
+    """
+    Abstract base class for all SVG element converters.
+
+    This class provides the foundation for converting SVG elements to DrawingML
+    using dependency injection for service management. All concrete converters
+    must inherit from this class and implement the abstract methods.
+
+    The converter uses ConversionServices for dependency injection, providing
+    access to UnitConverter, ColorParser, TransformParser, and ViewportResolver
+    through both direct service access and backward-compatible property accessors.
+
+    Example:
+        # New dependency injection pattern (preferred)
+        services = ConversionServices.create_default()
+        converter = MyConverter(services=services)
+
+        # Legacy migration pattern
+        converter = MyConverter.create_with_default_services()
+
+    Attributes:
+        supported_elements: List of SVG element tag names this converter handles
+        services: ConversionServices container with injected dependencies
+    """
+
     # Element types this converter handles
     supported_elements: List[str] = []
-    
-    def __init__(self):
+
+    def __init__(self, services: ConversionServices) -> None:
+        """
+        Initialize converter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+
+        Raises:
+            TypeError: If services parameter is missing or invalid
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.unit_converter = UnitConverter()
-        self.transform_parser = TransformParser()
-        self.color_parser = ColorParser()
-        self.viewport_resolver = ViewportResolver()
+        self.services = services
 
         # Initialize filter components
         self._filter_complexity_analyzer = None
         self._filter_optimization_strategy = None
         self._filter_fallback_chain = None
         self._filter_bounds_calculator = None
-        
+
+    @property
+    def unit_converter(self) -> UnitConverter:
+        """Get UnitConverter from services for backward compatibility."""
+        return self.services.unit_converter
+
+    @property
+    def color_parser(self) -> ColorParser:
+        """Get ColorParser from services for backward compatibility."""
+        return self.services.color_parser
+
+    @property
+    def transform_parser(self) -> TransformParser:
+        """Get TransformParser from services for backward compatibility."""
+        return self.services.transform_parser
+
+    @property
+    def viewport_resolver(self) -> ViewportResolver:
+        """Get ViewportResolver from services for backward compatibility."""
+        return self.services.viewport_resolver
+
+    def validate_services(self) -> bool:
+        """Validate that all required services are available."""
+        return self.services.validate_services()
+
+    @classmethod
+    def create_with_default_services(cls, config: Optional[ConversionConfig] = None) -> 'BaseConverter':
+        """
+        Create converter instance with default services for migration compatibility.
+
+        This method provides a migration path for existing code that doesn't yet
+        use explicit dependency injection. New code should prefer direct service
+        injection through the constructor.
+
+        Args:
+            config: Optional configuration for services. If None, uses defaults.
+
+        Returns:
+            Converter instance with default ConversionServices
+
+        Example:
+            # Migration pattern
+            converter = MyConverter.create_with_default_services()
+
+            # Preferred pattern
+            services = ConversionServices.create_default()
+            converter = MyConverter(services=services)
+
+        Note:
+            This is a migration utility. New code should inject services explicitly.
+        """
+        services = ConversionServices.create_default(config)
+        return cls(services=services)
+
     @abstractmethod
     def can_convert(self, element: ET.Element) -> bool:
         """
@@ -1186,8 +1268,15 @@ class BaseConverter(ABC):
 
 class ConverterRegistry:
     """Registry for managing and dispatching converters."""
-    
-    def __init__(self):
+
+    def __init__(self, services: Optional[ConversionServices] = None):
+        """
+        Initialize registry with optional service injection.
+
+        Args:
+            services: ConversionServices container for dependency injection
+        """
+        self.services = services
         self.converters: List[BaseConverter] = []
         self.element_map: Dict[str, List[BaseConverter]] = {}
         
@@ -1205,8 +1294,13 @@ class ConverterRegistry:
                    f"for elements: {converter.supported_elements}")
     
     def register_class(self, converter_class: Type[BaseConverter]):
-        """Register a converter class (instantiates it)."""
-        self.register(converter_class())
+        """Register a converter class (instantiates it with services)."""
+        if self.services:
+            converter = converter_class(services=self.services)
+        else:
+            # Fallback to legacy pattern during migration
+            converter = converter_class.create_with_default_services()
+        self.register(converter)
     
     def get_converter(self, element: ET.Element) -> Optional[BaseConverter]:
         """Get appropriate converter for an element."""
@@ -1241,6 +1335,20 @@ class ConverterRegistry:
             tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
             logger.warning(f"No converter found for element: {tag}")
             return None
+
+    @classmethod
+    def create_with_default_services(cls, config: Optional[ConversionConfig] = None):
+        """
+        Create registry with default services for migration compatibility.
+
+        Args:
+            config: Optional configuration for services
+
+        Returns:
+            ConverterRegistry instance with default ConversionServices
+        """
+        services = ConversionServices.create_default(config)
+        return cls(services=services)
     
     def register_default_converters(self):
         """Register all default converters for SVG elements."""
