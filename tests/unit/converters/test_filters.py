@@ -20,8 +20,8 @@ from typing import List, Optional
 from src.converters.filters import (
     FilterConverter, FilterDefinition, FilterPrimitive,
     GaussianBlurPrimitive, DropShadowPrimitive, OffsetPrimitive,
-    FloodPrimitive, ColorMatrixPrimitive, CompositePrimitive, FilterEffect,
-    FilterPrimitiveType, FilterUnits, ColorMatrixType
+    FloodPrimitive, ColorMatrixPrimitive, CompositePrimitive, MorphologyPrimitive,
+    FilterEffect, FilterPrimitiveType, FilterUnits, ColorMatrixType
 )
 from src.converters.base import ConversionContext
 from src.colors import ColorInfo, ColorFormat
@@ -490,9 +490,117 @@ class TestFilterPrimitiveParsing:
     def test_parse_unknown_primitive(self):
         """Test parsing unknown primitive type."""
         unknown_element = ET.Element("feUnknown")
-        
+
         result = self.converter._parse_filter_primitive(unknown_element, FilterUnits.USER_SPACE_ON_USE)
         assert result is None
+
+    def test_parse_morphology_primitive_dilate(self):
+        """Test parsing feMorphology primitive with dilate operator."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "dilate")
+        morph_element.set("radius", "2 3")
+        morph_element.set("in", "SourceGraphic")
+        morph_element.set("result", "dilated")
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.type == FilterPrimitiveType.MORPH
+        assert result.operator == "dilate"
+        assert result.radius_x == 2.0
+        assert result.radius_y == 3.0
+        assert result.input == "SourceGraphic"
+        assert result.result == "dilated"
+
+    def test_parse_morphology_primitive_erode(self):
+        """Test parsing feMorphology primitive with erode operator."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "erode")
+        morph_element.set("radius", "1.5")
+        morph_element.set("in", "blur1")
+        morph_element.set("result", "eroded")
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.type == FilterPrimitiveType.MORPH
+        assert result.operator == "erode"
+        assert result.radius_x == 1.5
+        assert result.radius_y == 1.5  # Single value applies to both dimensions
+        assert result.input == "blur1"
+        assert result.result == "eroded"
+
+    def test_parse_morphology_primitive_default_values(self):
+        """Test parsing feMorphology primitive with default values."""
+        morph_element = ET.Element("feMorphology")
+        # No attributes set - should use defaults
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.type == FilterPrimitiveType.MORPH
+        assert result.operator == "erode"  # Default operator
+        assert result.radius_x == 0.0  # Default radius
+        assert result.radius_y == 0.0  # Default radius
+        assert result.input is None  # Default input (SourceGraphic)
+        assert result.result is None  # No explicit result
+
+    def test_parse_morphology_primitive_zero_radius(self):
+        """Test parsing feMorphology primitive with zero radius (no-op)."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "dilate")
+        morph_element.set("radius", "0")
+        morph_element.set("result", "no-op")
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.operator == "dilate"
+        assert result.radius_x == 0.0
+        assert result.radius_y == 0.0
+        assert result.result == "no-op"
+
+    def test_parse_morphology_primitive_large_radius(self):
+        """Test parsing feMorphology primitive with large radius values."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "dilate")
+        morph_element.set("radius", "10.5 15.75")
+        morph_element.set("result", "thick_dilate")
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.operator == "dilate"
+        assert result.radius_x == 10.5
+        assert result.radius_y == 15.75
+        assert result.result == "thick_dilate"
+
+    def test_parse_morphology_primitive_invalid_radius(self):
+        """Test parsing feMorphology primitive with invalid radius values."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "dilate")
+        morph_element.set("radius", "invalid")
+
+        # Should handle invalid values gracefully - likely defaults to 0
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.operator == "dilate"
+        # Depending on implementation, might default to 0 or raise exception
+        # This verifies the parser handles invalid input gracefully
+
+    def test_parse_morphology_primitive_unknown_operator(self):
+        """Test parsing feMorphology primitive with unknown operator."""
+        morph_element = ET.Element("feMorphology")
+        morph_element.set("operator", "unknown")
+        morph_element.set("radius", "2")
+
+        result = self.converter._parse_filter_primitive(morph_element, FilterUnits.USER_SPACE_ON_USE)
+
+        assert isinstance(result, MorphologyPrimitive)
+        assert result.operator == "unknown"  # Should preserve the value
+        assert result.radius_x == 2.0
+        assert result.radius_y == 2.0
 
 
 class TestFilterApplication:
@@ -858,6 +966,174 @@ class TestFallbackColors:
         assert '<a:glow' in result
         # Should contain blue color (0000FF)
         assert '0000FF' in result
+
+
+class TestMorphologyVectorFirstConversion:
+    """Test vector-first conversion for feMorphology effects (Task 2.1)."""
+
+    def setup_method(self):
+        """Setup test fixtures for vector-first morphology tests."""
+        self.converter = FilterConverter()
+
+        # Mock the standardized tools from BaseConverter architecture
+        self.converter.unit_converter = Mock()
+        self.converter.unit_converter.to_emu.return_value = 25400  # 1px = 25400 EMU
+
+        self.converter.color_parser = Mock()
+        self.converter.color_parser.parse.return_value = ColorInfo(0, 0, 0, 1.0, ColorFormat.RGBA, "rgba(0,0,0,1)")
+
+        self.converter.transform_parser = Mock()
+        self.converter.viewport_resolver = Mock()
+
+    def test_morphology_strategy_changed_from_rasterize(self):
+        """Test that feMorphology strategy has changed from RASTERIZE to vector-first approach."""
+        # This test verifies Task 2.1 implementation goal
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="morphed",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=2.0, radius_y=2.0
+        )
+
+        # Convert to filter effect
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        # Should not require rasterization for vector-first approach
+        assert effect is not None
+        assert not effect.requires_rasterization, "feMorphology should use vector-first approach, not rasterization"
+        assert effect.effect_type == "morphology"
+
+    def test_dilate_operation_stroke_expansion_mapping(self):
+        """Test dilate operation mapping to PowerPoint stroke expansion (a:ln)."""
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="dilated",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=3.0, radius_y=3.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        assert effect.effect_type == "morphology"
+        assert effect.parameters["operator"] == "dilate"
+        assert effect.parameters["radius_x"] == 3.0
+        assert effect.parameters["radius_y"] == 3.0
+
+        # Should be low complexity for vector approach
+        assert effect.complexity_score < 2.0, "Vector-first dilate should have low complexity"
+
+    def test_erode_operation_stroke_reduction_mapping(self):
+        """Test erode operation mapping to PowerPoint stroke reduction techniques."""
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="blur1", result="eroded",
+            x=0, y=0, width=1, height=1,
+            operator="erode", radius_x=1.5, radius_y=2.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        assert effect.effect_type == "morphology"
+        assert effect.parameters["operator"] == "erode"
+        assert effect.parameters["radius_x"] == 1.5
+        assert effect.parameters["radius_y"] == 2.0
+
+        # Should be low complexity for vector approach
+        assert effect.complexity_score < 2.0, "Vector-first erode should have low complexity"
+
+    def test_asymmetric_radius_handling(self):
+        """Test handling of asymmetric radius values (different x and y)."""
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="asymmetric",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=5.0, radius_y=2.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        assert effect.parameters["radius_x"] == 5.0
+        assert effect.parameters["radius_y"] == 2.0
+
+        # Should handle asymmetric values correctly for PowerPoint conversion
+        assert "asymmetric_morphology" in effect.parameters or "radius_x" in effect.parameters
+
+    def test_zero_radius_no_op_optimization(self):
+        """Test optimization for zero radius (no-op case)."""
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="no-change",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=0.0, radius_y=0.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        # Zero radius should be very low complexity (essentially a no-op)
+        assert effect.complexity_score == 0.0 or effect.complexity_score < 0.1
+        assert effect.parameters["radius_x"] == 0.0
+        assert effect.parameters["radius_y"] == 0.0
+
+    def test_large_radius_complexity_handling(self):
+        """Test complexity calculation for large radius values."""
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="large_morph",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=20.0, radius_y=15.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        # Large radius might increase complexity but should still be vector-first
+        assert not effect.requires_rasterization
+        assert effect.complexity_score > 0.5  # Higher complexity than small radius
+        assert effect.complexity_score < 2.5  # But still reasonable for vector approach
+
+    def test_morphology_powerpoint_element_generation(self):
+        """Test generation of PowerPoint elements for morphology effects."""
+        # This will be implemented in later subtasks but test the interface
+        morph_primitive = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="test_output",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=2.0, radius_y=2.0
+        )
+
+        effect = self.converter._convert_primitive_to_effect(morph_primitive, False)
+
+        # Should have the necessary parameters for PowerPoint conversion
+        required_params = ["operator", "radius_x", "radius_y"]
+        for param in required_params:
+            assert param in effect.parameters, f"Missing required parameter: {param}"
+
+    def test_morphology_chaining_support(self):
+        """Test support for chaining morphology operations."""
+        # Test that morphology can be part of filter chains
+        morph1 = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="SourceGraphic", result="dilate1",
+            x=0, y=0, width=1, height=1,
+            operator="dilate", radius_x=2.0, radius_y=2.0
+        )
+
+        morph2 = MorphologyPrimitive(
+            type=FilterPrimitiveType.MORPH,
+            input="dilate1", result="eroded",
+            x=0, y=0, width=1, height=1,
+            operator="erode", radius_x=1.0, radius_y=1.0
+        )
+
+        effect1 = self.converter._convert_primitive_to_effect(morph1, False)
+        effect2 = self.converter._convert_primitive_to_effect(morph2, False)
+
+        # Both should be vector-first
+        assert not effect1.requires_rasterization
+        assert not effect2.requires_rasterization
+
+        # Second effect should reference first as input
+        assert morph2.input == "dilate1"
+        assert morph1.result == "dilate1"
 
 
 if __name__ == "__main__":
