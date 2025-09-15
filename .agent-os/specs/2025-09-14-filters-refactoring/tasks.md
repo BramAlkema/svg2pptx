@@ -37,14 +37,14 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 **Goal**: Refactor geometric transformations and composite operations with proper separation of concerns and optimized performance.
 
-3.1. Write unit tests for geometric transform filters covering offset operations, turbulence generation, and mathematical edge cases
-3.2. Extract and refactor geometric transformation filters from filters.py into filters/geometric/transforms.py with proper vectorization
-3.3. Write unit tests for composite operations covering merge operations, blend modes, and multi-layer processing scenarios
-3.4. Extract and refactor composite filter classes from filters.py into filters/geometric/composite.py with memory optimization
-3.5. Write unit tests for parsing utilities covering SVG filter parsing, parameter extraction, and malformed input handling
-3.6. Implement parsing utilities in filters/utils/parsing.py with robust error handling and validation
-3.7. Write unit tests for mathematical helper functions covering all computational operations used by filters
-3.8. Implement mathematical helpers in filters/utils/math_helpers.py with NumPy optimization and verify all processing engine tests pass
+- [x] 3.1. Write unit tests for geometric transform filters covering offset operations, turbulence generation, and mathematical edge cases
+- [x] 3.2. Extract and refactor geometric transformation filters from filters.py into filters/geometric/transforms.py with proper vectorization
+- [x] 3.3. Write unit tests for composite operations covering merge operations, blend modes, and multi-layer processing scenarios
+- [x] 3.4. Extract and refactor composite filter classes from filters.py into filters/geometric/composite.py with memory optimization
+- [x] 3.5. Write unit tests for parsing utilities covering SVG filter parsing, parameter extraction, and malformed input handling
+- [x] 3.6. Implement parsing utilities in filters/utils/parsing.py with robust error handling and validation
+- [x] 3.7. Write unit tests for mathematical helper functions covering all computational operations used by filters
+- [x] 3.8. Implement mathematical helpers in filters/utils/math_helpers.py with NumPy optimization and verify all processing engine tests pass
 
 ### 4. Advanced Features Migration
 
