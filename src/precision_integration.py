@@ -139,7 +139,7 @@ class PrecisionConversionContext(ConversionContext):
                  svg_root: Optional[ET.Element] = None,
                  precision_mode: PrecisionMode = PrecisionMode.SUBPIXEL,
                  enable_fractional_emu: bool = True,
-                 services=None):
+                 services: ConversionServices = None):
         """
         Initialize precision-aware conversion context.
 
@@ -147,8 +147,14 @@ class PrecisionConversionContext(ConversionContext):
             svg_root: Root SVG element
             precision_mode: Precision level for calculations
             enable_fractional_emu: Whether to enable fractional EMU precision
-            services: ConversionServices instance
+            services: ConversionServices instance (required)
+
+        Raises:
+            TypeError: If services is not provided
         """
+        if services is None:
+            raise TypeError("PrecisionConversionContext requires ConversionServices instance")
+
         super().__init__(svg_root, services=services)
 
         self.precision_mode = precision_mode
@@ -369,7 +375,7 @@ class PrecisionAwareConverter(BaseConverter):
 def create_precision_conversion_context(svg_root: Optional[ET.Element] = None,
                                        precision_mode: str = "subpixel",
                                        enable_fractional_emu: bool = True,
-                                       services=None) -> PrecisionConversionContext:
+                                       services: ConversionServices = None) -> PrecisionConversionContext:
     """
     Create a precision-aware conversion context.
 
@@ -377,11 +383,17 @@ def create_precision_conversion_context(svg_root: Optional[ET.Element] = None,
         svg_root: Root SVG element
         precision_mode: "standard", "subpixel", "high", or "ultra"
         enable_fractional_emu: Whether to enable fractional EMU precision
-        services: ConversionServices instance
+        services: ConversionServices instance (required)
 
     Returns:
         Configured PrecisionConversionContext instance
+
+    Raises:
+        TypeError: If services is not provided
     """
+    if services is None:
+        raise TypeError("create_precision_conversion_context requires ConversionServices instance")
+
     return PrecisionConversionContext(
         svg_root=svg_root,
         precision_mode=PrecisionMode(precision_mode),

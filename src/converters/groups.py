@@ -10,10 +10,13 @@ Handles SVG container elements with support for:
 - Transform accumulation through hierarchy
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from lxml import etree as ET
 from .base import BaseConverter, ConversionContext, ConverterRegistry
 from .transforms import TransformConverter
+
+if TYPE_CHECKING:
+    from ..services.conversion_services import ConversionServices
 
 
 class GroupHandler(BaseConverter):
@@ -21,7 +24,18 @@ class GroupHandler(BaseConverter):
 
     supported_elements = ['g', 'svg', 'symbol', 'defs', 'marker']
 
-    def __init__(self, services):
+    def __init__(self, services: 'ConversionServices'):
+        """Initialize GroupHandler with ConversionServices.
+
+        Args:
+            services: ConversionServices instance (required)
+
+        Raises:
+            TypeError: If services is not provided
+        """
+        if services is None:
+            raise TypeError("GroupHandler requires ConversionServices instance")
+
         super().__init__(services)
         self.transform_converter = TransformConverter(services)
     

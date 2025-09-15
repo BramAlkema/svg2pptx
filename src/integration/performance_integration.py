@@ -37,16 +37,27 @@ logger = logging.getLogger(__name__)
 class OptimizedSVGConverter:
     """Enhanced SVG converter with integrated performance optimizations."""
     
-    def __init__(self, optimization_level: OptimizationLevel = OptimizationLevel.STANDARD, services=None):
+    def __init__(self, optimization_level: OptimizationLevel = OptimizationLevel.STANDARD, services: 'ConversionServices' = None):
+        """Initialize OptimizedSVGConverter with performance optimizations.
+
+        Args:
+            optimization_level: Level of optimization to apply
+            services: ConversionServices instance (required for new usage, optional for migration)
+        """
         self.optimization_config = OptimizationConfig(level=optimization_level)
         self.optimizer = PerformanceOptimizer(self.optimization_config)
         self.registry = ConverterRegistry()
         self.cache = get_global_cache()
         self.profiler = get_profiler()
 
-        # Use provided services or create default ones
+        # Import here to avoid circular imports
         from ..services.conversion_services import ConversionServices
-        self.services = services if services is not None else ConversionServices.create_default()
+
+        # Create default services if none provided (for migration compatibility)
+        if services is None:
+            services = ConversionServices.create_default()
+
+        self.services = services
         
         # Initialize preprocessing pipeline
         self.geometry_plugins = self._load_geometry_plugins()
