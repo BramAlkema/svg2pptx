@@ -458,6 +458,7 @@ class TestErrorHandling:
         """Test handling of exceptions during apply."""
         morph_element = ET.Element("feMorphology")
         morph_element.set("operator", "dilate")
+        morph_element.set("radius", "2.0")  # Non-zero radius to trigger unit conversion
 
         # Mock unit converter to raise exception
         self.mock_context.unit_converter = Mock()

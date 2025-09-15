@@ -552,6 +552,6 @@ class TestGeometricIntegration:
         offset_element.set("dx", "10")
         offset_element.set("dy", "5")
 
-        results = chain.apply_sequential([offset_element], integration_setup['mock_context'])
-        assert len(results) > 0
-        assert any(r.success for r in results)
+        result = chain.apply(offset_element, integration_setup['mock_context'])
+        assert result is not None
+        assert result.success
