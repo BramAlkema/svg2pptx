@@ -1,5 +1,8 @@
 """
 Core preprocessing plugins ported from SVGO.
+
+Note: Uses native Python (re + lxml.etree) rather than NumPy for optimal performance.
+XML/string manipulation algorithms are faster with native tools than NumPy vectorization.
 """
 
 import re

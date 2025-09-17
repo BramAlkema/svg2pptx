@@ -12,66 +12,13 @@ Handles SVG transform attributes with support for:
 
 import re
 import math
+import importlib.util
 from typing import List, Tuple, Optional, Dict, Any
 from lxml import etree as ET
 from .base import BaseConverter, ConversionContext
 
-
-class Matrix:
-    """2D transformation matrix [a b c d e f] representing:
-    [a c e]   [x]
-    [b d f] * [y]
-    [0 0 1]   [1]
-    """
-    
-    def __init__(self, a: float = 1, b: float = 0, c: float = 0, 
-                 d: float = 1, e: float = 0, f: float = 0):
-        self.a = a  # x-scale
-        self.b = b  # y-shear
-        self.c = c  # x-shear  
-        self.d = d  # y-scale
-        self.e = e  # x-translate
-        self.f = f  # y-translate
-    
-    def multiply(self, other: 'Matrix') -> 'Matrix':
-        """Multiply this matrix with another matrix"""
-        return Matrix(
-            self.a * other.a + self.c * other.b,
-            self.b * other.a + self.d * other.b,
-            self.a * other.c + self.c * other.d,
-            self.b * other.c + self.d * other.d,
-            self.a * other.e + self.c * other.f + self.e,
-            self.b * other.e + self.d * other.f + self.f
-        )
-    
-    def transform_point(self, x: float, y: float) -> Tuple[float, float]:
-        """Transform a point using this matrix"""
-        new_x = self.a * x + self.c * y + self.e
-        new_y = self.b * x + self.d * y + self.f
-        return (new_x, new_y)
-    
-    def get_translation(self) -> Tuple[float, float]:
-        """Get translation components"""
-        return (self.e, self.f)
-    
-    def get_scale(self) -> Tuple[float, float]:
-        """Get scale components (approximate for non-uniform transforms)"""
-        scale_x = math.sqrt(self.a * self.a + self.b * self.b)
-        scale_y = math.sqrt(self.c * self.c + self.d * self.d)
-        return (scale_x, scale_y)
-    
-    def get_rotation(self) -> float:
-        """Get rotation angle in degrees"""
-        return math.degrees(math.atan2(self.b, self.a))
-    
-    def is_identity(self) -> bool:
-        """Check if this is an identity matrix"""
-        return (abs(self.a - 1) < 1e-6 and abs(self.b) < 1e-6 and 
-                abs(self.c) < 1e-6 and abs(self.d - 1) < 1e-6 and
-                abs(self.e) < 1e-6 and abs(self.f) < 1e-6)
-    
-    def __str__(self) -> str:
-        return f"matrix({self.a}, {self.b}, {self.c}, {self.d}, {self.e}, {self.f})"
+# Import unified Matrix class from core transforms module
+from src.transforms import Matrix
 
 
 class TransformConverter(BaseConverter):

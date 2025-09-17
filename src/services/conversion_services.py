@@ -105,13 +105,15 @@ class ConversionServices:
 
         try:
             # Initialize services with proper order and configuration
-            unit_converter = UnitConverter(default_dpi=config.default_dpi)
+            from ..units import ConversionContext
+            context = ConversionContext(dpi=config.default_dpi)
+            unit_converter = UnitConverter(default_context=context)
 
             color_parser = ColorParser()
 
             transform_parser = TransformParser()
 
-            viewport_resolver = ViewportResolver(unit_converter=unit_converter)
+            viewport_resolver = ViewportResolver(unit_engine=unit_converter)
 
             return cls(
                 unit_converter=unit_converter,
@@ -163,7 +165,7 @@ class ConversionServices:
             unit_converter = UnitConverter(**unit_config)
             color_parser = ColorParser(**color_config)
             transform_parser = TransformParser(**transform_config)
-            viewport_resolver = ViewportResolver(unit_converter=unit_converter)
+            viewport_resolver = ViewportResolver(unit_engine=unit_converter)
 
             return cls(
                 unit_converter=unit_converter,

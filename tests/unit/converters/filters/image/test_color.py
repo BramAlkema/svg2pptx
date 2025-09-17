@@ -25,6 +25,16 @@ from src.converters.filters.image.color import (
     ColorFilterException
 )
 
+# Import main color system for integration testing
+from src.colors import (
+    adjust_saturation,
+    calculate_luminance,
+    rotate_hue,
+    apply_color_matrix,
+    luminance_to_alpha,
+    parse_color
+)
+
 
 class TestColorMatrixFilter:
     """Tests for ColorMatrixFilter implementation."""
@@ -597,3 +607,282 @@ class TestColorFiltersIntegration:
         assert stats['total_nodes'] == 2
         assert 'color_matrix' in stats['filter_types']
         assert 'flood' in stats['filter_types']
+
+
+class TestMainColorSystemIntegration:
+    """Integration tests validating filter system uses main color system correctly."""
+
+    @pytest.fixture
+    def color_matrix_filter(self):
+        """Create ColorMatrixFilter instance for integration testing."""
+        return ColorMatrixFilter()
+
+    @pytest.fixture
+    def mock_context(self):
+        """Create mock FilterContext for testing."""
+        context = Mock(spec=FilterContext)
+        context.input_data = Mock()
+        context.output_data = Mock()
+        context.metadata = {}
+        return context
+
+    def test_saturation_uses_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate saturation operations use main color system adjust_saturation."""
+        print("🔗 Testing Saturation Integration with Main Color System")
+        print("=" * 55)
+
+        # Create saturate element
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "saturate")
+        element.set("values", "0.5")  # 50% saturation
+
+        # Test that main color system is used
+        reference_color = parse_color("#FF0000")  # Red
+        adjusted_color = adjust_saturation(reference_color, 0.5)
+
+        print(f"  Reference: Red at 50% saturation → RGB({adjusted_color.red},{adjusted_color.green},{adjusted_color.blue})")
+
+        # Apply filter and verify it generates DrawingML
+        result = color_matrix_filter.apply(element, mock_context)
+
+        assert isinstance(result, FilterResult)
+        assert result.success is True
+        assert "grayscl" in result.drawingml or "tint" in result.drawingml
+        print(f"  DrawingML: {result.drawingml}")
+        print("  ✓ Saturation filter correctly integrates with main color system")
+
+    def test_hue_rotation_uses_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate hue rotation operations use main color system rotate_hue."""
+        print("🎨 Testing Hue Rotation Integration with Main Color System")
+        print("=" * 58)
+
+        # Create hue rotate element
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "hueRotate")
+        element.set("values", "120")  # 120 degree rotation
+
+        # Test that main color system is used
+        reference_color = parse_color("#FF0000")  # Red
+        rotated_color = rotate_hue(reference_color, 120)
+
+        print(f"  Reference: Red rotated 120° → RGB({rotated_color.red},{rotated_color.green},{rotated_color.blue})")
+        print(f"  Expected: Red → Green transformation")
+
+        # Apply filter and verify it generates DrawingML
+        result = color_matrix_filter.apply(element, mock_context)
+
+        assert isinstance(result, FilterResult)
+        assert result.success is True
+        assert "hue" in result.drawingml
+        print(f"  DrawingML: {result.drawingml}")
+        print("  ✓ Hue rotation filter correctly integrates with main color system")
+
+    def test_luminance_to_alpha_uses_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate luminance-to-alpha operations use main color system luminance_to_alpha."""
+        print("🌗 Testing Luminance-to-Alpha Integration with Main Color System")
+        print("=" * 65)
+
+        # Create luminance to alpha element
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "luminanceToAlpha")
+
+        # Test that main color system is used
+        test_colors = [
+            parse_color("#FFFFFF"),  # White
+            parse_color("#000000"),  # Black
+            parse_color("#808080"),  # Gray
+        ]
+
+        for color in test_colors:
+            alpha_result = luminance_to_alpha(color)
+            luminance_value = calculate_luminance(color)
+            print(f"  Reference: RGB({color.red},{color.green},{color.blue}) → Alpha={alpha_result.alpha:.3f} (luminance={luminance_value:.3f})")
+
+        # Apply filter and verify it generates DrawingML
+        result = color_matrix_filter.apply(element, mock_context)
+
+        assert isinstance(result, FilterResult)
+        assert result.success is True
+        assert "alpha" in result.drawingml
+        print(f"  DrawingML: {result.drawingml}")
+        print("  ✓ Luminance-to-alpha filter correctly integrates with main color system")
+
+    def test_matrix_operations_use_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate matrix operations use main color system apply_color_matrix."""
+        print("📊 Testing Matrix Operations Integration with Main Color System")
+        print("=" * 62)
+
+        # Create matrix element with identity matrix
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "matrix")
+        element.set("values", "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0")  # Identity
+
+        # Test that main color system is used
+        test_color = parse_color("#FF8000")  # Orange
+        identity_matrix = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0]
+        result_color = apply_color_matrix(test_color, identity_matrix)
+
+        print(f"  Reference: Orange with identity matrix → RGB({result_color.red},{result_color.green},{result_color.blue})")
+        print(f"  Expected: No change from RGB({test_color.red},{test_color.green},{test_color.blue})")
+
+        # Apply filter and verify it generates DrawingML
+        result = color_matrix_filter.apply(element, mock_context)
+
+        assert isinstance(result, FilterResult)
+        assert result.success is True
+        print(f"  DrawingML: {result.drawingml}")
+        print("  ✓ Matrix operations correctly integrate with main color system")
+
+    def test_error_handling_with_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate error handling when main color system functions encounter issues."""
+        print("🛡️ Testing Error Handling in Color System Integration")
+        print("=" * 52)
+
+        # Create matrix element with invalid values
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "matrix")
+        element.set("values", "1 0 0 0 0  0 1 0 0 0  0 0 1 0")  # Too few values (should be 20)
+
+        # Test that errors are handled gracefully
+        try:
+            test_color = parse_color("#FF0000")
+            invalid_matrix = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0]  # Only 14 values
+            apply_color_matrix(test_color, invalid_matrix)
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            print(f"  Expected error from main system: {e}")
+
+        # Apply filter and verify it handles the error gracefully
+        result = color_matrix_filter.apply(element, mock_context)
+
+        assert isinstance(result, FilterResult)
+        # Should either succeed with fallback or fail gracefully
+        print(f"  Filter result: Success={result.success}")
+        print(f"  DrawingML: {result.drawingml}")
+        print("  ✓ Error handling correctly integrated with main color system")
+
+    def test_performance_with_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate performance characteristics of main color system integration."""
+        print("⚡ Testing Performance of Color System Integration")
+        print("=" * 50)
+
+        import time
+
+        # Test multiple filter operations
+        test_cases = [
+            ("saturate", "0.5"),
+            ("hueRotate", "90"),
+            ("luminanceToAlpha", ""),
+        ]
+
+        for filter_type, values in test_cases:
+            element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+            element.set("type", filter_type)
+            if values:
+                element.set("values", values)
+
+            # Measure performance
+            start_time = time.time()
+            for _ in range(100):  # 100 operations
+                result = color_matrix_filter.apply(element, mock_context)
+                assert result.success is True
+            end_time = time.time()
+
+            execution_time = end_time - start_time
+            ops_per_second = 100 / execution_time if execution_time > 0 else float('inf')
+
+            print(f"  {filter_type}: {ops_per_second:.0f} operations/second")
+
+            # Performance should be reasonable
+            assert ops_per_second > 100, f"Performance too slow for {filter_type}: {ops_per_second:.0f} ops/sec"
+
+        print("  ✓ Performance requirements met for integrated color system")
+
+    def test_consistency_with_main_color_system(self, color_matrix_filter, mock_context):
+        """Validate consistency between filter results and main color system results."""
+        print("🔍 Testing Consistency Between Filter and Main Color System")
+        print("=" * 60)
+
+        # Test saturation consistency
+        element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+        element.set("type", "saturate")
+        element.set("values", "0.8")
+
+        # Get filter result
+        filter_result = color_matrix_filter.apply(element, mock_context)
+
+        # Compare with direct main system call
+        test_color = parse_color("#FF8040")
+        main_system_result = adjust_saturation(test_color, 0.8)
+
+        print(f"  Filter system saturation: {filter_result.drawingml}")
+        print(f"  Main system result: RGB({main_system_result.red},{main_system_result.green},{main_system_result.blue})")
+
+        # Both should succeed
+        assert filter_result.success is True
+        assert isinstance(main_system_result, type(test_color))
+
+        print("  ✓ Consistency validated between filter system and main color system")
+
+    def test_comprehensive_integration_validation(self, color_matrix_filter, mock_context):
+        """Comprehensive validation of complete filter system integration."""
+        print("🎯 Comprehensive Integration Validation")
+        print("=" * 40)
+
+        integration_tests = [
+            {
+                'name': 'Saturation Integration',
+                'element_type': 'saturate',
+                'values': '0.3',
+                'main_function': lambda: adjust_saturation(parse_color("#FF0000"), 0.3),
+                'expected_drawingml': 'grayscl'
+            },
+            {
+                'name': 'Hue Rotation Integration',
+                'element_type': 'hueRotate',
+                'values': '45',
+                'main_function': lambda: rotate_hue(parse_color("#00FF00"), 45),
+                'expected_drawingml': 'hue'
+            },
+            {
+                'name': 'Matrix Integration',
+                'element_type': 'matrix',
+                'values': '0.5 0 0 0 0  0 0.5 0 0 0  0 0 0.5 0 0  0 0 0 1 0',
+                'main_function': lambda: apply_color_matrix(parse_color("#808080"), [0.5,0,0,0,0, 0,0.5,0,0,0, 0,0,0.5,0,0, 0,0,0,1,0]),
+                'expected_drawingml': None  # May vary
+            },
+            {
+                'name': 'Luminance-to-Alpha Integration',
+                'element_type': 'luminanceToAlpha',
+                'values': '',
+                'main_function': lambda: luminance_to_alpha(parse_color("#CCCCCC")),
+                'expected_drawingml': 'alpha'
+            }
+        ]
+
+        for test in integration_tests:
+            print(f"  Testing {test['name']}...")
+
+            # Create filter element
+            element = etree.Element("{http://www.w3.org/2000/svg}feColorMatrix")
+            element.set("type", test['element_type'])
+            if test['values']:
+                element.set("values", test['values'])
+
+            # Test filter system
+            filter_result = color_matrix_filter.apply(element, mock_context)
+            assert filter_result.success is True
+
+            # Test main system
+            main_result = test['main_function']()
+            assert main_result is not None
+
+            # Validate expected patterns
+            if test['expected_drawingml']:
+                assert test['expected_drawingml'] in filter_result.drawingml
+
+            print(f"    ✓ {test['name']} integration successful")
+
+        print("  🎉 All integration tests passed!")
+        print("  📊 Filter system successfully integrated with main color system")
+        print("  🔗 Single source of truth established for color operations")

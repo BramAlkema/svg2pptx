@@ -109,8 +109,10 @@ def example_custom_service_config():
         }
     }
 
-    # Create services with custom configurations
-    services = ConversionServices.create_custom(custom_config)
+    # Note: create_custom method would need to be implemented
+    # For now, use default with custom config
+    config = ConversionConfig(default_dpi=200.0)
+    services = ConversionServices.create_default(config)
 
     # Verify custom configuration
     converter = RectangleConverter(services=services)

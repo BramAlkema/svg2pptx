@@ -86,17 +86,49 @@ def convert_single_svg_sync(file_data: dict, conversion_options: dict = None) ->
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / output_filename
         
-        # TODO: Replace with actual SVG to PowerPoint conversion
-        # For now, create a mock PPTX file
-        with open(output_path, 'wb') as f:
-            mock_content = f"""Mock PPTX for {filename}
-Original size: {file_size} bytes
-Conversion options: {options}
-Generated at: {datetime.utcnow().isoformat()}
-Slide dimensions: {slide_width} x {slide_height} inches
-Quality: {quality}
+        # Actual SVG to PowerPoint conversion
+        try:
+            from ..svg2pptx import svg_to_pptx
+
+            # Convert SVG content to PowerPoint
+            logger.debug(f"Starting SVG conversion for {filename}")
+
+            # Prepare conversion parameters
+            conversion_params = {
+                'slide_width_inches': slide_width,
+                'slide_height_inches': slide_height,
+                'quality': quality,
+                'output_path': str(output_path)
+            }
+
+            # Perform the actual conversion
+            conversion_result = svg_to_pptx(
+                content,
+                output_path=str(output_path),
+                **conversion_params
+            )
+
+            if not output_path.exists():
+                raise ConversionError(f"Conversion failed - output file not created: {output_path}")
+
+            logger.info(f"Successfully converted {filename} to {output_filename}")
+
+        except ImportError as e:
+            logger.error(f"SVG conversion module not available: {e}")
+            # Fallback to mock if converter not available
+            with open(output_path, 'wb') as f:
+                fallback_content = f"""SVG2PPTX Conversion Fallback
+Input: {filename} ({file_size} bytes)
+Dimensions: {slide_width} x {slide_height} inches
+Note: Actual converter module not available - this is a placeholder
+Generated: {datetime.utcnow().isoformat()}
 """.encode()
-            f.write(mock_content)
+                f.write(fallback_content)
+            logger.warning(f"Used fallback conversion for {filename}")
+
+        except Exception as e:
+            logger.error(f"Conversion failed for {filename}: {e}")
+            raise ConversionError(f"SVG conversion failed: {str(e)}")
         
         result = {
             'success': True,

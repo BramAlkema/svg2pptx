@@ -15,14 +15,24 @@ import time
 import math
 
 # Import services for dependency injection
-from ..services.conversion_services import ConversionServices, ConversionConfig
+try:
+    from ..services.conversion_services import ConversionServices, ConversionConfig
+except ImportError:
+    # Fallback for test environments
+    from src.services.conversion_services import ConversionServices, ConversionConfig
 
 # Import types for type hints only
 if TYPE_CHECKING:
-    from ..units import UnitConverter
-    from ..colors import ColorParser
-    from ..transforms import TransformParser
-    from ..viewbox import ViewportResolver
+    try:
+        from ..units import UnitConverter
+        from ..colors import ColorParser
+        from ..transforms import TransformParser
+        from ..viewbox import ViewportResolver
+    except ImportError:
+        from src.units import UnitConverter
+        from src.colors import ColorParser
+        from src.transforms import TransformParser
+        from src.viewbox import ViewportResolver
 
 logger = logging.getLogger(__name__)
 
