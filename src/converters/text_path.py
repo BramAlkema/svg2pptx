@@ -30,13 +30,9 @@ from dataclasses import dataclass
 from enum import Enum
 from lxml import etree as ET
 
-from .base import BaseConverter
+from .base import BaseConverter, ConversionContext
 from .paths import PathConverter  # For path processing
-from .base import ConversionContext
-from ..colors import ColorParser, ColorInfo
-from ..transforms import TransformParser
-from ..units import UnitConverter
-from ..viewbox import ViewportResolver
+from ..colors import ColorInfo
 
 
 class TextPathMethod(Enum):

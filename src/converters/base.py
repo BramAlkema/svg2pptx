@@ -7,19 +7,32 @@ where each SVG element type has its own specialized converter.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Optional, Any, Type
+from typing import Dict, List, Tuple, Optional, Any, Type, TYPE_CHECKING
 from lxml import etree as ET
 import logging
 import re
 import time
 import math
 
-# Import the utilities from src level
-from ..units import UnitConverter
-from ..colors import ColorParser
-from ..transforms import TransformParser
-from ..viewbox import ViewportResolver
-from ..services.conversion_services import ConversionServices, ConversionConfig
+# Import services for dependency injection
+try:
+    from ..services.conversion_services import ConversionServices, ConversionConfig
+except ImportError:
+    # Fallback for test environments
+    from src.services.conversion_services import ConversionServices, ConversionConfig
+
+# Import types for type hints only
+if TYPE_CHECKING:
+    try:
+        from ..units import UnitConverter
+        from ..colors import ColorParser
+        from ..transforms import TransformParser
+        from ..viewbox import ViewportResolver
+    except ImportError:
+        from src.units import UnitConverter
+        from src.colors import ColorParser
+        from src.transforms import TransformParser
+        from src.viewbox import ViewportResolver
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +97,20 @@ class CoordinateSystem:
 
 class ConversionContext:
     """Context object passed through the conversion pipeline."""
-    
-    def __init__(self, svg_root: Optional[ET.Element] = None):
+
+    def __init__(self, svg_root: Optional[ET.Element] = None, services: ConversionServices = None):
+        """Initialize ConversionContext with required services.
+
+        Args:
+            svg_root: Optional SVG root element
+            services: ConversionServices instance (required)
+
+        Raises:
+            TypeError: If services is not provided
+        """
+        if services is None:
+            raise TypeError("ConversionContext requires ConversionServices instance")
+
         self.coordinate_system: Optional[CoordinateSystem] = None
         self.gradients: Dict[str, Dict] = {}
         self.patterns: Dict[str, Dict] = {}
@@ -97,9 +122,10 @@ class ConversionContext:
         self.style_stack: List[Dict] = []
         self.svg_root = svg_root
 
-        # Initialize unit converter and viewport context
-        self.unit_converter = UnitConverter()
-        self.viewport_handler = ViewportResolver()
+        # Use services for all service access
+        self.services = services
+        self.unit_converter = services.unit_converter
+        self.viewport_handler = services.viewport_resolver
         # Simplified viewport context initialization
         self.viewport_context = None
 
@@ -247,22 +273,22 @@ class BaseConverter(ABC):
         self._filter_bounds_calculator = None
 
     @property
-    def unit_converter(self) -> UnitConverter:
+    def unit_converter(self) -> 'UnitConverter':
         """Get UnitConverter from services for backward compatibility."""
         return self.services.unit_converter
 
     @property
-    def color_parser(self) -> ColorParser:
+    def color_parser(self) -> 'ColorParser':
         """Get ColorParser from services for backward compatibility."""
         return self.services.color_parser
 
     @property
-    def transform_parser(self) -> TransformParser:
+    def transform_parser(self) -> 'TransformParser':
         """Get TransformParser from services for backward compatibility."""
         return self.services.transform_parser
 
     @property
-    def viewport_resolver(self) -> ViewportResolver:
+    def viewport_resolver(self) -> 'ViewportResolver':
         """Get ViewportResolver from services for backward compatibility."""
         return self.services.viewport_resolver
 

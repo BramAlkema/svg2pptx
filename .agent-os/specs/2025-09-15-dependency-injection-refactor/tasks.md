@@ -22,15 +22,15 @@
   - [x] 2.7 Test BaseConverter changes with existing converter classes for compatibility
   - [x] 2.8 Verify all BaseConverter refactoring tests pass
 
-- [ ] 3. Migrate Core Converter Classes
-  - [ ] 3.1 Write tests for migrated converter classes with service injection
-  - [ ] 3.2 Migrate ShapeConverter, TextConverter, and PathConverter to dependency injection
-  - [ ] 3.3 Migrate ImageConverter, GradientConverter, and StyleConverter classes
-  - [ ] 3.4 Migrate remaining converter classes (AnimationConverter, MarkerConverter, etc.)
-  - [ ] 3.5 Remove manual service instantiations from all migrated converter constructors
-  - [ ] 3.6 Update converter initialization calls throughout the codebase to use services
-  - [ ] 3.7 Test all migrated converters with mocked services for proper isolation
-  - [ ] 3.8 Verify all converter migration tests pass
+- [x] 3. Migrate Core Converter Classes
+  - [x] 3.1 Write tests for migrated converter classes with service injection
+  - [x] 3.2 Migrate ShapeConverter, TextConverter, and PathConverter to dependency injection
+  - [x] 3.3 Migrate ImageConverter, GradientConverter, and StyleConverter classes
+  - [x] 3.4 Migrate remaining converter classes (AnimationConverter, MarkerConverter, etc.)
+  - [x] 3.5 Remove manual service instantiations from all migrated converter constructors
+  - [x] 3.6 Update converter initialization calls throughout the codebase to use services
+  - [x] 3.7 Test all migrated converters with mocked services for proper isolation
+  - [x] 3.8 Verify all converter migration tests pass
 
 - [ ] 4. Eliminate Manual Imports and Integration Testing
   - [ ] 4.1 Write comprehensive integration tests for end-to-end service injection

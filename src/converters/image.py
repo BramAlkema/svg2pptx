@@ -11,9 +11,6 @@ from urllib.parse import urlparse
 import tempfile
 
 from .base import BaseConverter, ConversionContext
-from ..units import UnitConverter
-from ..transforms import TransformParser
-from ..viewbox import ViewportResolver
 
 
 class ImageConverter(BaseConverter):

@@ -1,5 +1,9 @@
 """
 Geometry-focused preprocessing plugins for advanced shape optimization.
+
+Note: Douglas-Peucker and geometry algorithms use native Python + math for optimal
+performance. NumPy vectorization is 20-28% slower due to recursive algorithm patterns
+and memory allocation overhead. See reports/preprocessing_performance_analysis.md
 """
 
 import re

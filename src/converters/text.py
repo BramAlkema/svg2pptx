@@ -15,6 +15,7 @@ from typing import List, Dict, Any, Optional
 from lxml import etree as ET
 import logging
 from .base import BaseConverter, ConversionContext
+from ..services.conversion_services import ConversionServices
 
 logger = logging.getLogger(__name__)
 
@@ -24,17 +25,19 @@ class TextConverter(BaseConverter):
     
     supported_elements = ['text', 'tspan']
     
-    def __init__(self, 
+    def __init__(self,
+                 services: ConversionServices,
                  enable_font_embedding: bool = True,
                  enable_text_to_path_fallback: bool = False):
         """
         Initialize TextConverter with enhanced font capabilities.
-        
+
         Args:
+            services: ConversionServices container with initialized services
             enable_font_embedding: Enable three-tier font strategy with PPTX embedding
             enable_text_to_path_fallback: Enable automatic fallback to path conversion
         """
-        super().__init__()
+        super().__init__(services)
         self.enable_font_embedding = enable_font_embedding
         self.enable_text_to_path_fallback = enable_text_to_path_fallback
         

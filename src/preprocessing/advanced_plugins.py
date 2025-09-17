@@ -1,6 +1,10 @@
 """
 Advanced preprocessing plugins ported from SVGO.
 These provide more sophisticated optimizations for complex SVG structures.
+
+Note: Path optimization uses native Python (re + math) for superior performance over
+NumPy. Regex-based coordinate processing and recursive algorithms are faster with
+native Python tools. NumPy is reserved for conversion pipeline matrix operations.
 """
 
 import re

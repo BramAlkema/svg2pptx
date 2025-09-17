@@ -55,3 +55,6 @@ temp/
 # OS generated files
 *.tmp
 *.logdata/*.db
+
+# Agent OS
+.agent-os/

@@ -649,11 +649,25 @@ class DrawingMLGenerator:
 
 class SVGToDrawingMLConverter:
     """Main converter class that orchestrates the conversion process."""
-    
-    def __init__(self):
+
+    def __init__(self, services: 'ConversionServices' = None):
+        """Initialize SVGToDrawingMLConverter with ConversionServices.
+
+        Args:
+            services: ConversionServices instance (required for new usage, optional for migration)
+        """
         self.parser = None
         self.coord_mapper = None
         self.generator = None
+
+        # Import here to avoid circular imports
+        from .services.conversion_services import ConversionServices
+
+        # Create default services if none provided (for migration compatibility)
+        if services is None:
+            services = ConversionServices.create_default()
+
+        self.services = services
     
     def convert(self, svg_content: str) -> str:
         """Convert SVG content to DrawingML shapes."""
@@ -670,7 +684,7 @@ class SVGToDrawingMLConverter:
         # Create conversion context with proper coordinate system
         svg_root = ET.fromstring(svg_content)
         coord_sys = CoordinateSystem(self.parser.viewbox)
-        context = ConversionContext(svg_root)
+        context = ConversionContext(svg_root, services=self.services)
         context.coordinate_system = coord_sys
         
         # Add parsed gradients to context

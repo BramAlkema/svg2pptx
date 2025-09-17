@@ -24,11 +24,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from .base import BaseConverter
-from ..units import UnitConverter
-from ..colors import ColorParser
-from ..transforms import TransformParser
-from ..viewbox import ViewportResolver
 from .base import ConversionContext
+from ..services.conversion_services import ConversionServices
 
 logger = logging.getLogger(__name__)
 
@@ -106,13 +103,19 @@ class MaskingConverter(BaseConverter):
     
     supported_elements = ['mask', 'clipPath', 'defs']
     
-    def __init__(self):
-        super().__init__()
-        
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize MaskingConverter with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        super().__init__(services)
+
         # Storage for mask and clipPath definitions
         self.mask_definitions: Dict[str, MaskDefinition] = {}
         self.clippath_definitions: Dict[str, ClipPathDefinition] = {}
-        
+
         # Track which elements have masks or clipping applied
         self.masked_elements: List[MaskApplication] = []
         self.clipped_elements: List[ClipApplication] = []

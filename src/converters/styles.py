@@ -15,21 +15,25 @@ from lxml import etree as ET
 import re
 from .base import ConversionContext
 from .gradients import GradientConverter
-from ..colors import ColorParser
-from ..units import UnitConverter
-from ..transforms import TransformParser
-from ..viewbox import ViewportResolver
+from ..services.conversion_services import ConversionServices
 
 
 class StyleProcessor:
     """Processes SVG styles and converts them to DrawingML properties"""
     
-    def __init__(self):
-        self.gradient_converter = GradientConverter()
-        self.color_parser = ColorParser()
-        self.unit_converter = UnitConverter()
-        self.transform_parser = TransformParser()
-        self.viewport_resolver = ViewportResolver()
+    def __init__(self, services: ConversionServices):
+        """
+        Initialize StyleProcessor with dependency injection.
+
+        Args:
+            services: ConversionServices container with initialized services
+        """
+        self.services = services
+        self.gradient_converter = GradientConverter(services)
+        self.color_parser = services.color_parser
+        self.unit_converter = services.unit_converter
+        self.transform_parser = services.transform_parser
+        self.viewport_resolver = services.viewport_resolver
         self.css_rules = {}  # Store CSS rules from <style> elements
     
     def process_element_styles(self, element: ET.Element, context: ConversionContext) -> Dict[str, Any]:

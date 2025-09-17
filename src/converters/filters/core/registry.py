@@ -306,27 +306,54 @@ class FilterRegistry:
         """
         Load default filter implementations.
 
-        This method will be implemented to load standard filters
-        from the image and geometric modules when they are available.
+        Loads standard filters from image and geometric modules with graceful
+        fallback for missing modules to ensure registry stability.
         """
-        # TODO: Implement default filter loading when filter modules are ready
-        # from ..image.blur import GaussianBlurFilter, MotionBlurFilter
-        # from ..image.color import ColorMatrixFilter, FloodFilter
-        # from ..geometric.transforms import OffsetFilter, TurbulenceFilter
-        #
-        # default_filters = [
-        #     GaussianBlurFilter(),
-        #     MotionBlurFilter(),
-        #     ColorMatrixFilter(),
-        #     FloodFilter(),
-        #     OffsetFilter(),
-        #     TurbulenceFilter(),
-        # ]
-        #
-        # for filter_obj in default_filters:
-        #     self.register(filter_obj)
+        default_filter_specs = [
+            # Image filters
+            ('..image.blur', 'GaussianBlurFilter'),
+            ('..image.color', 'ColorMatrixFilter'),
+            ('..image.convolve_matrix', 'ConvolveMatrixFilter'),
 
-        pass
+            # Geometric filters
+            ('..geometric.transforms', 'OffsetFilter'),
+            ('..geometric.composite', 'CompositeFilter'),
+            ('..geometric.morphology', 'MorphologyFilter'),
+            ('..geometric.diffuse_lighting', 'DiffuseLightingFilter'),
+            ('..geometric.specular_lighting', 'SpecularLightingFilter'),
+        ]
+
+        filters_loaded = 0
+        filters_failed = 0
+
+        for module_path, filter_class_name in default_filter_specs:
+            try:
+                # Dynamic import with error handling
+                from importlib import import_module
+                module = import_module(module_path, package=__package__)
+
+                if hasattr(module, filter_class_name):
+                    filter_class = getattr(module, filter_class_name)
+                    filter_instance = filter_class()
+                    self.register(filter_instance)
+                    filters_loaded += 1
+                    self.logger.debug(f"Loaded default filter: {filter_class_name}")
+                else:
+                    self.logger.warning(f"Filter class {filter_class_name} not found in {module_path}")
+                    filters_failed += 1
+
+            except ImportError as e:
+                self.logger.debug(f"Module {module_path} not available: {e}")
+                filters_failed += 1
+            except Exception as e:
+                self.logger.warning(f"Failed to load {filter_class_name} from {module_path}: {e}")
+                filters_failed += 1
+
+        self.logger.info(f"Default filter loading complete: {filters_loaded} loaded, {filters_failed} failed")
+
+        # Always ensure at least basic filter types are available
+        if filters_loaded == 0:
+            self.logger.warning("No default filters loaded - registry may have limited functionality")
 
     def _update_element_mapping(self, filter_instance: Filter) -> None:
         """

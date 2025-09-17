@@ -7,16 +7,16 @@ from lxml import etree as ET
 import re
 from typing import Dict, List, Optional, Tuple
 from .base import BaseConverter, ConversionContext
-from ..colors import ColorParser
+from ..services.conversion_services import ConversionServices
 
 
 class StyleConverter(BaseConverter):
     """Converter for SVG style elements containing CSS."""
-    
+
     supported_elements = ['style']
-    
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self, services: ConversionServices):
+        super().__init__(services)
         self.parsed_styles: Dict[str, Dict[str, str]] = {}
     
     def can_convert(self, element: ET.Element) -> bool:

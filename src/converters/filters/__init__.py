@@ -25,9 +25,8 @@ from .core.base import Filter, FilterContext, FilterResult
 from .core.registry import FilterRegistry
 from .core.chain import FilterChain
 
-# Backward compatibility - maintain original imports
-# This ensures existing code continues to work
-from .compatibility.legacy import *
+# Backward compatibility - legacy import removed as part of modernization
+# Legacy compatibility module was removed to eliminate cruft
 
 __version__ = "2.0.0"
 __all__ = [

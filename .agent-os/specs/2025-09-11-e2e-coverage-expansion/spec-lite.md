@@ -1,3 +1,0 @@
-# Spec Summary (Lite)
-
-Expand End-to-End test coverage for the SVG2PPTX project to achieve the target of 90% coverage across all critical system components. This initiative will strengthen quality assurance, reduce production bugs, and ensure comprehensive validation of conversion workflows from SVG input to PowerPoint output. The expansion covers API endpoints, core conversion logic, integration services, error handling scenarios, and performance validation to provide complete coverage of user journeys and system reliability.

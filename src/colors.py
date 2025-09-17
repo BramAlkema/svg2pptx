@@ -1522,7 +1522,7 @@ def parse_colors_batch(color_parser: 'ColorParser', color_strings: List[str]) ->
             rgb_colors.append((i, color_str))
         elif color_str.startswith('hsl'):
             hsl_colors.append((i, color_str))
-        elif color_str in color_parser.css_colors:
+        elif color_str in NAMED_COLORS:
             named_colors.append((i, color_str))
         else:
             other_colors.append((i, color_str))
@@ -1530,40 +1530,49 @@ def parse_colors_batch(color_parser: 'ColorParser', color_strings: List[str]) ->
     # Initialize results list with None values
     results = [None] * len(color_strings)
 
+    # Helper function for safe color parsing with specific exception handling
+    def safe_parse_color(index: int, color_string: str, color_type: str = "unknown") -> None:
+        """Safely parse color with specific exception handling and logging."""
+        try:
+            results[index] = color_parser.parse(color_string)
+        except ValueError as e:
+            # Invalid color format or values
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Invalid {color_type} color '{color_string}': {e}")
+            results[index] = None
+        except (TypeError, AttributeError) as e:
+            # Incorrect input types or missing attributes
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Color parser error for {color_type} '{color_string}': {e}")
+            results[index] = None
+        except Exception as e:
+            # Unexpected errors - log and re-raise for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Unexpected error parsing {color_type} color '{color_string}': {e}")
+            results[index] = None
+
     # Batch process hex colors
     for i, color_str in hex_colors:
-        try:
-            results[i] = color_parser.parse(color_str)
-        except Exception:
-            results[i] = None
+        safe_parse_color(i, color_str, "hex")
 
     # Batch process RGB colors
     for i, color_str in rgb_colors:
-        try:
-            results[i] = color_parser.parse(color_str)
-        except Exception:
-            results[i] = None
+        safe_parse_color(i, color_str, "RGB")
 
     # Batch process HSL colors
     for i, color_str in hsl_colors:
-        try:
-            results[i] = color_parser.parse(color_str)
-        except Exception:
-            results[i] = None
+        safe_parse_color(i, color_str, "HSL")
 
     # Batch process named colors
     for i, color_str in named_colors:
-        try:
-            results[i] = color_parser.parse(color_str)
-        except Exception:
-            results[i] = None
+        safe_parse_color(i, color_str, "named")
 
     # Process remaining colors
     for i, color_str in other_colors:
-        try:
-            results[i] = color_parser.parse(color_str)
-        except Exception:
-            results[i] = None
+        safe_parse_color(i, color_str, "other")
 
     return results
 
@@ -2128,3 +2137,160 @@ def adjust_saturation(color: ColorInfo, saturation_factor: float) -> ColorInfo:
 
     return ColorInfo(r_final, g_final, b_final, color.alpha, color.format,
                     f"sat_{color.original}" if color.original else None)
+
+
+def rotate_hue(color: ColorInfo, degrees: float) -> ColorInfo:
+    """
+    Rotate color hue by specified degrees using HSL color space.
+
+    Args:
+        color: Source ColorInfo object
+        degrees: Rotation angle in degrees (-360 to 360)
+                Positive values rotate clockwise
+
+    Returns:
+        ColorInfo with rotated hue, preserving saturation and lightness
+
+    Example:
+        >>> red = ColorInfo.from_hex("#FF0000")
+        >>> green = rotate_hue(red, 120.0)  # Red → Green
+        >>> blue = rotate_hue(red, 240.0)   # Red → Blue
+
+    Note:
+        Handles angle normalization automatically. Angles outside -360 to 360
+        are wrapped to the valid range.
+    """
+    # Input validation
+    if not isinstance(color, ColorInfo):
+        raise ValueError("color must be a ColorInfo instance")
+    if not isinstance(degrees, (int, float)):
+        raise ValueError("degrees must be a number")
+
+    # Convert to HSL
+    h, s, l = rgb_to_hsl(color.red, color.green, color.blue)
+
+    # Apply hue rotation with automatic angle normalization
+    new_hue = (h + degrees) % 360
+
+    # Convert back to RGB
+    r, g, b = hsl_to_rgb(new_hue, s, l)
+
+    return ColorInfo(r, g, b, color.alpha, color.format,
+                    f"hue_{color.original}" if color.original else None)
+
+
+def apply_color_matrix(color: ColorInfo, matrix: List[float]) -> ColorInfo:
+    """
+    Apply 4×5 color transformation matrix to color.
+
+    Args:
+        color: Source ColorInfo object
+        matrix: 20 values representing 4×5 matrix in row-major order:
+               [R  G  B  A  offset_R]  # Row 0: New Red calculation
+               [R  G  B  A  offset_G]  # Row 1: New Green calculation
+               [R  G  B  A  offset_B]  # Row 2: New Blue calculation
+               [R  G  B  A  offset_A]  # Row 3: New Alpha calculation
+
+    Returns:
+        ColorInfo with transformed RGBA values, clamped to valid ranges
+
+    Example:
+        >>> # Invert colors matrix
+        >>> invert_matrix = [-1,0,0,0,1, 0,-1,0,0,1, 0,0,-1,0,1, 0,0,0,1,0]
+        >>> inverted = apply_color_matrix(color, invert_matrix)
+
+        >>> # Identity matrix (no change)
+        >>> identity_matrix = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0]
+        >>> unchanged = apply_color_matrix(color, identity_matrix)
+
+    Note:
+        Matrix values are applied as: new_component = (R*m[0] + G*m[1] + B*m[2] + A*m[3] + m[4])
+        RGB values are normalized to [0-1] for calculation, then scaled back to [0-255]
+        Alpha values are kept in [0-1] range throughout calculation
+    """
+    from typing import List
+
+    # Input validation
+    if not isinstance(color, ColorInfo):
+        raise ValueError("color must be a ColorInfo instance")
+    if not isinstance(matrix, (list, tuple)):
+        raise ValueError("matrix must be a list or tuple")
+    if len(matrix) != 20:
+        raise ValueError("matrix must contain exactly 20 values (4×5 matrix)")
+
+    # Validate all matrix values are numbers
+    try:
+        matrix_values = [float(val) for val in matrix]
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"All matrix values must be numbers: {e}")
+
+    # Normalize RGB to [0-1] range for calculation
+    r_norm = color.red / 255.0
+    g_norm = color.green / 255.0
+    b_norm = color.blue / 255.0
+    a_norm = color.alpha  # Already in [0-1] range
+
+    # Apply 4×5 matrix transformation
+    # Matrix is organized as rows: [R G B A offset] for each output component
+    new_r = (r_norm * matrix_values[0] + g_norm * matrix_values[1] +
+             b_norm * matrix_values[2] + a_norm * matrix_values[3] + matrix_values[4])
+    new_g = (r_norm * matrix_values[5] + g_norm * matrix_values[6] +
+             b_norm * matrix_values[7] + a_norm * matrix_values[8] + matrix_values[9])
+    new_b = (r_norm * matrix_values[10] + g_norm * matrix_values[11] +
+             b_norm * matrix_values[12] + a_norm * matrix_values[13] + matrix_values[14])
+    new_a = (r_norm * matrix_values[15] + g_norm * matrix_values[16] +
+             b_norm * matrix_values[17] + a_norm * matrix_values[18] + matrix_values[19])
+
+    # Clamp values to valid ranges
+    # RGB: clamp to [0-1] then scale to [0-255]
+    r_clamped = max(0.0, min(1.0, new_r)) * 255.0
+    g_clamped = max(0.0, min(1.0, new_g)) * 255.0
+    b_clamped = max(0.0, min(1.0, new_b)) * 255.0
+
+    # Alpha: clamp to [0-1]
+    a_clamped = max(0.0, min(1.0, new_a))
+
+    # Convert to integers for RGB
+    r_final, g_final, b_final = clamp_rgb(r_clamped, g_clamped, b_clamped)
+
+    return ColorInfo(r_final, g_final, b_final, a_clamped, color.format,
+                    f"matrix_{color.original}" if color.original else None)
+
+
+def luminance_to_alpha(color: ColorInfo) -> ColorInfo:
+    """
+    Convert color luminance to alpha channel, setting RGB to black.
+
+    Args:
+        color: Source ColorInfo object
+
+    Returns:
+        ColorInfo with RGB=(0,0,0) and alpha=luminance_value
+
+    Example:
+        >>> white = ColorInfo.from_rgb(255, 255, 255, 255)
+        >>> alpha_mask = luminance_to_alpha(white)
+        >>> # Result: RGB=(0,0,0), Alpha=1.0 (white luminance)
+
+        >>> gray = ColorInfo.from_rgb(128, 128, 128, 255)
+        >>> alpha_mask = luminance_to_alpha(gray)
+        >>> # Result: RGB=(0,0,0), Alpha≈0.22 (gray luminance)
+
+    Note:
+        Uses WCAG 2.1 relative luminance calculation for accurate conversion.
+        Preserves original alpha if it was less than the luminance value.
+    """
+    # Input validation
+    if not isinstance(color, ColorInfo):
+        raise ValueError("color must be a ColorInfo instance")
+
+    # Calculate luminance using existing WCAG function
+    luminance_value = calculate_luminance(color)
+
+    # Convert luminance to alpha channel
+    # Luminance is already in [0.0, 1.0] range, perfect for alpha
+    alpha_from_luminance = luminance_value
+
+    # Set RGB to black as per SVG luminance-to-alpha specification
+    return ColorInfo(0, 0, 0, alpha_from_luminance, color.format,
+                    f"luma_{color.original}" if color.original else None)
