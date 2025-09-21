@@ -203,8 +203,23 @@ class TestConversionServices:
     def test_conversion_services_create_custom(self, mock_viewport, mock_transform,
                                               mock_color, mock_unit):
         """Test ConversionServices.create_custom() factory method."""
+        mock_unit_instance = Mock()
+        mock_color_instance = Mock()
+        mock_transform_instance = Mock()
+        mock_viewport_instance = Mock()
+
+        mock_unit.return_value = mock_unit_instance
+        mock_color.return_value = mock_color_instance
+        mock_transform.return_value = mock_transform_instance
+        mock_viewport.return_value = mock_viewport_instance
+
         custom_config = {
-            'unit_converter': {'default_dpi': 200.0},
+            'config': {
+                'default_dpi': 144.0,
+                'viewport_width': 1024.0,
+                'viewport_height': 768.0,
+            },
+            'unit_converter': {'default_font_size': 18},
             'color_parser': {'color_space': 'sRGB'},
             'transform_parser': {'precision': 6},
             'viewport_resolver': {}
@@ -212,11 +227,24 @@ class TestConversionServices:
 
         services = ConversionServices.create_custom(custom_config)
 
-        mock_unit.assert_called_once_with(default_dpi=200.0)
+        mock_unit.assert_called_once_with(
+            default_dpi=144.0,
+            viewport_width=1024.0,
+            viewport_height=768.0,
+            default_font_size=18
+        )
         mock_color.assert_called_once_with(color_space='sRGB')
         mock_transform.assert_called_once_with(precision=6)
-        # ViewportResolver takes unit_converter instance, not direct parameters
-        mock_viewport.assert_called_once()
+        mock_viewport.assert_called_once_with(unit_engine=mock_unit_instance)
+
+        assert isinstance(services.config, ConversionConfig)
+        assert services.config.default_dpi == 144.0
+        assert services.config.viewport_width == 1024.0
+        assert services.config.viewport_height == 768.0
+        assert services.unit_converter is mock_unit_instance
+        assert services.color_parser is mock_color_instance
+        assert services.transform_parser is mock_transform_instance
+        assert services.viewport_resolver is mock_viewport_instance
 
     def test_conversion_services_lifecycle_management(self):
         """Test service lifecycle with proper initialization order."""

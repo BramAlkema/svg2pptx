@@ -146,33 +146,70 @@ class ConversionServices:
         """Create ConversionServices with custom service configurations.
 
         Args:
-            custom_config: Dictionary mapping service names to their config parameters
+            custom_config: Dictionary mapping service names to their config parameters.
 
         Returns:
-            ConversionServices instance with custom-configured services
+            ConversionServices instance with custom-configured services.
 
         Raises:
-            ServiceInitializationError: If any service fails to initialize
+            ServiceInitializationError: If any service fails to initialize.
         """
         try:
-            # Extract service configurations with defaults
-            unit_config = custom_config.get('unit_converter', {})
-            color_config = custom_config.get('color_parser', {})
-            transform_config = custom_config.get('transform_parser', {})
-            viewport_config = custom_config.get('viewport_resolver', {})
+            custom_config = custom_config or {}
 
-            # Initialize services with custom configurations
+            config_source = custom_config.get('config')
+            if config_source is None and 'config_path' in custom_config:
+                config_source = custom_config['config_path']
+
+            if isinstance(config_source, ConversionConfig):
+                conversion_config = config_source
+            elif isinstance(config_source, dict):
+                conversion_config = ConversionConfig.from_dict(config_source)
+            elif isinstance(config_source, (str, Path)):
+                conversion_config = ConversionConfig.from_file(str(config_source))
+            elif config_source is None:
+                conversion_config = ConversionConfig()
+            else:
+                raise TypeError(
+                    f"Unsupported config type for create_custom: {type(config_source)!r}"
+                )
+
+            unit_config = dict(custom_config.get('unit_converter', {}) or {})
+            unit_config.setdefault('default_dpi', conversion_config.default_dpi)
+            unit_config.setdefault('viewport_width', conversion_config.viewport_width)
+            unit_config.setdefault('viewport_height', conversion_config.viewport_height)
+
+            color_config = custom_config.get('color_parser', {}) or {}
+            transform_config = custom_config.get('transform_parser', {}) or {}
+            viewport_config = dict(custom_config.get('viewport_resolver', {}) or {})
+
             unit_converter = UnitConverter(**unit_config)
             color_parser = ColorParser(**color_config)
             transform_parser = TransformParser(**transform_config)
-            viewport_resolver = ViewportResolver(unit_engine=unit_converter)
+
+            if 'unit_engine' not in viewport_config:
+                viewport_config['unit_engine'] = unit_converter
+
+            allowed_viewport_keys = {'unit_engine'}
+            unexpected_viewport_keys = set(viewport_config) - allowed_viewport_keys
+            if unexpected_viewport_keys:
+                logger.debug(
+                    "Ignoring unsupported viewport_resolver keys: %s",
+                    ', '.join(sorted(unexpected_viewport_keys))
+                )
+            viewport_kwargs = {
+                key: value for key, value in viewport_config.items()
+                if key in allowed_viewport_keys
+            }
+
+            viewport_resolver = ViewportResolver(**viewport_kwargs)
 
             return cls(
                 unit_converter=unit_converter,
                 color_parser=color_parser,
                 transform_parser=transform_parser,
                 viewport_resolver=viewport_resolver,
-                config=config
+                config=conversion_config
             )
 
         except Exception as e:
