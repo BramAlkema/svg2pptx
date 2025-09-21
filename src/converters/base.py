@@ -1470,19 +1470,33 @@ class ConverterRegistryFactory:
     _registry_instance = None
     
     @classmethod
-    def get_registry(cls, force_new: bool = False) -> ConverterRegistry:
+    def get_registry(
+        cls,
+        force_new: bool = False,
+        services: Optional[ConversionServices] = None
+    ) -> ConverterRegistry:
         """Get a configured converter registry instance.
-        
+
         Args:
             force_new: If True, create a new registry instead of using singleton
-            
+            services: Optional ConversionServices instance to bind to the registry.
+                When provided, caching is disabled to prevent cross-service reuse.
+
         Returns:
             Configured ConverterRegistry instance
         """
+        if services is not None:
+            # Service-bound registries should not be cached to avoid cross-service
+            # dependency leakage. Each call gets a fresh registry configured with
+            # the provided services.
+            registry = ConverterRegistry(services=services)
+            registry.register_default_converters()
+            return registry
+
         if force_new or cls._registry_instance is None:
             registry = ConverterRegistry()
             registry.register_default_converters()
-            
+
             if not force_new:
                 cls._registry_instance = registry
                 
