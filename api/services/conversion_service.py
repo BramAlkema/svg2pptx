@@ -12,6 +12,7 @@ from .google_drive import GoogleDriveService, GoogleDriveError
 from .google_slides import GoogleSlidesService, GoogleSlidesError
 from .file_processor import UploadManager, FileProcessor
 from ..config import get_settings
+from src.services.conversion_services import ConversionServices
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,14 @@ class ConversionService:
         self.drive_service = None
         self.slides_service = None
         self.upload_manager = None
+        self.conversion_services: Optional[ConversionServices] = None
         self._initialize_services()
+
+    def _get_conversion_services(self) -> ConversionServices:
+        """Get or create the ConversionServices container used for conversions."""
+        if self.conversion_services is None:
+            self.conversion_services = ConversionServices.get_default_instance()
+        return self.conversion_services
     
     def _initialize_services(self):
         """Initialize Google Drive, Slides, and upload services."""
@@ -252,7 +260,9 @@ class ConversionService:
             logger.info("Parsed optimized SVG structure")
             
             # Step 3: Initialize modular conversion system
-            registry = ConverterRegistry()
+            services = self._get_conversion_services()
+
+            registry = ConverterRegistry(services=services)
             registry.register_default_converters()
             
             # Extract viewBox or use default coordinates
@@ -266,7 +276,7 @@ class ConversionService:
                 coord_system = CoordinateSystem((0, 0, width, height))
             
             # Step 4: Convert SVG using modular converters
-            context = ConversionContext(root)
+            context = ConversionContext(root, services=services)
             context.coordinate_system = coord_system
             context.converter_registry = registry
             
