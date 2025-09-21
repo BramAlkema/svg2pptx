@@ -12,6 +12,7 @@ from typing import Dict, List, Tuple, Optional, Union, Any
 import numpy as np
 
 from ..base import BaseConverter, ConversionContext
+from ...services.conversion_services import ConversionServices
 from .numpy_geometry import NumPyGeometryEngine, ShapeGeometry, ShapeType
 
 
@@ -25,14 +26,23 @@ class NumPyShapeConverter(BaseConverter):
 
     supported_elements = ['rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line']
 
-    def __init__(self, optimization_level: int = 2):
+    def __init__(
+        self,
+        services: Optional[ConversionServices] = None,
+        optimization_level: int = 2,
+    ):
         """
         Initialize NumPy shape converter.
 
         Args:
+            services: ConversionServices dependency container. If not provided,
+                default services will be created for backward compatibility.
             optimization_level: Performance optimization level (1-3)
         """
-        super().__init__()
+        if services is None:
+            services = ConversionServices.create_default()
+
+        super().__init__(services)
         self.geometry_engine = NumPyGeometryEngine(optimization_level)
         self._batch_cache = {}
 
@@ -692,14 +702,20 @@ class NumPyShapeConverter(BaseConverter):
 
 # ==================== Factory Functions ====================
 
-def create_numpy_shape_converter(optimization_level: int = 2) -> NumPyShapeConverter:
+def create_numpy_shape_converter(
+    services: Optional[ConversionServices] = None,
+    optimization_level: int = 2,
+) -> NumPyShapeConverter:
     """Create a NumPy shape converter with specified optimization level."""
-    return NumPyShapeConverter(optimization_level)
+    return NumPyShapeConverter(
+        services=services,
+        optimization_level=optimization_level,
+    )
+
 
 def register_numpy_converters(converter_registry: Any) -> None:
     """Register NumPy shape converters with the main converter registry."""
-    numpy_converter = NumPyShapeConverter()
+    services = getattr(converter_registry, 'services', None)
+    numpy_converter = NumPyShapeConverter(services=services)
 
-    # Register for all supported shape types
-    for shape_type in numpy_converter.supported_elements:
-        converter_registry.register(shape_type, numpy_converter)
+    converter_registry.register(numpy_converter)

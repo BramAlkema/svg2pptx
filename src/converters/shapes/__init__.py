@@ -45,8 +45,7 @@ class RectangleConverter(NumPyShapeConverter):
 
     def __init__(self, services=None, optimization_level=2):
         """Initialize with services (dependency injection) and optimization level."""
-        super().__init__(optimization_level)
-        self.services = services
+        super().__init__(services=services, optimization_level=optimization_level)
 
     def can_convert(self, element):
         return self.get_element_tag(element) == 'rect'
@@ -57,8 +56,7 @@ class CircleConverter(NumPyShapeConverter):
 
     def __init__(self, services=None, optimization_level=2):
         """Initialize with services (dependency injection) and optimization level."""
-        super().__init__(optimization_level)
-        self.services = services
+        super().__init__(services=services, optimization_level=optimization_level)
 
     def can_convert(self, element):
         return self.get_element_tag(element) == 'circle'
@@ -69,8 +67,7 @@ class EllipseConverter(NumPyShapeConverter):
 
     def __init__(self, services=None, optimization_level=2):
         """Initialize with services (dependency injection) and optimization level."""
-        super().__init__(optimization_level)
-        self.services = services
+        super().__init__(services=services, optimization_level=optimization_level)
 
     def can_convert(self, element):
         return self.get_element_tag(element) == 'ellipse'
@@ -81,8 +78,7 @@ class PolygonConverter(NumPyShapeConverter):
 
     def __init__(self, services=None, optimization_level=2):
         """Initialize with services (dependency injection) and optimization level."""
-        super().__init__(optimization_level)
-        self.services = services
+        super().__init__(services=services, optimization_level=optimization_level)
 
     def can_convert(self, element):
         tag = self.get_element_tag(element)
@@ -94,8 +90,7 @@ class LineConverter(NumPyShapeConverter):
 
     def __init__(self, services=None, optimization_level=2):
         """Initialize with services (dependency injection) and optimization level."""
-        super().__init__(optimization_level)
-        self.services = services
+        super().__init__(services=services, optimization_level=optimization_level)
 
     def can_convert(self, element):
         return self.get_element_tag(element) == 'line'
