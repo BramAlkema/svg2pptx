@@ -145,6 +145,20 @@ class TestTextConverterDependencyInjection:
         assert converter.can_convert(element) is True
         assert 'text' in converter.supported_elements
 
+    def test_text_converter_text_to_path_fallback_initialization(self, mock_conversion_services):
+        """Ensure enabling text-to-path fallback initializes converter without errors."""
+        from src.converters.text import TextConverter
+
+        converter = TextConverter(
+            services=mock_conversion_services,
+            enable_font_embedding=False,
+            enable_text_to_path_fallback=True,
+        )
+
+        assert converter.enable_text_to_path_fallback is True
+        assert converter._text_to_path_converter is not None
+        assert converter._text_to_path_converter.services is mock_conversion_services
+
 
 class TestPathConverterDependencyInjection:
     """Test PathConverter with dependency injection patterns."""

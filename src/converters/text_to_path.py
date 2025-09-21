@@ -13,13 +13,17 @@ Key Features:
 """
 
 from lxml import etree as ET
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 import logging
 import re
 
 from .base import BaseConverter, ConversionContext
 from .font_metrics import FontMetricsAnalyzer, FontMetrics
 from .path_generator import PathGenerator
+
+
+if TYPE_CHECKING:
+    from ..services.conversion_services import ConversionServices
 
 
 logger = logging.getLogger(__name__)
@@ -45,14 +49,17 @@ class TextToPathConverter(BaseConverter):
         'max_cache_size': 256
     }
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self,
+                 config: Optional[Dict[str, Any]] = None,
+                 services: Optional['ConversionServices'] = None):
         """
         Initialize TextToPathConverter with configuration.
-        
+
         Args:
             config: Configuration dictionary for converter behavior
+            services: Optional ConversionServices container for dependency injection
         """
-        super().__init__()
+        super().__init__(services)
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         
         # Initialize core components

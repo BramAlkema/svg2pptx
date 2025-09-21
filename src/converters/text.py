@@ -62,7 +62,9 @@ class TextConverter(BaseConverter):
         if self.enable_text_to_path_fallback:
             try:
                 from .text_to_path import TextToPathConverter
-                self._text_to_path_converter = TextToPathConverter()
+                self._text_to_path_converter = TextToPathConverter(
+                    services=self.services
+                )
                 logger.info("Text-to-path fallback enabled")
             except ImportError as e:
                 logger.warning(f"Could not enable text-to-path fallback: {e}")
