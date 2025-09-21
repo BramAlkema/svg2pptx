@@ -223,7 +223,7 @@ class ConversionService:
         try:
             from src.preprocessing import create_optimizer
             from src.converters import ConverterRegistry, CoordinateSystem, ConversionContext
-            from testbench import PPTXBuilder
+            from src.core.pptx_builder import PPTXBuilder
             import tempfile
             import os
             from lxml import etree as ET
@@ -355,7 +355,7 @@ class ConversionService:
     def _create_error_pptx(self, source_url: str, error_message: str) -> bytes:
         """Create a minimal PPTX file indicating conversion error."""
         try:
-            from testbench import PPTXBuilder
+            from src.core.pptx_builder import PPTXBuilder
             import tempfile
             import os
             
