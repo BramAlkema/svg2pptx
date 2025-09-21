@@ -274,7 +274,7 @@ class ConversionService:
             drawingml_elements = []
             
             for element in root:
-                converter = registry.get_converter(element.tag)
+                converter = registry.get_converter(element)
                 if converter:
                     try:
                         result = converter.convert(element, context)
