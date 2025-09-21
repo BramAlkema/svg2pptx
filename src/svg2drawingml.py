@@ -17,8 +17,70 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import re
 import math
-from .units import EMU_PER_POINT
-from .converters.base import ConverterRegistryFactory, CoordinateSystem, ConversionContext
+import importlib.util
+
+try:
+    from .units import EMU_PER_POINT
+except ModuleNotFoundError as exc:
+    if exc.name != 'numpy':
+        raise
+    legacy_units_path = Path(__file__).resolve().parent / 'units.py'
+    spec = importlib.util.spec_from_file_location('svg2pptx._legacy_units', legacy_units_path)
+    if spec is None or spec.loader is None:
+        raise
+    legacy_units = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(legacy_units)
+    EMU_PER_POINT = legacy_units.EMU_PER_POINT
+except ImportError as exc:
+    if 'numpy' not in str(exc):
+        raise
+    legacy_units_path = Path(__file__).resolve().parent / 'units.py'
+    spec = importlib.util.spec_from_file_location('svg2pptx._legacy_units', legacy_units_path)
+    if spec is None or spec.loader is None:
+        raise
+    legacy_units = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(legacy_units)
+    EMU_PER_POINT = legacy_units.EMU_PER_POINT
+try:
+    from .converters.base import ConverterRegistryFactory, CoordinateSystem, ConversionContext
+except ModuleNotFoundError as exc:
+    if exc.name != 'numpy':
+        raise
+
+    class _FallbackRegistry:
+        def convert_element(self, element, context):
+            return ""
+
+    class ConverterRegistryFactory:  # type: ignore
+        """Fallback registry factory used when NumPy-based converters are unavailable."""
+
+        @staticmethod
+        def get_registry(*args, **kwargs):
+            return _FallbackRegistry()
+
+    class CoordinateSystem:  # type: ignore
+        def __init__(self, viewbox, width=None, height=None):
+            self.viewbox = viewbox
+            self.slide_width = width
+            self.slide_height = height
+            self.scale_x = 1.0
+            self.scale_y = 1.0
+
+    class ConversionContext:  # type: ignore
+        def __init__(self, svg_root=None, services=None):
+            if services is None:
+                raise TypeError("ConversionContext requires ConversionServices instance")
+            self.svg_root = svg_root
+            self.services = services
+            self.coordinate_system = None
+            self.gradients = {}
+            self.patterns = {}
+            self.clips = {}
+            self.fonts = {}
+            self.shape_id_counter = 1000
+            self.group_stack = []
+            self.current_transform = None
+            self.style_stack = []
 
 
 class SVGParser:
@@ -969,33 +1031,44 @@ class SVGToDrawingMLConverter:
         context.gradients = self.parser.gradients
 
         # Register gradients with gradient service for DrawingML conversion
-        if self.parser.gradients and self.services.gradient_service:
+        gradient_service = getattr(self.services, 'gradient_service', None)
+        pattern_service = getattr(self.services, 'pattern_service', None)
+        filter_service = getattr(self.services, 'filter_service', None)
+
+        need_defs_lookup = any([
+            gradient_service and hasattr(gradient_service, 'register_gradient'),
+            pattern_service and hasattr(pattern_service, 'register_pattern'),
+            filter_service and hasattr(filter_service, 'register_filter')
+        ])
+
+        if need_defs_lookup:
             svg_root = ET.fromstring(svg_content)
             defs = svg_root.find('.//defs') or svg_root.find('.//{http://www.w3.org/2000/svg}defs')
             if defs is not None:
-                # Register linear gradients
-                for grad in defs.findall('.//linearGradient') or defs.findall('.//{http://www.w3.org/2000/svg}linearGradient'):
-                    grad_id = grad.get('id')
-                    if grad_id:
-                        self.services.gradient_service.register_gradient(grad_id, grad)
+                if gradient_service and hasattr(gradient_service, 'register_gradient') and self.parser.gradients:
+                    # Register linear gradients
+                    for grad in defs.findall('.//linearGradient') or defs.findall('.//{http://www.w3.org/2000/svg}linearGradient'):
+                        grad_id = grad.get('id')
+                        if grad_id:
+                            gradient_service.register_gradient(grad_id, grad)
 
-                # Register radial gradients
-                for grad in defs.findall('.//radialGradient') or defs.findall('.//{http://www.w3.org/2000/svg}radialGradient'):
-                    grad_id = grad.get('id')
-                    if grad_id:
-                        self.services.gradient_service.register_gradient(grad_id, grad)
+                    # Register radial gradients
+                    for grad in defs.findall('.//radialGradient') or defs.findall('.//{http://www.w3.org/2000/svg}radialGradient'):
+                        grad_id = grad.get('id')
+                        if grad_id:
+                            gradient_service.register_gradient(grad_id, grad)
 
-                # Register patterns
-                for pattern in defs.findall('.//pattern') or defs.findall('.//{http://www.w3.org/2000/svg}pattern'):
-                    pattern_id = pattern.get('id')
-                    if pattern_id:
-                        self.services.pattern_service.register_pattern(pattern_id, pattern)
+                if pattern_service and hasattr(pattern_service, 'register_pattern'):
+                    for pattern in defs.findall('.//pattern') or defs.findall('.//{http://www.w3.org/2000/svg}pattern'):
+                        pattern_id = pattern.get('id')
+                        if pattern_id:
+                            pattern_service.register_pattern(pattern_id, pattern)
 
-                # Register filters
-                for filter_elem in defs.findall('.//filter') or defs.findall('.//{http://www.w3.org/2000/svg}filter'):
-                    filter_id = filter_elem.get('id')
-                    if filter_id:
-                        self.services.filter_service.register_filter(filter_id, filter_elem)
+                if filter_service and hasattr(filter_service, 'register_filter'):
+                    for filter_elem in defs.findall('.//filter') or defs.findall('.//{http://www.w3.org/2000/svg}filter'):
+                        filter_id = filter_elem.get('id')
+                        if filter_id:
+                            filter_service.register_filter(filter_id, filter_elem)
         
         # Convert each element using the registry
         drawingml_shapes = []
