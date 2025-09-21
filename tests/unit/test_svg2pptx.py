@@ -14,6 +14,9 @@ from lxml import etree as ET
 import tempfile
 import zipfile
 
+from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
@@ -130,6 +133,64 @@ class TestSVGToPowerPointConverter:
         assert result is not None
         # Should have called converter for each element
         assert mock_converter.convert.call_count >= 1
+
+    def test_drawingml_shapes_round_trip(self, tmp_path):
+        """DrawingML snippets should materialize as shapes in the final PPTX."""
+
+        svg_path = tmp_path / "sample.svg"
+        svg_path.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>',
+            encoding='utf-8'
+        )
+
+        pptx_path = tmp_path / "output.pptx"
+
+        drawingml_snippet = (
+            "<p:sp>"
+            "<p:nvSpPr>"
+            "<p:cNvPr id=\"2\" name=\"Rectangle 1\"/>"
+            "<p:cNvSpPr/>"
+            "<p:nvPr/>"
+            "</p:nvSpPr>"
+            "<p:spPr>"
+            "<a:xfrm>"
+            "<a:off x=\"914400\" y=\"914400\"/>"
+            "<a:ext cx=\"1828800\" cy=\"914400\"/>"
+            "</a:xfrm>"
+            "<a:prstGeom prst=\"rect\">"
+            "<a:avLst/>"
+            "</a:prstGeom>"
+            "<a:solidFill>"
+            "<a:srgbClr val=\"FF0000\"/>"
+            "</a:solidFill>"
+            "</p:spPr>"
+            "<p:style>"
+            "<a:lnRef idx=\"1\"><a:schemeClr val=\"accent1\"/></a:lnRef>"
+            "<a:fillRef idx=\"3\"><a:schemeClr val=\"accent1\"/></a:fillRef>"
+            "<a:effectRef idx=\"2\"><a:schemeClr val=\"accent1\"/></a:effectRef>"
+            "<a:fontRef idx=\"minor\"><a:schemeClr val=\"lt1\"/></a:fontRef>"
+            "</p:style>"
+            "<p:txBody>"
+            "<a:bodyPr rtlCol=\"0\" anchor=\"ctr\"/>"
+            "<a:lstStyle/>"
+            "<a:p><a:pPr algn=\"ctr\"/></a:p>"
+            "</p:txBody>"
+            "</p:sp>"
+        )
+
+        with patch('src.svg2pptx.SVGToDrawingMLConverter.convert_file', return_value=drawingml_snippet):
+            result_path = self.converter.convert_file(str(svg_path), str(pptx_path))
+
+        presentation = Presentation(result_path)
+        slide = presentation.slides[0]
+        non_placeholder_shapes = [
+            shape for shape in slide.shapes if shape.shape_type != MSO_SHAPE_TYPE.PLACEHOLDER
+        ]
+
+        assert non_placeholder_shapes, "Expected DrawingML shapes to be added to the slide"
+        assert any(
+            shape.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE for shape in non_placeholder_shapes
+        ), "Inserted DrawingML shape should remain an auto shape after reload"
 
     # Error Handling Tests
     def test_convert_svg_conversion_error(self):
