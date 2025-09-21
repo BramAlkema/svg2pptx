@@ -240,7 +240,19 @@ class ConversionServices:
             self.unit_converter.to_emu("10px")
             self.color_parser.parse("#000000")
             self.transform_parser.parse("translate(10,20)")
-            self.viewport_resolver.parse_viewbox("0 0 100 100")
+
+            viewboxes = self.viewport_resolver.parse_viewbox_strings(["0 0 100 100"])
+            try:
+                first_viewbox = viewboxes[0]
+            except (IndexError, TypeError):
+                return False
+
+            if (
+                first_viewbox is None
+                or first_viewbox["width"] <= 0
+                or first_viewbox["height"] <= 0
+            ):
+                return False
 
             return True
 
