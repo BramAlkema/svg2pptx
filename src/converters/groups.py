@@ -13,7 +13,7 @@ Handles SVG container elements with support for:
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from lxml import etree as ET
 from .base import BaseConverter, ConversionContext, ConverterRegistry
-from .transforms import TransformConverter
+# TransformConverter replaced with direct transform engine usage
 
 if TYPE_CHECKING:
     from ..services.conversion_services import ConversionServices
@@ -37,7 +37,7 @@ class GroupHandler(BaseConverter):
             raise TypeError("GroupHandler requires ConversionServices instance")
 
         super().__init__(services)
-        self.transform_converter = TransformConverter(services)
+        # Use transform engine directly from services instead of separate converter
     
     def can_convert(self, element: ET.Element) -> bool:
         """Check if this converter can handle the given element"""
@@ -63,7 +63,9 @@ class GroupHandler(BaseConverter):
     def _convert_group(self, element: ET.Element, context: ConversionContext) -> str:
         """Convert SVG group element"""
         # Get group transform
-        group_transform = self.transform_converter.get_element_transform(element)
+        # Get transform directly from element using consolidated transform engine
+        transform_attr = element.get('transform', '')
+        group_transform = self.services.transform_parser.parse_to_matrix(transform_attr) if transform_attr else None
         
         # Create new context with accumulated transform
         new_context = ConversionContext(context.svg_root, services=self.services)
@@ -85,7 +87,7 @@ class GroupHandler(BaseConverter):
         group_id = element.get('id', f'group_{context.get_next_shape_id()}')
         
         # If group has transforms or multiple children, wrap in group
-        if not group_transform.is_identity() or len(child_elements) > 1:
+        if (group_transform and not group_transform.is_identity()) or len(child_elements) > 1:
             children_xml = '\n    '.join(child_elements)
             
             return f"""<a:grpSp>
@@ -94,7 +96,7 @@ class GroupHandler(BaseConverter):
         <a:cNvGrpSpPr/>
     </a:nvGrpSpPr>
     <a:grpSpPr>
-        {self.transform_converter.get_drawingml_transform(group_transform, context)}
+        {self._get_drawingml_transform(group_transform, context) if group_transform else ''}
     </a:grpSpPr>
     {children_xml}
 </a:grpSp>"""
@@ -138,17 +140,22 @@ class GroupHandler(BaseConverter):
             return ""
         
         # Get element transform and combine with parent
-        element_transform = self.transform_converter.get_element_transform(child)
+        # Get transform directly from child element
+        transform_attr = child.get('transform', '')
+        element_transform = self.services.transform_parser.parse_to_matrix(transform_attr) if transform_attr else None
         if parent_transform and not parent_transform.is_identity():
             # Combine transforms: parent * element
-            combined_transform = parent_transform.multiply(element_transform)
+            if element_transform:
+                combined_transform = parent_transform.multiply(element_transform)
+            else:
+                combined_transform = parent_transform
             
             # Temporarily set combined transform on element for processing
-            if not combined_transform.is_identity():
+            if combined_transform and not combined_transform.is_identity():
                 child.set('transform', str(combined_transform))
         
         # Get appropriate converter for this element
-        converter = context.converter_registry.get_converter(child_tag)
+        converter = context.converter_registry.get_converter(child)
         if converter:
             return converter.convert(child, context)
         
@@ -180,13 +187,18 @@ class GroupHandler(BaseConverter):
         # Get use transform
         use_x = float(use_element.get('x', '0'))
         use_y = float(use_element.get('y', '0'))
-        use_transform = self.transform_converter.get_element_transform(use_element)
+        # Get transform directly from use element
+        transform_attr = use_element.get('transform', '')
+        use_transform = self.services.transform_parser.parse_to_matrix(transform_attr) if transform_attr else None
         
         # Create translation for x,y offset
         if use_x != 0 or use_y != 0:
-            from .transforms import Matrix
-            translation = Matrix(1, 0, 0, 1, use_x, use_y)
-            use_transform = use_transform.multiply(translation)
+            from ..transforms.core import Matrix
+            translation = Matrix.translate(use_x, use_y)
+            if use_transform:
+                use_transform = use_transform.multiply(translation)
+            else:
+                use_transform = translation
         
         # Clone the referenced element and apply use transform
         cloned_element = self._clone_element_with_transform(referenced_element, use_transform)
@@ -206,18 +218,48 @@ class GroupHandler(BaseConverter):
             cloned.append(self._clone_element_with_transform(child, transform))
         
         # Apply transform
-        if not transform.is_identity():
+        if transform and not transform.is_identity():
             existing_transform = cloned.get('transform', '')
             if existing_transform:
                 # Combine transforms
-                existing = self.transform_converter.parse_transform(existing_transform)
-                combined = transform.multiply(existing)
-                cloned.set('transform', str(combined))
+                existing = self.services.transform_parser.parse_to_matrix(existing_transform)
+                if existing:
+                    combined = transform.multiply(existing)
+                    cloned.set('transform', str(combined))
+                else:
+                    cloned.set('transform', str(transform))
             else:
                 cloned.set('transform', str(transform))
         
         return cloned
-    
+
+    def _get_drawingml_transform(self, matrix, context, base_x: float = 0, base_y: float = 0,
+                               base_width: float = 100, base_height: float = 100) -> str:
+        """Convert transformation matrix to DrawingML xfrm element (simplified version)"""
+        if not matrix or matrix.is_identity():
+            # No transformation needed - return basic positioning
+            x_emu = context.to_emu(f"{base_x}px")
+            y_emu = context.to_emu(f"{base_y}px")
+            width_emu = context.to_emu(f"{base_width}px")
+            height_emu = context.to_emu(f"{base_height}px")
+
+            return f"""<a:xfrm>
+    <a:off x="{x_emu}" y="{y_emu}"/>
+    <a:ext cx="{width_emu}" cy="{height_emu}"/>
+</a:xfrm>"""
+
+        # For complex transforms, extract translation and apply basic transform
+        tx, ty = matrix.get_translation()
+        x_emu = context.to_emu(f"{base_x + tx}px")
+        y_emu = context.to_emu(f"{base_y + ty}px")
+        width_emu = context.to_emu(f"{base_width}px")
+        height_emu = context.to_emu(f"{base_height}px")
+
+        return f"""<a:xfrm>
+    <a:off x="{x_emu}" y="{y_emu}"/>
+    <a:ext cx="{width_emu}" cy="{height_emu}"/>
+</a:xfrm>"""
+
     def extract_definitions(self, svg_root: ET.Element) -> Dict[str, ET.Element]:
         """Extract all definition elements (gradients, patterns, etc.) from SVG"""
         definitions = {}
