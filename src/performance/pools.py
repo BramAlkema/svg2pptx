@@ -244,40 +244,18 @@ class ConverterPool:
         self._register_common_utilities()
     
     def _register_common_utilities(self):
-        """Register commonly used utility pools."""
-        from ..units import UnitConverter
-        from ..colors import ColorParser
-        from ..transforms import TransformParser
-        from ..viewbox import ViewportResolver
-        
-        # Register utility pools with factories
-        self.utility_pool.register_pool(
-            'unit_converter',
-            factory=lambda: UnitConverter(),
-            max_size=3,
-            init_size=1
-        )
-        
-        self.utility_pool.register_pool(
-            'color_parser', 
-            factory=lambda: ColorParser(),
-            max_size=3,
-            init_size=1
-        )
-        
-        self.utility_pool.register_pool(
-            'transform_engine',
-            factory=lambda: TransformParser(),
-            max_size=3,
-            init_size=1
-        )
-        
-        self.utility_pool.register_pool(
-            'viewport_handler',
-            factory=lambda: ViewportResolver(),
-            max_size=3,
-            init_size=1
-        )
+        """Register commonly used utility pools.
+
+        This method is deprecated and maintained for backward compatibility.
+        With ConversionServices dependency injection, utility pooling is now
+        handled at the service level rather than requiring manual registration.
+
+        All utility creation and pooling is now managed by ConversionServices
+        which provides singleton instances and proper lifecycle management.
+        """
+        # Migrated to ConversionServices - no manual utility registration needed
+        # ConversionServices provides centralized dependency injection for all utilities
+        pass
     
     def register_converter_pool(self, 
                               converter_class: Type,
