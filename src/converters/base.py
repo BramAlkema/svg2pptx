@@ -21,17 +21,24 @@ except ImportError:
     # Fallback for test environments
     from src.services.conversion_services import ConversionServices, ConversionConfig
 
+# Import fluent API for unit conversions
+try:
+    from ..units import unit, units
+except ImportError:
+    # Fallback for test environments
+    from src.units import unit, units
+
 # Import types for type hints only
 if TYPE_CHECKING:
     try:
         from ..units import UnitConverter
-        from ..colors import ColorParser
-        from ..transforms import TransformParser
+        from ..color import Color
+        from ..transforms import Transform
         from ..viewbox import ViewportResolver
     except ImportError:
         from src.units import UnitConverter
-        from src.colors import ColorParser
-        from src.transforms import TransformParser
+        from src.color import Color
+        from src.transforms import Transform
         from src.viewbox import ViewportResolver
 
 logger = logging.getLogger(__name__)
@@ -96,20 +103,33 @@ class CoordinateSystem:
 
 
 class ConversionContext:
-    """Context object passed through the conversion pipeline."""
+    """Context object passed through the conversion pipeline.
+
+    ✅ FIXED: ConversionContext.viewport_context now populated from SVG metadata
+    =========================================================================
+    IMPLEMENTATION: ConversionContext._create_viewport_context extracts viewBox
+    and dimensions from svg_root during __init__ and creates proper viewport_context
+    with SVG's actual dimensions. Falls back to 800×600 default when no metadata available.
+    """
 
     def __init__(self, svg_root: Optional[ET.Element] = None, services: ConversionServices = None):
-        """Initialize ConversionContext with required services.
+        """Initialize ConversionContext with backward compatibility.
 
         Args:
             svg_root: Optional SVG root element
-            services: ConversionServices instance (required)
-
-        Raises:
-            TypeError: If services is not provided
+            services: ConversionServices instance (auto-created if None for backward compatibility)
         """
+        # Backward compatibility: auto-create services if not provided
         if services is None:
-            raise TypeError("ConversionContext requires ConversionServices instance")
+            from ..services.conversion_services import ConversionServices
+            services = ConversionServices.create_default()
+            # Log warning about deprecated usage
+            import logging
+            logging.warning(
+                "ConversionContext created without explicit ConversionServices. "
+                "This usage is deprecated and will be removed in future versions. "
+                "Please provide ConversionServices explicitly."
+            )
 
         self.coordinate_system: Optional[CoordinateSystem] = None
         self.gradients: Dict[str, Dict] = {}
@@ -124,10 +144,12 @@ class ConversionContext:
 
         # Use services for all service access
         self.services = services
-        self.unit_converter = services.unit_converter
-        self.viewport_handler = services.viewport_resolver
-        # Simplified viewport context initialization
-        self.viewport_context = None
+
+        # Initialize viewport context from SVG metadata
+        self.viewport_context = self._create_viewport_context(svg_root)
+
+        # Initialize coordinate system from SVG metadata
+        self.coordinate_system = self._create_coordinate_system(svg_root)
 
         # Initialize converter registry for nested conversions
         self.converter_registry: Optional[ConverterRegistry] = None
@@ -206,23 +228,266 @@ class ConversionContext:
             merged.update(group)
         return merged
     
+    def _get_fluent_context_kwargs(self) -> Dict[str, Any]:
+        """Extract viewport context attributes for fluent API context."""
+        context_kwargs = {}
+        if self.viewport_context:
+            for attr in ['dpi', 'font_size', 'width', 'height', 'parent_width', 'parent_height']:
+                if hasattr(self.viewport_context, attr):
+                    value = getattr(self.viewport_context, attr)
+                    if value is not None:
+                        context_kwargs[attr] = value
+        return context_kwargs
+
     def to_emu(self, value, axis: str = 'x') -> int:
-        """Convert SVG length to EMUs using the context's unit converter."""
-        return self.unit_converter.to_emu(value, self.viewport_context, axis)
-    
+        """Convert SVG length to EMUs using the context's unit converter with fluent API."""
+        unit_value = unit(value, self.services.unit_converter)
+        context_kwargs = self._get_fluent_context_kwargs()
+        if context_kwargs:
+            unit_value = unit_value.with_context(**context_kwargs)
+        return unit_value.to_emu(axis)
+
     def to_pixels(self, value, axis: str = 'x') -> float:
-        """Convert SVG length to pixels using the context's unit converter."""
-        return self.unit_converter.to_pixels(value, self.viewport_context, axis)
-    
+        """Convert SVG length to pixels using the context's unit converter with fluent API."""
+        unit_value = unit(value, self.services.unit_converter)
+        context_kwargs = self._get_fluent_context_kwargs()
+        if context_kwargs:
+            unit_value = unit_value.with_context(**context_kwargs)
+        return unit_value.to_pixels(axis)
+
     def batch_convert_to_emu(self, values: Dict[str, Any]) -> Dict[str, int]:
-        """Convert multiple SVG lengths to EMUs in one call."""
-        return self.unit_converter.batch_convert(values, self.viewport_context)
+        """Convert multiple SVG lengths to EMUs in one call using fluent API."""
+        batch_converter = units(values, self.services.unit_converter)
+        context_kwargs = self._get_fluent_context_kwargs()
+        if context_kwargs:
+            batch_converter = batch_converter.with_context(**context_kwargs)
+        return batch_converter.to_emu()
     
     def update_viewport_context(self, **kwargs):
         """Update viewport context parameters."""
         for key, value in kwargs.items():
             if hasattr(self.viewport_context, key):
                 setattr(self.viewport_context, key, value)
+
+    def _create_viewport_context(self, svg_root: Optional[ET.Element]):
+        """
+        Create viewport context from SVG root element metadata.
+
+        Extracts viewBox and dimensions from SVG to create proper viewport context
+        for percentage and relative unit resolution.
+
+        Args:
+            svg_root: Optional SVG root element
+
+        Returns:
+            ConversionContext for viewport operations, or None if no SVG provided
+        """
+        if svg_root is None:
+            return None
+
+        # Extract viewport dimensions from SVG
+        width, height = self._extract_svg_dimensions(svg_root)
+
+        # Create viewport context using the unit converter service
+        return self.services.unit_converter.create_context(
+            width=width,
+            height=height,
+            dpi=96.0,  # Standard web DPI
+            font_size=16.0  # Default font size
+        )
+
+    def _create_coordinate_system(self, svg_root: Optional[ET.Element]) -> Optional[CoordinateSystem]:
+        """
+        Create coordinate system from SVG root element.
+
+        Args:
+            svg_root: Optional SVG root element
+
+        Returns:
+            CoordinateSystem instance or None if no SVG provided
+        """
+        if svg_root is None:
+            return None
+
+        # Extract SVG dimensions and viewBox
+        width, height = self._extract_svg_dimensions(svg_root)
+
+        # Try to extract viewBox, fallback to dimensions
+        viewbox_attr = svg_root.get('viewBox')
+        if viewbox_attr:
+            try:
+                viewbox_parts = viewbox_attr.strip().split()
+                if len(viewbox_parts) == 4:
+                    viewbox = tuple(float(x) for x in viewbox_parts)
+                else:
+                    viewbox = (0, 0, width, height)
+            except (ValueError, AttributeError):
+                viewbox = (0, 0, width, height)
+        else:
+            viewbox = (0, 0, width, height)
+
+        # Create and return coordinate system
+        return CoordinateSystem(viewbox)
+
+    def _extract_svg_dimensions(self, svg_root: ET.Element) -> tuple[float, float]:
+        """
+        Extract width and height from SVG element.
+
+        Tries multiple strategies:
+        1. viewBox attribute parsing
+        2. width/height attributes
+        3. Default fallback (800x600)
+
+        Args:
+            svg_root: SVG root element
+
+        Returns:
+            Tuple of (width, height) in pixels
+        """
+        # Strategy 1: Try viewBox first
+        viewbox = svg_root.get('viewBox')
+        if viewbox:
+            try:
+                # Use the high-performance ViewportResolver for parsing
+                from ..viewbox import ViewportResolver
+                import numpy as np
+
+                resolver = ViewportResolver()
+                parsed = resolver.parse_viewbox_strings(np.array([viewbox]))
+                if len(parsed) > 0 and len(parsed[0]) >= 4:
+                    # viewBox format: "x y width height"
+                    _, _, width, height = parsed[0][:4]
+                    return float(width), float(height)
+            except (ImportError, Exception):
+                # Fallback parsing
+                try:
+                    parts = viewbox.replace(',', ' ').split()
+                    if len(parts) >= 4:
+                        _, _, width, height = parts[:4]
+                        return float(width), float(height)
+                except (ValueError, IndexError):
+                    pass
+
+        # Strategy 2: Try width/height attributes
+        try:
+            width_attr = svg_root.get('width', '')
+            height_attr = svg_root.get('height', '')
+
+            if width_attr and height_attr:
+                # Parse length values (remove units for now)
+                width = self._parse_svg_length(width_attr)
+                height = self._parse_svg_length(height_attr)
+                if width > 0 and height > 0:
+                    return width, height
+        except (ValueError, TypeError):
+            pass
+
+        # Strategy 3: Default fallback
+        return 800.0, 600.0
+
+    def _parse_svg_length(self, length_str: str) -> float:
+        """
+        Parse SVG length value, removing units and returning numeric value.
+
+        Args:
+            length_str: Length string like "100px", "50%", "20"
+
+        Returns:
+            Numeric value (units stripped)
+        """
+        if not length_str:
+            return 0.0
+
+        length_str = length_str.strip()
+        if not length_str:
+            return 0.0
+
+        # Remove common SVG units
+        for unit in ['px', 'pt', 'em', 'ex', 'pc', 'mm', 'cm', 'in', '%']:
+            if length_str.endswith(unit):
+                length_str = length_str[:-len(unit)]
+                break
+
+        try:
+            return float(length_str)
+        except ValueError:
+            return 0.0
+
+    def _extract_css_transforms(self, element: ET.Element) -> str:
+        """Extract transform from CSS style attribute."""
+        style = element.get('style', '')
+        if not style:
+            return ''
+
+        # Parse style attribute for CSS transforms
+        styles = self.parse_style_attribute(style)
+        return styles.get('transform', '')
+
+    def apply_transform_to_points(self, transform: str, points: list,
+                                 viewport_context: Optional = None) -> list:
+        """Apply transform to a list of coordinate points."""
+        if not transform or not transform.strip() or not points:
+            return points
+
+        try:
+            matrix = self.services.transform_parser.parse_to_matrix(transform, viewport_context)
+
+            transformed_points = []
+            for point in points:
+                if len(point) >= 2:
+                    x, y = point[0], point[1]
+                    if math.isfinite(x) and math.isfinite(y):
+                        new_x, new_y = matrix.transform_point(x, y)
+                        if math.isfinite(new_x) and math.isfinite(new_y):
+                            transformed_points.append((new_x, new_y))
+                        else:
+                            transformed_points.append((x, y))  # Keep original if transform fails
+                    else:
+                        transformed_points.append((x, y))  # Keep original if invalid
+                else:
+                    transformed_points.append(point)  # Keep original if malformed
+
+            return transformed_points
+
+        except Exception as e:
+            logger.warning(f"Batch transform failed for '{transform}': {e}, returning original points")
+            return points
+
+    def get_cumulative_transform(self, element: ET.Element, viewport_context: Optional = None):
+        """Get cumulative transform matrix including parent transforms."""
+        transforms = []
+        current = element
+
+        # Collect transforms from element and all parents
+        while current is not None:
+            transform_attr = current.get('transform', '')
+            if transform_attr:
+                transforms.append(transform_attr)
+
+            # Check for CSS transforms as well
+            css_transform = self._extract_css_transforms(current)
+            if css_transform:
+                transforms.append(css_transform)
+
+            current = current.getparent()
+
+        if not transforms:
+            return self.services.transform_parser.parse_to_matrix('', viewport_context)
+
+        try:
+            # Apply transforms in reverse order (parent to child)
+            engine = self.services.transform_parser.__class__()
+            for transform_str in reversed(transforms):
+                engine.apply_combined_transforms([transform_str])
+
+            # Convert to legacy Matrix format
+            m = engine.current_matrix
+            from ..transforms.core import Matrix
+            return Matrix(m[0,0], m[1,0], m[0,1], m[1,1], m[0,2], m[1,2])
+
+        except Exception as e:
+            logger.warning(f"Cumulative transform calculation failed: {e}, using identity")
+            return self.services.transform_parser.parse_to_matrix('', viewport_context)
 
 
 class BaseConverter(ABC):
@@ -234,7 +499,7 @@ class BaseConverter(ABC):
     must inherit from this class and implement the abstract methods.
 
     The converter uses ConversionServices for dependency injection, providing
-    access to UnitConverter, ColorParser, TransformParser, and ViewportResolver
+    access to UnitConverter, ColorParser, Transform, and ViewportResolver
     through both direct service access and backward-compatible property accessors.
 
     Example:
@@ -263,6 +528,12 @@ class BaseConverter(ABC):
         Raises:
             TypeError: If services parameter is missing or invalid
         """
+        if services is None:
+            raise ValueError(
+                "ConversionServices is required. Use ConversionServices.create_default() "
+                "if you need default services."
+            )
+
         self.logger = logging.getLogger(self.__class__.__name__)
         self.services = services
 
@@ -273,24 +544,9 @@ class BaseConverter(ABC):
         self._filter_bounds_calculator = None
 
     @property
-    def unit_converter(self) -> 'UnitConverter':
-        """Get UnitConverter from services for backward compatibility."""
-        return self.services.unit_converter
-
-    @property
-    def color_parser(self) -> 'ColorParser':
-        """Get ColorParser from services for backward compatibility."""
-        return self.services.color_parser
-
-    @property
-    def transform_parser(self) -> 'TransformParser':
-        """Get TransformParser from services for backward compatibility."""
-        return self.services.transform_parser
-
-    @property
-    def viewport_resolver(self) -> 'ViewportResolver':
-        """Get ViewportResolver from services for backward compatibility."""
-        return self.services.viewport_resolver
+    def color_parser(self):
+        """Get Color class from services for direct color creation."""
+        return self.services.color_factory
 
     def validate_services(self) -> bool:
         """Validate that all required services are available."""
@@ -392,51 +648,104 @@ class BaseConverter(ABC):
         
         return default
     
-    def apply_transform(self, transform: str, x: float, y: float, 
+    def apply_transform(self, transform: str, x: float, y: float,
                        viewport_context: Optional = None) -> Tuple[float, float]:
-        """Apply SVG transform to coordinates using the universal TransformParser."""
-        if not transform:
+        """Apply SVG transform to coordinates using the enhanced TransformEngine."""
+        if not transform or not transform.strip():
             return x, y
-        
-        # Parse transform to matrix using the sophisticated TransformParser
-        matrix = self.transform_parser.parse_to_matrix(transform, viewport_context)
-        
-        # Apply matrix transformation to point
-        return matrix.transform_point(x, y)
+
+        try:
+            # Parse transform to Matrix using the enhanced Transform engine
+            matrix = self.services.transform_parser.parse_to_matrix(transform, viewport_context)
+
+            # Validate input coordinates
+            if not (isinstance(x, (int, float)) and isinstance(y, (int, float))):
+                logger.warning(f"Invalid coordinates for transform: x={x}, y={y}")
+                return x, y
+
+            if not (math.isfinite(x) and math.isfinite(y)):
+                logger.warning(f"Non-finite coordinates for transform: x={x}, y={y}")
+                return x, y
+
+            # Apply transformation to point using Matrix
+            result = matrix.transform_point(x, y)
+
+            # Validate result coordinates
+            if not (math.isfinite(result[0]) and math.isfinite(result[1])):
+                logger.warning(f"Transform produced non-finite result for '{transform}': {result}")
+                return x, y  # Return original coordinates as fallback
+
+            return result
+
+        except Exception as e:
+            logger.warning(f"Transform application failed for '{transform}': {e}, using original coordinates")
+            return x, y
     
     def get_element_transform_matrix(self, element: ET.Element, viewport_context: Optional = None):
-        """Get the transformation matrix for an SVG element."""
+        """Get the Matrix for an SVG element with enhanced error handling."""
         transform_attr = element.get('transform', '')
+
+        # Check both transform attribute and CSS transform property
         if not transform_attr:
-            return self.transform_parser.parse_to_matrix('', viewport_context)  # Identity matrix
-        
-        return self.transform_parser.parse_to_matrix(transform_attr, viewport_context)
+            style_transforms = self._extract_css_transforms(element)
+            if style_transforms:
+                transform_attr = style_transforms
+
+        if not transform_attr:
+            return self.services.transform_parser.parse_to_matrix('', viewport_context)  # Identity transform
+
+        try:
+            matrix = self.services.transform_parser.parse_to_matrix(transform_attr, viewport_context)
+
+            # Validate the resulting transform
+            if matrix.is_identity():
+                return matrix
+
+            # Additional validation for non-identity transforms
+            try:
+                # Test the transform with a simple point transformation
+                test_result = matrix.transform_point(0, 0)
+                if not (math.isfinite(test_result[0]) and math.isfinite(test_result[1])):
+                    logger.warning(f"Transform produces invalid results, using identity")
+                    return self.services.transform_parser.parse_to_matrix('', viewport_context)
+            except Exception:
+                logger.warning(f"Transform validation failed, using identity")
+                return self.services.transform_parser.parse_to_matrix('', viewport_context)
+
+            return matrix
+
+        except Exception as e:
+            logger.warning(f"Failed to parse transform '{transform_attr}': {e}, using identity")
+            return self.services.transform_parser.parse_to_matrix('', viewport_context)
     
     def parse_color(self, color: str) -> str:
-        """Parse SVG color to DrawingML hex format using ColorParser."""
+        """Parse SVG color to DrawingML hex format using modern Color system."""
         if not color or color == 'none':
             return None
-            
+
         # Handle gradient/pattern references directly
         if color.startswith('url('):
             return color
-        
-        # Use the sophisticated ColorParser for all other colors
-        color_info = self.color_parser.parse(color)
-        if color_info is None:
+
+        # Use the modern Color system for all other colors
+        try:
+            from ..color import Color
+            color_obj = Color(color)
+
+            # Handle transparent colors
+            if color_obj._alpha == 0:
+                return None
+
+            # Get RGB values and return hex format compatible with existing code
+            r, g, b = color_obj.rgb()
+            return f'{r:02X}{g:02X}{b:02X}'
+        except Exception:
             return None
-            
-        # Handle transparent colors
-        if color_info.alpha == 0:
-            return None
-            
-        # Return hex format compatible with existing code
-        return f'{color_info.red:02X}{color_info.green:02X}{color_info.blue:02X}'
     
     
     def to_emu(self, value: str, axis: str = 'x') -> int:
         """Convert SVG length to EMUs using the unit converter."""
-        return self.unit_converter.to_emu(value, axis=axis)
+        return self.services.unit_converter.to_emu(value, axis=axis)
     
     def parse_length(self, value: str, viewport_size: float = 100) -> float:
         """Parse SVG length value with units."""
@@ -491,11 +800,11 @@ class BaseConverter(ABC):
                 ref_id = ref_id[1:]
                 
             if context and ref_id in context.gradients:
-                # Handle gradient fill
-                return self.generate_gradient_fill(context.gradients[ref_id], opacity)
+                # Handle gradient fill - pass both gradient data and ID
+                return self.generate_gradient_fill_with_id(ref_id, context.gradients[ref_id], opacity)
             elif context and ref_id in context.patterns:
-                # Handle pattern fill
-                return self.generate_pattern_fill(context.patterns[ref_id], opacity)
+                # Handle pattern fill - pass both pattern data and ID
+                return self.generate_pattern_fill_with_id(ref_id, context.patterns[ref_id], opacity)
             else:
                 # Fallback to gray if reference not found
                 gray_color = self.parse_color('gray')
@@ -526,8 +835,11 @@ class BaseConverter(ABC):
         if not color:
             return ''
             
-        # Convert stroke width to EMUs using proper unit converter
-        width_emu = self.unit_converter.to_emu(f"{stroke_width}px")
+        # Convert stroke width to EMUs with minimum thickness for PowerPoint visibility
+        stroke_width_value = float(stroke_width)
+        # Apply minimum stroke width of 2px and scale factor for better PowerPoint visibility
+        adjusted_stroke_width = max(stroke_width_value * 2.0, 2.0)
+        width_emu = self.services.unit_converter.to_emu(f"{adjusted_stroke_width}px")
         
         alpha = int(float(opacity) * 100000)
         
@@ -546,17 +858,49 @@ class BaseConverter(ABC):
                 </a:solidFill>
             </a:ln>'''
     
+    def generate_gradient_fill_with_id(self, gradient_id: str, gradient: Dict, opacity: str = '1') -> str:
+        """Generate DrawingML gradient fill using gradient ID and data."""
+        if gradient_id and self.services.gradient_service:
+            # Use gradient service to convert to DrawingML
+            gradient_content = self.services.gradient_service.get_gradient_content(gradient_id)
+            if gradient_content:
+                return gradient_content
+
+        # Fallback to gray if gradient not found or service unavailable
+        gray_color = self.parse_color('gray')
+        return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
+
     def generate_gradient_fill(self, gradient: Dict, opacity: str = '1') -> str:
-        """Generate DrawingML gradient fill."""
-        # This is a placeholder - should be implemented in GradientConverter
-        gray_color = self.parse_color('gray')
-        return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
+        """Generate DrawingML gradient fill (legacy method)."""
+        # Extract gradient ID from the gradient dictionary
+        gradient_id = gradient.get('id', '')
+        if not gradient_id:
+            # Try to get ID from href attribute (gradient references)
+            gradient_id = gradient.get('href', '').replace('#', '')
+
+        return self.generate_gradient_fill_with_id(gradient_id, gradient, opacity)
     
-    def generate_pattern_fill(self, pattern: Dict, opacity: str = '1') -> str:
-        """Generate DrawingML pattern fill."""
-        # This is a placeholder - patterns are complex in DrawingML
+    def generate_pattern_fill_with_id(self, pattern_id: str, pattern: Dict, opacity: str = '1') -> str:
+        """Generate DrawingML pattern fill using pattern ID and data."""
+        if pattern_id and self.services.pattern_service:
+            # Use pattern service to convert to DrawingML
+            pattern_content = self.services.pattern_service.get_pattern_content(pattern_id)
+            if pattern_content:
+                return pattern_content
+
+        # Fallback to gray if pattern not found or service unavailable
         gray_color = self.parse_color('gray')
         return f'<a:solidFill><a:srgbClr val="{gray_color}"/></a:solidFill>'
+
+    def generate_pattern_fill(self, pattern: Dict, opacity: str = '1') -> str:
+        """Generate DrawingML pattern fill (legacy method)."""
+        # Extract pattern ID from the pattern dictionary
+        pattern_id = pattern.get('id', '')
+        if not pattern_id:
+            # Try to get ID from href attribute (pattern references)
+            pattern_id = pattern.get('href', '').replace('#', '')
+
+        return self.generate_pattern_fill_with_id(pattern_id, pattern, opacity)
 
     # Filter processing methods
 
@@ -628,7 +972,18 @@ class BaseConverter(ABC):
 
         filter_id = filter_ref['filter_id']
 
-        # Look for filter definition in SVG document
+        # Try FilterService first for better integration
+        if hasattr(self.services, 'filter_service') and self.services.filter_service:
+            filter_content = self.services.filter_service.get_filter_content(filter_id, context)
+            if filter_content:
+                return {
+                    'id': filter_id,
+                    'type': 'filter_service',
+                    'content': filter_content,
+                    'drawingml': filter_content
+                }
+
+        # Fall back to legacy filter parsing
         if context.svg_root is not None:
             # Find filter definition by ID
             filter_elements = context.svg_root.xpath(f"//svg:filter[@id='{filter_id}']",
@@ -802,6 +1157,21 @@ class BaseConverter(ABC):
 
     def _apply_native_dml_filter(self, filter_def: Dict[str, Any], content: str, context: ConversionContext) -> str:
         """Apply filter using native DrawingML effects."""
+        # Handle FilterService-generated content
+        if filter_def.get('type') == 'filter_service':
+            drawingml = filter_def.get('drawingml', '')
+            if drawingml and not drawingml.strip().startswith('<!--'):
+                # Insert filter effects into content (handle both PowerPoint and DrawingML formats)
+                if '</p:spPr>' in content:
+                    return content.replace('</p:spPr>', f'{drawingml}</p:spPr>')
+                elif '</a:spPr>' in content:
+                    return content.replace('</a:spPr>', f'{drawingml}</a:spPr>')
+                else:
+                    # Fallback: append to content
+                    return content + drawingml
+            else:
+                return content
+
         if filter_def['type'] == 'feGaussianBlur':
             blur_radius = float(filter_def.get('stdDeviation', '0'))
             blur_radius_emu = int(blur_radius * 12700)  # Convert to EMUs
@@ -1416,13 +1786,8 @@ class ConverterRegistry:
         except ImportError as e:
             logger.warning(f"Failed to import GradientConverter: {e}")
         
-        # Register transform converter
-        try:
-            from .transforms import TransformConverter
-            self.register_class(TransformConverter)
-            converters_registered.append('TransformConverter')
-        except ImportError as e:
-            logger.warning(f"Failed to import TransformConverter: {e}")
+        # Transform converter replaced with direct transform engine usage
+        # TransformConverter is no longer registered as a separate converter
         
         # Register group handler
         try:
@@ -1460,34 +1825,50 @@ class ConverterRegistry:
             converters_registered.append('FilterConverter')
         except ImportError as e:
             logger.warning(f"Failed to import FilterConverter: {e}")
-        
+
+        # Register animation converter (new modular system)
+        try:
+            from .animation_converter import AnimationConverter
+            self.register_class(AnimationConverter)
+            converters_registered.append('AnimationConverter')
+        except ImportError as e:
+            logger.warning(f"Failed to import AnimationConverter: {e}")
+
         logger.info(f"Registered {len(converters_registered)} converters: {', '.join(converters_registered)}")
 
 
 class ConverterRegistryFactory:
-    """Factory for creating and configuring converter registries."""
-    
+    """Factory for creating and configuring converter registries.
+
+    FIXED: ConversionServices now properly passed through to registry
+    =================================================================
+    The factory now accepts services parameter and passes it to
+    ConverterRegistry constructor, ensuring custom DPI/color parsers
+    and other services flow through to all converters.
+    """
+
     _registry_instance = None
     
     @classmethod
-    def get_registry(cls, force_new: bool = False) -> ConverterRegistry:
+    def get_registry(cls, services: Optional[ConversionServices] = None, force_new: bool = False) -> ConverterRegistry:
         """Get a configured converter registry instance.
-        
+
         Args:
+            services: ConversionServices container for dependency injection (optional)
             force_new: If True, create a new registry instead of using singleton
-            
+
         Returns:
             Configured ConverterRegistry instance
         """
         if force_new or cls._registry_instance is None:
-            registry = ConverterRegistry()
+            registry = ConverterRegistry(services=services)
             registry.register_default_converters()
-            
+
             if not force_new:
                 cls._registry_instance = registry
-                
+
             return registry
-        
+
         return cls._registry_instance
     
     @classmethod

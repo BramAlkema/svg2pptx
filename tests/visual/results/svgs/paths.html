@@ -1,0 +1,35 @@
+
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>SVG Test: paths</title>
+                <style>
+                    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+                    .container { display: flex; flex-direction: column; align-items: center; }
+                    .svg-container { border: 1px solid #ccc; padding: 10px; background: white; }
+                    h1 { color: #333; margin-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>SVG Source: paths</h1>
+                    <div class="svg-container">
+                        
+        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 50 150 Q 100 50 150 150 T 250 150"
+                  stroke="blue" stroke-width="3" fill="none"/>
+            <path d="M 50 200 C 50 100, 200 100, 200 200 S 350 300, 350 200"
+                  stroke="red" stroke-width="3" fill="none"/>
+            <path d="M 100 250 L 150 200 L 200 250 L 175 275 L 125 275 Z"
+                  fill="yellow" stroke="orange" stroke-width="2"/>
+            <text x="200" y="50" text-anchor="middle" font-family="Arial" font-size="18" fill="darkblue">
+                Path Test
+            </text>
+        </svg>
+        
+                    </div>
+                </div>
+            </body>
+            </html>
+            

@@ -1,0 +1,16 @@
+
+        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50, 50)">
+                <rect x="0" y="0" width="60" height="40" fill="lightblue" stroke="blue"/>
+                <text x="30" y="55" text-anchor="middle" font-size="12">Translated</text>
+            </g>
+            <g transform="rotate(45, 200, 100)">
+                <rect x="170" y="70" width="60" height="40" fill="lightgreen" stroke="green"/>
+                <text x="200" y="115" text-anchor="middle" font-size="12">Rotated</text>
+            </g>
+            <g transform="scale(1.5) translate(200, 100)">
+                <rect x="0" y="0" width="40" height="30" fill="lightcoral" stroke="red"/>
+                <text x="20" y="45" text-anchor="middle" font-size="8">Scaled</text>
+            </g>
+        </svg>
+        

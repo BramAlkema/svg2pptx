@@ -1,0 +1,103 @@
+# Google Slides Visual Testing Configuration
+
+google_slides:
+  # Authentication configuration
+  auth:
+    method: service_account  # Options: service_account, oauth2
+    credentials_path: ~/.config/svg2pptx/google_credentials.json
+    # For OAuth2, you can also specify:
+    # client_id: your-oauth-client-id
+    # client_secret: your-oauth-client-secret
+    # redirect_uri: http://localhost:8080
+
+  # Conversion settings
+  conversion:
+    folder_id: null  # Optional Google Drive folder ID for organizing test files
+    cleanup_after_test: true  # Delete presentations after testing
+    delete_original_pptx: true  # Delete uploaded PPTX after conversion
+
+  # Screenshot capture settings
+  screenshot:
+    format: png  # Options: png, jpeg, webp
+    quality: 100  # Image quality (1-100)
+    method: hybrid  # Options: api, playwright, hybrid
+    timeout: 30  # Timeout in seconds
+    size: large  # Options: small, medium, large, xlarge
+
+    # Playwright-specific settings
+    playwright:
+      viewport_width: 1920
+      viewport_height: 1080
+      wait_time: 3.0  # Seconds to wait for page load
+      full_page: false  # Capture full page vs viewport
+
+  # Validation settings
+  validation:
+    tolerance: 0.95  # Similarity threshold (0.0-1.0)
+    generate_diffs: true  # Generate visual diff images
+    fail_on_mismatch: true  # Fail tests when similarity below threshold
+
+    # Comparison methods to use
+    methods:
+      structural_similarity: true
+      pixel_difference: true
+      histogram_correlation: true
+      perceptual_hash: true
+
+  # Output directories (relative to project root)
+  output:
+    screenshots_dir: tests/visual/screenshots
+    references_dir: tests/visual/references
+    reports_dir: tests/visual/reports
+    temp_dir: tests/visual/temp
+
+  # Batch processing settings
+  batch:
+    max_concurrent: 3  # Maximum concurrent test runs
+    progress_reporting: true
+    continue_on_error: true
+    generate_summary_report: true
+
+# Test environment settings
+environment:
+  # Test data paths
+  test_svg_dir: tests/visual/test_data/svg
+  sample_svg_files:
+    - simple_shapes.svg
+    - complex_gradients.svg
+    - text_formatting.svg
+    - animations.svg
+
+  # Performance settings
+  timeouts:
+    conversion: 120  # Seconds for SVG to PPTX conversion
+    upload: 60      # Seconds for Drive upload
+    slides_conversion: 60  # Seconds for PPTX to Slides conversion
+    screenshot: 30   # Seconds per screenshot
+    validation: 10   # Seconds per image comparison
+
+  # Retry settings
+  retries:
+    api_calls: 3
+    screenshot_capture: 2
+    validation: 1
+
+# Logging configuration
+logging:
+  level: INFO  # Options: DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: tests/visual/logs/google_slides_tests.log
+  max_file_size: 10MB
+  backup_count: 5
+
+# Integration settings
+integration:
+  # CI/CD settings
+  ci_mode: false  # Enable simplified output for CI environments
+  artifact_retention_days: 7
+
+  # GitHub Actions specific
+  github_actions:
+    upload_artifacts: true
+    comment_on_pr: true
+    fail_on_regression: true

@@ -1,0 +1,26 @@
+# W3C SVG Compliance Testing Dependencies
+
+# Core dependencies from main project
+playwright>=1.40.0
+pillow>=10.0.0
+opencv-python>=4.8.0
+scikit-image>=0.22.0
+numpy>=1.20.0
+requests>=2.31.0
+
+# LibreOffice automation
+psutil>=5.9.0
+
+# SVG rendering for references
+cairosvg>=2.7.0
+
+# System monitoring
+pathlib>=1.0.1
+
+# Data processing
+pyyaml>=6.0
+
+# Testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-html>=3.1.0

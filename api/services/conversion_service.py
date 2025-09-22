@@ -223,7 +223,7 @@ class ConversionService:
         try:
             from src.preprocessing import create_optimizer
             from src.converters import ConverterRegistry, CoordinateSystem, ConversionContext
-            from testbench import PPTXBuilder
+            from src.core.pptx_builder import PPTXBuilder
             import tempfile
             import os
             from lxml import etree as ET
@@ -251,10 +251,14 @@ class ConversionService:
             root = ET.fromstring(optimized_svg)
             logger.info("Parsed optimized SVG structure")
             
-            # Step 3: Initialize modular conversion system
-            registry = ConverterRegistry()
+            # Step 3: Initialize modular conversion system with services
+            from src.services.conversion_services import ConversionServices
+
+            # Create default services for conversion
+            services = ConversionServices.create_default()
+            registry = ConverterRegistry(services=services)
             registry.register_default_converters()
-            
+
             # Extract viewBox or use default coordinates
             viewbox = root.get('viewBox')
             if viewbox:
@@ -264,17 +268,19 @@ class ConversionService:
                 width = float(root.get('width', '800').replace('px', ''))
                 height = float(root.get('height', '600').replace('px', ''))
                 coord_system = CoordinateSystem((0, 0, width, height))
-            
+
             # Step 4: Convert SVG using modular converters
-            context = ConversionContext(root)
+            # ConversionContext now requires services parameter
+            context = ConversionContext(services=services, svg_root=root)
             context.coordinate_system = coord_system
             context.converter_registry = registry
-            
+
             logger.info("Converting SVG using modular converter system")
             drawingml_elements = []
-            
+
             for element in root:
-                converter = registry.get_converter(element.tag)
+                # get_converter expects ET.Element, not element tag
+                converter = registry.get_converter(element)
                 if converter:
                     try:
                         result = converter.convert(element, context)
@@ -291,13 +297,16 @@ class ConversionService:
             if not drawingml_elements:
                 logger.warning("No elements converted with modular system, falling back to legacy converter")
                 from src.svg2drawingml import SVGToDrawingMLConverter
-                
+                from src.services.conversion_services import ConversionServices
+
                 # Save optimized SVG to temporary file for legacy converter
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False, encoding='utf-8') as f:
                     f.write(optimized_svg)
                     temp_svg_path = f.name
-                
-                converter = SVGToDrawingMLConverter()
+
+                # Create converter with default services
+                services = ConversionServices.create_default()
+                converter = SVGToDrawingMLConverter(services=services)
                 drawingml = converter.convert_file(temp_svg_path)
                 logger.info(f"Fallback conversion completed ({len(drawingml)} characters)")
             
@@ -355,7 +364,7 @@ class ConversionService:
     def _create_error_pptx(self, source_url: str, error_message: str) -> bytes:
         """Create a minimal PPTX file indicating conversion error."""
         try:
-            from testbench import PPTXBuilder
+            from src.core.pptx_builder import PPTXBuilder
             import tempfile
             import os
             
@@ -520,7 +529,7 @@ class ConversionService:
             
             # Test with a simple SVG URL
             test_url = "https://example.com/test.svg"
-            result = self.convert_and_upload(test_url)
+            result = self.convert_and_upload(svg_url=test_url)
             
             logger.info("Conversion service test completed successfully")
             return {

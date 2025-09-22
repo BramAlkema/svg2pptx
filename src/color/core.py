@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 import threading
 
+from .color_spaces import ColorSpaceConverter
+
 # Global cache for color conversions to improve performance
 _conversion_cache = {}
 _cache_lock = threading.Lock()
@@ -118,12 +120,15 @@ class Color:
                 pass  # Standard hex format
             elif len(hex_val) == 8:
                 # Hex with alpha #rrggbbaa
-                self._alpha = int(hex_val[6:8], 16) / 255.0
+                self._alpha = round(int(hex_val[6:8], 16) / 255.0, 10)  # Round to avoid floating point issues
                 hex_val = hex_val[:6]
             else:
                 raise ValueError(f"Invalid hex color format: {value}")
 
-            self._rgb = tuple(int(hex_val[i:i+2], 16) for i in (0, 2, 4))
+            try:
+                self._rgb = tuple(int(hex_val[i:i+2], 16) for i in (0, 2, 4))
+            except ValueError:
+                raise ValueError(f"Invalid hex color format: {value}")
 
         elif value.startswith('rgb'):
             # RGB/RGBA functional notation
@@ -133,7 +138,11 @@ class Color:
                 match = re.match(pattern, value)
                 if match:
                     r, g, b, a = match.groups()
-                    self._rgb = (int(r), int(g), int(b))
+                    r, g, b = int(r), int(g), int(b)
+                    # Validate RGB ranges
+                    if not all(0 <= c <= 255 for c in [r, g, b]):
+                        raise ValueError(f"Invalid rgb format: {value}")
+                    self._rgb = (r, g, b)
                     self._alpha = float(a)
                 else:
                     raise ValueError(f"Invalid rgba format: {value}")
@@ -142,7 +151,11 @@ class Color:
                 match = re.match(pattern, value)
                 if match:
                     r, g, b = match.groups()
-                    self._rgb = (int(r), int(g), int(b))
+                    r, g, b = int(r), int(g), int(b)
+                    # Validate RGB ranges
+                    if not all(0 <= c <= 255 for c in [r, g, b]):
+                        raise ValueError(f"Invalid rgb format: {value}")
+                    self._rgb = (r, g, b)
                 else:
                     raise ValueError(f"Invalid rgb format: {value}")
 
@@ -150,20 +163,28 @@ class Color:
             # HSL/HSLA functional notation - convert to RGB
             import re
             if value.startswith('hsla'):
-                pattern = r'hsla\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*,\s*([\d.]+)\s*\)'
+                pattern = r'hsla\s*\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*,\s*([\d.]+)\s*\)'
                 match = re.match(pattern, value)
                 if match:
                     h, s, l, a = match.groups()
-                    self._rgb = self._hsl_to_rgb(int(h), int(s)/100, int(l)/100)
+                    h, s, l = float(h), float(s), float(l)
+                    # Validate HSL ranges
+                    if not (0 <= h <= 360 and 0 <= s <= 100 and 0 <= l <= 100):
+                        raise ValueError(f"Invalid hsl format: {value}")
+                    self._rgb = self._hsl_to_rgb(h, s/100, l/100)
                     self._alpha = float(a)
                 else:
                     raise ValueError(f"Invalid hsla format: {value}")
             else:
-                pattern = r'hsl\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)'
+                pattern = r'hsl\s*\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)'
                 match = re.match(pattern, value)
                 if match:
                     h, s, l = match.groups()
-                    self._rgb = self._hsl_to_rgb(int(h), int(s)/100, int(l)/100)
+                    h, s, l = float(h), float(s), float(l)
+                    # Validate HSL ranges
+                    if not (0 <= h <= 360 and 0 <= s <= 100 and 0 <= l <= 100):
+                        raise ValueError(f"Invalid hsl format: {value}")
+                    self._rgb = self._hsl_to_rgb(h, s/100, l/100)
                 else:
                     raise ValueError(f"Invalid hsl format: {value}")
 
@@ -172,15 +193,15 @@ class Color:
             self._alpha = 0.0
 
         else:
-            # Named colors - basic set for now
-            named_colors = {
-                'red': (255, 0, 0), 'green': (0, 128, 0), 'blue': (0, 0, 255),
-                'white': (255, 255, 255), 'black': (0, 0, 0), 'gray': (128, 128, 128),
-                'yellow': (255, 255, 0), 'cyan': (0, 255, 255), 'magenta': (255, 0, 255),
-                'orange': (255, 165, 0), 'purple': (128, 0, 128), 'brown': (165, 42, 42)
-            }
-            if value in named_colors:
-                self._rgb = named_colors[value]
+            # CSS named colors using comprehensive lookup table
+            from .css_colors import get_css_color
+
+            css_color = get_css_color(value)
+            if css_color:
+                self._rgb = css_color
+                # Handle transparent specially
+                if value.lower() == 'transparent':
+                    self._alpha = 0.0
             else:
                 raise ValueError(f"Unknown color name: {value}")
 
@@ -260,13 +281,13 @@ class Color:
         Darken the color by reducing lightness in Lab space.
 
         Args:
-            amount: Amount to darken (0.0-1.0)
+            amount: Amount to darken (0.0-1.0, values > 1.0 are clamped)
 
         Returns:
             New Color instance with reduced lightness
         """
-        if not 0.0 <= amount <= 1.0:
-            raise ValueError(f"Amount must be between 0.0 and 1.0, got {amount}")
+        # Clamp amount to valid range instead of raising error
+        amount = max(0.0, min(1.0, amount))
 
         try:
             # Convert to Lab for perceptually uniform lightness adjustment
@@ -297,13 +318,13 @@ class Color:
         Lighten the color by increasing lightness in Lab space.
 
         Args:
-            amount: Amount to lighten (0.0-1.0)
+            amount: Amount to lighten (0.0-1.0, values > 1.0 are clamped)
 
         Returns:
             New Color instance with increased lightness
         """
-        if not 0.0 <= amount <= 1.0:
-            raise ValueError(f"Amount must be between 0.0 and 1.0, got {amount}")
+        # Clamp amount to valid range instead of raising error
+        amount = max(0.0, min(1.0, amount))
 
         try:
             # Convert to Lab for perceptually uniform lightness adjustment
@@ -376,6 +397,24 @@ class Color:
         """
         return self.saturate(-amount)
 
+    def adjust_hue(self, degrees: float) -> Color:
+        """
+        Adjust hue by rotating in HSL color space.
+
+        Args:
+            degrees: Degrees to rotate hue (-360 to 360)
+
+        Returns:
+            New Color instance with adjusted hue
+        """
+        hsl = self._rgb_to_hsl(*self._rgb)
+        new_hue = (hsl[0] + degrees) % 360
+        new_rgb = self._hsl_to_rgb(new_hue, hsl[1], hsl[2])
+
+        new_color = Color(new_rgb)
+        new_color._alpha = self._alpha
+        return new_color
+
     def _rgb_to_hsl(self, r: int, g: int, b: int) -> tuple:
         """Convert RGB to HSL."""
         r, g, b = r / 255.0, g / 255.0, b / 255.0
@@ -402,6 +441,7 @@ class Color:
                 h = ((r - g) / diff + 4) / 6.0
 
         return (h * 360, s, l)
+
 
     def temperature(self, kelvin: int) -> Color:
         """
@@ -559,6 +599,37 @@ class Color:
         """
         return self._rgb_to_hsl(*self._rgb)
 
+    def oklab(self) -> Tuple[float, float, float]:
+        """
+        Get OKLab representation - a modern perceptually uniform color space.
+
+        OKLab is designed for better color manipulation and mixing than
+        traditional color spaces like sRGB or CIE Lab. It provides more
+        accurate lightness perception and smoother color transitions.
+
+        Returns:
+            OKLab values as (L, a, b) tuple where:
+            - L: Lightness (0.0-1.0)
+            - a: Green-red component
+            - b: Blue-yellow component
+        """
+        return ColorSpaceConverter.rgb_to_oklab(*self._rgb)
+
+    def oklch(self) -> Tuple[float, float, float]:
+        """
+        Get OKLCh representation - cylindrical form of OKLab.
+
+        OKLCh provides intuitive control over lightness, chroma, and hue
+        while maintaining the perceptual advantages of OKLab.
+
+        Returns:
+            OKLCh values as (L, C, h) tuple where:
+            - L: Lightness (0.0-1.0)
+            - C: Chroma (saturation)
+            - h: Hue angle in degrees (0-360)
+        """
+        return ColorSpaceConverter.rgb_to_oklch(*self._rgb)
+
     def to_xyz(self) -> Tuple[float, float, float]:
         """
         Get CIE XYZ representation using colorspacious.
@@ -634,13 +705,17 @@ class Color:
             return False
         return self._rgb == other._rgb and abs(self._alpha - other._alpha) < 1e-6
 
+    def __hash__(self) -> int:
+        """Make Color hashable for use in sets and dicts."""
+        return hash((self._rgb, round(self._alpha, 6)))
+
     def __str__(self) -> str:
         """String representation."""
         return f"Color({self.hex(include_hash=True)})"
 
     def __repr__(self) -> str:
         """Detailed string representation."""
-        return f"Color(rgb={self._rgb}, alpha={self._alpha})"
+        return f"Color({self.hex(include_hash=True)}, alpha={self._alpha})"
 
     @classmethod
     def from_lab(cls, l: float, a: float, b: float, alpha: float = 1.0) -> Color:
@@ -727,5 +802,61 @@ class Color:
 
         color = cls((0, 0, 0))  # Temporary RGB values
         color._rgb = color._hsl_to_rgb(h, s, l)
+        color._alpha = alpha
+        return color
+
+    @classmethod
+    def from_oklab(cls, l: float, a: float, b: float, alpha: float = 1.0) -> Color:
+        """
+        Create Color from OKLab values.
+
+        Args:
+            l: Lightness (0.0-1.0)
+            a: Green-red component
+            b: Blue-yellow component
+            alpha: Alpha channel (0.0-1.0)
+
+        Returns:
+            New Color instance
+
+        Raises:
+            ValueError: If values are outside valid ranges
+        """
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError(f"Alpha must be between 0.0 and 1.0, got {alpha}")
+        if not 0.0 <= l <= 1.0:
+            raise ValueError(f"Lightness must be between 0.0 and 1.0, got {l}")
+
+        color = cls((0, 0, 0))  # Temporary RGB values
+        color._rgb = ColorSpaceConverter.oklab_to_rgb(l, a, b)
+        color._alpha = alpha
+        return color
+
+    @classmethod
+    def from_oklch(cls, l: float, c: float, h: float, alpha: float = 1.0) -> Color:
+        """
+        Create Color from OKLCh values.
+
+        Args:
+            l: Lightness (0.0-1.0)
+            c: Chroma (saturation)
+            h: Hue angle in degrees (0-360)
+            alpha: Alpha channel (0.0-1.0)
+
+        Returns:
+            New Color instance
+
+        Raises:
+            ValueError: If values are outside valid ranges
+        """
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError(f"Alpha must be between 0.0 and 1.0, got {alpha}")
+        if not 0.0 <= l <= 1.0:
+            raise ValueError(f"Lightness must be between 0.0 and 1.0, got {l}")
+        if c < 0.0:
+            raise ValueError(f"Chroma must be non-negative, got {c}")
+
+        color = cls((0, 0, 0))  # Temporary RGB values
+        color._rgb = ColorSpaceConverter.oklch_to_rgb(l, c, h)
         color._alpha = alpha
         return color

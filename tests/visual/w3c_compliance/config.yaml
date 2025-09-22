@@ -1,0 +1,164 @@
+# W3C SVG Compliance Testing Configuration
+
+w3c_compliance:
+  # Test suite selection
+  test_suite:
+    type: basic  # Options: basic, comprehensive, features, custom
+    w3c_version: "1.1"  # W3C SVG version to test against
+    max_tests: 50  # Limit for performance (null for no limit)
+
+    # Custom test selection (when type=custom)
+    custom_tests: []
+
+    # Feature-specific testing (when type=features)
+    categories:
+      - basic-shapes
+      - paths
+      - text
+      - gradients
+      - transforms
+
+  # LibreOffice configuration
+  libreoffice:
+    headless: true
+    port: 8100
+    startup_timeout: 30
+    screenshot_delay: 2.0
+    page_transition_delay: 1.0
+
+    # Additional LibreOffice arguments
+    additional_args:
+      - "--nolockcheck"
+      - "--nodefault"
+
+  # Visual comparison settings
+  comparison:
+    tolerance: 0.85  # Overall similarity threshold
+    enable_detailed_analysis: true
+    reference_resolution: [1920, 1080]
+
+    # Comparison algorithms weights
+    weights:
+      structural_similarity: 0.25
+      pixel_accuracy: 0.20
+      color_fidelity: 0.15
+      geometry_preservation: 0.20
+      text_readability: 0.10
+      visual_quality: 0.10
+
+  # Compliance level thresholds
+  compliance_thresholds:
+    full: 0.95
+    high: 0.85
+    medium: 0.70
+    low: 0.50
+    fail: 0.0
+
+  # Output configuration
+  output:
+    base_dir: tests/visual/w3c_compliance/results
+    save_intermediate_files: true
+    generate_html_report: true
+    generate_json_report: true
+
+    # Image output settings
+    image_format: png
+    image_quality: 95
+    generate_comparison_images: true
+    generate_diff_images: true
+
+  # Performance settings
+  performance:
+    max_concurrent_tests: 1  # LibreOffice limitation
+    test_timeout: 300  # 5 minutes per test
+    memory_limit_mb: 2048
+    cleanup_temp_files: true
+
+  # Reporting settings
+  reporting:
+    include_screenshots: true
+    include_metrics: true
+    include_feature_analysis: true
+    show_passed_tests: true
+    show_failed_tests: true
+
+    # Report sections
+    sections:
+      - executive_summary
+      - compliance_distribution
+      - category_analysis
+      - feature_analysis
+      - detailed_results
+      - recommendations
+
+# Test data management
+test_data:
+  # W3C test suite URLs
+  download_sources:
+    "1.1": "https://www.w3.org/Graphics/SVG/Test/20110816/archives/W3C_SVG_11_F2_test_suite.zip"
+    "2.0": "https://github.com/w3c/svgwg/archive/refs/heads/main.zip"
+    "tiny": "https://www.w3.org/Graphics/SVG/Test/20110816/archives/W3C_SVG_11_Tiny_test_suite.zip"
+
+  # Local storage
+  cache_dir: data/w3c_tests/cache
+  suite_dir: data/w3c_tests/suites
+
+  # Cache settings
+  cache_expiry_days: 30
+  verify_checksums: true
+
+# Browser automation
+browser:
+  # Playwright settings
+  headless: true
+  timeout: 60000  # 60 seconds
+  viewport:
+    width: 1920
+    height: 1080
+
+  # Browser arguments
+  chromium_args:
+    - --no-sandbox
+    - --disable-dev-shm-usage
+    - --disable-gpu
+    - --disable-extensions
+
+# Logging configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: tests/visual/w3c_compliance/logs/compliance_tests.log
+  max_file_size: 10MB
+  backup_count: 5
+
+  # Component-specific logging
+  components:
+    w3c_test_manager: INFO
+    libreoffice_controller: INFO
+    svg_pptx_comparator: INFO
+    compliance_runner: INFO
+
+# Integration settings
+integration:
+  # CI/CD settings
+  ci_mode: false
+  fail_on_low_compliance: true
+  minimum_compliance_score: 0.70
+
+  # Artifact management
+  save_artifacts: true
+  artifact_retention_days: 30
+  compress_artifacts: true
+
+# Advanced features
+advanced:
+  # Machine learning enhancements (future)
+  enable_ml_analysis: false
+  ml_model_path: null
+
+  # Custom validation rules
+  custom_validators: []
+
+  # Plugin system
+  plugins_dir: tests/visual/w3c_compliance/plugins
+  enabled_plugins: []
