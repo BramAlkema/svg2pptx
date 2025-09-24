@@ -45,14 +45,15 @@ class TextToPathConverter(BaseConverter):
         'max_cache_size': 256
     }
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, services: 'ConversionServices', config: Optional[Dict[str, Any]] = None):
         """
-        Initialize TextToPathConverter with configuration.
-        
+        Initialize TextToPathConverter with services and configuration.
+
         Args:
+            services: ConversionServices container with initialized services
             config: Configuration dictionary for converter behavior
         """
-        super().__init__()
+        super().__init__(services)
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         
         # Initialize core components
@@ -212,9 +213,9 @@ class TextToPathConverter(BaseConverter):
         try:
             x_emu, y_emu = context.coordinate_system.svg_to_emu(text_props['x'], text_props['y'])
             
-            # Calculate text box dimensions (approximate)
-            text_width = max(len(text_content) * text_props['font_size'] * 0.6, 100)
-            text_height = text_props['font_size'] * 1.2
+            # Calculate text box dimensions using enhanced estimation
+            text_width = max(len(text_content) * text_props['font_size'] * 0.55, 100)  # Improved ratio
+            text_height = text_props['font_size'] * 1.25  # Better line height
             
             # Adjust position based on text anchor
             text_width_emu = self.to_emu(f"{text_width}px")
@@ -307,11 +308,10 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'font-family:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('font-family:'):
-                    font_family = part.split(':', 1)[1].strip()
-                    families.extend(self._parse_font_family_list(font_family))
-                    break
+            # Use canonical StyleParser for font family extraction
+            font_family = self.services.style_parser.extract_font_family(style)
+            if font_family:
+                families.extend(self._parse_font_family_list(font_family))
         
         return families if families else ['Arial']
     
@@ -334,10 +334,10 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'font-size:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('font-size:'):
-                    font_size = part.split(':', 1)[1].strip()
-                    return self._parse_font_size(font_size)
+            # Use canonical StyleParser for font size extraction
+            font_size = self.services.style_parser.get_property_value(style, 'font-size')
+            if font_size:
+                return self._parse_font_size(font_size)
         
         return 12.0  # Default font size
     
@@ -378,10 +378,10 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'font-weight:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('font-weight:'):
-                    weight = part.split(':', 1)[1].strip()
-                    return weight_map.get(weight, 400)
+            # Use canonical StyleParser for font weight extraction
+            weight = self.services.style_parser.get_property_value(style, 'font-weight')
+            if weight:
+                return weight_map.get(weight, 400)
         
         return 400
     
@@ -395,10 +395,10 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'font-style:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('font-style:'):
-                    style_val = part.split(':', 1)[1].strip()
-                    return 'italic' if style_val in ['italic', 'oblique'] else 'normal'
+            # Use canonical StyleParser for font style extraction
+            style_val = self.services.style_parser.get_property_value(style, 'font-style')
+            if style_val:
+                return 'italic' if style_val in ['italic', 'oblique'] else 'normal'
         
         return 'normal'
     
@@ -414,13 +414,12 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'fill:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('fill:'):
-                    fill = part.split(':', 1)[1].strip()
-                    if fill and fill != 'none':
-                        color = self.parse_color(fill)
-                        if color:
-                            return f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
+            # Use canonical StyleParser for fill extraction
+            fill = self.services.style_parser.get_property_value(style, 'fill')
+            if fill and fill != 'none':
+                color = self.parse_color(fill)
+                if color:
+                    return f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
         
         # Default black
         return '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>'
@@ -437,10 +436,10 @@ class TextToPathConverter(BaseConverter):
         # Check style attribute
         style = element.get('style', '')
         if 'text-decoration:' in style:
-            for part in style.split(';'):
-                if part.strip().startswith('text-decoration:'):
-                    decoration_val = part.split(':', 1)[1].strip()
-                    decorations.extend(decoration_val.split())
+            # Use canonical StyleParser for text decoration extraction
+            decoration_val = self.services.style_parser.get_property_value(style, 'text-decoration')
+            if decoration_val:
+                decorations.extend(decoration_val.split())
         
         return decorations
     

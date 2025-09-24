@@ -1,41 +1,44 @@
 #!/usr/bin/env python3
 """
-SVG Path Element Converter for SVG2PPTX
+SVG Path Element Converter for SVG2PPTX (New Implementation)
 
-This converter handles SVG <path> elements by leveraging the high-performance
-PathEngine from src.paths to process path data and convert it to PowerPoint
-DrawingML format.
+This converter handles SVG <path> elements using the new modular PathSystem
+architecture. It replaces the legacy PathConverter with a clean implementation
+that leverages the industry-standard arc conversion and coordinate transformation.
 
 Key Features:
-- Utilizes the optimized PathEngine for 100-300x performance improvement
-- Handles all SVG path commands (M, L, C, S, Q, T, A, Z)
-- Converts complex Bezier curves to PowerPoint-compatible format
-- Supports path transformations and coordinate system mapping
-- Integrates with the dependency injection converter architecture
+- Uses the new PathSystem for complete path processing pipeline
+- Industry-standard arc-to-bezier conversion (a2c algorithm)
+- Proper coordinate transformation through CoordinateSystem
+- Clean separation of concerns with modular architecture
+- Comprehensive error handling and validation
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from lxml import etree as ET
 import logging
 
 from .base import BaseConverter, ConversionContext
-from ..paths import PathEngine, PathData
+from ..paths import PathSystem, PathProcessingResult, create_path_system
+
+if TYPE_CHECKING:
+    from ..services.conversion_services import ConversionServices
 
 logger = logging.getLogger(__name__)
 
 
 class PathConverter(BaseConverter):
     """
-    Converts SVG <path> elements to PowerPoint DrawingML using the optimized PathEngine.
+    Converts SVG <path> elements to PowerPoint DrawingML using the new PathSystem.
 
-    This converter serves as the bridge between the high-performance PathEngine
-    and the converter architecture, providing seamless integration of path
-    processing into the conversion pipeline.
+    This converter provides a clean interface between the SVG conversion pipeline
+    and the new modular path processing system. It handles viewport configuration,
+    coordinate transformation, and PowerPoint XML generation.
     """
 
     supported_elements = ['path']
 
-    def __init__(self, services):
+    def __init__(self, services: 'ConversionServices'):
         """
         Initialize PathConverter with dependency injection.
 
@@ -44,12 +47,16 @@ class PathConverter(BaseConverter):
         """
         super().__init__(services)
 
-        # Initialize the high-performance path engine
-        self.path_engine = PathEngine()
+        # Initialize the new path system (will be configured per conversion)
+        self._path_system = None
 
         # Track conversion statistics
         self._paths_converted = 0
         self._total_commands = 0
+        self._arc_conversions = 0
+        self._processing_time_ms = 0.0
+
+        logger.debug("PathConverter initialized with new PathSystem architecture")
 
     def can_convert(self, element: ET.Element) -> bool:
         """Check if this converter can handle the given element."""
@@ -74,238 +81,239 @@ class PathConverter(BaseConverter):
                 logger.warning("Empty path data encountered")
                 return ""
 
-            # Use PathEngine for high-performance processing
-            processed_path = self._process_path_with_engine(path_data, context)
+            # Configure path system for this conversion context
+            self._configure_path_system(context)
 
-            # Generate DrawingML shape
-            drawingml = self._generate_drawingml_shape(processed_path, element, context)
+            # Extract style attributes
+            style_attributes = self._extract_style_attributes(element)
 
-            # Track statistics
-            self._paths_converted += 1
-            self._total_commands += len(processed_path.commands) if hasattr(processed_path, 'commands') else 0
+            # Process path using the new system
+            result = self._path_system.process_path(path_data, style_attributes)
 
-            return drawingml
+            # Update statistics
+            self._update_conversion_statistics(result)
+
+            # Return the generated PowerPoint XML
+            return result.shape_xml
 
         except Exception as e:
             logger.error(f"Failed to convert path element: {e}")
             return f"<!-- Error converting path: {e} -->"
 
-    def _process_path_with_engine(self, path_data: str, context: ConversionContext) -> PathData:
+    def _configure_path_system(self, context: ConversionContext):
         """
-        Process path data using the high-performance PathEngine.
+        Configure the path system based on the conversion context.
 
         Args:
-            path_data: SVG path 'd' attribute content
-            context: Conversion context for coordinate transformation
-
-        Returns:
-            Processed PathData object
+            context: Conversion context with viewport and coordinate information
         """
-        # Determine viewport and target dimensions for coordinate transformation
-        viewport = None
-        target_size = None
+        try:
+            # Extract viewport information from context
+            viewport_width = 800  # Default values
+            viewport_height = 600
+            viewbox = None
 
-        if context.coordinate_system:
-            viewport = (
-                context.coordinate_system.viewbox[0],
-                context.coordinate_system.viewbox[1],
-                context.coordinate_system.viewbox[2],
-                context.coordinate_system.viewbox[3]
+            if context.coordinate_system:
+                # Get actual dimensions from coordinate system
+                if hasattr(context.coordinate_system, 'slide_width'):
+                    # Convert from EMU to pixels (approximate)
+                    viewport_width = context.coordinate_system.slide_width / 12700
+                    viewport_height = context.coordinate_system.slide_height / 12700
+
+                if hasattr(context.coordinate_system, 'viewbox'):
+                    viewbox = context.coordinate_system.viewbox
+
+            # Create and configure path system
+            self._path_system = create_path_system(
+                viewport_width=viewport_width,
+                viewport_height=viewport_height,
+                viewbox=viewbox,
+                enable_logging=False  # Disable for performance
             )
-            target_size = (
-                context.coordinate_system.slide_width,
-                context.coordinate_system.slide_height
-            )
 
-        # Use PathEngine for optimized processing
-        result = self.path_engine.process_path(
-            path_data,
-            viewport=viewport,
-            target_size=target_size
-        )
+            logger.debug(f"Path system configured: {viewport_width}×{viewport_height}, viewbox={viewbox}")
 
-        # Extract PathData from result
-        if isinstance(result, dict) and 'path_data' in result:
-            return result['path_data']
-        else:
-            # Fallback: parse directly if process_path returns unexpected format
-            return self.path_engine.parse_path(path_data)
+        except Exception as e:
+            logger.warning(f"Failed to configure path system from context: {e}")
+            # Fallback to default configuration
+            self._path_system = create_path_system(800, 600, enable_logging=False)
 
-    def _generate_drawingml_shape(self, path_data: PathData, element: ET.Element,
-                                 context: ConversionContext) -> str:
+    def _extract_style_attributes(self, element: ET.Element) -> Dict[str, Any]:
         """
-        Generate PowerPoint DrawingML shape from processed path data.
+        Extract style attributes from SVG element for PowerPoint styling.
 
         Args:
-            path_data: Processed path data from PathEngine
-            element: Original SVG path element
-            context: Conversion context
+            element: SVG path element
 
         Returns:
-            DrawingML XML string
+            Dictionary of style attributes
         """
-        shape_id = context.get_next_shape_id()
+        style_attrs = {}
 
-        # Extract styling attributes
-        fill = self.get_attribute_with_style(element, 'fill', 'black')
-        stroke = self.get_attribute_with_style(element, 'stroke', 'none')
-        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
-        opacity = self.get_attribute_with_style(element, 'opacity', '1')
+        # Extract common styling attributes
+        style_attrs['fill'] = self.get_attribute_with_style(element, 'fill', 'black')
+        style_attrs['stroke'] = self.get_attribute_with_style(element, 'stroke', 'none')
+        style_attrs['stroke-width'] = self.get_attribute_with_style(element, 'stroke-width', '1')
+        style_attrs['opacity'] = self.get_attribute_with_style(element, 'opacity', '1')
 
-        # Generate fill and stroke elements
-        fill_xml = self.generate_fill(fill, opacity, context)
-        stroke_xml = self.generate_stroke(stroke, stroke_width, opacity, context)
+        # Additional attributes that might be useful
+        stroke_dasharray = self.get_attribute_with_style(element, 'stroke-dasharray', 'none')
+        if stroke_dasharray != 'none':
+            style_attrs['stroke-dasharray'] = stroke_dasharray
 
-        # Convert PathData to DrawingML path
-        path_xml = self._convert_path_data_to_drawingml(path_data)
+        stroke_linecap = self.get_attribute_with_style(element, 'stroke-linecap', 'butt')
+        if stroke_linecap != 'butt':
+            style_attrs['stroke-linecap'] = stroke_linecap
 
-        # Calculate bounding box for shape positioning
-        bounds = self._calculate_path_bounds(path_data)
+        stroke_linejoin = self.get_attribute_with_style(element, 'stroke-linejoin', 'miter')
+        if stroke_linejoin != 'miter':
+            style_attrs['stroke-linejoin'] = stroke_linejoin
 
-        # Generate complete shape XML
-        shape_xml = f'''
-        <p:sp>
-            <p:nvSpPr>
-                <p:cNvPr id="{shape_id}" name="Path{shape_id}"/>
-                <p:cNvSpPr/>
-                <p:nvPr/>
-            </p:nvSpPr>
-            <p:spPr>
-                <a:xfrm>
-                    <a:off x="{int(bounds['x'])}" y="{int(bounds['y'])}"/>
-                    <a:ext cx="{int(bounds['width'])}" cy="{int(bounds['height'])}"/>
-                </a:xfrm>
-                <a:custGeom>
-                    <a:avLst/>
-                    <a:gdLst/>
-                    <a:ahLst/>
-                    <a:cxnLst/>
-                    <a:rect l="0" t="0" r="{int(bounds['width'])}" b="{int(bounds['height'])}"/>
-                    <a:pathLst>
-                        <a:path w="{int(bounds['width'])}" h="{int(bounds['height'])}" fill="norm">
-                            {path_xml}
-                        </a:path>
-                    </a:pathLst>
-                </a:custGeom>
-                {fill_xml}
-                {stroke_xml}
-            </p:spPr>
-            <p:style>
-                <a:lnRef idx="1"><a:schemeClr val="accent1"/></a:lnRef>
-                <a:fillRef idx="3"><a:schemeClr val="accent1"/></a:fillRef>
-                <a:effectRef idx="2"><a:schemeClr val="accent1"/></a:effectRef>
-                <a:fontRef idx="minor"><a:schemeClr val="lt1"/></a:fontRef>
-            </p:style>
-            <p:txBody>
-                <a:bodyPr rtlCol="0" anchor="ctr"/>
-                <a:lstStyle/>
-                <a:p>
-                    <a:pPr algn="ctr"/>
-                    <a:endParaRPr lang="en-US"/>
-                </a:p>
-            </p:txBody>
-        </p:sp>'''
+        return style_attrs
 
-        return shape_xml.strip()
-
-    def _convert_path_data_to_drawingml(self, path_data: PathData) -> str:
+    def _update_conversion_statistics(self, result: PathProcessingResult):
         """
-        Convert PathData to DrawingML path commands.
+        Update conversion statistics based on processing result.
 
         Args:
-            path_data: Processed path data from PathEngine
-
-        Returns:
-            DrawingML path XML string
+            result: Path processing result from PathSystem
         """
-        # This is a simplified conversion - the real implementation would
-        # need to handle the NumPy arrays and structured data from PathEngine
-        # For now, provide basic path structure
-
-        if hasattr(path_data, 'commands') and path_data.commands is not None:
-            # Use the structured command data from PathEngine
-            return self._convert_structured_commands(path_data.commands)
-        else:
-            # Fallback to basic path representation
-            return '<a:moveTo><a:pt x="0" y="0"/></a:moveTo><a:lnTo><a:pt x="100" y="100"/></a:lnTo>'
-
-    def _convert_structured_commands(self, commands) -> str:
-        """Convert structured command array to DrawingML."""
-        drawingml_commands = []
-
-        # Convert PathEngine commands to DrawingML
-        # PathEngine command format: (command_type, subtype, point_count, coordinates_array)
-        for command in commands:
-            if len(command) >= 4:
-                cmd_type = int(command[0])
-                subtype = int(command[1])
-                point_count = int(command[2])
-                coords = command[3]  # numpy array
-
-                # Convert based on command type
-                if cmd_type == 0:  # MoveTo
-                    x, y = int(coords[0]), int(coords[1])
-                    drawingml_commands.append(f'<a:moveTo><a:pt x="{x}" y="{y}"/></a:moveTo>')
-
-                elif cmd_type == 1:  # LineTo
-                    x, y = int(coords[0]), int(coords[1])
-                    drawingml_commands.append(f'<a:lnTo><a:pt x="{x}" y="{y}"/></a:lnTo>')
-
-                elif cmd_type == 6:  # QuadTo (quadratic Bezier)
-                    x1, y1, x2, y2 = int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3])
-                    drawingml_commands.append(f'<a:quadBezTo><a:pt x="{x1}" y="{y1}"/><a:pt x="{x2}" y="{y2}"/></a:quadBezTo>')
-
-                elif cmd_type == 7:  # CubicTo (cubic Bezier)
-                    if len(coords) >= 6:
-                        x1, y1, x2, y2, x3, y3 = int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3]), int(coords[4]), int(coords[5])
-                        drawingml_commands.append(f'<a:cubicBezTo><a:pt x="{x1}" y="{y1}"/><a:pt x="{x2}" y="{y2}"/><a:pt x="{x3}" y="{y3}"/></a:cubicBezTo>')
-
-                elif cmd_type == 8:  # Close path
-                    drawingml_commands.append('<a:close/>')
-
-        return ''.join(drawingml_commands) or '<a:moveTo><a:pt x="0" y="0"/></a:moveTo>'
-
-    def _calculate_path_bounds(self, path_data: PathData) -> Dict[str, float]:
-        """
-        Calculate bounding box for the path.
-
-        Args:
-            path_data: Processed path data
-
-        Returns:
-            Dictionary with x, y, width, height bounds
-        """
-        # Use PathEngine's bounds calculation if available
-        if hasattr(path_data, 'bounds') and path_data.bounds is not None:
-            bounds = path_data.bounds
-            return {
-                'x': bounds[0],
-                'y': bounds[1],
-                'width': bounds[2] - bounds[0],
-                'height': bounds[3] - bounds[1]
-            }
-
-        # Fallback bounds
-        return {
-            'x': 0.0,
-            'y': 0.0,
-            'width': 100.0,
-            'height': 100.0
-        }
+        self._paths_converted += 1
+        self._total_commands += result.processing_stats['command_count']
+        self._arc_conversions += result.processing_stats['arc_count']
+        self._processing_time_ms += result.processing_stats['processing_time_ms']
 
     def get_conversion_statistics(self) -> Dict[str, Any]:
-        """Get statistics about path conversion performance."""
+        """
+        Get conversion statistics for performance monitoring.
+
+        Returns:
+            Dictionary with conversion statistics
+        """
+        avg_processing_time = (
+            self._processing_time_ms / self._paths_converted
+            if self._paths_converted > 0 else 0.0
+        )
+
         return {
             'paths_converted': self._paths_converted,
             'total_commands': self._total_commands,
-            'average_commands_per_path': (
+            'arc_conversions': self._arc_conversions,
+            'total_processing_time_ms': self._processing_time_ms,
+            'average_processing_time_ms': avg_processing_time,
+            'commands_per_path': (
                 self._total_commands / self._paths_converted
-                if self._paths_converted > 0 else 0
-            ),
-            'path_engine_cache_stats': self.path_engine.get_cache_stats() if hasattr(self.path_engine, 'get_cache_stats') else {}
+                if self._paths_converted > 0 else 0.0
+            )
         }
 
     def reset_statistics(self):
         """Reset conversion statistics."""
         self._paths_converted = 0
         self._total_commands = 0
+        self._arc_conversions = 0
+        self._processing_time_ms = 0.0
+
+    def validate_path_before_conversion(self, path_data: str) -> bool:
+        """
+        Validate path data before attempting conversion.
+
+        Args:
+            path_data: SVG path 'd' attribute content
+
+        Returns:
+            True if path data is valid, False otherwise
+        """
+        try:
+            # Use a temporary path system for validation
+            if not self._path_system:
+                temp_system = create_path_system(800, 600, enable_logging=False)
+                return temp_system.validate_path_data(path_data)
+            else:
+                return self._path_system.validate_path_data(path_data)
+        except Exception:
+            return False
+
+    def get_supported_path_commands(self) -> list:
+        """
+        Get list of supported SVG path commands.
+
+        Returns:
+            List of supported command letters
+        """
+        if not self._path_system:
+            temp_system = create_path_system(800, 600, enable_logging=False)
+            return temp_system.get_supported_commands()
+        else:
+            return self._path_system.get_supported_commands()
+
+    def configure_arc_quality(self, max_segment_angle: float = 90.0, error_tolerance: float = 0.01):
+        """
+        Configure arc conversion quality parameters.
+
+        Args:
+            max_segment_angle: Maximum angle per arc segment in degrees
+            error_tolerance: Maximum acceptable error in coordinate units
+        """
+        if self._path_system:
+            self._path_system.configure_arc_quality(max_segment_angle, error_tolerance)
+        else:
+            logger.warning("Path system not configured yet - arc quality will be set on next conversion")
+
+    def process_batch_paths(self, path_specs: list) -> list:
+        """
+        Process multiple paths in batch for efficiency.
+
+        Args:
+            path_specs: List of dictionaries with 'path_data' and optional 'style_attributes'
+
+        Returns:
+            List of PowerPoint XML strings
+        """
+        if not self._path_system:
+            logger.error("Path system not configured - configure with conversion context first")
+            return []
+
+        try:
+            results = self._path_system.process_multiple_paths(path_specs)
+
+            # Update statistics for batch
+            for result in results:
+                self._update_conversion_statistics(result)
+
+            # Extract shape XML from results
+            return [result.shape_xml for result in results]
+
+        except Exception as e:
+            logger.error(f"Batch path processing failed: {e}")
+            return []
+
+    def get_path_system_info(self) -> Dict[str, Any]:
+        """
+        Get information about the configured path system.
+
+        Returns:
+            Dictionary with path system information
+        """
+        if not self._path_system:
+            return {'configured': False}
+
+        return {
+            'configured': True,
+            'is_ready': self._path_system.is_configured(),
+            'supported_commands': len(self._path_system.get_supported_commands()),
+            'system_stats': self._path_system.get_processing_statistics()
+        }
+
+    def cleanup(self):
+        """Clean up resources when converter is no longer needed."""
+        if self._path_system:
+            # Reset system statistics to free memory
+            self._path_system.reset_statistics()
+            self._path_system = None
+
+        logger.debug("PathConverter cleaned up")
+
+
+# Compatibility alias for existing code
+PathConverterNew = PathConverter

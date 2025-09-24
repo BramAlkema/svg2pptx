@@ -25,7 +25,7 @@ class EnhancedShapeConverter(BaseConverter):
 
     supported_elements = ['rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line']
 
-    def __init__(self, services=None, optimization_level: int = 2):
+    def __init__(self, services: 'ConversionServices', optimization_level: int = 2):
         """
         Initialize enhanced shape converter.
 

@@ -31,8 +31,8 @@ from enum import Enum
 from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
-from .paths import PathConverter  # For path processing
-from ..colors import ColorInfo
+from ..paths import create_path_system  # For path processing
+from ..color import Color
 
 
 class TextPathMethod(Enum):
@@ -46,6 +46,11 @@ class TextPathSpacing(Enum):
     EXACT = "exact"      # Exact character positioning
     AUTO = "auto"        # Automatic spacing adjustments
 
+
+# TODO: CONSOLIDATION OPPORTUNITY - PathPoint class here duplicates
+# functionality available in utils.path_processor.PathProcessor
+# Consider migrating to services.path_processor.PathPoint which supports
+# both simple (x,y) and extended (x,y,angle,distance) use cases
 
 @dataclass
 class PathPoint:
@@ -86,7 +91,7 @@ class TextPathInfo:
     href: str
     font_family: str
     font_size: float
-    fill: Optional[ColorInfo]
+    fill: Optional[Color]
     
     def get_effective_start_offset(self, path_length: float) -> float:
         """Get start offset in absolute units."""
@@ -139,9 +144,13 @@ class FontMetrics:
 
 class PathSampler:
     """Samples points along SVG paths for text positioning."""
-    
-    def __init__(self):
-        self.path_converter = PathConverter()
+
+    def __init__(self, services=None):
+        from ..services.conversion_services import ConversionServices
+        if services is None:
+            services = ConversionServices.create_default()
+        # Path system will be created per-conversion with viewport configuration
+        self.path_system = None
         
     def sample_path(self, path_data: str, num_samples: int = 100) -> List[PathPoint]:
         """Sample points along path with tangent information."""
@@ -184,18 +193,46 @@ class PathSampler:
         return path_points
     
     def _parse_path_commands(self, path_data: str) -> List[Tuple]:
-        """Parse SVG path data into commands."""
+        """Parse SVG path data into commands using modern PathSystem."""
         if not path_data:
             return []
-        
+
+        try:
+            # Create path system if not available
+            if self.path_system is None:
+                # Use a default configuration for text path processing
+                self.path_system = create_path_system(800, 600, (0, 0, 800, 600))
+
+            # Process path to get commands
+            result = self.path_system.process_path(path_data)
+
+            # Convert PathSystem result to expected legacy format
+            commands = []
+            for cmd in result.commands:
+                if cmd.coordinates:
+                    coords = [(pt.x, pt.y) for pt in cmd.coordinates]
+                    commands.append((cmd.command_type.value.upper(), coords))
+                else:
+                    commands.append((cmd.command_type.value.upper(), []))
+            return commands
+
+        except ImportError:
+            # Fallback to legacy parsing if PathSystem not available
+            return self._legacy_parse_path_commands(path_data)
+        except Exception:
+            # Fallback to legacy parsing on any error
+            return self._legacy_parse_path_commands(path_data)
+
+    def _legacy_parse_path_commands(self, path_data: str) -> List[Tuple]:
+        """Legacy path parsing - to be replaced once PathEngine integration is complete."""
         # Simple path parsing - in practice would use more robust parser
         commands = []
         pattern = r'([MmLlHhVvCcSsQqTtAaZz])((?:[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?,?\s*)*)'
-        
+
         for match in re.finditer(pattern, path_data):
             cmd = match.group(1)
             params_str = match.group(2).strip()
-            
+
             if params_str:
                 # Parse numeric parameters
                 params = []
@@ -324,8 +361,8 @@ class TextPathConverter(BaseConverter):
     
     supported_elements = ['textPath', 'text']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: 'ConversionServices'):
+        super().__init__(services)
         self.path_sampler = PathSampler()
         self.path_definitions: Dict[str, str] = {}  # Cache path definitions
     

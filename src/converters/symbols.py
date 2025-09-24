@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
-from ..transforms import TransformMatrix
+from ..transforms import Matrix
 
 
 @dataclass
@@ -49,7 +49,7 @@ class UseInstance:
     y: float = 0.0
     width: Optional[float] = None
     height: Optional[float] = None
-    transform: Optional[TransformMatrix] = None
+    transform: Optional[Matrix] = None
 
 
 class SymbolConverter(BaseConverter):
@@ -57,10 +57,10 @@ class SymbolConverter(BaseConverter):
     
     supported_elements = ['symbol', 'use', 'defs']
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, services: 'ConversionServices'):
+        super().__init__(services)
         self.symbols: Dict[str, SymbolDefinition] = {}
-        
+
         # Track use element processing to prevent infinite recursion
         self.use_processing_stack: List[str] = []
         
@@ -104,16 +104,35 @@ class SymbolConverter(BaseConverter):
         if not symbol_id:
             return
         
-        # Parse viewBox
+        # Parse viewBox using canonical ViewportResolver
         viewbox = None
         viewbox_str = symbol_element.get('viewBox')
         if viewbox_str:
             try:
-                viewbox_values = [float(v) for v in viewbox_str.split()]
-                if len(viewbox_values) == 4:
-                    viewbox = tuple(viewbox_values)
-            except (ValueError, TypeError):
-                viewbox = None
+                # Use the canonical high-performance ViewportResolver for parsing
+                from ..viewbox import ViewportResolver
+                import numpy as np
+
+                resolver = ViewportResolver()
+                parsed = resolver.parse_viewbox_strings(np.array([viewbox_str]))
+                if len(parsed) > 0 and len(parsed[0]) >= 4:
+                    viewbox = tuple(parsed[0][:4])
+            except ImportError:
+                # Fallback to legacy parsing if ViewportResolver not available
+                pass
+            except Exception:
+                # Fallback on any parsing error
+                pass
+
+            # Legacy fallback - enhanced to handle commas
+            if viewbox is None:
+                try:
+                    cleaned = viewbox_str.strip().replace(',', ' ')
+                    viewbox_values = [float(v) for v in cleaned.split()]
+                    if len(viewbox_values) >= 4:
+                        viewbox = tuple(viewbox_values[:4])
+                except (ValueError, TypeError):
+                    viewbox = None
         
         # Parse dimensions
         width = self._parse_dimension(symbol_element.get('width'))
@@ -288,10 +307,10 @@ class SymbolConverter(BaseConverter):
 </a:grpSp>"""
     
     def _calculate_symbol_transform(self, symbol_def: SymbolDefinition, 
-                                  use_instance: UseInstance) -> TransformMatrix:
+                                  use_instance: UseInstance) -> Matrix:
         """Calculate the transformation matrix for symbol instantiation."""
         # Start with identity matrix
-        result_matrix = TransformMatrix()
+        result_matrix = Matrix.identity()
         
         # Apply use element transform if present
         if use_instance.transform:
@@ -299,13 +318,13 @@ class SymbolConverter(BaseConverter):
         
         # Apply translation from use x,y
         if use_instance.x != 0 or use_instance.y != 0:
-            translation = TransformMatrix.create_translate(use_instance.x, use_instance.y)
+            translation = Matrix.translate(use_instance.x, use_instance.y)
             result_matrix = result_matrix.multiply(translation)
         
         # Apply scaling if use element has different dimensions than symbol
         scale_x, scale_y = self._calculate_symbol_scaling(symbol_def, use_instance)
         if scale_x != 1.0 or scale_y != 1.0:
-            scaling = TransformMatrix.create_scale(scale_x, scale_y)
+            scaling = Matrix.scale(scale_x, scale_y)
             result_matrix = result_matrix.multiply(scaling)
         
         return result_matrix
