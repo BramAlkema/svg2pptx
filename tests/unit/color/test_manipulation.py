@@ -12,8 +12,8 @@ import numpy as np
 from unittest.mock import Mock, patch
 from math import sqrt
 
-from src.color import Color
-from src.color.manipulation import ColorManipulation, BlendMode
+from core.color import Color
+from core.color.manipulation import ColorManipulation, BlendMode
 
 
 class TestColorManipulationInitialization:

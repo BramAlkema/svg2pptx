@@ -111,8 +111,8 @@ class ICoordinateSystem(Protocol):
 
     Integrates with existing viewport/units systems rather than duplicating functionality.
     Leverages:
-    - ViewportEngine from src.viewbox for viewport/viewBox handling
-    - UnitConverter from src.units for SVG → EMU conversions
+    - ViewportEngine from .viewbox for viewport/viewBox handling
+    - UnitConverter from .units for SVG → EMU conversions
     - Existing coordinate transformation infrastructure
     """
 

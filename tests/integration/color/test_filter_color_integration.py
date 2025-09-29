@@ -12,7 +12,7 @@ import logging
 from typing import List, Dict, Any
 
 # Import main color system - using modern Color class
-from src.color import Color
+from core.color import Color
 
 # Import color manipulation functions using Color class methods
 def adjust_saturation(color, factor):

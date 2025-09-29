@@ -153,7 +153,7 @@ def create_backend_factory_from_services(services) -> BooleanEngineFactory:
         Configured BooleanEngineFactory instance
 
     Example:
-        >>> from src.services.conversion_services import ConversionServices
+        >>> from core.services.conversion_services import ConversionServices
         >>> services = ConversionServices.create_default()
         >>> factory = create_backend_factory_from_services(services)
         >>> engine = factory.create_best_available_backend()

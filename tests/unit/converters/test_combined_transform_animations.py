@@ -7,7 +7,7 @@ import pytest
 from lxml import etree as ET
 
 from src.converters.animation_converter import AnimationConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 def make_svg(svg_inner: str) -> ET.Element:

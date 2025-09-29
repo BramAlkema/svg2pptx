@@ -21,11 +21,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import viewBox system
 try:
-    from src.viewbox.core import (
+    from core.viewbox.core import (
         ViewportEngine, ViewBoxArray, ViewportArray, ViewportMappingArray,
         AspectAlign, MeetOrSlice, ALIGNMENT_FACTORS
     )
-    from src.units.core import UnitEngine, ConversionContext
+    from core.units.core import UnitEngine, ConversionContext
     import numpy as np
     VIEWBOX_AVAILABLE = True
 except ImportError:

@@ -1,6 +1,6 @@
 """SVG to PowerPoint text layout conversion."""
 from typing import Tuple
-from src.units import EMU_PER_POINT
+from core.units import EMU_PER_POINT
 
 
 def svg_text_to_ppt_box(svg_x: float, svg_y: float, anchor: str, text: str,

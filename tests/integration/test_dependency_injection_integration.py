@@ -18,7 +18,7 @@ from pathlib import Path
 import tempfile
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices, ConversionConfig, ServiceInitializationError
+from core.services.conversion_services import ConversionServices, ConversionConfig, ServiceInitializationError
 from src.converters.base import BaseConverter, ConversionContext, ConverterRegistry
 from src.converters.shapes import RectangleConverter
 from src.converters.text import TextConverter

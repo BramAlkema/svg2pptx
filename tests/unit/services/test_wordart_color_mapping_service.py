@@ -9,11 +9,11 @@ import pytest
 from lxml import etree as ET
 from unittest.mock import Mock
 
-from src.services.wordart_color_mapping_service import (
+from core.services.wordart_color_mapping_service import (
     WordArtColorMappingService,
     create_wordart_color_mapping_service
 )
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext
 
 

@@ -6,7 +6,7 @@ Debug the PathEngine output to see what command structure is actually generated
 import sys
 sys.path.insert(0, 'src')
 
-from src.paths import PathEngine
+from core.paths import PathEngine
 
 def debug_path_engine():
     engine = PathEngine()

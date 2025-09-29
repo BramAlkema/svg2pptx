@@ -115,8 +115,8 @@ class CoordinateSystem(BasePathComponent):
     Concrete coordinate system implementation interface.
 
     Integrates with existing SVG2PPTX infrastructure:
-    - ViewportEngine from src.viewbox for viewport/viewBox transformations
-    - UnitConverter from src.units for SVG → EMU conversions
+    - ViewportEngine from .viewbox for viewport/viewBox transformations
+    - UnitConverter from .units for SVG → EMU conversions
 
     This component coordinates the existing systems rather than reimplementing them.
     """
@@ -135,8 +135,8 @@ class CoordinateSystem(BasePathComponent):
         Initialize with existing viewport and unit conversion services.
 
         Args:
-            viewport_engine: ViewportEngine instance from src.viewbox
-            unit_converter: UnitConverter instance from src.units
+            viewport_engine: ViewportEngine instance from .viewbox
+            unit_converter: UnitConverter instance from .units
         """
         pass
 

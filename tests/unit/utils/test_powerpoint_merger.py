@@ -20,7 +20,7 @@ try:
 except ImportError:
     PPTX_AVAILABLE = False
 
-from src.utils.powerpoint_merger import (
+from core.utils.powerpoint_merger import (
     PPTXMerger, PPTXMergeError, MergeResult,
     merge_presentations_simple, merge_pptx_files
 )

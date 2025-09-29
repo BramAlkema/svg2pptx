@@ -17,7 +17,7 @@ from src.converters.timing import (
     TimingEventType, AnimationTimeline
 )
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestTimingReference:

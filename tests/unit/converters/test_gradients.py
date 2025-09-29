@@ -12,7 +12,7 @@ from unittest.mock import Mock
 
 from src.converters.gradients import GradientConverter
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestGradientConverter:

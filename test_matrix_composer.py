@@ -11,7 +11,7 @@ import numpy as np
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.transforms.matrix_composer import (
+from core.transforms.matrix_composer import (
     viewport_matrix, parse_viewbox, parse_preserve_aspect_ratio,
     parse_transform, element_ctm, needs_normalise, normalise_content_matrix
 )

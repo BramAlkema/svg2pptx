@@ -9,7 +9,7 @@ import pytest
 import xml.etree.ElementTree as ET
 from unittest.mock import Mock
 
-from src.utils.xml_builder import (
+from core.utils.xml_builder import (
     XMLBuilder, get_xml_builder,
     create_presentation_xml, create_slide_xml, create_content_types_xml, create_animation_xml
 )

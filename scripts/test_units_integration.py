@@ -15,7 +15,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import the adapters
-from src.units_adapter import (
+from core.units_adapter import (
     LegacyUnitAdapter, FastUnitMixin, ViewportContextAdapter,
     create_fast_unit_converter, upgrade_unit_converter
 )

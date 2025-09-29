@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import transforms system
 try:
-    from src.transforms.core import (
+    from core.transforms.core import (
         TransformEngine, Matrix, BoundingBox
     )
     import numpy as np

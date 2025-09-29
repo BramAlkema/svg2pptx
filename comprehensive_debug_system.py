@@ -218,7 +218,7 @@ class ComprehensiveDebugSystem:
 
         try:
             # Import and debug services
-            from src.services.conversion_services import ConversionServices
+            from core.services.conversion_services import ConversionServices
             from src.svg2pptx import convert_svg_to_pptx
 
             print("🔨 Creating ConversionServices...")
@@ -245,7 +245,7 @@ class ComprehensiveDebugSystem:
 
             svg_root = ET.fromstring(svg_content.encode('utf-8'))
 
-            from src.viewbox.core import ViewportEngine
+            from core.viewbox.core import ViewportEngine
 
             STANDARD_SLIDE_WIDTH_EMU = 9144000   # 10 inches
             STANDARD_SLIDE_HEIGHT_EMU = 6858000  # 7.5 inches

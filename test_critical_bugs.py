@@ -6,7 +6,7 @@ Test script to verify which of the 20 critical bugs are still active.
 def test_unit_imports():
     """Test that unit/units functions can be imported."""
     try:
-        from src.units import unit, units
+        from core.units import unit, units
         print("✅ unit/units import: SUCCESS")
         return True
     except Exception as e:
@@ -16,7 +16,7 @@ def test_unit_imports():
 def test_conversion_services():
     """Test ConversionServices creation."""
     try:
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
         print("✅ ConversionServices.create_default(): SUCCESS")
         return True
@@ -28,7 +28,7 @@ def test_symbol_converter_import():
     """Test SymbolConverter imports and creation."""
     try:
         from src.converters.symbols import SymbolConverter
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
         converter = SymbolConverter(services)
         print("✅ SymbolConverter creation: SUCCESS")
@@ -41,7 +41,7 @@ def test_path_converter():
     """Test PathConverter creation."""
     try:
         from src.converters.paths import PathConverter
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
         converter = PathConverter(services)
         print("✅ PathConverter creation: SUCCESS")
@@ -54,7 +54,7 @@ def test_text_converter():
     """Test TextConverter creation."""
     try:
         from src.converters.text import TextConverter
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
         converter = TextConverter(services)
         print("✅ TextConverter creation: SUCCESS")
@@ -67,7 +67,7 @@ def test_enhanced_shape_converter():
     """Test EnhancedShapeConverter creation."""
     try:
         from src.converters.shapes.enhanced_converter import EnhancedShapeConverter
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
         converter = EnhancedShapeConverter(services)
         print("✅ EnhancedShapeConverter creation: SUCCESS")

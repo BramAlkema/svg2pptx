@@ -22,7 +22,7 @@ except ImportError:
     BATCH_AVAILABLE = False
 
 # Core conversion systems
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.svg2drawingml import SVGToDrawingMLConverter
 
 

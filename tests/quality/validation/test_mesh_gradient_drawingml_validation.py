@@ -38,7 +38,7 @@ try:
     from src.converters.gradients.mesh_engine import MeshGradientEngine, ColorInterpolator, MeshPatch
     from src.converters.gradients.converter import GradientConverter
     from src.converters.base import ConversionContext
-    from src.services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
     MESH_GRADIENT_AVAILABLE = True
 except ImportError:
     MESH_GRADIENT_AVAILABLE = False

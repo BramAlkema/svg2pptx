@@ -12,7 +12,7 @@ from lxml import etree as ET
 from src.converters.wordart_builder import (
     WordArtTransformBuilder, WordArtShapeConfig, create_wordart_builder
 )
-from src.utils.ooxml_transform_utils import OOXMLTransformUtils, OOXMLTransform
+from core.utils.ooxml_transform_utils import OOXMLTransformUtils, OOXMLTransform
 
 
 class TestOOXMLTransformUtils:

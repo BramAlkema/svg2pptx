@@ -11,7 +11,7 @@ import inspect
 from unittest.mock import Mock
 from typing import get_type_hints
 
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import BaseConverter
 from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
 from src.converters.paths import PathConverter
@@ -64,11 +64,11 @@ class TestServiceContainerValidation:
         services = ConversionServices.create_default()
 
         # Test key service types
-        from src.units import UnitConverter
-        from src.color import Color
-        from src.transforms import TransformEngine
-        from src.viewbox import ViewportEngine
-        from src.core.pptx_builder import PPTXBuilder
+        from core.units import UnitConverter
+        from core.color import Color
+        from core.transforms import TransformEngine
+        from core.viewbox import ViewportEngine
+        from core.legacy.pptx_builder import PPTXBuilder
 
         assert isinstance(services.unit_converter, UnitConverter)
         assert services.color_factory is Color
@@ -279,7 +279,7 @@ class TestServiceLifecycle:
 
     def test_service_initialization_error_handling(self):
         """Test that service initialization errors are properly handled."""
-        from src.services.conversion_services import ServiceInitializationError
+        from core.services.conversion_services import ServiceInitializationError
 
         # Test that invalid configuration raises appropriate error
         with pytest.raises(ServiceInitializationError):

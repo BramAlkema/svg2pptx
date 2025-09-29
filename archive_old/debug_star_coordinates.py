@@ -8,7 +8,7 @@ sys.path.insert(0, 'src')
 
 from lxml import etree as ET
 from src.svg2drawingml import SVGToDrawingMLConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 import re
 
 # Read the star SVG

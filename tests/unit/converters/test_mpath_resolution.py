@@ -12,7 +12,7 @@ from lxml import etree
 
 from src.converters.animation_converter import AnimationConverter
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestMPathResolution:

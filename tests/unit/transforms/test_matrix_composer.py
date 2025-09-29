@@ -6,7 +6,7 @@ Unit tests for matrix composer functions
 import pytest
 import numpy as np
 from lxml import etree as ET
-from src.transforms.matrix_composer import (
+from core.transforms.matrix_composer import (
     parse_viewbox, parse_preserve_aspect_ratio, get_alignment_factors,
     viewport_matrix, parse_transform, element_ctm,
     normalise_content_matrix, needs_normalise, on_slide

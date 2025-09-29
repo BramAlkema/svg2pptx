@@ -14,7 +14,7 @@ import inspect
 from typing import List, Dict, Set
 from collections import defaultdict
 
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
 from src.converters.paths import PathConverter
 from src.converters.text import TextConverter
@@ -414,7 +414,7 @@ class TestTypeHints:
 
     def test_service_classes_have_type_hints(self):
         """Test that service classes have proper type hints."""
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
 
         # Test that ConversionServices has type annotations
         annotations = getattr(ConversionServices, '__annotations__', {})

@@ -25,7 +25,7 @@ except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from src.services import SecureFileService, default_secure_file_service
+    from core.services import SecureFileService, default_secure_file_service
 
 from .speedrun_optimizer import SVGSpeedrunOptimizer, SpeedrunMode, enable_speedrun_mode
 from .speedrun_cache import SpeedrunCache, enable_speedrun_mode as enable_cache_speedrun

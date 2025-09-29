@@ -9,11 +9,11 @@ from lxml import etree as ET
 from unittest.mock import Mock
 
 from src.converters.base import ConversionContext
-from src.viewbox.ctm_utils import (
+from core.viewbox.ctm_utils import (
     create_root_context_with_viewport, walk_tree_with_ctm,
     apply_ctm_to_coordinates
 )
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestConversionContextCTM:

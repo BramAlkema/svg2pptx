@@ -44,7 +44,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 try:
     from src.converters.base import ConversionContext
-    from src.services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
     from src.preprocessing.optimizer import SVGOptimizer
     CONVERTERS_AVAILABLE = True
 except ImportError:

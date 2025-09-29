@@ -19,7 +19,7 @@ from src.converters.clippath_analyzer import ClipPathAnalyzer
 from src.converters.masking import MaskingConverter
 from src.converters.clippath_types import ClipPathDefinition, ClippingType
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestCustGeomClipping:

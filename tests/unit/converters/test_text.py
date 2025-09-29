@@ -17,9 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from src.converters.text import TextConverter
 from src.converters.base import ConversionContext, CoordinateSystem
-from src.units import UnitConverter
-from src.color import Color
-from src.services.conversion_services import ConversionServices
+from core.units import UnitConverter
+from core.color import Color
+from core.services.conversion_services import ConversionServices
 
 
 class TestTextConverter:

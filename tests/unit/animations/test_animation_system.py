@@ -17,7 +17,7 @@ from src.animations import (
     create_animation_converter, parse_svg_animations
 )
 from src.converters.animation_converter import AnimationConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 @pytest.fixture

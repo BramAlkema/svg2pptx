@@ -10,8 +10,8 @@ import pytest
 import numpy as np
 from unittest.mock import patch, Mock
 
-from src.color import Color
-from src.color.harmony import ColorHarmony
+from core.color import Color
+from core.color.harmony import ColorHarmony
 
 
 class TestColorHarmonyInitialization:

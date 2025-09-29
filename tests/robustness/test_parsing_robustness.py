@@ -21,7 +21,7 @@ except ImportError:
 
 from src.svg2pptx import convert_svg_to_pptx
 from src.svg2drawingml import SVGToDrawingMLConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import BaseConverter
 
 

@@ -15,7 +15,7 @@ from lxml import etree as ET
 
 from src.svg2pptx import convert_svg_to_pptx, SVGToPowerPointConverter
 from src.svg2drawingml import SVGToDrawingMLConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConverterRegistry, ConversionContext
 from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
 from src.converters.paths import PathConverter

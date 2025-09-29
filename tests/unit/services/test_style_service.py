@@ -8,7 +8,7 @@ following W3C CSS specifications.
 
 import pytest
 from lxml import etree as ET
-from src.services.style_service import StyleService, parse_inline_style, parse_css, _specificity
+from core.services.style_service import StyleService, parse_inline_style, parse_css, _specificity
 
 
 class TestInlineStyleParsing:

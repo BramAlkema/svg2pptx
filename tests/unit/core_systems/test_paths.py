@@ -16,7 +16,7 @@ from unittest.mock import Mock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.paths import (
+from core.paths import (
     PathSystem, PathCommandType, PathCommand, create_path_system
 )
 

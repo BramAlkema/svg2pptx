@@ -24,7 +24,7 @@ except ImportError:
 
 try:
     from src.converters.base import CoordinateSystem, ConversionContext
-    from src.transforms import Matrix
+    from core.transforms import Matrix
     BASE_AVAILABLE = True
 except ImportError:
     BASE_AVAILABLE = False

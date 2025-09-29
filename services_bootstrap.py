@@ -6,9 +6,9 @@ Services Bootstrap for SVG2PPTX
 Wire all services properly with DI propagation.
 """
 
-from src.services.conversion_services import ConversionServices
-from src.viewbox.core import ViewportEngine
-from src.units import UnitConverter
+from core.services.conversion_services import ConversionServices
+from core.viewbox.core import ViewportEngine
+from core.units import UnitConverter
 
 def build_services(svg_root, slide_w_emu, slide_h_emu):
     """

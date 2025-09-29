@@ -61,10 +61,10 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
 from src.converters.base import BaseConverter, ConversionContext
-from src.units import UnitConverter
-from src.color import Color
-from src.transforms import TransformEngine
-from src.viewbox import ViewportEngine
+from core.units import UnitConverter
+from core.color import Color
+from core.transforms import TransformEngine
+from core.viewbox import ViewportEngine
 
 
 

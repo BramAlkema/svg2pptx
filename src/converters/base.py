@@ -19,14 +19,14 @@ try:
     from ..services.conversion_services import ConversionServices, ConversionConfig
 except ImportError:
     # Fallback for test environments
-    from src.services.conversion_services import ConversionServices, ConversionConfig
+    from core.services.conversion_services import ConversionServices, ConversionConfig
 
 # Import fluent API for unit conversions
 try:
     from ..units import unit, units
 except ImportError:
     # Fallback for test environments
-    from src.units import unit, units
+    from core.units import unit, units
 
 # Import types for type hints only
 if TYPE_CHECKING:
@@ -36,10 +36,10 @@ if TYPE_CHECKING:
         from ..transforms import Transform
         from ..viewbox import ViewportEngine
     except ImportError:
-        from src.units import UnitConverter
-        from src.color import Color
-        from src.transforms import Transform
-        from src.viewbox import ViewportEngine
+        from core.units import UnitConverter
+        from core.color import Color
+        from core.transforms import Transform
+        from core.viewbox import ViewportEngine
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class CoordinateSystem:
             from ..units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
         except ImportError:
             # Fallback for test environments
-            from src.units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
+            from core.units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
 
         self.viewbox = viewbox
         self.slide_width = slide_width if slide_width is not None else SLIDE_WIDTH_EMU

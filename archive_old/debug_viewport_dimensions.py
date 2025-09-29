@@ -7,8 +7,8 @@ import sys
 sys.path.insert(0, 'src')
 
 from lxml import etree as ET
-from src.viewbox import ViewportEngine
-from src.services.conversion_services import ConversionServices
+from core.viewbox import ViewportEngine
+from core.services.conversion_services import ConversionServices
 
 # Read the star SVG
 with open('debug_star.svg', 'r') as f:

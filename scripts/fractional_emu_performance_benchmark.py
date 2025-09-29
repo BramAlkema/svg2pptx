@@ -45,7 +45,7 @@ from src.fractional_emu import (
     VectorizedPrecisionEngine,
     FractionalCoordinateContext
 )
-from src.units import UnitConverter, UnitType, ViewportContext
+from core.units import UnitConverter, UnitType, ViewportContext
 
 
 class FractionalEMUBenchmark:

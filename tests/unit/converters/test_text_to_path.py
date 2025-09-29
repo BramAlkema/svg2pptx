@@ -11,8 +11,8 @@ from unittest.mock import Mock, patch, MagicMock
 from src.converters.text_to_path import TextToPathConverter
 from src.converters.base import ConversionContext, CoordinateSystem
 from src.converters.font_metrics import FontMetrics, GlyphOutline
-from src.units import UnitConverter
-from src.color import Color
+from core.units import UnitConverter
+from core.color import Color
 
 
 class TestTextToPathConverter:

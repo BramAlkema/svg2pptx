@@ -26,7 +26,7 @@ from src.converters.filters.image.color import (
 )
 
 # Import modern color system for integration testing
-from src.color import Color
+from core.color import Color
 
 
 class TestColorMatrixFilter:

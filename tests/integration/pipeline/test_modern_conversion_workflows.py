@@ -16,12 +16,12 @@ from lxml import etree as ET
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import modern working components
-from src.transforms import Matrix
-from src.color import Color, ColorBatch
-from src.units import UnitConverter, ConversionContext
+from core.transforms import Matrix
+from core.color import Color, ColorBatch
+from core.units import UnitConverter, ConversionContext
 from src.converters.base import CoordinateSystem, ConversionContext as BaseConversionContext
 from src.converters.shapes import RectangleConverter, CircleConverter
-from src.services.conversion_services import ConversionServices, ConversionConfig
+from core.services.conversion_services import ConversionServices, ConversionConfig
 
 
 class TestModernShapeConversionWorkflow:

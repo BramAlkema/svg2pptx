@@ -20,11 +20,11 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.viewbox.core import (
+from core.viewbox.core import (
     ViewportEngine, ViewBoxArray, ViewportArray, ViewportMappingArray,
     AspectAlign, MeetOrSlice, create_viewport_engine
 )
-from src.units.core import UnitConverter, ConversionContext
+from core.units.core import UnitConverter, ConversionContext
 from lxml import etree as ET
 
 

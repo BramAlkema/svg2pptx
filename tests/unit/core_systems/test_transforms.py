@@ -17,7 +17,7 @@ from unittest.mock import Mock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.transforms import TransformEngine, Matrix
+from core.transforms import TransformEngine, Matrix
 
 
 class TestTransformEngineBasics:
@@ -171,7 +171,7 @@ class TestTransformEngineIntegration:
     def test_engine_with_conversion_services(self):
         """Test TransformEngine integration with ConversionServices."""
         # This test ensures the transform engine works with dependency injection
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
 
         services = ConversionServices.create_default()
         assert services.transform_parser is not None

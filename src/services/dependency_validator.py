@@ -301,7 +301,7 @@ class DependencyValidator:
                         init_args[arg_name] = initialized_services[arg_value]
                     elif arg_value == 'ConversionContext':
                         # Special case for ConversionContext
-                        from src.units import ConversionContext
+                        from core.units import ConversionContext
                         init_args[arg_name] = ConversionContext(dpi=96.0)
                     elif isinstance(arg_value, bool):
                         init_args[arg_name] = arg_value

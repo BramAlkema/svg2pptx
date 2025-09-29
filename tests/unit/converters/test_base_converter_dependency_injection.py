@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch, MagicMock
 from abc import ABC
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices, ConversionConfig
+from core.services.conversion_services import ConversionServices, ConversionConfig
 from src.converters.base import BaseConverter, ConversionContext
 
 
@@ -278,7 +278,7 @@ class TestMigrationUtilities:
                 return "<test/>"
 
         # Test that using the deprecated migration utility shows warning
-        from src.services.migration_utils import MigrationHelper
+        from core.services.migration_utils import MigrationHelper
 
         with pytest.warns(UserWarning, match="Manual service instantiation is deprecated"):
             converter = MigrationHelper.create_legacy_converter(TestConverter)

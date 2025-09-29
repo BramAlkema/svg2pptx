@@ -8,7 +8,7 @@ Validates SVG color/gradient mapping to PowerPoint DrawingML format.
 import pytest
 from lxml import etree as ET
 
-from src.services.wordart_color_service import (
+from core.services.wordart_color_service import (
     WordArtColorMappingService,
     LinearGradientInfo,
     RadialGradientInfo,
@@ -200,7 +200,7 @@ class TestWordArtColorMappingService:
 
     def test_color_distance_calculation(self):
         """Test color distance calculation."""
-        from src.color import Color
+        from core.color import Color
 
         red = Color("#FF0000")
         blue = Color("#0000FF")

@@ -11,8 +11,8 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch
 
-from src.color import Color
-from src.color.batch import ColorBatch
+from core.color import Color
+from core.color.batch import ColorBatch
 
 
 class TestColorBatchInitialization:

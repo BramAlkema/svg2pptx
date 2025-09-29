@@ -25,12 +25,12 @@ from typing import List, Tuple, Dict
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import the modern color system
-from src.color import Color
+from core.color import Color
 
 # Try importing gradient converter - it might not exist yet
 try:
     from src.converters.gradients import GradientConverter
-    from src.services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
     GRADIENT_CONVERTER_AVAILABLE = True
 except ImportError:
     # Create a mock GradientConverter for testing

@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import json
 from pathlib import Path
 
-from src.services.conversion_services import (
+from core.services.conversion_services import (
     ConversionServices,
     ConversionConfig,
     ServiceInitializationError

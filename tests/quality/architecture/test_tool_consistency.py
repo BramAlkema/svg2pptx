@@ -16,10 +16,10 @@ import importlib
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from src.converters.base import BaseConverter
-from src.units import UnitConverter
-from src.color import Color
-from src.transforms import TransformEngine
-from src.viewbox import ViewportEngine
+from core.units import UnitConverter
+from core.color import Color
+from core.transforms import TransformEngine
+from core.viewbox import ViewportEngine
 from unittest.mock import Mock
 
 
@@ -276,10 +276,10 @@ class TestToolChainConsistency:
         """Test that tools can be imported consistently across the codebase."""
         try:
             # Test direct imports
-            from src.units import UnitConverter
-            from src.color import Color
-            from src.transforms import TransformEngine
-            from src.viewbox import ViewportEngine
+            from core.units import UnitConverter
+            from core.color import Color
+            from core.transforms import TransformEngine
+            from core.viewbox import ViewportEngine
             
             # Test that each tool can be instantiated
             unit_converter = UnitConverter()

@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from src.color import Color
+    from core.color import Color
     COLOR_AVAILABLE = True
 except ImportError:
     COLOR_AVAILABLE = False

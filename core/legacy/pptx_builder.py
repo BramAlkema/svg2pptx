@@ -561,7 +561,7 @@ if __name__ == "__main__":
     # Test 2: Picture example with units system (requires an image file)
     # Uncomment if you have an image to test:
     """
-    from src.services.conversion_services import ConversionServices
+    from .services.conversion_services import ConversionServices
 
     # Create services with unit converter
     services = ConversionServices.create_default()

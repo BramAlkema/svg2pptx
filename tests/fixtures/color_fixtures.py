@@ -7,7 +7,7 @@ and rendering functionality across the test suite.
 """
 
 import pytest
-from src.color import Color
+from core.color import Color
 
 
 @pytest.fixture

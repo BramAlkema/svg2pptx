@@ -11,7 +11,7 @@ This example showcases the new color system's capabilities including:
 """
 
 import time
-from src.color import Color, ColorBatch, ColorHarmony
+from core.color import Color, ColorBatch, ColorHarmony
 
 def demo_fluent_api():
     """Demonstrate the fluent, chainable color API."""
@@ -170,7 +170,7 @@ def demo_legacy_compatibility():
     print("=" * 40)
 
     # Import legacy interfaces
-    from src.color import ColorParser, ColorInfo
+    from core.color import ColorParser, ColorInfo
 
     # Legacy ColorParser usage
     parser = ColorParser()

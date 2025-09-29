@@ -6,8 +6,8 @@ This script tests the complete content normalization pipeline to verify
 it works end-to-end for off-slide content patterns.
 """
 
-from src.viewbox.ctm_utils import create_root_context_with_viewport
-from src.services.conversion_services import ConversionServices
+from core.viewbox.ctm_utils import create_root_context_with_viewport
+from core.services.conversion_services import ConversionServices
 from lxml import etree as ET
 import numpy as np
 
@@ -30,8 +30,8 @@ def test_normalization_integration():
     print(f"SVG viewBox: {svg_root.get('viewBox')}")
 
     # Test the bounds and detection
-    from src.viewbox.content_bounds import calculate_raw_content_bounds
-    from src.transforms.matrix_composer import needs_normalise
+    from core.viewbox.content_bounds import calculate_raw_content_bounds
+    from core.transforms.matrix_composer import needs_normalise
 
     bounds = calculate_raw_content_bounds(svg_root)
     needs_norm = needs_normalise(svg_root)
@@ -95,7 +95,7 @@ def test_no_normalization_case():
 
     svg_root = ET.fromstring(svg_content)
 
-    from src.transforms.matrix_composer import needs_normalise
+    from core.transforms.matrix_composer import needs_normalise
     needs_norm = needs_normalise(svg_root)
 
     print(f"Normal content needs normalization: {needs_norm}")

@@ -55,7 +55,7 @@ except ImportError as e:
 
 # Mock other imports that might not be available
 try:
-    from src.units.core import UnitEngine, ConversionContext
+    from core.units.core import UnitEngine, ConversionContext
     UNITS_AVAILABLE = True
 except ImportError:
     UNITS_AVAILABLE = False
@@ -67,7 +67,7 @@ except ImportError:
             pass
 
 try:
-    from src.color.core import ColorEngine
+    from core.color.core import ColorEngine
     COLORS_AVAILABLE = True
 except ImportError:
     COLORS_AVAILABLE = False
@@ -78,7 +78,7 @@ except ImportError:
             return {'r': 255, 'g': 0, 'b': 0, 'a': 1.0}
 
 try:
-    from src.transforms.core import TransformEngine
+    from core.transforms.core import TransformEngine
     TRANSFORMS_AVAILABLE = True
 except ImportError:
     TRANSFORMS_AVAILABLE = False

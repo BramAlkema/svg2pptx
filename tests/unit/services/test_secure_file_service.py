@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
-from src.services.secure_file_service import (
+from core.services.secure_file_service import (
     SecureFileService,
     SecureTempFile,
     SecureTempDir,

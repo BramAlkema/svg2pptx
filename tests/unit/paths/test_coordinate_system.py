@@ -10,8 +10,8 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch
 
-from src.paths.coordinate_system import CoordinateSystem
-from src.paths.architecture import (
+from core.paths.coordinate_system import CoordinateSystem
+from core.paths.architecture import (
     PathCommand, PathBounds, PathCommandType,
     CoordinateTransformError
 )

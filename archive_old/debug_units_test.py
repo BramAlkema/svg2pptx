@@ -5,7 +5,7 @@ import sys
 sys.path.append('.')
 
 from lxml import etree as ET
-from src.units import unit
+from core.units import unit
 
 # Test the units system directly
 print("=== Units System Font Size Testing ===")

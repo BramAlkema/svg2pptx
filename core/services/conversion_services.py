@@ -12,16 +12,16 @@ import json
 import logging
 from pathlib import Path
 
-from src.units import UnitConverter, unit
-from src.color import Color
-from src.transforms import TransformEngine
-from src.viewbox import ViewportEngine
-from src.paths import PathSystem, create_path_system
-from src.utils.style_parser import StyleParser
-from src.utils.coordinate_transformer import CoordinateTransformer
-from src.utils.font_processor import FontProcessor
-from src.utils.path_processor import PathProcessor
-from src.core.pptx_builder import PPTXBuilder
+from ..units import UnitConverter, unit
+from ..color import Color
+from ..transforms import TransformEngine
+from ..viewbox import ViewportEngine
+from ..paths import PathSystem, create_path_system
+from ..utils.style_parser import StyleParser
+from ..utils.coordinate_transformer import CoordinateTransformer
+from ..utils.font_processor import FontProcessor
+from ..utils.path_processor import PathProcessor
+from ..legacy.pptx_builder import PPTXBuilder
 from .gradient_service import GradientService
 from .pattern_service import PatternService
 from .filter_service import FilterService
@@ -504,7 +504,7 @@ class ConversionServices:
         """
         if self.path_system is None:
             # Create PathSystem with this services instance to avoid circular import
-            from src.paths import create_path_system
+            from ..paths import create_path_system
             self.path_system = create_path_system(
                 viewport_width=viewport_width,
                 viewport_height=viewport_height,

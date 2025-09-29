@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.config.hybrid_config import HybridConversionConfig, ConversionMode
 from src.converters.base import ConverterRegistryFactory, ConversionContext
 
@@ -246,7 +246,7 @@ class TestHybridModeIntegration:
 
     def test_performance_integration(self):
         """Test that hybrid mode doesn't significantly impact performance"""
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         import time
 
         # Measure base service creation time

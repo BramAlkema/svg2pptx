@@ -13,7 +13,7 @@ from lxml import etree as ET
 from src.converters.masking import MaskingConverter
 from src.converters.clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from tests.fixtures.clippath_fixtures import (
     create_svg_element, create_simple_rect_clippath,
     create_simple_path_clippath, create_nested_clippath_definitions,

@@ -1,20 +1,26 @@
-#!/usr/bin/env python3
 """
-Core Services for Clean Slate Architecture
+Services Module
 
-Essential services migrated from legacy src/services/ for self-contained operation.
+Core services for SVG2PPTX conversion system including secure file operations,
+conversion services, and utility services.
 """
 
 from .conversion_services import ConversionServices
-from .font_service import FontService
-from .image_service import ImageService
-from .text_layout import svg_text_to_ppt_box
-from .wordart_transform_service import create_transform_decomposer
+from .secure_file_service import (
+    SecureFileService,
+    SecureTempFile,
+    SecureTempDir,
+    SecureFileOperationError,
+    PathTraversalError,
+    default_secure_file_service
+)
 
 __all__ = [
     'ConversionServices',
-    'FontService',
-    'ImageService',
-    'svg_text_to_ppt_box',
-    'create_transform_decomposer'
+    'SecureFileService',
+    'SecureTempFile',
+    'SecureTempDir',
+    'SecureFileOperationError',
+    'PathTraversalError',
+    'default_secure_file_service'
 ]

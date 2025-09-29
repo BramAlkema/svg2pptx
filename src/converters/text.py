@@ -21,7 +21,7 @@ from ..services.conversion_services import ConversionServices
 try:
     from ..units import unit, units
 except ImportError:
-    from src.units import unit, units
+    from core.units import unit, units
 
 logger = logging.getLogger(__name__)
 

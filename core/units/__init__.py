@@ -13,7 +13,7 @@ Combines best features from all parallel implementations:
 Example Usage:
 
     Fluent API (Recommended):
-    >>> from src.units import unit, units
+    >>> from .units import unit, units
     >>>
     >>> # Simple conversions
     >>> unit("100px").to_emu()
@@ -46,7 +46,7 @@ Example Usage:
     {"x": 952500, "width": 3810000}
 
     Traditional API:
-    >>> from src.units import UnitConverter
+    >>> from .units import UnitConverter
     >>> converter = UnitConverter()
     >>> emu = converter.to_emu("100px")
     >>> pixels = converter.to_pixels("2em")

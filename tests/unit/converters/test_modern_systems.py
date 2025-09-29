@@ -15,9 +15,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import working components that we verified
-from src.transforms import Matrix
-from src.color import Color
-from src.units import UnitConverter
+from core.transforms import Matrix
+from core.color import Color
+from core.units import UnitConverter
 from src.converters.base import ConversionContext, CoordinateSystem
 
 
@@ -115,7 +115,7 @@ class TestUnitsSystem:
 
     def test_px_to_emu_conversion(self):
         """Test pixel to EMU conversion."""
-        from src.units import ConversionContext
+        from core.units import ConversionContext
         converter = UnitConverter()
         context = ConversionContext()
         emu_value = converter.to_emu("100px", context)
@@ -124,7 +124,7 @@ class TestUnitsSystem:
 
     def test_pt_to_emu_conversion(self):
         """Test point to EMU conversion."""
-        from src.units import ConversionContext
+        from core.units import ConversionContext
         converter = UnitConverter()
         context = ConversionContext()
         emu_value = converter.to_emu("12pt", context)  # 12pt font
@@ -221,7 +221,7 @@ class TestModernSystemsIntegration:
         unit_converter = UnitConverter()
 
         # Parse a color using modern API and convert some units
-        from src.units import ConversionContext
+        from core.units import ConversionContext
         color = Color("#FF0000")
         context = ConversionContext()
         emu_size = unit_converter.to_emu("16px", context)
@@ -232,9 +232,9 @@ class TestModernSystemsIntegration:
     def test_all_modern_systems_importable(self):
         """Test that all modern systems can be imported together."""
         # This test verifies no circular dependencies or import conflicts
-        from src.transforms import Matrix
-        from src.color import Color
-        from src.units import UnitConverter
+        from core.transforms import Matrix
+        from core.color import Color
+        from core.units import UnitConverter
         from src.converters.base import CoordinateSystem, ConversionContext
 
         # All should be importable without errors

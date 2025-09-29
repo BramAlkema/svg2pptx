@@ -17,7 +17,7 @@ from ..core.base import Filter, FilterContext, FilterResult, FilterException
 from ....units import unit
 
 # Import main color system operations
-from src.color import Color
+from core.color import Color
 
 logger = logging.getLogger(__name__)
 

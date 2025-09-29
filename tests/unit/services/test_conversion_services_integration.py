@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices, ConversionConfig, ServiceInitializationError
+from core.services.conversion_services import ConversionServices, ConversionConfig, ServiceInitializationError
 
 
 class TestConversionServicesIntegration:
@@ -47,7 +47,7 @@ class TestConversionServicesIntegration:
         services = ConversionServices.create_default()
 
         # Test unit conversion
-        from src.units import unit
+        from core.units import unit
         result = unit("10px").to_emu()
         assert isinstance(result, int)
         assert result > 0
@@ -324,7 +324,7 @@ class TestConversionServicesIntegration:
         transform_result = services.transform_parser.parse_to_matrix("translate(0,0)")
 
         # 5. Convert units
-        from src.units import unit
+        from core.units import unit
         width_emu = unit("80px").to_emu()
 
         # All operations should complete without error

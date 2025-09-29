@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from src.svg2pptx import convert_svg_to_pptx, SVGToPowerPointConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestHeadlessEnvironment:
@@ -363,7 +363,7 @@ class TestBuildSystemIntegration:
         # Simulate package installation by ensuring imports work
         try:
             from src.svg2pptx import convert_svg_to_pptx
-            from src.services.conversion_services import ConversionServices
+            from core.services.conversion_services import ConversionServices
             from src.converters.base import BaseConverter
 
             # Test that services can be created

@@ -133,7 +133,7 @@ class TestSecurityPipeline:
 
     def test_secure_file_service_integration(self):
         """Test that SecureFileService is properly integrated."""
-        from src.services import default_secure_file_service
+        from core.services import default_secure_file_service
 
         # Test basic functionality
         with default_secure_file_service.secure_temp_file_context('.txt') as temp_path:
@@ -153,7 +153,7 @@ class TestSecurityPipeline:
 
     def test_input_validator_integration(self):
         """Test that InputValidator is properly integrated."""
-        from src.utils.input_validator import InputValidator
+        from core.utils.input_validator import InputValidator
 
         validator = InputValidator()
 
@@ -172,9 +172,9 @@ class TestSecurityPipeline:
 
     def test_path_traversal_protection(self):
         """Test that path traversal attacks are prevented."""
-        from src.services import default_secure_file_service
+        from core.services import default_secure_file_service
 
-        from src.services.secure_file_service import PathTraversalError
+        from core.services.secure_file_service import PathTraversalError
 
         # Test various path traversal attempts
         traversal_attempts = [

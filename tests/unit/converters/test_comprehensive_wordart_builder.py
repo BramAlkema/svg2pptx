@@ -15,7 +15,7 @@ from src.converters.comprehensive_wordart_builder import (
     ComprehensiveWordArtResult,
     create_comprehensive_wordart_builder
 )
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext
 from core.policy.targets import TextDecision
 

@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Test imports first
 try:
-    from src.transforms import Matrix
+    from core.transforms import Matrix
     TRANSFORM_AVAILABLE = True
 except ImportError:
     TRANSFORM_AVAILABLE = False

@@ -6,8 +6,8 @@ This file demonstrates various usage patterns for the new dependency injection
 system in SVG2PPTX converter.
 """
 
-from src.services.conversion_services import ConversionServices, ConversionConfig
-from src.services.migration_utils import MigrationHelper
+from core.services.conversion_services import ConversionServices, ConversionConfig
+from core.services.migration_utils import MigrationHelper
 from src.converters.shapes import RectangleConverter
 from src.converters.text import TextConverter
 from src.converters.base import ConversionContext

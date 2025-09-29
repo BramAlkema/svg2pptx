@@ -155,7 +155,7 @@ def e2e_svg_to_pptx_converter():
     try:
         # Try to import real converter
         from src.converters.multislide import MultislideConverter
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
 
         services = ConversionServices.create_default()
         return MultislideConverter(services)

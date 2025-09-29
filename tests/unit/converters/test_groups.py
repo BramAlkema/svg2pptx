@@ -17,9 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from src.converters.groups import GroupHandler
 from src.converters.base import BaseConverter, ConversionContext, ConverterRegistry, CoordinateSystem
-from src.transforms import Matrix
-from src.units import UnitConverter
-from src.services.conversion_services import ConversionServices
+from core.transforms import Matrix
+from core.units import UnitConverter
+from core.services.conversion_services import ConversionServices
 
 
 class TestGroupHandler:
@@ -41,7 +41,7 @@ class TestGroupHandler:
         services.clip_service = Mock()
 
         # Configure transform_parser to return identity matrix
-        from src.transforms import Matrix
+        from core.transforms import Matrix
         services.transform_parser.parse_to_matrix = Mock(return_value=Matrix.identity())
 
         # Configure color_parser to return proper hex values
@@ -364,7 +364,7 @@ class TestGroupHandlerToolIntegration:
         services.clip_service = Mock()
 
         # Configure transform_parser to return identity matrix
-        from src.transforms import Matrix
+        from core.transforms import Matrix
         services.transform_parser.parse_to_matrix = Mock(return_value=Matrix.identity())
 
         # Configure color_parser to return proper hex values
@@ -520,7 +520,7 @@ class TestGroupHandlerEdgeCases:
         services.clip_service = Mock()
 
         # Configure transform_parser to return identity matrix
-        from src.transforms import Matrix
+        from core.transforms import Matrix
         services.transform_parser.parse_to_matrix = Mock(return_value=Matrix.identity())
 
         # Configure color_parser to return proper hex values
@@ -569,7 +569,7 @@ class TestGroupHandlerEdgeCases:
         original.set('transform', 'scale(2)')
         
         # Create transform to apply
-        from src.transforms import Matrix
+        from core.transforms import Matrix
         transform = Matrix(1, 0, 0, 1, 10, 20)  # Translation
         
         cloned = handler._clone_element_with_transform(original, transform)

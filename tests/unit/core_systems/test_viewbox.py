@@ -16,11 +16,11 @@ from unittest.mock import Mock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.viewbox.core import (
+from core.viewbox.core import (
     ViewportEngine, ViewBoxArray, ViewportArray, ViewportMappingArray,
     AspectAlign, MeetOrSlice, ALIGNMENT_FACTORS
 )
-from src.units.core import UnitConverter, ConversionContext
+from core.units.core import UnitConverter, ConversionContext
 
 
 class TestViewportEngineBasics:
@@ -658,8 +658,8 @@ class TestUtilityFunctions:
 
     def test_create_viewport_engine_function(self):
         """Test create_viewport_engine convenience function."""
-        from src.viewbox.core import create_viewport_engine
-        from src.units.core import UnitConverter
+        from core.viewbox.core import create_viewport_engine
+        from core.units.core import UnitConverter
 
         # Test with default unit engine
         engine = create_viewport_engine()
@@ -673,7 +673,7 @@ class TestUtilityFunctions:
 
     def test_batch_resolve_viewports_function_import(self):
         """Test batch_resolve_viewports convenience function import."""
-        from src.viewbox.core import batch_resolve_viewports
+        from core.viewbox.core import batch_resolve_viewports
 
         # Function should be importable and callable
         assert callable(batch_resolve_viewports)

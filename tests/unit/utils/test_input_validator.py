@@ -10,7 +10,7 @@ import pytest
 import math
 from unittest.mock import patch
 
-from src.utils.input_validator import (
+from core.utils.input_validator import (
     InputValidator,
     ValidationContext,
     ValidationError,

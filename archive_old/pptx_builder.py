@@ -7,7 +7,7 @@ from pathlib import Path
 from lxml import etree as ET
 
 sys.path.append('.')
-from src.units import unit
+from core.units import unit
 
 class PPTXBuilder:
     def __init__(self, template_dir="pptx_templates"):

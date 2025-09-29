@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices, ServiceInitializationError
+from core.services.conversion_services import ConversionServices, ServiceInitializationError
 from src.config.hybrid_config import HybridConversionConfig
 
 
@@ -90,7 +90,7 @@ class TestConversionServicesHybridExtensions:
 
     def test_create_with_clean_slate_with_config(self):
         """Test create_with_clean_slate with custom configuration"""
-        from src.services.conversion_services import ConversionConfig
+        from core.services.conversion_services import ConversionConfig
 
         config = ConversionConfig(
             default_dpi=120.0,

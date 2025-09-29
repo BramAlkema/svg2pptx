@@ -17,7 +17,7 @@ try:
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
 
-from src.utils.input_validator import (
+from core.utils.input_validator import (
     InputValidator,
     ValidationContext,
     ValidationError,

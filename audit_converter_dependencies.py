@@ -202,7 +202,7 @@ class ConverterAuditor:
         print("1. Add ConversionServices type annotation: def __init__(self, services: ConversionServices)")
         print("2. Make services parameter mandatory (no default None)")
         print("3. Call super().__init__(services) in constructor")
-        print("4. Import ConversionServices from src.services.conversion_services")
+        print("4. Import ConversionServices from core.services.conversion_services")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ Tests the dedicated color space conversion engine for OKLab and OKLCh.
 
 import pytest
 import numpy as np
-from src.color.color_spaces import ColorSpaceConverter, rgb_to_oklab, oklab_to_rgb
+from core.color.color_spaces import ColorSpaceConverter, rgb_to_oklab, oklab_to_rgb
 
 
 class TestColorSpaceConverter:
@@ -181,7 +181,7 @@ class TestConvenienceFunctions:
 
     def test_all_convenience_functions_exist(self):
         """Test that all convenience functions are available."""
-        from src.color.color_spaces import (
+        from core.color.color_spaces import (
             rgb_to_oklab, oklab_to_rgb,
             rgb_to_oklch, oklch_to_rgb,
             oklab_to_oklch, oklch_to_oklab

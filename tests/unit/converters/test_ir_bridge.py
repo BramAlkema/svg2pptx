@@ -11,7 +11,7 @@ from lxml import etree as ET
 
 from src.converters.ir_bridge import IRConverterBridge, create_ir_bridge
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.config.hybrid_config import HybridConversionConfig, ConversionMode
 
 

@@ -10,8 +10,8 @@ import pytest
 import math
 from unittest.mock import Mock, patch
 
-from src.paths.arc_converter import ArcConverter
-from src.paths.architecture import (
+from core.paths.arc_converter import ArcConverter
+from core.paths.architecture import (
     PathCommand, CoordinatePoint, BezierSegment, PathCommandType,
     ArcConversionError
 )
@@ -400,7 +400,7 @@ class TestArcConverter:
     def test_error_handling_a2c_failure(self, mock_a2c, converter):
         """Test error handling when a2c algorithm fails."""
         # Mock the a2c function to raise an error
-        from src.paths.a2c import ArcTooBigError
+        from core.paths.a2c import ArcTooBigError
         mock_a2c.side_effect = ArcTooBigError("Arc too big")
 
         with pytest.raises(ArcConversionError, match="Arc conversion failed: Arc too big"):

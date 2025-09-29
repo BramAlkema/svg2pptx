@@ -6,7 +6,7 @@ import sys
 from lxml import etree as ET
 
 sys.path.append('.')
-from src.units import unit
+from core.units import unit
 
 class WorkingPPTXGenerator:
     def __init__(self, base_file='manual_test.pptx'):

@@ -25,7 +25,7 @@ try:
     from src.converters.gradients.converter import GradientConverter
     from src.converters.gradients.mesh_engine import MeshGradientEngine
     from src.converters.base import ConversionContext
-    from src.services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
     from src.pptx_minimal import MinimalPPTXGenerator
 except ImportError as e:
     MESH_GRADIENT_AVAILABLE = False

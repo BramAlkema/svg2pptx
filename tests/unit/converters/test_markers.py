@@ -27,8 +27,8 @@ from src.converters.markers import (
     MarkerPosition, MarkerUnits
 )
 from src.converters.base import ConversionContext
-from src.color import Color
-from src.transforms import Matrix
+from core.color import Color
+from core.transforms import Matrix
 
 
 class TestMarkerConverter:
@@ -290,7 +290,7 @@ class TestUseElementProcessing:
         self.context.get_next_shape_id = Mock(return_value=2001)
 
         # Mock transform parser to return identity matrix by default
-        from src.transforms import Matrix
+        from core.transforms import Matrix
         self.converter.transform_parser.parse_to_matrix = Mock(return_value=Matrix.identity())
         
         # Add a test symbol

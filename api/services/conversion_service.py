@@ -223,7 +223,7 @@ class ConversionService:
         try:
             from src.preprocessing import create_optimizer
             from src.converters import ConverterRegistry, CoordinateSystem, ConversionContext
-            from src.core.pptx_builder import PPTXBuilder
+            from core.legacy.pptx_builder import PPTXBuilder
             import tempfile
             import os
             from lxml import etree as ET
@@ -252,7 +252,7 @@ class ConversionService:
             logger.info("Parsed optimized SVG structure")
             
             # Step 3: Initialize modular conversion system with services
-            from src.services.conversion_services import ConversionServices
+            from core.services.conversion_services import ConversionServices
 
             # Create default services for conversion
             services = ConversionServices.create_default()
@@ -297,7 +297,7 @@ class ConversionService:
             if not drawingml_elements:
                 logger.warning("No elements converted with modular system, falling back to legacy converter")
                 from src.svg2drawingml import SVGToDrawingMLConverter
-                from src.services.conversion_services import ConversionServices
+                from core.services.conversion_services import ConversionServices
 
                 # Save optimized SVG to temporary file for legacy converter
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False, encoding='utf-8') as f:
@@ -364,7 +364,7 @@ class ConversionService:
     def _create_error_pptx(self, source_url: str, error_message: str) -> bytes:
         """Create a minimal PPTX file indicating conversion error."""
         try:
-            from src.core.pptx_builder import PPTXBuilder
+            from core.legacy.pptx_builder import PPTXBuilder
             import tempfile
             import os
             

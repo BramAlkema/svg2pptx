@@ -17,8 +17,8 @@ from unittest.mock import Mock, patch, mock_open
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.services.font_embedding_engine import FontEmbeddingEngine
-from src.services.font_service import FontService
+from core.services.font_embedding_engine import FontEmbeddingEngine
+from core.services.font_service import FontService
 from src.data.embedded_font import (
     EmbeddedFont, FontSubsetRequest, FontEmbeddingStats, EmbeddingPermission
 )

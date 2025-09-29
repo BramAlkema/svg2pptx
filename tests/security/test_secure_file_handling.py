@@ -15,9 +15,9 @@ import zipfile
 from unittest.mock import patch, mock_open
 
 from src.svg2pptx import convert_svg_to_pptx
-from src.services.image_service import ImageService
+from core.services.image_service import ImageService
 from src.converters.base import BaseConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestSecureFileHandling:

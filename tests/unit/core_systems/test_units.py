@@ -16,11 +16,11 @@ from unittest.mock import Mock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.units.core import (
+from core.units.core import (
     UnitConverter, ConversionContext, UnitType,
     to_emu
 )
-from src.units import unit, units
+from core.units import unit, units
 
 
 class TestUnitConverterBasics:

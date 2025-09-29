@@ -7,8 +7,8 @@ without any coordinate transformations.
 """
 
 import pytest
-from src.paths.parser import PathParser
-from src.paths.architecture import PathCommand, PathCommandType, PathParseError
+from core.paths.parser import PathParser
+from core.paths.architecture import PathCommand, PathCommandType, PathParseError
 
 
 class TestPathParser:

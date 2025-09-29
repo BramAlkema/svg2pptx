@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from lxml import etree as ET
 
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext
 
 

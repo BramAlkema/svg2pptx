@@ -20,7 +20,7 @@ from lxml import etree
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.converters.animations import AnimationConverter, AnimationType
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext
 
 

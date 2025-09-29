@@ -29,7 +29,7 @@ except ImportError:
     BASE_AVAILABLE = False
 
 try:
-    from src.transforms import Matrix
+    from core.transforms import Matrix
     TRANSFORM_AVAILABLE = True
 except ImportError:
     TRANSFORM_AVAILABLE = False

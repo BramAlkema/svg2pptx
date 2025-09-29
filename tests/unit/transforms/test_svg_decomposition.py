@@ -10,7 +10,7 @@ import numpy as np
 import math
 from lxml import etree as ET
 
-from src.services.wordart_transform_service import (
+from core.services.wordart_transform_service import (
     SVGTransformDecomposer,
     TransformComponents,
     create_transform_decomposer

@@ -9,7 +9,7 @@ from lxml import etree as ET
 
 # Import base classes that definitely exist
 from src.converters.base import BaseConverter, ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestSymbolsBasic:

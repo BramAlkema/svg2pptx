@@ -6,7 +6,7 @@ Debug the curved line path specifically
 import sys
 sys.path.insert(0, 'src')
 
-from src.paths import PathEngine
+from core.paths import PathEngine
 
 def debug_curve_path():
     engine = PathEngine()

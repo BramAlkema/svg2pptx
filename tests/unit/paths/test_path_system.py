@@ -10,8 +10,8 @@ import pytest
 from lxml import etree
 from unittest.mock import Mock, patch
 
-from src.paths.path_system import PathSystem, create_path_system, PathProcessingResult
-from src.paths.architecture import (
+from core.paths.path_system import PathSystem, create_path_system, PathProcessingResult
+from core.paths.architecture import (
     PathSystemError, PathParseError, CoordinateTransformError,
     XMLGenerationError, PathBounds
 )

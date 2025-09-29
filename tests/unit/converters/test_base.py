@@ -26,7 +26,7 @@ from src.converters.base import (
 
 # Import ConversionServices for proper dependency injection
 try:
-    from src.services.conversion_services import ConversionServices, ConversionConfig
+    from core.services.conversion_services import ConversionServices, ConversionConfig
 except ImportError:
     # Fallback for environments where services aren't available
     ConversionServices = Mock

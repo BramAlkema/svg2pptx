@@ -13,7 +13,7 @@ from lxml import etree as ET
 from src.converters.custgeom_generator import CustGeomGenerator, CoordinateContext
 from src.converters.clippath_types import ClipPathDefinition, ClippingType
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from tests.fixtures.clippath_fixtures import create_svg_element
 
 

@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch, MagicMock
 from lxml import etree as ET
 
 # Import all our systems for comprehensive testing
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext, ConverterRegistry
 from src.svg2pptx import SVGToPowerPointConverter
 from src.svg2drawingml import SVGToDrawingMLConverter

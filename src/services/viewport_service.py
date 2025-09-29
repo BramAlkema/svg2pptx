@@ -1,8 +1,8 @@
 """Viewport coordinate transformation service."""
 from typing import Tuple
 from lxml import etree as ET
-from src.viewbox.core import ViewportEngine
-from src.units import UnitConverter, EMU_PER_POINT
+from core.viewbox.core import ViewportEngine
+from core.units import UnitConverter, EMU_PER_POINT
 
 
 class ViewportService:

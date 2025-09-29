@@ -14,7 +14,7 @@ import pytest
 import math
 from typing import Tuple, List
 
-from src.transforms.core import Matrix
+from core.transforms.core import Matrix
 
 
 class TestMatrixCreation:

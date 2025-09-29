@@ -10,7 +10,7 @@ import pytest
 import numpy as np
 from math import sqrt
 
-from src.color import Color
+from core.color import Color
 
 
 class TestColorAccuracyValidation:

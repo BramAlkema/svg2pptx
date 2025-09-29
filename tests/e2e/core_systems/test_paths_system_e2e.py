@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import path system
 try:
-    from src.paths.core import (
+    from core.paths.core import (
         PathEngine, PathData, PathCommandType,
         AdvancedLRUCache, ArrayPool
     )

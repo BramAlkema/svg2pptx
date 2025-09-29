@@ -23,7 +23,7 @@ except ImportError:
     NUMPY_AVAILABLE = False
     print("❌ NumPy not available - tests will be limited")
 
-from src.transforms.core import Matrix, TransformEngine
+from core.transforms.core import Matrix, TransformEngine
 
 
 def test_legacy_matrix_performance():

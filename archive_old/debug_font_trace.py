@@ -5,9 +5,9 @@ import sys
 sys.path.append('.')
 
 from lxml import etree as ET
-from src.utils.font_processor import FontProcessor
+from core.utils.font_processor import FontProcessor
 from src.converters.text import TextConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 # Create test SVG with 24pt font
 svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">

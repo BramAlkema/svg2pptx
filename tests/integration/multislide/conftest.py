@@ -49,7 +49,7 @@ def integration_temp_dir() -> Generator[Path, None, None]:
 def real_conversion_services():
     """Real conversion services for integration testing."""
     try:
-        from src.services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         return ConversionServices.create_default()
     except ImportError:
         pytest.skip("ConversionServices not available for integration testing")

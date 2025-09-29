@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Core conversion systems
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext, ConverterRegistry
 from src.svg2drawingml import SVGToDrawingMLConverter
 

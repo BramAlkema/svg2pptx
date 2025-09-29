@@ -11,8 +11,8 @@ from lxml import etree as ET
 import tempfile
 import os
 
-from src.services.conversion_services import ConversionServices, ConversionConfig
-from src.services.migration_utils import MigrationHelper
+from core.services.conversion_services import ConversionServices, ConversionConfig
+from core.services.migration_utils import MigrationHelper
 from src.converters.base import ConversionContext
 
 

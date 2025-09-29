@@ -5,10 +5,10 @@ Test DTDA Logo Pattern
 This tests the specific pattern mentioned in the roadmap where content appears off-slide.
 """
 
-from src.viewbox.ctm_utils import create_root_context_with_viewport
-from src.services.conversion_services import ConversionServices
-from src.transforms.matrix_composer import needs_normalise
-from src.viewbox.content_bounds import calculate_content_bounds
+from core.viewbox.ctm_utils import create_root_context_with_viewport
+from core.services.conversion_services import ConversionServices
+from core.transforms.matrix_composer import needs_normalise
+from core.viewbox.content_bounds import calculate_content_bounds
 from lxml import etree as ET
 import numpy as np
 

@@ -7,7 +7,7 @@ compatibility with legacy color operations for the integration tests.
 """
 
 import pytest
-from src.color import Color
+from core.color import Color
 
 
 class TestColorMigrationCompatibility:

@@ -25,7 +25,7 @@ from src.converters.shapes import (
     LineConverter
 )
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestRectangleConverter:

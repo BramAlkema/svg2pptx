@@ -8,7 +8,7 @@ sys.path.append('.')
 
 from lxml import etree as ET
 from src.converters.text import TextConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from src.converters.base import ConversionContext
 
 class CleanHybridConverter:

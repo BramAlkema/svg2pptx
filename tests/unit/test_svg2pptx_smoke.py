@@ -24,7 +24,7 @@ class TestSVG2PPTXSmoke:
     def test_import_units(self):
         """Test that units module can be imported."""
         try:
-            import src.units
+            import core.units
             assert True
         except ImportError:
             pytest.skip("units module not available")

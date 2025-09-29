@@ -538,7 +538,7 @@ class XTestFillProcessing:  # Disabled - requires StyleEngine API refactor
         self.context = Mock(spec=ConversionContext)
         
         # Mock color parsing using modern Color API
-        from src.color import Color
+        from core.color import Color
         def mock_color_parse(color_str):
             if color_str.startswith('#'):
                 color = Color(color_str)
@@ -654,7 +654,7 @@ class XTestStrokeProcessing:  # Disabled - requires StyleEngine API refactor
         self.context.to_emu = Mock(return_value=12700)  # 1pt = 12700 EMU
         
         # Mock color parsing using modern Color API
-        from src.color import Color
+        from core.color import Color
         def mock_color_parse(color_str):
             if color_str.startswith('#'):
                 color = Color(color_str)
@@ -889,7 +889,7 @@ class XTestCompleteStyleProcessing:  # Disabled - requires StyleEngine API refac
         self.context.to_emu = Mock(return_value=12700)
         
         # Mock color parsing using modern Color API
-        from src.color import Color
+        from core.color import Color
         def mock_color_parse(color_str):
             if color_str.startswith('#'):
                 color = Color(color_str)

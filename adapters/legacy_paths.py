@@ -48,7 +48,7 @@ class A2CAdapter:
         """
         try:
             # Placeholder for actual a2c logic
-            # In production: from src.paths.a2c import arc_to_cubic
+            # In production: from core.paths.a2c import arc_to_cubic
             # return arc_to_cubic(start, end, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag)
 
             # Simplified approximation for now

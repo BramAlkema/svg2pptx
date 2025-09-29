@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from src.svg2pptx import convert_svg_to_pptx
-from src.paths import create_path_system
+from core.paths import create_path_system
 
 def main():
     print("=" * 80)

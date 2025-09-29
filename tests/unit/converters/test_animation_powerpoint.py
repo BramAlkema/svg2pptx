@@ -20,7 +20,7 @@ from src.converters.animation_templates import (
     PowerPointAnimationGenerator, PowerPointAnimationConfig, PowerPointEffectType
 )
 from src.converters.base import ConversionContext
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestPowerPointAnimationGenerator:

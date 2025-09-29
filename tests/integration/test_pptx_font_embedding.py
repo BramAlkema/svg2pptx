@@ -19,7 +19,7 @@ from unittest.mock import Mock, patch, mock_open
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from src.pptx.package_builder import PPTXPackageBuilder, create_pptx_with_embedded_fonts
-from src.services.font_embedding_engine import FontEmbeddingEngine
+from core.services.font_embedding_engine import FontEmbeddingEngine
 from src.data.embedded_font import EmbeddedFont, FontSubsetRequest, EmbeddingPermission
 
 

@@ -12,7 +12,7 @@ import numpy as np
 from unittest.mock import patch
 import gc
 
-from src.color import Color
+from core.color import Color
 
 
 class TestColorPerformanceBenchmarks:

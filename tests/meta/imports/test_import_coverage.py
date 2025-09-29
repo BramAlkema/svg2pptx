@@ -75,22 +75,22 @@ class TestImportCoverage:
 
     def test_units_import(self):
         """Test units import - 207 lines coverage."""
-        import src.units
+        import core.units
         assert src.units is not None
 
     def test_transforms_import(self):
         """Test transforms import - 242 lines coverage."""
-        import src.transforms
+        import core.transforms
         assert src.transforms is not None
 
     def test_viewbox_import(self):
         """Test viewbox import - 175 lines coverage."""
-        import src.viewbox
+        import core.viewbox
         assert src.viewbox is not None
 
     def test_colors_import(self):
         """Test colors import - 247 lines coverage."""
-        import src.colors
+        import core.colors
         assert src.colors is not None
 
     def test_pptx_font_embedder_import(self):

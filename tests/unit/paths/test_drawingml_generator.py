@@ -10,8 +10,8 @@ import pytest
 from unittest.mock import Mock
 from lxml import etree as ET
 
-from src.paths.drawingml_generator import DrawingMLGenerator
-from src.paths.architecture import (
+from core.paths.drawingml_generator import DrawingMLGenerator
+from core.paths.architecture import (
     PathCommand, CoordinatePoint, PathCommandType, PathBounds,
     XMLGenerationError
 )

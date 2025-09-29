@@ -10,7 +10,7 @@ import pytest
 import numpy as np
 from unittest.mock import patch, MagicMock
 
-from src.color import Color
+from core.color import Color
 
 
 class TestColorInitialization:
@@ -340,7 +340,7 @@ class TestColorConversions:
             oklch = color.oklch()
 
             # Convert OKLCh back to OKLab and compare
-            from src.color.color_spaces import ColorSpaceConverter
+            from core.color.color_spaces import ColorSpaceConverter
             oklab_from_oklch = ColorSpaceConverter.oklch_to_oklab(*oklch)
 
             # Check consistency (allow small floating point differences)
@@ -617,7 +617,7 @@ class TestColorFactoryMethods:
             color_oklab = Color.from_oklab(l, a, b)
 
             # Convert to OKLCh and create color from that
-            from src.color.color_spaces import ColorSpaceConverter
+            from core.color.color_spaces import ColorSpaceConverter
             oklch_vals = ColorSpaceConverter.oklab_to_oklch(l, a, b)
             color_oklch = Color.from_oklch(*oklch_vals)
 
@@ -930,7 +930,7 @@ class TestColorCaching:
 
     def test_cache_size_limit(self):
         """Test that cache size is limited."""
-        from src.color.core import _cached_color_convert
+        from core.color.core import _cached_color_convert
         import numpy as np
 
         # Test that the function works with numpy arrays

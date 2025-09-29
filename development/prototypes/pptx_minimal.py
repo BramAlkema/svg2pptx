@@ -27,7 +27,7 @@ from src.ooxml_templates import (
     SLIDE_RELS_XML
 )
 from src.svg2drawingml import SVGToDrawingMLConverter
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class MinimalPPTXGenerator:

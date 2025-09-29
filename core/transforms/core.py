@@ -14,7 +14,7 @@ Key Features:
 - Comprehensive type hints for enhanced IDE support
 
 Usage:
-    from src.transforms.core import Matrix
+    from .transforms.core import Matrix
 
     # Create transformations
     translate = Matrix.translate(10, 20)

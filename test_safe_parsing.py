@@ -10,7 +10,7 @@ from lxml import etree as ET
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.utils.transform_utils import (
+from core.utils.transform_utils import (
     get_transform_safe, has_transform_safe,
     parse_transform_safe, get_attribute_safe, has_attribute_safe
 )

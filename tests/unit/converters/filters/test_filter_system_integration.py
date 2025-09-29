@@ -14,7 +14,7 @@ from lxml import etree as ET
 from src.converters.filters.image.blur import GaussianBlurFilter, BlurParameters
 from src.converters.filters.core.base import FilterContext, FilterResult
 from src.converters.filters.core.registry import FilterRegistry
-from src.services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class TestFilterSystemBasics:

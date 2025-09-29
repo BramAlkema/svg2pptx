@@ -23,7 +23,7 @@ except ImportError:
     GRADIENT_CONVERTER_AVAILABLE = False
 
 try:
-    from src.color import ColorParser, ColorInfo
+    from core.color import ColorParser, ColorInfo
     COLOR_SYSTEM_AVAILABLE = True
 except ImportError:
     COLOR_SYSTEM_AVAILABLE = False
