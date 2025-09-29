@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+  <!-- Advanced SMIL Timing and Control Features -->
+
+  <text x="250" y="25" text-anchor="middle" font-family="Arial" font-size="16" fill="#2c3e50">
+    Advanced SMIL Timing Controls
+  </text>
+
+  <!-- 1. Animation with restart controls -->
+  <g id="restart-controls">
+    <text x="50" y="60" font-family="Arial" font-size="12" fill="#34495e">Restart: always</text>
+    <circle cx="50" cy="80" r="12" fill="#e74c3c">
+      <animate attributeName="r" values="12;20;12" dur="3s" restart="always" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 2. Animation with fill modes -->
+  <g id="fill-modes">
+    <text x="150" y="60" font-family="Arial" font-size="12" fill="#34495e">Fill: freeze</text>
+    <rect x="135" y="70" width="30" height="20" fill="#3498db">
+      <animateTransform attributeName="transform" type="scale"
+                        values="1;1.5" dur="2s" fill="freeze" begin="1s"/>
+    </rect>
+  </g>
+
+  <!-- 3. Complex keyTimes and keySplines (Bezier easing) -->
+  <g id="bezier-easing">
+    <text x="250" y="60" font-family="Arial" font-size="12" fill="#34495e">Bezier Easing</text>
+    <circle cx="250" cy="80" r="8" fill="#2ecc71">
+      <animateTransform attributeName="transform" type="translate"
+                        values="0,0;100,0;0,0"
+                        keyTimes="0;0.5;1"
+                        keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1"
+                        calcMode="spline"
+                        dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 4. Animation chains with begin/end references -->
+  <g id="animation-chains">
+    <text x="50" y="130" font-family="Arial" font-size="12" fill="#34495e">Animation Chains</text>
+
+    <!-- First animation -->
+    <rect x="50" y="140" width="20" height="20" fill="#9b59b6">
+      <animate attributeName="opacity" values="1;0" dur="1s" id="anim1"/>
+    </rect>
+
+    <!-- Second animation starts when first ends -->
+    <circle cx="90" cy="150" r="10" fill="#f39c12">
+      <animate attributeName="r" values="10;20;10" dur="1.5s" begin="anim1.end"/>
+    </circle>
+
+    <!-- Third animation starts when second begins -->
+    <polygon points="130,140 145,155 130,170 115,155" fill="#1abc9c">
+      <animateTransform attributeName="transform" type="rotate"
+                        values="0 130 155;360 130 155" dur="2s" begin="anim1.end"/>
+    </polygon>
+  </g>
+
+  <!-- 5. Min/Max duration constraints -->
+  <g id="duration-constraints">
+    <text x="250" y="130" font-family="Arial" font-size="12" fill="#34495e">Duration Constraints</text>
+    <rect x="250" y="140" width="25" height="25" fill="#e67e22">
+      <animate attributeName="width" values="25;50;25" dur="2s" min="1s" max="4s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 6. Multiple values with different interpolation modes -->
+  <g id="interpolation-modes">
+    <text x="350" y="130" font-family="Arial" font-size="12" fill="#34495e">Interpolation</text>
+    <path d="M 350,150 L 380,140 L 410,150 L 395,170 L 365,170 Z" fill="#8e44ad">
+      <animate attributeName="fill"
+               values="#8e44ad;#e74c3c;#3498db;#2ecc71;#f39c12;#8e44ad"
+               dur="3s" calcMode="linear" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 7. Negative begin times and offsets -->
+  <g id="negative-timing">
+    <text x="50" y="210" font-family="Arial" font-size="12" fill="#34495e">Negative Begin</text>
+    <circle cx="50" cy="230" r="10" fill="#c0392b">
+      <animate attributeName="opacity" values="1;0.2;1" dur="4s" begin="-2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 8. Event-based triggers (simulated with long delays) -->
+  <g id="event-triggers">
+    <text x="150" y="210" font-family="Arial" font-size="12" fill="#34495e">Delayed Start</text>
+    <rect x="140" y="220" width="20" height="20" fill="#34495e">
+      <animate attributeName="fill" values="#34495e;#e74c3c;#34495e" dur="1s" begin="5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 9. Complex repeat behavior -->
+  <g id="complex-repeat">
+    <text x="250" y="210" font-family="Arial" font-size="12" fill="#34495e">Complex Repeat</text>
+    <ellipse cx="250" cy="230" rx="15" ry="8" fill="#16a085">
+      <animateTransform attributeName="transform" type="scale"
+                        values="1;2;1" dur="1s" repeatCount="3" repeatDur="5s"/>
+    </ellipse>
+  </g>
+
+  <!-- 10. Animation with accumulate behavior -->
+  <g id="accumulate-behavior">
+    <text x="350" y="210" font-family="Arial" font-size="12" fill="#34495e">Accumulate</text>
+    <rect x="345" y="220" width="15" height="15" fill="#27ae60">
+      <animateTransform attributeName="transform" type="translate"
+                        values="0,0;20,0" dur="1s" repeatCount="4" accumulate="sum"/>
+    </rect>
+  </g>
+
+  <!-- 11. Additive transforms -->
+  <g id="additive-transforms">
+    <text x="50" y="270" font-family="Arial" font-size="12" fill="#34495e">Additive Transforms</text>
+    <polygon points="50,280 65,275 80,280 72.5,295 57.5,295" fill="#d35400">
+      <animateTransform attributeName="transform" type="translate"
+                        values="0,0;50,0;0,0" dur="4s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate"
+                        values="0 65 287.5;360 65 287.5" dur="2s" repeatCount="indefinite" additive="sum"/>
+      <animateTransform attributeName="transform" type="scale"
+                        values="1;1.2;1" dur="3s" repeatCount="indefinite" additive="sum"/>
+    </polygon>
+  </g>
+
+  <!-- 12. Discrete vs continuous animation -->
+  <g id="discrete-vs-continuous">
+    <text x="200" y="270" font-family="Arial" font-size="12" fill="#34495e">Discrete/Continuous</text>
+
+    <!-- Discrete -->
+    <rect x="200" y="275" width="12" height="12" fill="#95a5a6">
+      <animate attributeName="x" values="200;220;240;220;200" dur="2s" calcMode="discrete" repeatCount="indefinite"/>
+    </rect>
+
+    <!-- Continuous -->
+    <circle cx="210" cy="290" r="6" fill="#7f8c8d">
+      <animate attributeName="cx" values="210;230;250;230;210" dur="2s" calcMode="linear" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 13. Path length animation -->
+  <g id="path-length">
+    <text x="350" y="270" font-family="Arial" font-size="12" fill="#34495e">Path Length</text>
+    <path d="M 350,280 Q 375,275 400,280" fill="none" stroke="#2c3e50" stroke-width="3">
+      <animate attributeName="stroke-dasharray" values="0,100;50,50;100,0" dur="3s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>

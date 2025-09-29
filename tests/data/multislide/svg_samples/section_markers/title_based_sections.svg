@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768">
+  <title>Title-Based Section Detection - 3 Slides</title>
+
+  <!-- Slide 1: Introduction Section -->
+  <g id="section_introduction">
+    <rect width="1024" height="768" fill="#f8f9fa"/>
+
+    <!-- Section title (slide boundary indicator) -->
+    <text x="512" y="100" text-anchor="middle" font-size="48" fill="#212529" font-weight="bold" class="section-title">Introduction</text>
+    <line x1="200" y1="120" x2="824" y2="120" stroke="#007bff" stroke-width="3"/>
+
+    <!-- Content area -->
+    <rect x="100" y="180" width="824" height="500" fill="white" stroke="#dee2e6" stroke-width="2" rx="12"/>
+
+    <!-- Welcome content -->
+    <text x="512" y="250" text-anchor="middle" font-size="36" fill="#495057">Welcome to Our Company</text>
+    <text x="512" y="300" text-anchor="middle" font-size="20" fill="#6c757d">Building Tomorrow's Solutions Today</text>
+
+    <!-- Company overview -->
+    <g class="company-overview">
+      <rect x="150" y="350" width="200" height="120" fill="#e7f3ff" stroke="#007bff" stroke-width="2" rx="8"/>
+      <text x="250" y="380" text-anchor="middle" font-size="18" fill="#007bff" font-weight="bold">Founded</text>
+      <text x="250" y="410" text-anchor="middle" font-size="24" fill="#0056b3" font-weight="bold">2015</text>
+      <text x="250" y="440" text-anchor="middle" font-size="14" fill="#007bff">8 years of innovation</text>
+
+      <rect x="374" y="350" width="200" height="120" fill="#e8f5e8" stroke="#28a745" stroke-width="2" rx="8"/>
+      <text x="474" y="380" text-anchor="middle" font-size="18" fill="#28a745" font-weight="bold">Employees</text>
+      <text x="474" y="410" text-anchor="middle" font-size="24" fill="#155724" font-weight="bold">1,247</text>
+      <text x="474" y="440" text-anchor="middle" font-size="14" fill="#28a745">Across 12 countries</text>
+
+      <rect x="598" y="350" width="200" height="120" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="8"/>
+      <text x="698" y="380" text-anchor="middle" font-size="18" fill="#856404" font-weight="bold">Customers</text>
+      <text x="698" y="410" text-anchor="middle" font-size="24" fill="#856404" font-weight="bold">50K+</text>
+      <text x="698" y="440" text-anchor="middle" font-size="14" fill="#856404">Worldwide</text>
+    </g>
+
+    <!-- Mission statement -->
+    <rect x="150" y="500" width="724" height="100" fill="#f8d7da" stroke="#dc3545" stroke-width="2" rx="8"/>
+    <text x="512" y="530" text-anchor="middle" font-size="20" fill="#721c24" font-weight="bold">Our Mission</text>
+    <text x="512" y="560" text-anchor="middle" font-size="16" fill="#721c24">To empower businesses with cutting-edge technology solutions</text>
+    <text x="512" y="580" text-anchor="middle" font-size="16" fill="#721c24">that drive growth, efficiency, and innovation</text>
+  </g>
+
+  <!-- Section transition marker -->
+  <rect x="0" y="760" width="1024" height="8" fill="#007bff" opacity="0.3"/>
+
+  <!-- Slide 2: Products Section -->
+  <g id="section_products" transform="translate(0, 768)">
+    <rect width="1024" height="768" fill="#e8f4fd"/>
+
+    <!-- Section title (slide boundary indicator) -->
+    <text x="512" y="100" text-anchor="middle" font-size="48" fill="#0056b3" font-weight="bold" class="section-title">Our Products</text>
+    <line x1="200" y1="120" x2="824" y2="120" stroke="#0056b3" stroke-width="3"/>
+
+    <!-- Content area -->
+    <rect x="50" y="180" width="924" height="500" fill="white" stroke="#b3d7ff" stroke-width="2" rx="12"/>
+
+    <!-- Product portfolio -->
+    <text x="512" y="230" text-anchor="middle" font-size="24" fill="#0056b3" font-weight="bold">Complete Solution Suite</text>
+
+    <!-- Product 1: Enterprise Platform -->
+    <g class="product-enterprise">
+      <rect x="100" y="270" width="250" height="180" fill="#cce7ff" stroke="#007bff" stroke-width="2" rx="10"/>
+      <text x="225" y="300" text-anchor="middle" font-size="20" fill="#004085" font-weight="bold">Enterprise Platform</text>
+
+      <circle cx="130" cy="330" r="6" fill="#007bff"/>
+      <text x="145" y="335" font-size="14" fill="#004085">Scalable architecture</text>
+
+      <circle cx="130" cy="355" r="6" fill="#007bff"/>
+      <text x="145" y="360" font-size="14" fill="#004085">Real-time analytics</text>
+
+      <circle cx="130" cy="380" r="6" fill="#007bff"/>
+      <text x="145" y="385" font-size="14" fill="#004085">Enterprise security</text>
+
+      <circle cx="130" cy="405" r="6" fill="#007bff"/>
+      <text x="145" y="410" font-size="14" fill="#004085">API integration</text>
+
+      <rect x="120" y="425" width="210" height="15" fill="#007bff" rx="7"/>
+      <text x="225" y="435" text-anchor="middle" font-size="11" fill="white">10,000+ active users</text>
+    </g>
+
+    <!-- Product 2: Cloud Services -->
+    <g class="product-cloud">
+      <rect x="374" y="270" width="250" height="180" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="10"/>
+      <text x="499" y="300" text-anchor="middle" font-size="20" fill="#155724" font-weight="bold">Cloud Services</text>
+
+      <circle cx="404" cy="330" r="6" fill="#28a745"/>
+      <text x="419" y="335" font-size="14" fill="#155724">99.9% uptime SLA</text>
+
+      <circle cx="404" cy="355" r="6" fill="#28a745"/>
+      <text x="419" y="360" font-size="14" fill="#155724">Auto-scaling</text>
+
+      <circle cx="404" cy="380" r="6" fill="#28a745"/>
+      <text x="419" y="385" font-size="14" fill="#155724">Global CDN</text>
+
+      <circle cx="404" cy="405" r="6" fill="#28a745"/>
+      <text x="419" y="410" font-size="14" fill="#155724">24/7 monitoring</text>
+
+      <rect x="394" y="425" width="210" height="15" fill="#28a745" rx="7"/>
+      <text x="499" y="435" text-anchor="middle" font-size="11" fill="white">50+ data centers</text>
+    </g>
+
+    <!-- Product 3: Mobile Solutions -->
+    <g class="product-mobile">
+      <rect x="648" y="270" width="250" height="180" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="10"/>
+      <text x="773" y="300" text-anchor="middle" font-size="20" fill="#856404" font-weight="bold">Mobile Solutions</text>
+
+      <circle cx="678" cy="330" r="6" fill="#ffc107"/>
+      <text x="693" y="335" font-size="14" fill="#856404">Cross-platform SDK</text>
+
+      <circle cx="678" cy="355" r="6" fill="#ffc107"/>
+      <text x="693" y="360" font-size="14" fill="#856404">Offline capability</text>
+
+      <circle cx="678" cy="380" r="6" fill="#ffc107"/>
+      <text x="693" y="385" font-size="14" fill="#856404">Push notifications</text>
+
+      <circle cx="678" cy="405" r="6" fill="#ffc107"/>
+      <text x="693" y="410" font-size="14" fill="#856404">Analytics built-in</text>
+
+      <rect x="668" y="425" width="210" height="15" fill="#ffc107" rx="7"/>
+      <text x="773" y="435" text-anchor="middle" font-size="11" fill="#212529">2M+ downloads</text>
+    </g>
+
+    <!-- Integration capabilities -->
+    <rect x="150" y="480" width="724" height="80" fill="#e2e3e5" stroke="#6c757d" stroke-width="2" rx="8"/>
+    <text x="512" y="510" text-anchor="middle" font-size="18" fill="#495057" font-weight="bold">Seamless Integration</text>
+    <text x="512" y="535" text-anchor="middle" font-size="14" fill="#6c757d">All products work together as a unified ecosystem</text>
+    <text x="512" y="555" text-anchor="middle" font-size="14" fill="#6c757d">Single sign-on, shared data, consistent UX</text>
+
+    <!-- Customer testimonial -->
+    <rect x="200" y="590" width="624" height="70" fill="#f8d7da" stroke="#dc3545" stroke-width="1" rx="6"/>
+    <text x="512" y="615" text-anchor="middle" font-size="14" fill="#721c24" font-style="italic">"This platform transformed our business operations."</text>
+    <text x="512" y="635" text-anchor="middle" font-size="12" fill="#721c24" font-weight="bold">- Sarah Chen, CTO at TechCorp</text>
+    <text x="512" y="650" text-anchor="middle" font-size="11" fill="#721c24">40% increase in productivity</text>
+  </g>
+
+  <!-- Section transition marker -->
+  <rect x="0" y="1528" width="1024" height="8" fill="#0056b3" opacity="0.3"/>
+
+  <!-- Slide 3: Contact Section -->
+  <g id="section_contact" transform="translate(0, 1536)">
+    <rect width="1024" height="768" fill="#e8f5e8"/>
+
+    <!-- Section title (slide boundary indicator) -->
+    <text x="512" y="100" text-anchor="middle" font-size="48" fill="#155724" font-weight="bold" class="section-title">Get in Touch</text>
+    <line x1="200" y1="120" x2="824" y2="120" stroke="#28a745" stroke-width="3"/>
+
+    <!-- Content area -->
+    <rect x="100" y="180" width="824" height="500" fill="white" stroke="#80d187" stroke-width="2" rx="12"/>
+
+    <!-- Contact information -->
+    <text x="512" y="240" text-anchor="middle" font-size="28" fill="#155724" font-weight="bold">Ready to Transform Your Business?</text>
+    <text x="512" y="280" text-anchor="middle" font-size="18" fill="#28a745">Let's discuss how our solutions can help you achieve your goals</text>
+
+    <!-- Contact methods -->
+    <g class="contact-methods">
+      <!-- Phone -->
+      <rect x="150" y="320" width="200" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+      <circle cx="200" cy="350" r="12" fill="#28a745"/>
+      <text x="200" y="355" text-anchor="middle" font-size="16" fill="white" font-weight="bold">📞</text>
+      <text x="250" y="355" text-anchor="middle" font-size="16" fill="#155724" font-weight="bold">Call Us</text>
+      <text x="250" y="380" text-anchor="middle" font-size="14" fill="#155724">+1 (555) 123-4567</text>
+      <text x="250" y="400" text-anchor="middle" font-size="12" fill="#28a745">Mon-Fri 9AM-6PM EST</text>
+
+      <!-- Email -->
+      <rect x="374" y="320" width="200" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+      <circle cx="424" cy="350" r="12" fill="#28a745"/>
+      <text x="424" y="355" text-anchor="middle" font-size="16" fill="white" font-weight="bold">✉</text>
+      <text x="474" y="355" text-anchor="middle" font-size="16" fill="#155724" font-weight="bold">Email Us</text>
+      <text x="474" y="380" text-anchor="middle" font-size="14" fill="#155724">sales@company.com</text>
+      <text x="474" y="400" text-anchor="middle" font-size="12" fill="#28a745">24hr response guarantee</text>
+
+      <!-- Demo -->
+      <rect x="598" y="320" width="200" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+      <circle cx="648" cy="350" r="12" fill="#28a745"/>
+      <text x="648" y="355" text-anchor="middle" font-size="16" fill="white" font-weight="bold">🎯</text>
+      <text x="698" y="355" text-anchor="middle" font-size="16" fill="#155724" font-weight="bold">Book Demo</text>
+      <text x="698" y="380" text-anchor="middle" font-size="14" fill="#155724">Free 30-min session</text>
+      <text x="698" y="400" text-anchor="middle" font-size="12" fill="#28a745">Personalized walkthrough</text>
+    </g>
+
+    <!-- Office locations -->
+    <rect x="200" y="450" width="624" height="120" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2" rx="8"/>
+    <text x="512" y="480" text-anchor="middle" font-size="20" fill="#495057" font-weight="bold">Office Locations</text>
+
+    <text x="300" y="510" text-anchor="middle" font-size="14" fill="#495057" font-weight="bold">New York</text>
+    <text x="300" y="530" text-anchor="middle" font-size="12" fill="#6c757d">123 Tech Street</text>
+    <text x="300" y="545" text-anchor="middle" font-size="12" fill="#6c757d">NY 10001</text>
+
+    <text x="512" y="510" text-anchor="middle" font-size="14" fill="#495057" font-weight="bold">San Francisco</text>
+    <text x="512" y="530" text-anchor="middle" font-size="12" fill="#6c757d">456 Innovation Ave</text>
+    <text x="512" y="545" text-anchor="middle" font-size="12" fill="#6c757d">CA 94105</text>
+
+    <text x="724" y="510" text-anchor="middle" font-size="14" fill="#495057" font-weight="bold">London</text>
+    <text x="724" y="530" text-anchor="middle" font-size="12" fill="#6c757d">789 Future Lane</text>
+    <text x="724" y="545" text-anchor="middle" font-size="12" fill="#6c757d">EC1A 1AA</text>
+
+    <!-- Call to action -->
+    <rect x="300" y="600" width="424" height="60" fill="#28a745" rx="30"/>
+    <text x="512" y="640" text-anchor="middle" font-size="24" fill="white" font-weight="bold">Start Your Free Trial Today</text>
+  </g>
+</svg>

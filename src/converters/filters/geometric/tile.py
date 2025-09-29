@@ -6,7 +6,7 @@ tiling in PowerPoint with a:blipFill/a:tile integration.
 """
 
 import math
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from dataclasses import dataclass
 from typing import Tuple, Optional, Dict, Any, List
 from abc import ABC, abstractmethod

@@ -569,12 +569,8 @@ class Color:
         Returns:
             Lab values as (L*, a*, b*) tuple
         """
-        try:
-            lab = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELab")
-            return tuple(float(x) for x in lab)
-        except Exception as e:
-            # Fallback to legacy implementation
-            raise NotImplementedError(f"Lab conversion requires colorspacious: {e}")
+        lab = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELab")
+        return tuple(float(x) for x in lab)
 
     def lch(self) -> Tuple[float, float, float]:
         """
@@ -583,12 +579,8 @@ class Color:
         Returns:
             LCH values as (L*, C*, h°) tuple
         """
-        try:
-            lch = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELCh")
-            return tuple(float(x) for x in lch)
-        except Exception as e:
-            # Fallback to legacy implementation
-            raise NotImplementedError(f"LCH conversion requires colorspacious: {e}")
+        lch = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELCh")
+        return tuple(float(x) for x in lch)
 
     def hsl(self) -> Tuple[float, float, float]:
         """
@@ -637,12 +629,8 @@ class Color:
         Returns:
             XYZ values tuple
         """
-        try:
-            xyz = colorspacious.cspace_convert(self._rgb, "sRGB255", "XYZ100")
-            return tuple(float(x) for x in xyz)
-        except Exception as e:
-            # Fallback to legacy implementation
-            raise NotImplementedError(f"XYZ conversion requires colorspacious: {e}")
+        xyz = colorspacious.cspace_convert(self._rgb, "sRGB255", "XYZ100")
+        return tuple(float(x) for x in xyz)
 
     def drawingml(self) -> str:
         """

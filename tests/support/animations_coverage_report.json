@@ -1,0 +1,82 @@
+{
+  "summary": {
+    "total_modules": 1,
+    "modules_analyzed": 1,
+    "average_coverage": 92.87925696594426,
+    "modules_meeting_target": 1,
+    "modules_below_target": 0
+  },
+  "modules": {
+    "src.converters.animations": {
+      "coverage": 92.87925696594426,
+      "missing_lines": [
+        77,
+        127,
+        142,
+        165,
+        183,
+        194,
+        214,
+        219,
+        224,
+        256,
+        257,
+        282,
+        301,
+        316,
+        317,
+        320,
+        340,
+        341,
+        371,
+        372,
+        433,
+        443,
+        485
+      ],
+      "gaps": {
+        "module": "src.converters.animations",
+        "current_coverage": 92.87925696594426,
+        "target_coverage": 80.0,
+        "coverage_gap": 0,
+        "missing_lines": [
+          77,
+          127,
+          142,
+          165,
+          183,
+          194,
+          214,
+          219,
+          224,
+          256,
+          257,
+          282,
+          301,
+          316,
+          317,
+          320,
+          340,
+          341,
+          371,
+          372,
+          433,
+          443,
+          485
+        ],
+        "lines_to_cover": 23,
+        "meets_target": true,
+        "missing_patterns": {
+          "error_handling": 0,
+          "edge_cases": 0,
+          "main_logic": 0,
+          "initialization": 0,
+          "consecutive_gaps": 19,
+          "largest_gap": 2,
+          "isolated_lines": 15
+        }
+      }
+    }
+  },
+  "recommendations": []
+}

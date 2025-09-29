@@ -104,21 +104,26 @@ class SymbolConverter(BaseConverter):
         if not symbol_id:
             return
         
-        # Parse viewBox using canonical ViewportResolver
+        # Parse viewBox using ConversionServices
         viewbox = None
         viewbox_str = symbol_element.get('viewBox')
         if viewbox_str:
             try:
-                # Use the canonical high-performance ViewportResolver for parsing
-                from ..viewbox import ViewportResolver
                 import numpy as np
 
-                resolver = ViewportResolver()
+                # Use services for dependency injection
+                if hasattr(self, 'services') and self.services and hasattr(self.services, 'viewport_resolver'):
+                    resolver = self.services.viewport_resolver
+                else:
+                    from ..services.conversion_services import ConversionServices
+                    services = ConversionServices.create_default()
+                    resolver = services.viewport_resolver
+
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox_str]))
                 if len(parsed) > 0 and len(parsed[0]) >= 4:
                     viewbox = tuple(parsed[0][:4])
             except ImportError:
-                # Fallback to legacy parsing if ViewportResolver not available
+                # Fallback to legacy parsing if ViewportEngine not available
                 pass
             except Exception:
                 # Fallback on any parsing error
@@ -396,9 +401,8 @@ class SymbolConverter(BaseConverter):
             return None
         
         try:
-            # Remove common units
-            clean_str = dimension_str.replace('px', '').replace('pt', '').replace('%', '')
-            return float(clean_str)
+            # Use robust length parsing that handles all units properly
+            return self.parse_length(dimension_str)
         except (ValueError, TypeError):
             return None
     

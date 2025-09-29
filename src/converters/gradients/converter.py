@@ -45,28 +45,66 @@ class GradientConverter(BaseConverter):
             if element.tag.endswith('linearGradient') or element.tag.endswith('radialGradient'):
                 # Try the high-performance engine first
                 try:
-                    result = self.gradient_engine.process_single_gradient(element)
-                    if result:
-                        return result
-                except Exception as e:
-                    self.logger.debug(f"High-performance engine failed, using fallback: {e}")
+                    # Validate element before processing
+                    if not self._validate_gradient_element(element):
+                        self.logger.debug(f"Gradient element validation failed, using fallback for {element.get('id', 'unknown')}")
+                        return self._convert_with_fallback(element, context)
 
-            # Fallback to basic implementation
-            if element.tag.endswith('linearGradient'):
-                return self._convert_linear_gradient(element, context)
-            elif element.tag.endswith('radialGradient'):
-                return self._convert_radial_gradient(element, context)
-            elif element.tag.endswith('pattern'):
-                return self._convert_pattern(element, context)
-            elif element.tag.endswith('meshgradient'):
-                return self._convert_mesh_gradient(element, context)
-            else:
-                self.logger.warning(f"Unknown gradient type: {element.tag}")
-                return self._create_fallback_gradient()
+                    result = self.gradient_engine.process_single_gradient(element)
+                    if result and len(result.strip()) > 0:
+                        self.logger.debug(f"High-performance engine succeeded for gradient {element.get('id', 'unknown')}")
+                        return result
+                    else:
+                        self.logger.debug(f"High-performance engine returned empty result for {element.get('id', 'unknown')}, using fallback")
+                        return self._convert_with_fallback(element, context)
+
+                except Exception as e:
+                    self.logger.warning(f"High-performance engine failed for gradient {element.get('id', 'unknown')}: {e}")
+                    import traceback
+                    self.logger.debug(f"Gradient engine traceback: {traceback.format_exc()}")
+                    return self._convert_with_fallback(element, context)
+
+            # Handle other gradient types
+            return self._convert_with_fallback(element, context)
 
         except Exception as e:
             self.logger.error(f"Error converting gradient element {element.tag}: {e}")
             return self._create_fallback_gradient()
+
+    def _convert_with_fallback(self, element: ET.Element, context: ConversionContext) -> str:
+        """Convert using fallback implementation with proper routing"""
+        if element.tag.endswith('linearGradient'):
+            return self._convert_linear_gradient(element, context)
+        elif element.tag.endswith('radialGradient'):
+            return self._convert_radial_gradient(element, context)
+        elif element.tag.endswith('pattern'):
+            return self._convert_pattern(element, context)
+        elif element.tag.endswith('meshgradient'):
+            return self._convert_mesh_gradient(element, context)
+        else:
+            self.logger.warning(f"Unknown gradient type: {element.tag}")
+            return self._create_fallback_gradient()
+
+    def _validate_gradient_element(self, element: ET.Element) -> bool:
+        """Validate gradient element before processing with high-performance engine"""
+        try:
+            # Check if element is valid
+            if element is None:
+                return False
+
+            # Check if element has required attributes based on type
+            if element.tag.endswith('linearGradient'):
+                # Linear gradients should have coordinate attributes (with defaults)
+                return True  # LinearGradient engine handles defaults
+            elif element.tag.endswith('radialGradient'):
+                # Radial gradients should have center/radius attributes (with defaults)
+                return True  # RadialGradient engine handles defaults
+
+            return True
+
+        except Exception as e:
+            self.logger.debug(f"Gradient validation error: {e}")
+            return False
 
     def get_fill_from_url(self, url: str, context: ConversionContext) -> str:
         """Get fill definition from URL reference (url(#id))"""
@@ -120,42 +158,72 @@ class GradientConverter(BaseConverter):
         """Safely parse float value with fallback using CoordinateTransformer service."""
         # Migrated to use CoordinateTransformer service for consistent coordinate parsing
         try:
+            # Handle percentage values
+            if value and value.strip().endswith('%'):
+                percentage_val = value.strip()[:-1]
+                return float(percentage_val) / 100.0
+
             # Use the coordinate transformer service for consistent parsing
-            parsed_result = self.services.coordinate_transformer.parse_single_coordinate(value)
-            return parsed_result.value if parsed_result else default
-        except (ValueError, TypeError, AttributeError):
-            # Fallback to direct parsing if service is not available
-            try:
-                return float(value)
-            except (ValueError, TypeError):
-                return default
+            parsed_result = self.services.coordinate_transformer.parse_coordinate_string(value)
+            if parsed_result and parsed_result.coordinates:
+                # Return the first coordinate's x value
+                return parsed_result.coordinates[0][0]
+
+            # Try direct float parsing as fallback
+            return float(value) if value else default
+
+        except (ValueError, TypeError, AttributeError) as e:
+            self.logger.debug(f"Coordinate parsing failed for '{value}': {e}, using default {default}")
+            return default
 
     def _convert_linear_gradient(self, element: ET.Element, context: ConversionContext) -> str:
-        """Convert linear gradient using basic implementation"""
-        # Extract gradient attributes using coordinate transformer service
-        # Use CoordinateTransformer for consistent coordinate parsing
-        coord_str = f"{element.get('x1', '0')},{element.get('y1', '0')} {element.get('x2', '1')},{element.get('y2', '0')}"
-        result = self.services.coordinate_transformer.parse_coordinate_string(coord_str)
+        """Convert linear gradient using enhanced coordinate transformer"""
+        # Extract gradient attributes using coordinate transformer service for consistency
+        try:
+            # Get coordinate values with defaults
+            x1_str = element.get('x1', '0%')
+            y1_str = element.get('y1', '0%')
+            x2_str = element.get('x2', '100%')
+            y2_str = element.get('y2', '0%')
 
-        if len(result.coordinates) >= 2:
-            (x1, y1), (x2, y2) = result.coordinates[0], result.coordinates[1]
-        else:
-            # Fallback to manual parsing for backward compatibility
-            x1 = self._safe_float_parse(element.get('x1', '0'), 0.0)
-            y1 = self._safe_float_parse(element.get('y1', '0'), 0.0)
-            x2 = self._safe_float_parse(element.get('x2', '1'), 1.0)
-            y2 = self._safe_float_parse(element.get('y2', '0'), 0.0)
+            # Use CoordinateTransformer for consistent coordinate parsing
+            x1 = self._safe_float_parse(x1_str, 0.0)
+            y1 = self._safe_float_parse(y1_str, 0.0)
+            x2 = self._safe_float_parse(x2_str, 1.0)
+            y2 = self._safe_float_parse(y2_str, 0.0)
 
-        # Calculate angle
+            self.logger.debug(f"Parsed gradient coordinates: x1={x1}, y1={y1}, x2={x2}, y2={y2}")
+
+        except Exception as e:
+            self.logger.warning(f"Coordinate parsing failed for gradient {element.get('id', 'unknown')}: {e}")
+            # Safe fallback values
+            x1, y1, x2, y2 = 0.0, 0.0, 1.0, 0.0
+
+        # Calculate angle with coordinate validation
         dx = x2 - x1
         dy = y2 - y1
-        if dx == 0 and dy == 0:
+
+        # Validate coordinate differences
+        if abs(dx) < 1e-10 and abs(dy) < 1e-10:
+            # Zero-length gradient, default to horizontal
             angle = 0
+            self.logger.debug(f"Zero-length gradient detected, using horizontal angle")
         else:
+            # Calculate angle using robust math
             angle = math.atan2(dy, dx) * 180 / math.pi
             angle = (90 - angle) % 360  # Convert to DrawingML angle system
 
+            # Validate angle range
+            if not (0 <= angle <= 360):
+                self.logger.warning(f"Invalid angle {angle}, clamping to valid range")
+                angle = max(0, min(360, angle))
+
         angle_emu = int(angle * 60000)  # Convert to EMU (1/60000 degree)
+
+        # Validate EMU range for DrawingML
+        if not (0 <= angle_emu <= 21600000):  # 21600000 = 360 * 60000
+            self.logger.warning(f"Angle EMU {angle_emu} out of range, clamping")
+            angle_emu = max(0, min(21600000, angle_emu))
 
         # Get gradient stops
         stops = self._get_gradient_stops(element)
@@ -232,13 +300,28 @@ class GradientConverter(BaseConverter):
 
             # Parse color using canonical Color API for consistency
             stop_color_str = stop.get('stop-color', '#000000')
+
+            # Also check style attribute for stop-color
+            style = stop.get('style', '')
+            if 'stop-color:' in style and self.services.style_parser:
+                style_color = self.services.style_parser.get_property_value(style, 'stop-color')
+                if style_color:
+                    stop_color_str = style_color
+
             try:
-                from ...color import Color
-                color_obj = Color(stop_color_str)
-                stop_color = color_obj.hex()[1:]  # Remove # prefix
-            except:
-                # Fallback for invalid colors
-                stop_color = "000000"
+                color_obj = self.services.color_parser(stop_color_str.strip())
+                hex_result = color_obj.hex()
+                # Color API returns hex without # prefix, so use directly
+                stop_color = hex_result if not hex_result.startswith('#') else hex_result[1:]
+                self.logger.debug(f"Successfully parsed color '{stop_color_str}' to hex '{stop_color}'")
+            except Exception as e:
+                # Enhanced fallback for invalid colors with logging
+                self.logger.debug(f"Color parsing failed for '{stop_color_str}': {e}, using fallback")
+
+                # Try basic hex extraction as fallback
+                fallback_color = self._extract_fallback_color(stop_color_str)
+                stop_color = fallback_color
+                self.logger.debug(f"Used fallback color '{stop_color}' for invalid input '{stop_color_str}'")
 
             # Parse opacity with style attribute support
             stop_opacity_str = stop.get('stop-opacity', '1.0')
@@ -268,3 +351,44 @@ class GradientConverter(BaseConverter):
                 stops = [(0.0, "000000", 1.0), (1.0, "FFFFFF", 1.0)]
 
         return stops
+
+    def _extract_fallback_color(self, color_str: str) -> str:
+        """Extract fallback color when Color API fails"""
+        try:
+            color_clean = color_str.strip().lower()
+
+            # Try basic hex parsing
+            if color_clean.startswith('#'):
+                hex_part = color_clean[1:]
+                if len(hex_part) == 3:
+                    # Expand 3-digit hex
+                    hex_part = ''.join([c*2 for c in hex_part])
+                elif len(hex_part) == 6:
+                    # Already valid 6-digit hex
+                    pass
+                else:
+                    # Invalid length, use default
+                    return "000000"
+
+                # Validate hex characters
+                try:
+                    int(hex_part, 16)
+                    return hex_part.upper()
+                except ValueError:
+                    pass
+
+            # Basic named color fallbacks
+            basic_colors = {
+                'red': 'FF0000', 'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00',
+                'black': '000000', 'white': 'FFFFFF', 'gray': '808080', 'grey': '808080',
+                'cyan': '00FFFF', 'magenta': 'FF00FF', 'orange': 'FFA500', 'purple': '800080'
+            }
+
+            if color_clean in basic_colors:
+                return basic_colors[color_clean]
+
+        except Exception:
+            pass
+
+        # Final fallback to black
+        return "000000"

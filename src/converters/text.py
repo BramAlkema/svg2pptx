@@ -25,6 +25,95 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# XML namespace definitions for proper PowerPoint structure
+NS = {
+    "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
+    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+}
+
+def _q(n):
+    """Helper: Convert 'p:sp' -> '{uri}sp' format"""
+    pfx, tag = n.split(":")
+    return f"{{{NS[pfx]}}}{tag}"
+
+def make_text_shape(
+    *,
+    shape_id: int,
+    name: str,
+    x_emu: int,
+    y_emu: int,
+    w_emu: int,
+    h_emu: int,
+    text: str,
+    font_size_pt: float = 24.0,
+    rgb: str = "000000",  # "RRGGBB"
+    bold: bool = False,
+    italic: bool = False,
+    align: str = "l",     # "l" | "ctr" | "r" | "just"
+):
+    """Return a <p:sp> element ready to append to slide's spTree."""
+    sp = ET.Element(_q("p:sp"))  # no nsmap here; inherit from slide
+
+    # --- Non-visual props ---
+    nvSpPr = ET.SubElement(sp, _q("p:nvSpPr"))
+    cNvPr = ET.SubElement(nvSpPr, _q("p:cNvPr"), id=str(shape_id), name=name)
+    ET.SubElement(nvSpPr, _q("p:cNvSpPr"))
+    ET.SubElement(nvSpPr, _q("p:nvPr"))
+
+    # --- Shape props (position + geometry) ---
+    spPr = ET.SubElement(sp, _q("p:spPr"))
+    xfrm = ET.SubElement(spPr, _q("a:xfrm"))
+    ET.SubElement(xfrm, _q("a:off"), x=str(x_emu), y=str(y_emu))
+    ET.SubElement(xfrm, _q("a:ext"), cx=str(w_emu), cy=str(h_emu))
+    prstGeom = ET.SubElement(spPr, _q("a:prstGeom"), prst="rect")
+    ET.SubElement(prstGeom, _q("a:avLst"))
+
+    # Optional: no outline (prevents default hairline)
+    ln = ET.SubElement(spPr, _q("a:ln"))
+    ET.SubElement(ln, _q("a:noFill"))
+
+    # --- Text body ---
+    txBody = ET.SubElement(sp, _q("p:txBody"))
+    bodyPr = ET.SubElement(
+        txBody,
+        _q("a:bodyPr"),
+        vertOverflow="ellipsis",
+        wrap="square",
+        rtlCol="0",
+        anchor="ctr" if align == "ctr" else "t",
+        anchorCtr="1" if align == "ctr" else "0",
+    )
+    ET.SubElement(txBody, _q("a:lstStyle"))
+
+    p = ET.SubElement(txBody, _q("a:p"))
+    if align in ("ctr", "r", "l", "just"):
+        pPr = ET.SubElement(p, _q("a:pPr"), algn=("ctr" if align == "ctr" else align))
+    # Run
+    r = ET.SubElement(p, _q("a:r"))
+    rPr = ET.SubElement(
+        r,
+        _q("a:rPr"),
+        lang="en-US",
+        sz=str(int(round(font_size_pt * 100))),  # 1/100 pt
+        b="1" if bold else "0",
+        i="1" if italic else "0",
+        dirty="0",
+    )
+    solidFill = ET.SubElement(rPr, _q("a:solidFill"))
+    ET.SubElement(solidFill, _q("a:srgbClr"), val=rgb.upper())
+
+    # (Optional) set typeface explicitly; otherwise theme font applies
+    latin = ET.SubElement(rPr, _q("a:latin"))
+    latin.set("typeface", "+mn-lt")  # or a real font name like "Space Grotesk"
+
+    t = ET.SubElement(r, _q("a:t"))
+    t.text = text
+
+    # End paragraph props are IMPORTANT (PowerPoint complains without them)
+    ET.SubElement(p, _q("a:endParaRPr"))
+
+    return sp
+
 
 class TextConverter(BaseConverter):
     """Converts SVG text elements to DrawingML text shapes with optional text-to-path fallback"""
@@ -205,6 +294,14 @@ class TextConverter(BaseConverter):
         # Get text properties
         font_family = self._get_font_family(element)
         font_size = self._get_font_size(element, context)
+
+        # READABILITY FIX: Boost small font sizes for PowerPoint presentation readability
+        # Minimum readable size for presentations is 18 points
+        MIN_READABLE_FONT_SIZE = 18
+        if font_size < MIN_READABLE_FONT_SIZE:
+            # Scale up small fonts proportionally but ensure minimum readability
+            font_size = max(font_size * 1.8, MIN_READABLE_FONT_SIZE)
+
         font_weight = self._get_font_weight(element)
         font_style = self._get_font_style(element)
         text_anchor = self._get_text_anchor(element)
@@ -216,65 +313,133 @@ class TextConverter(BaseConverter):
             text_content, font_family, font_size, font_weight, font_style
         )
 
-        # Convert all coordinates and dimensions to EMU using fluent units API
+        # READABILITY FIX: Make text boxes larger for boosted font sizes
+        # With minimum 18pt fonts, we need proportionally larger textboxes
+        text_width = max(text_width, font_size * 15)  # Increased multiplier for readability
+        text_height = max(text_height, font_size * 3)  # Increased height for larger fonts
+
+        # Convert coordinates using same viewport mapping as main converter
+        # Initialize variables
+        svg_width = None
+        svg_height = None
+
+        # Get the viewport mapping from the main converter context if available
+        if hasattr(context, 'viewport_mapping') and context.viewport_mapping is not None:
+            # Use existing viewport mapping from main conversion context
+            viewport_mapping = context.viewport_mapping
+            x_emu = int(x * viewport_mapping['scale_x'] + viewport_mapping['translate_x'])
+            y_emu = int(y * viewport_mapping['scale_y'] + viewport_mapping['translate_y'])
+        else:
+            # Fallback: extract dimensions from SVG root element
+            svg_root = context.root if hasattr(context, 'root') else element.getroottree().getroot()
+
+            # Get SVG dimensions from viewBox or width/height attributes
+            viewbox = svg_root.get('viewBox')
+            if viewbox:
+                # Parse viewBox: "min-x min-y width height"
+                parts = viewbox.strip().split()
+                if len(parts) >= 4:
+                    svg_width = float(parts[2])
+                    svg_height = float(parts[3])
+                else:
+                    raise ValueError(f"Invalid viewBox format: {viewbox}")
+            else:
+                # Get from width/height attributes using robust parsing
+                width_attr = svg_root.get('width', '')
+                height_attr = svg_root.get('height', '')
+
+                if width_attr and height_attr:
+                    try:
+                        svg_width = self.parse_length(width_attr)
+                        svg_height = self.parse_length(height_attr)
+                        if svg_width is None or svg_height is None:
+                            raise ValueError("Could not parse width/height attributes")
+                    except (ValueError, TypeError):
+                        raise ValueError(f"Invalid width/height format: {width_attr}, {height_attr}")
+                else:
+                    raise ValueError("No viewBox or width/height attributes found in SVG")
+
+            # Get target dimensions from services or use dynamic calculation
+            if svg_width and svg_height and svg_width > 0 and svg_height > 0:
+                # Try to get slide dimensions from context or services
+                if hasattr(context, 'slide_width_emu') and hasattr(context, 'slide_height_emu'):
+                    target_width_emu = context.slide_width_emu
+                    target_height_emu = context.slide_height_emu
+                elif hasattr(self.services, 'presentation_service'):
+                    # Get from presentation service if available
+                    target_width_emu = getattr(self.services.presentation_service, 'slide_width_emu', None)
+                    target_height_emu = getattr(self.services.presentation_service, 'slide_height_emu', None)
+                    if not target_width_emu or not target_height_emu:
+                        raise ValueError("Presentation service dimensions not available")
+                else:
+                    # Dynamic calculation based on SVG aspect ratio and units system
+                    # Use units system to convert standard sizes dynamically
+                    base_width = unit("10in")  # Standard but not hardcoded EMU
+                    target_width_emu = base_width.to_emu()
+
+                    # Calculate height maintaining SVG aspect ratio
+                    svg_aspect = svg_width / svg_height
+                    target_height_emu = int(target_width_emu / svg_aspect)
+
+                # Scale coordinates proportionally
+                x_emu = int((x / svg_width) * target_width_emu)
+                y_emu = int((y / svg_height) * target_height_emu)
+            else:
+                raise ValueError(f"Invalid SVG dimensions: {svg_width}x{svg_height}")
+
+        # Convert text dimensions to EMU using units system fluent API
         try:
-            # Use fluent units API for consistent coordinate conversion
-            x_emu = unit(x, 'px').to_emu()
-            y_emu = unit(y, 'px').to_emu()
-            text_width_emu = unit(text_width, 'px').to_emu()
-            text_height_emu = unit(text_height, 'px').to_emu()
-
-            self.logger.debug(f"Converted coordinates to EMU: x={x_emu}, y={y_emu}, w={text_width_emu}, h={text_height_emu}")
-
+            text_width_emu = unit(f"{text_width}px").to_emu()
+            text_height_emu = unit(f"{text_height}px").to_emu()
         except Exception as e:
-            self.logger.debug(f"Fluent units API failed: {e}, using fallback EMU conversion")
-            # Fallback EMU conversion (1 px ≈ 9525 EMU at 96 DPI)
-            x_emu = int(x * 9525)
-            y_emu = int(y * 9525)
-            text_width_emu = int(text_width * 9525)
+            # Fallback to basic conversion
+            self.logger.debug(f"Units system failed: {e}, using fallback")
+            text_width_emu = int(text_width * 9525)  # 96 DPI fallback
             text_height_emu = int(text_height * 9525)
+
+        self.logger.debug(f"SVG viewport: {svg_width}x{svg_height}, Text at ({x},{y}) -> EMU ({x_emu},{y_emu})")
 
         # Precise position adjustment based on text anchor and font metrics
         x_emu, y_emu = self._adjust_position_for_text_anchor(
             x_emu, y_emu, text_width_emu, text_height_emu, text_anchor, font_family, font_size
         )
         
-        # Generate base text shape content
+        # Generate proper XML shape using builder
         shape_id = context.get_next_shape_id()
-        base_content = f"""<p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-    <p:nvSpPr>
-        <p:cNvPr id="{shape_id}" name="Text"/>
-        <p:cNvSpPr/>
-        <p:nvPr/>
-    </p:nvSpPr>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{text_width_emu}" cy="{text_height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-        <a:noFill/>
-        <a:ln><a:noFill/></a:ln>
-    </p:spPr>
-    <p:txBody>
-        <a:bodyPr wrap="none" rtlCol="0">
-            <a:spAutoFit/>
-        </a:bodyPr>
-        <a:lstStyle/>
-        <a:p>
-            <a:pPr algn="{text_anchor}"/>
-            <a:r>
-                <a:rPr lang="en-US" sz="{int(font_size * 150)}"{self._generate_enhanced_font_attributes(font_weight, font_style, text_decoration)}>
-                    <a:latin typeface="{self._escape_xml(font_family)}"/>
-                    {fill_color}
-                </a:rPr>
-                <a:t>{self._escape_xml(text_content)}</a:t>
-            </a:r>
-        </a:p>
-    </p:txBody>
-</p:sp>"""
+
+        # Extract formatting for XML builder
+        bold = font_weight in ['bold', '700', '800', '900']
+        italic = font_style == 'italic'
+
+        # Convert text anchor to alignment
+        align_map = {
+            'start': 'l',
+            'middle': 'ctr',
+            'end': 'r'
+        }
+        align = align_map.get(text_anchor, 'l')
+
+        # Extract actual color value from fill_color
+        rgb_color = self._extract_color_value(fill_color)
+
+        # Create shape element using proper XML builder
+        shape_element = make_text_shape(
+            shape_id=shape_id,
+            name=f"Text {shape_id}",
+            x_emu=x_emu,
+            y_emu=y_emu,
+            w_emu=text_width_emu,
+            h_emu=text_height_emu,
+            text=text_content,
+            font_size_pt=font_size,
+            rgb=rgb_color,
+            bold=bold,
+            italic=italic,
+            align=align
+        )
+
+        # Convert to string for compatibility with existing pipeline
+        base_content = ET.tostring(shape_element, encoding='unicode')
 
         # Apply filter effects if present
         text_bounds = {
@@ -1002,3 +1167,39 @@ class TextConverter(BaseConverter):
             return 'extra-bold'
         else:
             return 'black'
+
+    def _extract_color_value(self, fill_color: str) -> str:
+        """Extract RGB color value from fill_color result"""
+        if not fill_color:
+            return 'FF0000'  # Default red
+
+        # If it's already a simple hex color
+        if fill_color.startswith('#'):
+            return fill_color[1:]
+
+        # If it's a DrawingML XML string, extract the color value
+        if '<a:srgbClr val="' in fill_color:
+            import re
+            match = re.search(r'<a:srgbClr val="([A-Fa-f0-9]{6})"', fill_color)
+            if match:
+                return match.group(1)
+
+        # Handle named colors
+        color_map = {
+            'red': 'FF0000',
+            'blue': '0000FF',
+            'green': '008000',
+            'black': '000000',
+            'white': 'FFFFFF',
+            'yellow': 'FFFF00',
+            'cyan': '00FFFF',
+            'magenta': 'FF00FF',
+            'gray': '808080',
+            'grey': '808080',
+            'orange': 'FFA500',
+            'purple': '800080',
+            'brown': 'A52A2A',
+            'pink': 'FFC0CB'
+        }
+
+        return color_map.get(fill_color.lower(), 'FF0000')

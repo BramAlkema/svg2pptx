@@ -36,6 +36,7 @@ from lxml import etree
 from dataclasses import dataclass
 
 from ..core.base import Filter, FilterContext, FilterResult
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -409,10 +410,10 @@ class DiffuseLightingFilter(Filter):
             a:sp3d DrawingML configuration
         """
         # Convert surface scale to EMU units for extrusion
-        extrusion_height = context.unit_converter.to_emu(f"{abs(params.surface_scale)}px")
+        extrusion_height = unit(f"{abs(params.surface_scale)}px").to_emu()
 
         # Calculate contour width based on surface scale
-        contour_width = context.unit_converter.to_emu(f"{abs(params.surface_scale) * 0.5}px")
+        contour_width = unit(f"{abs(params.surface_scale) * 0.5}px").to_emu()
 
         # Determine material properties based on diffuse constant
         if params.diffuse_constant >= 2.0:
@@ -444,8 +445,8 @@ class DiffuseLightingFilter(Filter):
             a:bevel DrawingML effects
         """
         # Calculate bevel dimensions based on diffuse constant
-        bevel_width = context.unit_converter.to_emu(f"{params.diffuse_constant * 2.0}px")
-        bevel_height = context.unit_converter.to_emu(f"{params.diffuse_constant * 1.5}px")
+        bevel_width = unit(f"{params.diffuse_constant * 2.0}px").to_emu()
+        bevel_height = unit(f"{params.diffuse_constant * 1.5}px").to_emu()
 
         # Determine bevel type based on light direction
         if params.light_source_type == "distant" and params.light_elevation is not None:
@@ -557,8 +558,8 @@ class DiffuseLightingFilter(Filter):
             a:innerShdw DrawingML for depth enhancement
         """
         # Calculate shadow parameters based on surface scale
-        blur_radius = context.unit_converter.to_emu(f"{params.surface_scale * 2.0}px")
-        shadow_distance = context.unit_converter.to_emu(f"{params.surface_scale * 1.0}px")
+        blur_radius = unit(f"{params.surface_scale * 2.0}px").to_emu()
+        shadow_distance = unit(f"{params.surface_scale * 1.0}px").to_emu()
 
         # Determine shadow direction opposite to light source
         if params.light_source_type == "distant" and params.light_azimuth is not None:

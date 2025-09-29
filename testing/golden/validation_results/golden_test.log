@@ -1,0 +1,36 @@
+2025-09-27 23:17:59,763 - testing.golden.runner - INFO - Starting Golden Test Framework demonstration
+2025-09-27 23:17:59,763 - testing.golden.runner - INFO - Created 7 test cases
+2025-09-27 23:17:59,763 - testing.golden.runner - INFO - Running golden test suite...
+2025-09-27 23:17:59,763 - testing.golden.framework - INFO - Starting golden test suite: 7 test cases
+2025-09-27 23:17:59,763 - testing.golden.framework - INFO - Running test 1/7: basic_rectangle
+2025-09-27 23:17:59,787 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,790 - testing.golden.framework - INFO - Running test 2/7: basic_circle
+2025-09-27 23:17:59,813 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,813 - testing.golden.framework - INFO - Running test 3/7: simple_text
+2025-09-27 23:17:59,836 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,836 - testing.golden.framework - INFO - Running test 4/7: complex_text_anchor
+2025-09-27 23:17:59,859 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,859 - testing.golden.framework - INFO - Running test 5/7: simple_path
+2025-09-27 23:17:59,882 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,882 - testing.golden.framework - INFO - Running test 6/7: arc_path
+2025-09-27 23:17:59,905 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,905 - testing.golden.framework - INFO - Running test 7/7: linear_gradient
+2025-09-27 23:17:59,928 - testing.golden.framework - ERROR - Comparator PPTXComparator failed: name 'time' is not defined
+2025-09-27 23:17:59,928 - testing.golden.framework - INFO - Golden test suite completed: 0.0% pass rate
+2025-09-27 23:17:59,929 - testing.golden.runner - INFO - Golden test completed: 0.0% pass rate
+2025-09-27 23:17:59,929 - testing.golden.runner - INFO - Detailed report: testing/golden/validation_results/golden_test_report.html
+2025-09-27 23:18:09,418 - testing.golden.runner - INFO - Starting Golden Test Framework demonstration
+2025-09-27 23:18:09,418 - testing.golden.runner - INFO - Created 7 test cases
+2025-09-27 23:18:09,418 - testing.golden.runner - INFO - Running golden test suite...
+2025-09-27 23:18:09,418 - testing.golden.framework - INFO - Starting golden test suite: 7 test cases
+2025-09-27 23:18:09,418 - testing.golden.framework - INFO - Running test 1/7: basic_rectangle
+2025-09-27 23:18:09,445 - testing.golden.framework - INFO - Running test 2/7: basic_circle
+2025-09-27 23:18:09,468 - testing.golden.framework - INFO - Running test 3/7: simple_text
+2025-09-27 23:18:09,491 - testing.golden.framework - INFO - Running test 4/7: complex_text_anchor
+2025-09-27 23:18:09,514 - testing.golden.framework - INFO - Running test 5/7: simple_path
+2025-09-27 23:18:09,537 - testing.golden.framework - INFO - Running test 6/7: arc_path
+2025-09-27 23:18:09,558 - testing.golden.framework - INFO - Running test 7/7: linear_gradient
+2025-09-27 23:18:09,581 - testing.golden.framework - WARNING - Stopping after 21 failures
+2025-09-27 23:18:09,581 - testing.golden.framework - INFO - Golden test suite completed: 0.0% pass rate
+2025-09-27 23:18:09,582 - testing.golden.runner - INFO - Golden test completed: 0.0% pass rate
+2025-09-27 23:18:09,582 - testing.golden.runner - INFO - Detailed report: testing/golden/validation_results/golden_test_report.html

@@ -1,6 +1,6 @@
 """
 Test suite for ImageConverter.
-Tests image handling, data URLs, file paths, and ViewportResolver integration.
+Tests image handling, data URLs, file paths, and ViewportEngine integration.
 """
 
 import pytest
@@ -20,7 +20,29 @@ class TestImageConverter:
     @pytest.fixture
     def converter(self):
         """Create an ImageConverter instance."""
-        return ImageConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        # Configure image_service mock
+        mock_services.image_service = Mock()
+
+        # Create mock image info object with width/height attributes
+        mock_image_info = Mock()
+        mock_image_info.width = 100
+        mock_image_info.height = 80
+        mock_image_info.path = 'test.png'
+        mock_image_info.format = 'PNG'
+
+        mock_services.image_service.process_image_source = Mock(return_value=mock_image_info)
+        mock_services.image_service.generate_embed_id = Mock(return_value='rId123')
+
+        return ImageConverter(services=mock_services)
     
     @pytest.fixture
     def mock_context(self):
@@ -55,10 +77,10 @@ class TestImageConverter:
         assert 'r:embed="rId123"' in result
     
     def test_viewport_resolver_integration(self, converter, mock_context):
-        """Test ViewportResolver integration for coordinate mapping."""
+        """Test ViewportEngine integration for coordinate mapping."""
         element = ET.fromstring('<image x="50" y="100" width="200" height="150" href="test.jpg"/>')
         
-        # Mock ViewportResolver integration through context
+        # Mock ViewportEngine integration through context
         viewport_mapping = Mock()
         viewport_mapping.svg_to_emu = Mock(return_value=(1828800, 3657600))
         mock_context.viewport_mapping = viewport_mapping
@@ -66,15 +88,15 @@ class TestImageConverter:
         with patch('os.path.exists', return_value=True):
             result = converter.convert(element, mock_context)
         
-        # Verify ViewportResolver was used for coordinate conversion
+        # Verify ViewportEngine was used for coordinate conversion
         viewport_mapping.svg_to_emu.assert_called_once_with(50.0, 100.0)
         assert '<a:off x="1828800" y="3657600"/>' in result
     
     def test_viewport_resolver_fallback(self, converter, mock_context):
-        """Test fallback to standard coordinate system when ViewportResolver not available."""
+        """Test fallback to standard coordinate system when ViewportEngine not available."""
         element = ET.fromstring('<image x="10" y="20" width="100" height="80" href="test.png"/>')
         
-        # No ViewportResolver in context
+        # No ViewportEngine in context
         mock_context.viewport_mapping = None
         
         with patch('os.path.exists', return_value=True):
@@ -157,45 +179,55 @@ class TestImageConverter:
     def test_web_url_processing(self, converter, mock_context):
         """Test processing of web URLs."""
         element = ET.fromstring('<image x="0" y="0" width="100" height="100" href="https://example.com/image.jpg"/>')
-        
-        # Mock web image download
-        mock_context.download_web_image = Mock(return_value="rId456")
-        
+
+        # Configure image service to handle web URLs and return different embed ID
+        mock_image_info = Mock()
+        mock_image_info.width = 100
+        mock_image_info.height = 80
+        mock_image_info.path = 'https://example.com/image.jpg'
+        mock_image_info.format = 'JPEG'
+
+        converter.services.image_service.process_image_source.return_value = mock_image_info
+        converter.services.image_service.generate_embed_id.return_value = 'rId456'
+
         result = converter.convert(element, mock_context)
-        
-        mock_context.download_web_image.assert_called_once_with('https://example.com/image.jpg')
+
         assert 'r:embed="rId456"' in result
     
     def test_web_url_without_downloader(self, converter, mock_context):
         """Test web URL handling when downloader not available."""
         element = ET.fromstring('<image x="0" y="0" width="100" height="100" href="https://example.com/image.jpg"/>')
-        
-        # No download_web_image method in context
-        delattr(mock_context, 'download_web_image') if hasattr(mock_context, 'download_web_image') else None
-        
+
+        # Configure image service to return None for failed web URL download
+        converter.services.image_service.process_image_source.return_value = None
+
         result = converter.convert(element, mock_context)
-        
+
         assert '<!-- Unable to process image source -->' in result
     
     def test_relative_file_path_with_base_path(self, converter, mock_context):
         """Test relative file path resolution with base path."""
         element = ET.fromstring('<image x="0" y="0" width="100" height="100" href="images/test.png"/>')
-        
+
         mock_context.base_path = '/path/to/svg'
-        
+
         with patch('os.path.exists', return_value=True):
             result = converter.convert(element, mock_context)
-        
-        mock_context.add_image.assert_called_once_with('/path/to/svg/images/test.png')
+
+        # Verify the image service was called with the resolved path
+        converter.services.image_service.process_image_source.assert_called_once_with('images/test.png', '/path/to/svg')
         assert '<p:pic>' in result
     
     def test_nonexistent_file_path(self, converter, mock_context):
         """Test handling of nonexistent file paths."""
         element = ET.fromstring('<image x="0" y="0" width="100" height="100" href="nonexistent.png"/>')
-        
+
+        # Configure image service to return None for nonexistent file
+        converter.services.image_service.process_image_source.return_value = None
+
         with patch('os.path.exists', return_value=False):
             result = converter.convert(element, mock_context)
-        
+
         assert '<!-- Unable to process image source -->' in result
     
     def test_edge_case_zero_dimensions(self, converter, mock_context):
@@ -224,9 +256,12 @@ class TestImageConverter:
     def test_invalid_data_url(self, converter, mock_context):
         """Test handling of invalid data URLs."""
         element = ET.fromstring('<image x="0" y="0" width="100" height="100" href="data:invalid"/>')
-        
+
+        # Configure image service to return None for invalid data URL
+        converter.services.image_service.process_image_source.return_value = None
+
         result = converter.convert(element, mock_context)
-        
+
         assert '<!-- Unable to process image source -->' in result
     
     def test_aspect_ratio_preservation(self, converter):

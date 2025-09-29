@@ -90,44 +90,24 @@ class ColorHarmony:
         if count < 3:
             raise ValueError("count must be at least 3")
 
-        try:
-            # Convert base color to LCH for hue manipulation
-            base_lch = colorspacious.cspace_convert(self.base_color.rgb(), "sRGB255", "CIELCh")
+        # Convert base color to LCH for hue manipulation
+        base_lch = colorspacious.cspace_convert(self.base_color.rgb(), "sRGB255", "CIELCh")
 
-            # Generate hue offsets centered around base hue
-            half_spread = spread / 2.0
-            hue_offsets = np.linspace(-half_spread, half_spread, count)
-
-            analogous_colors = []
-            for offset in hue_offsets:
-                # Create new color with offset hue
-                new_lch = base_lch.copy()
-                new_lch[2] = (base_lch[2] + offset) % 360
-
-                # Convert back to RGB
-                new_rgb = colorspacious.cspace_convert(new_lch, "CIELCh", "sRGB255")
-                new_rgb = tuple(max(0, min(255, int(c))) for c in new_rgb)
-
-                new_color = Color(new_rgb)
-                new_color._alpha = getattr(self.base_color, '_alpha', 1.0)
-                analogous_colors.append(new_color)
-
-            return analogous_colors
-
-        except Exception:
-            # Fallback using HSL hue rotation
-            return self._fallback_analogous_hsl(count, spread)
-
-    def _fallback_analogous_hsl(self, count: int, spread: float) -> List[Color]:
-        """Fallback analogous generation using HSL."""
-        base_hsl = self.base_color.hsl()
+        # Generate hue offsets centered around base hue
         half_spread = spread / 2.0
         hue_offsets = np.linspace(-half_spread, half_spread, count)
 
         analogous_colors = []
         for offset in hue_offsets:
-            new_hue = (base_hsl[0] + offset) % 360
-            new_color = Color.from_hsl(new_hue, base_hsl[1], base_hsl[2])
+            # Create new color with offset hue
+            new_lch = base_lch.copy()
+            new_lch[2] = (base_lch[2] + offset) % 360
+
+            # Convert back to RGB
+            new_rgb = colorspacious.cspace_convert(new_lch, "CIELCh", "sRGB255")
+            new_rgb = tuple(max(0, min(255, int(c))) for c in new_rgb)
+
+            new_color = Color(new_rgb)
             new_color._alpha = getattr(self.base_color, '_alpha', 1.0)
             analogous_colors.append(new_color)
 

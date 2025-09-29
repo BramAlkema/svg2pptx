@@ -27,7 +27,7 @@ from src.converters.markers import (
     MarkerPosition, MarkerUnits
 )
 from src.converters.base import ConversionContext
-from src.colors import ColorInfo, ColorFormat
+from src.color import Color
 from src.transforms import Matrix
 
 
@@ -36,8 +36,17 @@ class TestMarkerConverter:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
-        self.context = ConversionContext()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
+        self.context = ConversionContext(services=mock_services)
         self.context.get_next_shape_id = Mock(return_value=1001)
     
     def test_initialization(self):
@@ -96,7 +105,16 @@ class TestMarkerDefinitionExtraction:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
     
     def test_basic_marker_extraction(self):
         """Test basic marker definition extraction."""
@@ -195,7 +213,16 @@ class TestSymbolDefinitionExtraction:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
     
     def test_basic_symbol_extraction(self):
         """Test basic symbol definition extraction."""
@@ -249,9 +276,22 @@ class TestUseElementProcessing:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
-        self.context = ConversionContext()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
+        self.context = ConversionContext(services=mock_services)
         self.context.get_next_shape_id = Mock(return_value=2001)
+
+        # Mock transform parser to return identity matrix by default
+        from src.transforms import Matrix
+        self.converter.transform_parser.parse_to_matrix = Mock(return_value=Matrix.identity())
         
         # Add a test symbol
         self.converter.symbols['test_symbol'] = SymbolDefinition(
@@ -329,8 +369,17 @@ class TestMarkerPathApplication:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
-        self.context = ConversionContext()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
+        self.context = ConversionContext(services=mock_services)
         
         # Add test marker
         self.converter.markers['arrow'] = MarkerDefinition(
@@ -461,7 +510,16 @@ class TestStandardArrowDetection:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
     
     def test_detect_arrow_polygon(self):
         """Test arrow polygon detection."""
@@ -523,8 +581,17 @@ class TestMarkerDrawingMLGeneration:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
-        self.context = ConversionContext()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
+        self.context = ConversionContext(services=mock_services)
         self.context.get_next_shape_id = Mock(return_value=3001)
     
     def test_marker_instance_creation(self):
@@ -540,7 +607,7 @@ class TestMarkerDrawingMLGeneration:
             content_xml='<polygon points="0,0 10,5 0,10"/>'
         )
         
-        color = ColorInfo(255, 0, 0, 1.0, ColorFormat.RGB, 'rgb(255,0,0)')
+        color = Color('rgb(255,0,0)')
         
         marker_instance = MarkerInstance(
             definition=marker_def,
@@ -562,7 +629,7 @@ class TestMarkerDrawingMLGeneration:
     def test_generate_standard_arrow_drawingml(self):
         """Test DrawingML generation for standard arrows."""
         transform_matrix = Matrix.identity()
-        color = ColorInfo(0, 128, 255, 1.0, ColorFormat.RGB, 'rgb(0,128,255)')
+        color = Color('rgb(0,128,255)')
         
         result = self.converter._generate_standard_arrow_drawingml(
             'arrow', transform_matrix, color, self.context
@@ -587,7 +654,7 @@ class TestMarkerDrawingMLGeneration:
             content_xml='<circle r="3"/>'
         )
         
-        color = ColorInfo(255, 0, 0, 0.8, ColorFormat.RGBA, 'rgba(255,0,0,0.8)')
+        color = Color('rgba(255,0,0,0.8)')
         
         marker_instance = MarkerInstance(
             definition=marker_def,
@@ -653,7 +720,16 @@ class TestViewBoxCalculations:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
     
     def test_viewbox_transform_basic(self):
         """Test basic viewBox transform calculation."""
@@ -726,8 +802,17 @@ class TestErrorHandling:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.converter = MarkerConverter()
-        self.context = ConversionContext()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        self.converter = MarkerConverter(services=mock_services)
+        self.context = ConversionContext(services=mock_services)
     
     def test_marker_without_id(self):
         """Test marker definition without ID."""

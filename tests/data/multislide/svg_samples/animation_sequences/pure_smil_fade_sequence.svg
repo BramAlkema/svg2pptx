@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 8 rectangles in a square pattern with staggered fade animation -->
+  <rect id="rect1" x="30" y="30" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="0s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect2" x="45" y="30" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="0.2s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect3" x="60" y="30" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="0.4s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect4" x="60" y="45" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="0.6s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect5" x="60" y="60" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="0.8s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect6" x="45" y="60" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="1.0s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect7" x="30" y="60" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="1.2s"
+             repeatCount="indefinite"/>
+  </rect>
+
+  <rect id="rect8" x="30" y="45" width="10" height="10"
+        fill="#f2a20c" stroke="#a60311" stroke-width="1">
+    <animate attributeName="opacity"
+             values="0;1;1;0"
+             dur="2s"
+             begin="1.4s"
+             repeatCount="indefinite"/>
+  </rect>
+</svg>

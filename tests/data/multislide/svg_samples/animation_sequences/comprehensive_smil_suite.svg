@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-family="Arial" font-size="18" fill="#2c3e50">
+    Comprehensive SMIL Animation Test Suite
+  </text>
+
+  <!-- 1. Basic Opacity Animation -->
+  <g id="opacity-group">
+    <text x="50" y="70" font-family="Arial" font-size="12" fill="#34495e">Opacity</text>
+    <circle cx="50" cy="90" r="15" fill="#e74c3c">
+      <animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 2. Color Animation -->
+  <g id="color-group">
+    <text x="150" y="70" font-family="Arial" font-size="12" fill="#34495e">Color</text>
+    <rect x="135" y="75" width="30" height="30" stroke="#2c3e50" stroke-width="2">
+      <animate attributeName="fill" values="#e74c3c;#3498db;#2ecc71;#e74c3c" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 3. Scale Transform -->
+  <g id="scale-group">
+    <text x="250" y="70" font-family="Arial" font-size="12" fill="#34495e">Scale</text>
+    <polygon points="250,90 265,75 280,90 265,105" fill="#9b59b6">
+      <animateTransform attributeName="transform" type="scale" values="1;1.5;1" dur="2s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+
+  <!-- 4. Rotation Transform -->
+  <g id="rotation-group">
+    <text x="350" y="70" font-family="Arial" font-size="12" fill="#34495e">Rotation</text>
+    <rect x="340" y="80" width="20" height="20" fill="#f39c12">
+      <animateTransform attributeName="transform" type="rotate" values="0 350 90;360 350 90" dur="4s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 5. Translation Transform -->
+  <g id="translation-group">
+    <text x="450" y="70" font-family="Arial" font-size="12" fill="#34495e">Translation</text>
+    <circle cx="450" cy="90" r="10" fill="#1abc9c">
+      <animateTransform attributeName="transform" type="translate" values="0,0;50,0;0,0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 6. Complex Motion Path -->
+  <g id="motion-path-group">
+    <text x="50" y="150" font-family="Arial" font-size="12" fill="#34495e">Motion Path</text>
+    <path d="M 50,170 Q 150,140 250,170 Q 350,200 450,170" fill="none" stroke="#bdc3c7" stroke-width="2" stroke-dasharray="3,3"/>
+    <circle r="8" fill="#e67e22">
+      <animateMotion path="M 50,170 Q 150,140 250,170 Q 350,200 450,170" dur="5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 7. Multiple Transform Combination -->
+  <g id="combined-transforms">
+    <text x="50" y="230" font-family="Arial" font-size="12" fill="#34495e">Combined Transforms</text>
+    <rect x="45" y="240" width="15" height="15" fill="#8e44ad">
+      <animateTransform attributeName="transform" type="translate" values="0,0;100,0;0,0" dur="4s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="2s" repeatCount="indefinite" additive="sum"/>
+      <animateTransform attributeName="transform" type="scale" values="1;0.5;1" dur="3s" repeatCount="indefinite" additive="sum"/>
+    </rect>
+  </g>
+
+  <!-- 8. Staggered Animation Sequence -->
+  <g id="staggered-sequence">
+    <text x="250" y="230" font-family="Arial" font-size="12" fill="#34495e">Staggered Sequence</text>
+    <rect x="250" y="240" width="12" height="12" fill="#c0392b">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="270" y="240" width="12" height="12" fill="#c0392b">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="290" y="240" width="12" height="12" fill="#c0392b">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.6s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="310" y="240" width="12" height="12" fill="#c0392b">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.9s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 9. Conditional Animation (begin/end) -->
+  <g id="conditional-animation">
+    <text x="450" y="230" font-family="Arial" font-size="12" fill="#34495e">Conditional</text>
+    <circle cx="450" cy="250" r="12" fill="#16a085">
+      <animate attributeName="r" values="12;20;12" dur="2s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#16a085;#f1c40f;#16a085" dur="2s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 10. Text Animation -->
+  <g id="text-animation">
+    <text x="50" y="300" font-family="Arial" font-size="14" fill="#2c3e50">
+      Animated Text
+      <animate attributeName="font-size" values="14;24;14" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#2c3e50;#e74c3c;#2c3e50" dur="3s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- 11. Path Data Animation -->
+  <g id="path-morph">
+    <text x="250" y="300" font-family="Arial" font-size="12" fill="#34495e">Path Morphing</text>
+    <path fill="#3498db" stroke="#2980b9" stroke-width="2">
+      <animate attributeName="d"
+               values="M 250,320 L 280,320 L 265,340 Z;M 250,320 Q 265,300 280,320 Q 265,340 250,320;M 250,320 L 280,320 L 265,340 Z"
+               dur="4s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 12. Complex Easing with keyTimes -->
+  <g id="easing-animation">
+    <text x="400" y="300" font-family="Arial" font-size="12" fill="#34495e">Easing</text>
+    <circle cx="400" cy="320" r="10" fill="#e67e22">
+      <animateTransform attributeName="transform" type="translate"
+                        values="0,0;100,0;0,0"
+                        keyTimes="0;0.3;1"
+                        dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 13. Synchronized Animations -->
+  <g id="synchronized">
+    <text x="50" y="370" font-family="Arial" font-size="12" fill="#34495e">Synchronized</text>
+    <rect x="50" y="375" width="15" height="15" fill="#9b59b6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" id="sync1"/>
+    </rect>
+    <circle cx="80" cy="382" r="7" fill="#9b59b6">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="sync1.begin"/>
+    </circle>
+  </g>
+
+  <!-- 14. Discrete Animation -->
+  <g id="discrete">
+    <text x="200" y="370" font-family="Arial" font-size="12" fill="#34495e">Discrete</text>
+    <polygon points="200,380 215,375 230,380 225,390 205,390" fill="#f39c12">
+      <animate attributeName="fill" values="#f39c12;#e74c3c;#3498db;#2ecc71" dur="2s" repeatCount="indefinite" calcMode="discrete"/>
+    </polygon>
+  </g>
+
+  <!-- 15. Stroke Animation -->
+  <g id="stroke-animation">
+    <text x="350" y="370" font-family="Arial" font-size="12" fill="#34495e">Stroke</text>
+    <rect x="350" y="375" width="30" height="15" fill="none" stroke="#2c3e50">
+      <animate attributeName="stroke-width" values="1;5;1" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke" values="#2c3e50;#e74c3c;#2c3e50" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>

@@ -159,7 +159,7 @@ class PPTXPackageBuilder:
 
     def _parse_viewbox(self, svg_root: ET.Element) -> Tuple[float, float, float, float]:
         """
-        Parse SVG viewBox to get dimensions using canonical ViewportResolver.
+        Parse SVG viewBox to get dimensions using canonical ViewportEngine.
 
         Args:
             svg_root: Parsed SVG root element
@@ -170,16 +170,23 @@ class PPTXPackageBuilder:
         viewbox = svg_root.get('viewBox')
         if viewbox:
             try:
-                # Use the canonical high-performance ViewportResolver for parsing
-                from ..viewbox import ViewportResolver
+                # Use ConversionServices for dependency injection
                 import numpy as np
 
-                resolver = ViewportResolver()
+                try:
+                    from ..services.conversion_services import ConversionServices
+                    services = ConversionServices.create_default()
+                    resolver = services.viewport_resolver
+                except ImportError:
+                    # Fallback to direct import
+                    from ..viewbox import ViewportEngine
+                    resolver = ViewportEngine()
+
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox]))
                 if len(parsed) > 0 and len(parsed[0]) >= 4:
                     return tuple(parsed[0][:4])
             except ImportError:
-                # Fallback to legacy parsing if ViewportResolver not available
+                # Fallback to legacy parsing if ViewportEngine not available
                 pass
             except Exception:
                 # Fallback on any parsing error
@@ -410,7 +417,7 @@ class PPTXPackageBuilder:
             DrawingML XML content
         """
         try:
-            import xml.etree.ElementTree as ET
+            from lxml import etree as ET
             from ..services.conversion_services import ConversionServices
             from ..converters.base import ConversionContext, ConverterRegistry
 

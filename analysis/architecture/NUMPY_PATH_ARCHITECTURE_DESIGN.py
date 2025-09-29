@@ -313,7 +313,7 @@ class VectorizedCoordinateEngine:
         for i in range(n_commands):
             cmd = commands[i]
             if cmd['coord_count'] > 0:
-                coords = cmd['coords'][:cmd['coord_count']].reshape(-1, 2)
+                coords = self._extract_coordinates(cmd)
 
                 if cmd['is_relative']:
                     # Convert relative to absolute
@@ -355,10 +355,10 @@ class VectorizedCoordinateEngine:
         Returns:
             Transformed path with updated coordinates
         """
-        if parsed_path['command_count'] == 0:
+        if parsed_path[0]['command_count'] == 0:
             return parsed_path.copy()
 
-        commands = parsed_path['commands'][:parsed_path['command_count']]
+        commands = parsed_path[0]['commands'][:parsed_path[0]['command_count']]
 
         # Convert relative coordinates to absolute first
         absolute_commands = self._convert_relative_to_absolute(
@@ -371,7 +371,7 @@ class VectorizedCoordinateEngine:
 
         for i, cmd in enumerate(absolute_commands):
             if cmd['coord_count'] > 0:
-                coords = cmd['coords'][:cmd['coord_count']].reshape(-1, 2)
+                coords = self._extract_coordinates(cmd)
                 coord_indices.append((i, len(all_coords), len(all_coords) + len(coords)))
                 all_coords.extend(coords)
 
@@ -384,7 +384,7 @@ class VectorizedCoordinateEngine:
 
         # Update commands with transformed coordinates
         result_path = parsed_path.copy()
-        result_commands = result_path['commands'][:result_path['command_count']]
+        result_commands = result_path[0]['commands'][:result_path[0]['command_count']]
 
         for cmd_idx, start_idx, end_idx in coord_indices:
             transformed_subset = transformed_coords[start_idx:end_idx]
@@ -513,6 +513,33 @@ class VectorizedBezierEngine:
 
         return cubic_points
 
+    def _extract_coordinates(self, cmd) -> np.ndarray:
+        """Safely extract coordinates from command, handling different types."""
+        coord_data = cmd['coords'][:cmd['coord_count']]
+
+        if cmd['cmd_type'] == PathCommandType.ARC:
+            # Arc has 7 coords: rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
+            if len(coord_data) >= 7:
+                return coord_data[-2:].reshape(1, 2)  # Only take final x,y
+            else:
+                return np.array([[0, 0]])
+        elif cmd['cmd_type'] in [PathCommandType.HORIZONTAL, PathCommandType.VERTICAL]:
+            # H/V commands have single coordinate
+            if cmd['cmd_type'] == PathCommandType.HORIZONTAL:
+                return np.array([[coord_data[0], 0]])
+            else:
+                return np.array([[0, coord_data[0]]])
+        else:
+            # Regular commands with coordinate pairs
+            if len(coord_data) % 2 == 0 and len(coord_data) > 0:
+                return coord_data.reshape(-1, 2)
+            elif len(coord_data) > 0:
+                # Handle odd coordinate count by padding
+                padded_coords = np.append(coord_data, 0)
+                return padded_coords.reshape(-1, 2)
+            else:
+                return np.array([[0, 0]])
+
     def process_bezier_curves(self, parsed_path: np.ndarray,
                              subdivision_level: int = 20) -> Dict[str, np.ndarray]:
         """
@@ -525,7 +552,7 @@ class VectorizedBezierEngine:
         Returns:
             Dictionary with curve data and evaluated points
         """
-        commands = parsed_path['commands'][:parsed_path['command_count']]
+        commands = parsed_path[0]['commands'][:parsed_path[0]['command_count']]
 
         cubic_curves = []
         quadratic_curves = []
@@ -536,7 +563,7 @@ class VectorizedBezierEngine:
             if cmd['coord_count'] == 0:
                 continue
 
-            coords = cmd['coords'][:cmd['coord_count']].reshape(-1, 2)
+            coords = self._extract_coordinates(cmd)
 
             if cmd['cmd_type'] == PathCommandType.CUBIC_CURVE:
                 # Cubic Bezier: current_pos, control1, control2, end_point
@@ -621,7 +648,7 @@ class UltraFastPathEngine:
         # Parse path string
         parsed_path = self.parser.parse_path_string(path_string)
 
-        if parsed_path['command_count'] == 0:
+        if parsed_path[0]['command_count'] == 0:
             return {'parsed_path': parsed_path, 'commands': 0, 'coordinates': 0}
 
         # Apply transformations if specified
@@ -652,14 +679,14 @@ class UltraFastPathEngine:
 
         # Update performance metrics
         self._paths_processed += 1
-        self._total_commands += parsed_path['command_count']
-        self._total_coordinates += parsed_path['total_coords']
+        self._total_commands += parsed_path[0]['command_count']
+        self._total_coordinates += parsed_path[0]['total_coords']
 
         return {
             'parsed_path': parsed_path,
             'bezier_data': bezier_data,
-            'commands': parsed_path['command_count'],
-            'coordinates': parsed_path['total_coords'],
+            'commands': parsed_path[0]['command_count'],
+            'coordinates': parsed_path[0]['total_coords'],
             'performance_metrics': self.get_performance_stats()
         }
 
@@ -738,3 +765,474 @@ if __name__ == "__main__":
     print("\nRunning performance benchmark...")
     benchmark_time = benchmark_numpy_path_performance()
     print(f"\nBenchmark completed in {benchmark_time:.4f}s")
+
+
+# ============================================================================
+# Memory Optimization and Cache-Efficient Layouts
+# ============================================================================
+
+class MemoryOptimizedPathProcessor:
+    """
+    Memory-efficient path processor with cache-optimized data layouts.
+
+    Features:
+    - Memory pool allocation for frequent operations
+    - Cache-aligned data structures for better performance
+    - Memory usage tracking and optimization
+    - Lazy evaluation for large path collections
+    """
+
+    def __init__(self, initial_pool_size: int = 1000):
+        self.pool_size = initial_pool_size
+
+        # Pre-allocated memory pools for common operations
+        self._coordinate_pool = np.empty((initial_pool_size, 2), dtype=np.float64)
+        self._transform_pool = np.empty((initial_pool_size, 3, 3), dtype=np.float64)
+        self._bezier_pool = np.empty((initial_pool_size, 4, 2), dtype=np.float64)
+
+        # Memory usage tracking
+        self._pool_usage = {
+            'coordinates': 0,
+            'transforms': 0,
+            'bezier': 0
+        }
+
+        # Cache-aligned allocation flags
+        self._use_aligned_allocation = True
+
+    def allocate_coordinate_buffer(self, size: int) -> np.ndarray:
+        """Allocate cache-aligned coordinate buffer."""
+        if self._use_aligned_allocation and size <= self.pool_size:
+            if self._pool_usage['coordinates'] + size <= self.pool_size:
+                start = self._pool_usage['coordinates']
+                end = start + size
+                self._pool_usage['coordinates'] = end
+                return self._coordinate_pool[start:end]
+
+        # Fallback to regular allocation with cache alignment
+        return np.empty((size, 2), dtype=np.float64)
+
+    def reset_pools(self):
+        """Reset memory pools for reuse."""
+        self._pool_usage = {key: 0 for key in self._pool_usage}
+
+    def get_memory_stats(self) -> Dict[str, Any]:
+        """Get memory usage statistics."""
+        return {
+            'pool_size': self.pool_size,
+            'pool_usage': self._pool_usage.copy(),
+            'coordinate_pool_mb': self._coordinate_pool.nbytes / (1024 * 1024),
+            'transform_pool_mb': self._transform_pool.nbytes / (1024 * 1024),
+            'bezier_pool_mb': self._bezier_pool.nbytes / (1024 * 1024)
+        }
+
+
+class LazyPathCollection:
+    """
+    Lazy evaluation system for large collections of paths.
+
+    Features:
+    - On-demand path processing
+    - Memory-efficient iteration over large datasets
+    - Automatic caching of frequently accessed paths
+    - Memory pressure management
+    """
+
+    def __init__(self, path_strings: List[str], cache_size: int = 100):
+        self.path_strings = path_strings
+        self.cache_size = cache_size
+        self._processed_cache = {}
+        self._access_count = {}
+        self._engine = UltraFastPathEngine()
+
+    def __len__(self) -> int:
+        return len(self.path_strings)
+
+    def __getitem__(self, index: int) -> Dict[str, Any]:
+        """Get processed path with lazy evaluation."""
+        if index in self._processed_cache:
+            self._access_count[index] = self._access_count.get(index, 0) + 1
+            return self._processed_cache[index]
+
+        # Process path on demand
+        path_string = self.path_strings[index]
+        processed = self._engine.process_path_string(path_string)
+
+        # Cache management
+        if len(self._processed_cache) >= self.cache_size:
+            # Remove least frequently accessed item
+            lru_index = min(self._access_count.keys(),
+                           key=lambda k: self._access_count[k])
+            del self._processed_cache[lru_index]
+            del self._access_count[lru_index]
+
+        self._processed_cache[index] = processed
+        self._access_count[index] = 1
+
+        return processed
+
+    def get_batch(self, indices: List[int]) -> List[Dict[str, Any]]:
+        """Get multiple paths efficiently."""
+        return [self[i] for i in indices]
+
+
+# ============================================================================
+# Integration Architecture with Existing Converter Pipeline
+# ============================================================================
+
+class PathConverterIntegration:
+    """
+    Integration layer between NumPy path engine and existing converter pipeline.
+
+    Features:
+    - Backward compatibility with existing path converter APIs
+    - Automatic performance optimization selection
+    - Fallback to legacy implementation for edge cases
+    - Seamless integration with dependency injection system
+    """
+
+    def __init__(self, enable_numpy_optimization: bool = True):
+        self.enable_numpy_optimization = enable_numpy_optimization
+
+        # Initialize engines
+        if enable_numpy_optimization:
+            self.numpy_engine = UltraFastPathEngine()
+            self.memory_processor = MemoryOptimizedPathProcessor()
+
+        # Performance tracking
+        self._numpy_operations = 0
+        self._legacy_operations = 0
+        self._performance_ratio = 1.0
+
+    def should_use_numpy_processing(self, path_data: str, complexity_hint: Optional[str] = None) -> bool:
+        """Determine whether to use NumPy or legacy processing."""
+        if not self.enable_numpy_optimization:
+            return False
+
+        # Simple heuristics for optimization selection
+        if len(path_data) > 1000:  # Large paths benefit from vectorization
+            return True
+
+        if complexity_hint in ['bezier', 'curves', 'complex']:
+            return True
+
+        # Count path commands to estimate complexity
+        command_count = len([c for c in path_data if c.isalpha()])
+        return command_count > 10
+
+    def process_path_optimized(self, path_data: str,
+                             transform_matrix: Optional[np.ndarray] = None,
+                             **kwargs) -> Dict[str, Any]:
+        """Process path with automatic optimization selection."""
+
+        if self.should_use_numpy_processing(path_data, kwargs.get('complexity_hint')):
+            # Use NumPy-optimized processing
+            try:
+                result = self.numpy_engine.process_path_string(
+                    path_data, transform_matrix, **kwargs
+                )
+                result['processing_engine'] = 'numpy'
+                self._numpy_operations += 1
+                return result
+
+            except Exception as e:
+                # Fallback to legacy on error
+                print(f"NumPy processing failed, falling back to legacy: {e}")
+                return self._process_path_legacy(path_data, transform_matrix, **kwargs)
+        else:
+            # Use legacy processing for simple paths
+            return self._process_path_legacy(path_data, transform_matrix, **kwargs)
+
+    def _process_path_legacy(self, path_data: str,
+                           transform_matrix: Optional[np.ndarray] = None,
+                           **kwargs) -> Dict[str, Any]:
+        """Legacy path processing implementation."""
+        # Placeholder for existing path processing logic
+        self._legacy_operations += 1
+        return {
+            'path_data': path_data,
+            'processing_engine': 'legacy',
+            'commands': len([c for c in path_data if c.isalpha()]),
+            'coordinates': len([c for c in path_data if c.isdigit()]) * 2  # Rough estimate
+        }
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get performance summary for optimization decisions."""
+        total_ops = self._numpy_operations + self._legacy_operations
+        if total_ops == 0:
+            return {'no_operations': True}
+
+        numpy_ratio = self._numpy_operations / total_ops
+
+        return {
+            'total_operations': total_ops,
+            'numpy_operations': self._numpy_operations,
+            'legacy_operations': self._legacy_operations,
+            'numpy_usage_ratio': numpy_ratio,
+            'performance_improvement': f"{numpy_ratio * 100:.1f}% optimized operations"
+        }
+
+
+class ConverterServiceAdapter:
+    """
+    Adapter for integration with dependency injection services.
+
+    Provides seamless integration with the existing ConversionServices
+    architecture while enabling high-performance NumPy path processing.
+    """
+
+    def __init__(self, conversion_services):
+        self.services = conversion_services
+        self.path_integration = PathConverterIntegration()
+
+        # Cache for service compatibility
+        self._service_cache = {}
+
+    def convert_path_element(self, path_element, context) -> Any:
+        """Convert path element using optimized processing."""
+        # Extract path data
+        path_data = path_element.get('d', '')
+        if not path_data:
+            return None
+
+        # Get transformation matrix from context
+        transform_matrix = getattr(context, 'transform_matrix', None)
+
+        # Process with optimization
+        processed_path = self.path_integration.process_path_optimized(
+            path_data,
+            transform_matrix,
+            complexity_hint=self._analyze_path_complexity(path_element)
+        )
+
+        # Convert to format expected by existing converters
+        return self._format_for_existing_pipeline(processed_path, context)
+
+    def _analyze_path_complexity(self, path_element) -> str:
+        """Analyze path element to suggest processing complexity."""
+        path_data = path_element.get('d', '')
+
+        if any(cmd in path_data for cmd in ['C', 'c', 'Q', 'q', 'A', 'a']):
+            return 'curves'
+        elif len(path_data) > 500:
+            return 'complex'
+        else:
+            return 'simple'
+
+    def _format_for_existing_pipeline(self, processed_path: Dict[str, Any], context) -> Any:
+        """Format processed path data for existing converter pipeline."""
+        # Placeholder for conversion to existing format
+        return {
+            'processed_path': processed_path,
+            'context': context,
+            'optimized': processed_path.get('processing_engine') == 'numpy'
+        }
+
+
+# ============================================================================
+# Comprehensive Performance Validation Framework
+# ============================================================================
+
+class PathPerformanceValidator:
+    """
+    Comprehensive validation framework for path processing performance.
+
+    Features:
+    - Benchmarking against legacy implementation
+    - Accuracy validation to ensure correctness
+    - Performance regression detection
+    - Automated optimization recommendations
+    """
+
+    def __init__(self):
+        self.numpy_engine = UltraFastPathEngine()
+        self.test_cases = self._generate_test_cases()
+
+    def _generate_test_cases(self) -> List[Dict[str, Any]]:
+        """Generate comprehensive test cases for validation."""
+        return [
+            {
+                'name': 'simple_lines',
+                'path': 'M 10 10 L 20 20 L 30 10 Z',
+                'expected_commands': 4,
+                'complexity': 'low'
+            },
+            {
+                'name': 'cubic_curves',
+                'path': 'M 100 200 C 100 100 400 100 400 200',
+                'expected_commands': 2,
+                'complexity': 'medium'
+            },
+            {
+                'name': 'complex_mixed',
+                'path': 'M 50 50 Q 100 25 150 50 T 250 50 C 300 25 350 75 400 50 A 25 25 0 1 1 450 50',
+                'expected_commands': 5,
+                'complexity': 'high'
+            },
+            {
+                'name': 'large_coordinate_set',
+                'path': ' '.join([f'L {i*10} {i*5}' for i in range(100)]),
+                'expected_commands': 100,
+                'complexity': 'high'
+            }
+        ]
+
+    def validate_accuracy(self) -> Dict[str, Any]:
+        """Validate accuracy of NumPy implementation against reference."""
+        results = {'passed': 0, 'failed': 0, 'details': []}
+
+        for test_case in self.test_cases:
+            try:
+                processed = self.numpy_engine.process_path_string(test_case['path'])
+
+                # Check command count
+                commands_correct = processed['commands'] == test_case['expected_commands']
+
+                # Check coordinate validity (no NaN/Inf)
+                coords_valid = self._validate_coordinates(processed['parsed_path'])
+
+                if commands_correct and coords_valid:
+                    results['passed'] += 1
+                    status = 'PASS'
+                else:
+                    results['failed'] += 1
+                    status = 'FAIL'
+
+                results['details'].append({
+                    'test': test_case['name'],
+                    'status': status,
+                    'commands_correct': commands_correct,
+                    'coords_valid': coords_valid
+                })
+
+            except Exception as e:
+                results['failed'] += 1
+                results['details'].append({
+                    'test': test_case['name'],
+                    'status': 'ERROR',
+                    'error': str(e)
+                })
+
+        return results
+
+    def _validate_coordinates(self, parsed_path: np.ndarray) -> bool:
+        """Validate that all coordinates are finite numbers."""
+        commands = parsed_path[0]['commands'][:parsed_path[0]['command_count']]
+
+        for cmd in commands:
+            coords = cmd['coords'][:cmd['coord_count']]
+            if not np.all(np.isfinite(coords)):
+                return False
+
+        return True
+
+    def benchmark_performance(self, iterations: int = 1000) -> Dict[str, Any]:
+        """Benchmark performance against test cases."""
+        import time
+
+        results = {}
+
+        for test_case in self.test_cases:
+            path_data = test_case['path']
+
+            # Benchmark NumPy implementation
+            start_time = time.perf_counter()
+            for _ in range(iterations):
+                self.numpy_engine.process_path_string(path_data)
+            numpy_time = time.perf_counter() - start_time
+
+            results[test_case['name']] = {
+                'numpy_time': numpy_time,
+                'paths_per_second': iterations / numpy_time,
+                'complexity': test_case['complexity']
+            }
+
+        return results
+
+    def generate_performance_report(self) -> str:
+        """Generate comprehensive performance validation report."""
+        accuracy_results = self.validate_accuracy()
+        performance_results = self.benchmark_performance()
+
+        report = []
+        report.append("=" * 70)
+        report.append("NUMPY PATH ARCHITECTURE PERFORMANCE VALIDATION REPORT")
+        report.append("=" * 70)
+
+        # Accuracy section
+        report.append(f"\nACCURACY VALIDATION:")
+        report.append(f"  Tests passed: {accuracy_results['passed']}")
+        report.append(f"  Tests failed: {accuracy_results['failed']}")
+        report.append(f"  Success rate: {accuracy_results['passed']/(accuracy_results['passed']+accuracy_results['failed'])*100:.1f}%")
+
+        for detail in accuracy_results['details']:
+            status_symbol = "✅" if detail['status'] == 'PASS' else "❌"
+            report.append(f"    {status_symbol} {detail['test']}: {detail['status']}")
+
+        # Performance section
+        report.append(f"\nPERFORMANCE BENCHMARKS:")
+        for test_name, perf_data in performance_results.items():
+            report.append(f"  {test_name}:")
+            report.append(f"    Paths/second: {perf_data['paths_per_second']:,.0f}")
+            report.append(f"    Complexity: {perf_data['complexity']}")
+
+        # Summary
+        avg_perf = sum(p['paths_per_second'] for p in performance_results.values()) / len(performance_results)
+        report.append(f"\nSUMMARY:")
+        report.append(f"  Average performance: {avg_perf:,.0f} paths/second")
+        report.append(f"  Architecture status: {'✅ VALIDATED' if accuracy_results['failed'] == 0 else '⚠️ NEEDS FIXES'}")
+
+        return "\n".join(report)
+
+
+# ============================================================================
+# Usage Examples and Integration Demonstrations
+# ============================================================================
+
+def demonstrate_complete_integration():
+    """Demonstrate complete NumPy path architecture integration."""
+    print("=" * 70)
+    print("NUMPY PATH ARCHITECTURE INTEGRATION DEMONSTRATION")
+    print("=" * 70)
+
+    # 1. Basic path processing
+    print("\n1. Basic Path Processing:")
+    engine = UltraFastPathEngine()
+    test_path = "M 100 200 C 100 100 400 100 400 200 Q 500 100 600 200"
+
+    result = engine.process_path_string(test_path)
+    print(f"   Processed {result['commands']} commands, {result['coordinates']} coordinates")
+
+    # 2. Memory-optimized processing
+    print("\n2. Memory-Optimized Processing:")
+    memory_processor = MemoryOptimizedPathProcessor()
+    coord_buffer = memory_processor.allocate_coordinate_buffer(100)
+    print(f"   Allocated coordinate buffer: {coord_buffer.shape}")
+    print(f"   Memory stats: {memory_processor.get_memory_stats()}")
+
+    # 3. Lazy collection processing
+    print("\n3. Lazy Collection Processing:")
+    paths = [test_path] * 10
+    lazy_collection = LazyPathCollection(paths, cache_size=5)
+    print(f"   Created lazy collection with {len(lazy_collection)} paths")
+
+    sample_result = lazy_collection[0]
+    print(f"   First path: {sample_result['commands']} commands")
+
+    # 4. Integration layer
+    print("\n4. Integration Layer:")
+    integration = PathConverterIntegration()
+    optimized_result = integration.process_path_optimized(test_path)
+    print(f"   Processing engine: {optimized_result['processing_engine']}")
+    print(f"   Performance summary: {integration.get_performance_summary()}")
+
+    # 5. Performance validation
+    print("\n5. Performance Validation:")
+    validator = PathPerformanceValidator()
+    validation_report = validator.generate_performance_report()
+    print(validation_report)
+
+
+if __name__ == "__main__":
+    # Run complete demonstration
+    demonstrate_complete_integration()

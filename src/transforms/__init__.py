@@ -2,27 +2,30 @@
 """
 Transform System for SVG2PPTX
 
-Clean, high-performance 2D transformation engine using pure NumPy.
-Consolidated transform functionality with both legacy Matrix and modern TransformEngine.
+Provides matrix composition, CTM propagation, and coordinate transformation
+for proper SVG viewport mapping to PowerPoint EMU coordinates.
 """
 
-# Import from core module
+from .matrix_composer import (
+    viewport_matrix,
+    element_ctm,
+    normalise_content_matrix,
+    needs_normalise,
+    parse_viewbox,
+    parse_preserve_aspect_ratio
+)
+from .engine import TransformEngine
 from .core import Matrix
-from .parser import TransformParser, TransformEngine
+from .parser import TransformParser
 
-# Export Transform as the primary transform class (using Matrix for compatibility)
-Transform = Matrix
-TransformBuilder = TransformEngine
-
-# Export clean interface
 __all__ = [
-    'Transform',           # Primary transform class (Matrix)
-    'Matrix',             # Original Matrix class
-    'TransformEngine',    # Transform parser (alias for TransformParser)
-    'TransformParser',    # Transform parser class
-    'TransformBuilder',   # Alias for TransformEngine
+    'viewport_matrix',
+    'element_ctm',
+    'normalise_content_matrix',
+    'needs_normalise',
+    'parse_viewbox',
+    'parse_preserve_aspect_ratio',
+    'TransformEngine',
+    'Matrix',
+    'TransformParser'
 ]
-
-# Version info
-__version__ = '3.0.0'
-__author__ = 'SVG2PPTX Team'

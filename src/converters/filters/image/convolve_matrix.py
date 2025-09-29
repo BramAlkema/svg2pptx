@@ -7,7 +7,7 @@ for complex arbitrary matrices.
 """
 
 import math
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Dict, Any, Union

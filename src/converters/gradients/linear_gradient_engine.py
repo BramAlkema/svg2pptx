@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from lxml import etree as ET
 import re
 
-from .numpy_gradient_engine import NumPyColorProcessor, NumPyTransformProcessor, GradientData, GradientType
+from .core import ColorProcessor, TransformProcessor, GradientData, GradientType
 
 
 @dataclass
@@ -49,8 +49,8 @@ class LinearGradientEngine:
     - XML generation using efficient templates
     """
 
-    def __init__(self, color_processor: NumPyColorProcessor,
-                 transform_processor: NumPyTransformProcessor):
+    def __init__(self, color_processor: ColorProcessor,
+                 transform_processor: TransformProcessor):
         """
         Initialize linear gradient engine with shared processors.
 
@@ -694,15 +694,15 @@ class LinearGradientEngine:
 
 # ==================== Convenience Functions ====================
 
-def create_linear_gradient_engine(color_processor: NumPyColorProcessor,
-                                transform_processor: NumPyTransformProcessor) -> LinearGradientEngine:
+def create_linear_gradient_engine(color_processor: ColorProcessor,
+                                transform_processor: TransformProcessor) -> LinearGradientEngine:
     """Create a linear gradient engine with shared processors."""
     return LinearGradientEngine(color_processor, transform_processor)
 
 
 def process_linear_gradients_fast(gradient_elements: List[ET.Element],
-                                color_processor: Optional[NumPyColorProcessor] = None,
-                                transform_processor: Optional[NumPyTransformProcessor] = None) -> List[str]:
+                                color_processor: Optional[ColorProcessor] = None,
+                                transform_processor: Optional[TransformProcessor] = None) -> List[str]:
     """
     Fast processing of linear gradients using default processors.
 
@@ -715,10 +715,10 @@ def process_linear_gradients_fast(gradient_elements: List[ET.Element],
         List of DrawingML XML strings
     """
     if color_processor is None:
-        color_processor = NumPyColorProcessor()
+        color_processor = ColorProcessor()
 
     if transform_processor is None:
-        transform_processor = NumPyTransformProcessor()
+        transform_processor = TransformProcessor()
 
     engine = LinearGradientEngine(color_processor, transform_processor)
     return engine.process_linear_gradients_batch(gradient_elements)

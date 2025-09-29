@@ -41,7 +41,7 @@ class TestModernShapeConverterAPIs:
         assert hasattr(RectangleConverter, 'convert')
 
         # Test inheritance
-        assert 'NumPyShapeConverter' in [cls.__name__ for cls in RectangleConverter.__mro__]
+        assert 'EnhancedShapeConverter' in [cls.__name__ for cls in RectangleConverter.__mro__]
 
     def test_circle_converter_class_structure(self):
         """Test CircleConverter class structure and API."""
@@ -49,7 +49,7 @@ class TestModernShapeConverterAPIs:
         assert CircleConverter.supported_elements == ['circle']
         assert hasattr(CircleConverter, 'can_convert')
         assert hasattr(CircleConverter, 'convert')
-        assert 'NumPyShapeConverter' in [cls.__name__ for cls in CircleConverter.__mro__]
+        assert 'EnhancedShapeConverter' in [cls.__name__ for cls in CircleConverter.__mro__]
 
     def test_ellipse_converter_class_structure(self):
         """Test EllipseConverter class structure and API."""
@@ -72,8 +72,8 @@ class TestModernShapeConverterAPIs:
         assert hasattr(LineConverter, 'can_convert')
         assert hasattr(LineConverter, 'convert')
 
-    def test_all_converters_inherit_from_numpy_converter(self):
-        """Test that all converters inherit from NumPyShapeConverter."""
+    def test_all_converters_inherit_from_enhanced_converter(self):
+        """Test that all converters inherit from EnhancedShapeConverter."""
         converters = [
             RectangleConverter,
             CircleConverter,
@@ -84,7 +84,7 @@ class TestModernShapeConverterAPIs:
 
         for converter_class in converters:
             mro_names = [cls.__name__ for cls in converter_class.__mro__]
-            assert 'NumPyShapeConverter' in mro_names, f"{converter_class.__name__} should inherit from NumPyShapeConverter"
+            assert 'EnhancedShapeConverter' in mro_names, f"{converter_class.__name__} should inherit from EnhancedShapeConverter"
 
     def test_converter_supported_elements_unique(self):
         """Test that each converter has unique supported elements."""
@@ -254,7 +254,7 @@ class TestModernShapeConverterIntegration:
         # Test they're the modern implementations
         for converter in [RectangleConverter, CircleConverter, EllipseConverter]:
             mro_names = [cls.__name__ for cls in converter.__mro__]
-            assert 'NumPyShapeConverter' in mro_names
+            assert 'EnhancedShapeConverter' in mro_names
 
     def test_no_placeholder_converters_remaining(self):
         """Test that no placeholder converters remain after legacy removal."""
@@ -267,16 +267,17 @@ class TestModernShapeConverterIntegration:
 
     def test_modern_architecture_performance_attributes(self):
         """Test that modern converters have performance-related attributes."""
-        from src.converters.shapes.numpy_converter import NumPyShapeConverter
+        from tests.utils.dependency_checks import skip_if_no_enhanced_converter
+        from src.converters.shapes.enhanced_converter import EnhancedShapeConverter
 
-        # Test NumPy converter has performance features
-        assert hasattr(NumPyShapeConverter, 'supported_elements')
+        # Test EnhancedShapeConverter has performance features
+        assert hasattr(EnhancedShapeConverter, 'supported_elements')
         # Check for instance attribute that would be created on initialization
         # geometry_engine is an instance attribute, not class attribute
 
         # Test our converters inherit these
         mro_names = [cls.__name__ for cls in RectangleConverter.__mro__]
-        assert 'NumPyShapeConverter' in mro_names
+        assert 'EnhancedShapeConverter' in mro_names
 
 
 if __name__ == "__main__":

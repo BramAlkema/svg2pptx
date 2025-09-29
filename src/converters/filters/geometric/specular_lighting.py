@@ -36,6 +36,7 @@ from lxml import etree
 from dataclasses import dataclass
 
 from ..core.base import Filter, FilterContext, FilterResult
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -437,10 +438,10 @@ class SpecularLightingFilter(Filter):
             a:sp3d DrawingML configuration with specular material properties
         """
         # Convert surface scale to EMU units for extrusion (reused from diffuse)
-        extrusion_height = context.unit_converter.to_emu(f"{abs(params.surface_scale)}px")
+        extrusion_height = unit(f"{abs(params.surface_scale)}px").to_emu()
 
         # Calculate contour width based on surface scale (reused from diffuse)
-        contour_width = context.unit_converter.to_emu(f"{abs(params.surface_scale) * 0.5}px")
+        contour_width = unit(f"{abs(params.surface_scale) * 0.5}px").to_emu()
 
         # Map specular exponent to PowerPoint material properties (Subtask 2.3.6)
         material = self._map_shininess_to_material(params.specular_exponent)
@@ -492,8 +493,8 @@ class SpecularLightingFilter(Filter):
             a:bevel DrawingML effects
         """
         # Calculate bevel dimensions based on specular constant (reused approach)
-        bevel_width = context.unit_converter.to_emu(f"{params.specular_constant * 2.0}px")
-        bevel_height = context.unit_converter.to_emu(f"{params.specular_constant * 1.5}px")
+        bevel_width = unit(f"{params.specular_constant * 2.0}px").to_emu()
+        bevel_height = unit(f"{params.specular_constant * 1.5}px").to_emu()
 
         # Determine bevel type based on light direction (reused from diffuse)
         if params.light_source_type == "distant" and params.light_elevation is not None:
@@ -608,20 +609,20 @@ class SpecularLightingFilter(Filter):
         # Calculate highlight parameters based on specular properties
         # Specular exponent controls highlight focus/sharpness
         if params.specular_exponent >= 64.0:
-            blur_radius = context.unit_converter.to_emu(f"{params.surface_scale * 0.5}px")  # Sharp highlight
+            blur_radius = unit(f"{params.surface_scale * 0.5}px").to_emu()  # Sharp highlight
             highlight_intensity = 80000  # High intensity for shiny surfaces
             comment_focus = "sharp, focused highlight for high shininess"
         elif params.specular_exponent >= 16.0:
-            blur_radius = context.unit_converter.to_emu(f"{params.surface_scale * 1.0}px")  # Medium highlight
+            blur_radius = unit(f"{params.surface_scale * 1.0}px").to_emu()  # Medium highlight
             highlight_intensity = 60000  # Medium intensity
             comment_focus = "medium highlight focus"
         else:
-            blur_radius = context.unit_converter.to_emu(f"{params.surface_scale * 2.0}px")  # Soft highlight
+            blur_radius = unit(f"{params.surface_scale * 2.0}px").to_emu()  # Soft highlight
             highlight_intensity = 40000  # Lower intensity for matte surfaces
             comment_focus = "soft, diffused highlight for low shininess"
 
         # Calculate highlight distance based on surface scale
-        highlight_distance = context.unit_converter.to_emu(f"{params.surface_scale * 1.5}px")
+        highlight_distance = unit(f"{params.surface_scale * 1.5}px").to_emu()
 
         # Determine highlight direction based on light source (opposite of shadow)
         if params.light_source_type == "distant" and params.light_azimuth is not None:

@@ -154,98 +154,21 @@ class ColorBatch:
         Returns:
             New ColorBatch with adjusted saturation
         """
-        try:
-            # Convert entire batch to LCH color space for chroma adjustment
-            lch_array = colorspacious.cspace_convert(self._rgb_array, "sRGB255", "CIELCh")
+        # Convert entire batch to LCH color space for chroma adjustment
+        lch_array = colorspacious.cspace_convert(self._rgb_array, "sRGB255", "CIELCh")
 
-            # Vectorized chroma adjustment
-            lch_array[:, 1] = np.maximum(0, lch_array[:, 1] + (amount * 50))
+        # Vectorized chroma adjustment
+        lch_array[:, 1] = np.maximum(0, lch_array[:, 1] + (amount * 50))
 
-            # Convert back to RGB
-            new_rgb_array = colorspacious.cspace_convert(lch_array, "CIELCh", "sRGB255")
-            new_rgb_array = np.clip(new_rgb_array, 0, 255).astype(np.uint8)
+        # Convert back to RGB
+        new_rgb_array = colorspacious.cspace_convert(lch_array, "CIELCh", "sRGB255")
+        new_rgb_array = np.clip(new_rgb_array, 0, 255).astype(np.uint8)
 
-            # Create new ColorBatch instance
-            new_batch = ColorBatch.__new__(ColorBatch)
-            new_batch._rgb_array = new_rgb_array
-            new_batch._alpha_array = self._alpha_array.copy()
-            return new_batch
-
-        except Exception:
-            # Fallback to HSV saturation adjustment using vectorized operations
-            return self._fallback_saturate_hsv(amount)
-
-    def _fallback_saturate_hsv(self, amount: float) -> ColorBatch:
-        """Fallback saturation adjustment using HSV color space."""
-        # Convert RGB to HSV using vectorized operations
-        rgb_normalized = self._rgb_array.astype(np.float32) / 255.0
-
-        # Vectorized RGB to HSV conversion
-        max_rgb = np.max(rgb_normalized, axis=1)
-        min_rgb = np.min(rgb_normalized, axis=1)
-        diff = max_rgb - min_rgb
-
-        # Value (brightness)
-        v = max_rgb
-
-        # Saturation
-        s = np.where(max_rgb != 0, diff / max_rgb, 0)
-
-        # Adjust saturation
-        s = np.clip(s + amount, 0, 1)
-
-        # Hue calculation (vectorized)
-        h = np.zeros_like(max_rgb)
-
-        # Red is max
-        red_max = (rgb_normalized[:, 0] == max_rgb) & (diff != 0)
-        h[red_max] = (rgb_normalized[red_max, 1] - rgb_normalized[red_max, 2]) / diff[red_max]
-
-        # Green is max
-        green_max = (rgb_normalized[:, 1] == max_rgb) & (diff != 0)
-        h[green_max] = 2.0 + (rgb_normalized[green_max, 2] - rgb_normalized[green_max, 0]) / diff[green_max]
-
-        # Blue is max
-        blue_max = (rgb_normalized[:, 2] == max_rgb) & (diff != 0)
-        h[blue_max] = 4.0 + (rgb_normalized[blue_max, 0] - rgb_normalized[blue_max, 1]) / diff[blue_max]
-
-        h = (h / 6.0) % 1.0
-
-        # Convert HSV back to RGB
-        new_rgb_array = self._hsv_to_rgb_vectorized(h, s, v)
-
+        # Create new ColorBatch instance
         new_batch = ColorBatch.__new__(ColorBatch)
         new_batch._rgb_array = new_rgb_array
         new_batch._alpha_array = self._alpha_array.copy()
         return new_batch
-
-    def _hsv_to_rgb_vectorized(self, h: np.ndarray, s: np.ndarray, v: np.ndarray) -> np.ndarray:
-        """Vectorized HSV to RGB conversion."""
-        c = v * s
-        x = c * (1 - np.abs((h * 6) % 2 - 1))
-        m = v - c
-
-        rgb = np.zeros((len(h), 3))
-
-        # Define the six hue regions
-        region_0 = (h >= 0) & (h < 1/6)
-        region_1 = (h >= 1/6) & (h < 2/6)
-        region_2 = (h >= 2/6) & (h < 3/6)
-        region_3 = (h >= 3/6) & (h < 4/6)
-        region_4 = (h >= 4/6) & (h < 5/6)
-        region_5 = (h >= 5/6) & (h < 1)
-
-        # Set RGB values based on hue region
-        rgb[region_0] = np.column_stack([c[region_0], x[region_0], np.zeros(np.sum(region_0))])
-        rgb[region_1] = np.column_stack([x[region_1], c[region_1], np.zeros(np.sum(region_1))])
-        rgb[region_2] = np.column_stack([np.zeros(np.sum(region_2)), c[region_2], x[region_2]])
-        rgb[region_3] = np.column_stack([np.zeros(np.sum(region_3)), x[region_3], c[region_3]])
-        rgb[region_4] = np.column_stack([x[region_4], np.zeros(np.sum(region_4)), c[region_4]])
-        rgb[region_5] = np.column_stack([c[region_5], np.zeros(np.sum(region_5)), x[region_5]])
-
-        # Add the m value and convert to 0-255 range
-        rgb = (rgb + m.reshape(-1, 1)) * 255
-        return np.clip(rgb, 0, 255).astype(np.uint8)
 
     def to_colors(self) -> List[Color]:
         """

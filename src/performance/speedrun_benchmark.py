@@ -18,6 +18,15 @@ import logging
 import json
 import random
 
+try:
+    from ..services import SecureFileService, default_secure_file_service
+except ImportError:
+    # Handle direct execution
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from src.services import SecureFileService, default_secure_file_service
+
 from .speedrun_optimizer import SVGSpeedrunOptimizer, SpeedrunMode, enable_speedrun_mode
 from .speedrun_cache import SpeedrunCache, enable_speedrun_mode as enable_cache_speedrun
 from .optimizer import PerformanceOptimizer, OptimizationLevel
@@ -69,7 +78,11 @@ class SVGSpeedrunBenchmark:
         Args:
             cache_dir: Directory for benchmark cache (uses temp if not provided)
         """
-        self.cache_dir = cache_dir or Path(tempfile.mkdtemp(prefix="speedrun_bench_"))
+        if cache_dir is None:
+            secure_dir = default_secure_file_service.create_secure_temp_dir(prefix="speedrun_bench_")
+            self.cache_dir = Path(secure_dir.path)
+        else:
+            self.cache_dir = cache_dir
         self.results: List[BenchmarkResult] = []
         
         # Test SVG samples

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:cSld>
+        <p:spTree>
+            <p:nvGrpSpPr>
+                <p:cNvPr id="1" name=""/>
+                <p:cNvGrpSpPr/>
+                <p:nvPr/>
+            </p:nvGrpSpPr>
+            <p:grpSpPr>
+                <a:xfrm>
+                    <a:off x="0" y="0"/>
+                    <a:ext cx="9144000" cy="6858000"/>
+                    <a:chOff x="0" y="0"/>
+                    <a:chExt cx="9144000" cy="6858000"/>
+                </a:xfrm>
+            </p:grpSpPr>
+            <p:sp>
+<p:nvSpPr>
+<p:cNvPr id="1000" name="Path1000"/>
+<p:cNvSpPr/>
+<p:nvPr/>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="2057400" y="1600200"/>
+<a:ext cx="5029200" cy="3429000"/>
+</a:xfrm>
+<a:custGeom>
+<a:avLst/>
+<a:gdLst/>
+<a:ahLst/>
+<a:cxnLst/>
+<a:rect l="0" t="0" r="5029200" b="3429000"/>
+<a:pathLst>
+<a:path w="5029200" h="3429000" fill="norm">
+<a:moveTo><a:pt x="4572000" y="5029200"/></a:moveTo>
+</a:path>
+</a:pathLst>
+</a:custGeom>
+<a:solidFill><a:srgbClr val="E74C3C"/></a:solidFill>
+<a:ln w="38100">
+<a:solidFill>
+<a:srgbClr val="C0392B"/>
+</a:solidFill>
+</a:ln>
+</p:spPr>
+<p:style>
+<a:lnRef idx="1"><a:schemeClr val="accent1"/></a:lnRef>
+<a:fillRef idx="3"><a:schemeClr val="accent1"/></a:fillRef>
+<a:effectRef idx="2"><a:schemeClr val="accent1"/></a:effectRef>
+<a:fontRef idx="minor"><a:schemeClr val="lt1"/></a:fontRef>
+</p:style>
+<p:txBody>
+<a:bodyPr rtlCol="0" anchor="ctr"/>
+<a:lstStyle/>
+<a:p>
+<a:pPr algn="ctr"/>
+<a:endParaRPr lang="en-US"/>
+</a:p>
+</p:txBody>
+</p:sp>
+        </p:spTree>
+    </p:cSld>
+    <p:clrMapOvr>
+        <a:masterClrMapping/>
+    </p:clrMapOvr>
+</p:sld>

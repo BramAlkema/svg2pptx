@@ -1,0 +1,6 @@
+<!-- Bezier curves path isolation test -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Path 5: Bezier curves only -->
+  <path d="M60,200 C60,180 80,180 100,200 S140,220 160,200"
+        fill="none" stroke="#e67e22" stroke-width="4"/>
+</svg>

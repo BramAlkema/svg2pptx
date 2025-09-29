@@ -37,6 +37,107 @@ from .geometry_plugins import (
     ConvertStyleToAttrsPlugin
 )
 
+from .resolve_clippath_plugin import ResolveClipPathsPlugin
+
+# SVGO-style plugin aliases (kebab-case names -> plugin classes)
+SVGO_ALIASES = {
+    # Basic plugins
+    'cleanup-attrs': CleanupAttrsPlugin,
+    'cleanup-numeric-values': CleanupNumericValuesPlugin,
+    'remove-empty-attrs': RemoveEmptyAttrsPlugin,
+    'remove-empty-containers': RemoveEmptyContainersPlugin,
+    'remove-comments': RemoveCommentsPlugin,
+    'convert-colors': ConvertColorsPlugin,
+    'collapse-groups': CollapseGroupsPlugin,
+    'remove-unused-namespaces': RemoveUnusedNamespacesPlugin,
+    'convert-shape-to-path': ConvertShapeToPathPlugin,
+
+    # Advanced plugins
+    'convert-path-data': ConvertPathDataPlugin,
+    'merge-paths': MergePathsPlugin,
+    'convert-transform': ConvertTransformPlugin,
+    'remove-useless-stroke-and-fill': RemoveUselessStrokeAndFillPlugin,
+    'remove-hidden-elements': RemoveHiddenElementsPlugin,
+    'minify-styles': MinifyStylesPlugin,
+    'sort-attrs': SortAttributesPlugin,
+    'remove-unknowns-and-defaults': RemoveUnknownsAndDefaultsPlugin,
+
+    # Geometry plugins
+    'convert-ellipse-to-circle': ConvertEllipseToCirclePlugin,
+    'simplify-polygon': SimplifyPolygonPlugin,
+    'optimize-viewbox': OptimizeViewBoxPlugin,
+    'simplify-transform-matrix': SimplifyTransformMatrixPlugin,
+    'remove-empty-defs': RemoveEmptyDefsPlugin,
+    'convert-style-to-attrs': ConvertStyleToAttrsPlugin,
+
+    # ClipPath resolution
+    'resolve-clippath': ResolveClipPathsPlugin,
+}
+
+# SVGO preset-default plugin list (mirrors SVGO's preset-default)
+SVGO_PRESET_DEFAULT = [
+    'cleanup-attrs',
+    # 'inline-styles',          # Skip if not implemented
+    # 'remove-doctype',         # Skip - not applicable
+    # 'remove-xml-proc-inst',   # Skip - not applicable
+    'remove-comments',
+    # 'remove-metadata',        # Skip if not implemented
+    # 'remove-title',           # Skip if not implemented
+    # 'remove-desc',            # Skip if not implemented
+    'remove-unknowns-and-defaults',
+    'remove-useless-stroke-and-fill',
+    'remove-unused-namespaces',
+    # 'remove-editors-namespaces',  # Skip if not implemented
+    'cleanup-numeric-values',
+    'convert-colors',
+    'remove-empty-attrs',
+    'remove-hidden-elements',
+    'remove-empty-containers',
+    # 'remove-viewbox',         # DO NOT enable by default; use optimize-viewbox instead
+    # 'cleanup-enable-background',  # Skip
+    'convert-path-data',
+    'convert-transform',
+    # 'remove-empty-text',      # Skip if not implemented
+    'collapse-groups',
+    'merge-paths',
+    'convert-style-to-attrs',
+    'sort-attrs',
+    'remove-empty-defs',
+    'simplify-transform-matrix',
+    'optimize-viewbox',
+    'convert-ellipse-to-circle',
+    'simplify-polygon',
+    # 'convert-shape-to-path'   # Usually *off* in SVGO preset-default; keep optional
+]
+
+def _resolve_svgo_plugin(entry):
+    """
+    Resolve SVGO-style plugin configuration entries.
+
+    Accepts:
+      - "plugin-name" (string)
+      - {"plugin-name": True/False} (boolean enable/disable)
+      - {"plugin-name": {"param": val, ...}} (object with parameters)
+
+    Returns:
+        tuple: (plugin_class, enabled, params) or (None, False, {})
+    """
+    if isinstance(entry, str):
+        name, enabled, params = entry, True, {}
+    elif isinstance(entry, dict) and entry:
+        name, val = next(iter(entry.items()))
+        if isinstance(val, bool):
+            enabled, params = val, {}
+        elif isinstance(val, dict):
+            enabled, params = True, val
+        else:
+            enabled, params = True, {}
+    else:
+        return None, False, {}
+
+    cls = SVGO_ALIASES.get(name)
+    return cls, bool(enabled), (params or {})
+
 
 class SVGOptimizer:
     """Main SVG optimizer that applies preprocessing plugins."""
@@ -78,27 +179,67 @@ class SVGOptimizer:
         self._initialize_plugins()
     
     def _initialize_plugins(self):
-        """Initialize plugins based on configuration."""
-        plugin_config = self.config.get('plugins', {})
-        
-        # Determine which plugin set to use
-        preset = self.config.get('preset', 'default')
-        if preset == 'minimal':
-            plugin_classes = self.MINIMAL_PLUGINS
-        elif preset == 'aggressive':
-            plugin_classes = self.AGGRESSIVE_PLUGINS
+        """Initialize plugins based on configuration (supports SVGO-style config)."""
+        cfg = self.config
+        plugin_cfg = cfg.get('plugins', {})
+
+        # 1) Determine plugin list:
+        #    - if user passed a list -> SVGO style, use as-is (order matters)
+        #    - elif 'preset' == 'aggressive' -> your aggressive list
+        #    - else if 'preset' == 'svgo' or 'preset-default' -> SVGO_PRESET_DEFAULT
+        #    - else -> your DEFAULT_PLUGINS
+        plugin_entries = cfg.get('plugins_list')  # Allow explicit list via key
+        if plugin_entries is None and isinstance(plugin_cfg, list):
+            plugin_entries = plugin_cfg
+
+        selected = []
+        if plugin_entries:
+            # SVGO-style list
+            for entry in plugin_entries:
+                cls, enabled, params = _resolve_svgo_plugin(entry)
+                if cls and enabled:
+                    selected.append((cls, params))
         else:
-            plugin_classes = self.DEFAULT_PLUGINS
-        
-        # Register plugins with their configurations
-        for plugin_class in plugin_classes:
-            plugin_name = plugin_class.name
-            individual_config = plugin_config.get(plugin_name, {})
-            
-            # Check if plugin is disabled
-            if individual_config.get('enabled', True):
-                plugin = plugin_class(individual_config)
-                self.registry.register(plugin)
+            preset = cfg.get('preset', 'default')
+            if preset in ('svgo', 'preset-default'):
+                for name in SVGO_PRESET_DEFAULT:
+                    cls = SVGO_ALIASES.get(name)
+                    if cls:
+                        params = plugin_cfg.get(name, {})
+                        enabled = params.get('enabled', True) if isinstance(params, dict) else True
+                        if enabled:
+                            selected.append((cls, params if isinstance(params, dict) else {}))
+            elif preset == 'aggressive':
+                for cls in self.AGGRESSIVE_PLUGINS:
+                    plugin_name = getattr(cls, 'name', cls.__name__)
+                    params = plugin_cfg.get(plugin_name, {})
+                    if params.get('enabled', True) if isinstance(params, dict) else True:
+                        selected.append((cls, params if isinstance(params, dict) else {}))
+            elif preset == 'minimal':
+                for cls in self.MINIMAL_PLUGINS:
+                    plugin_name = getattr(cls, 'name', cls.__name__)
+                    params = plugin_cfg.get(plugin_name, {})
+                    if params.get('enabled', True) if isinstance(params, dict) else True:
+                        selected.append((cls, params if isinstance(params, dict) else {}))
+            else:
+                for cls in self.DEFAULT_PLUGINS:
+                    plugin_name = getattr(cls, 'name', cls.__name__)
+                    params = plugin_cfg.get(plugin_name, {})
+                    if params.get('enabled', True) if isinstance(params, dict) else True:
+                        selected.append((cls, params if isinstance(params, dict) else {}))
+
+        # 2) Register plugins in that order
+        for cls, params in selected:
+            plugin = cls(params)
+            self.registry.register(plugin)
+
+        # 3) Precision/multipass compatibility with SVGO
+        #    SVGO calls it floatPrecision
+        prec = self.config.get('floatPrecision', self.config.get('precision', 3))
+        self.config['precision'] = prec
+        if 'multipass' not in self.config and self.config.get('passCount'):
+            self.config['multipass'] = True
+            self.config['maxPasses'] = int(self.config['passCount'])
     
     def optimize(self, svg_content: str) -> str:
         """Optimize SVG content using registered plugins."""
@@ -118,8 +259,10 @@ class SVGOptimizer:
             context = PreprocessingContext()
             context.precision = self.config.get('precision', 3)
             
-            # Apply plugins multiple times if needed
-            max_passes = self.config.get('multipass', False) and 3 or 1
+            # Apply plugins multiple times if needed (SVGO-style multipass)
+            max_passes = self.config.get('maxPasses')
+            if not max_passes:
+                max_passes = 3 if self.config.get('multipass', False) else 1
             
             for pass_num in range(max_passes):
                 context.modifications_made = False
@@ -203,30 +346,34 @@ class SVGOptimizer:
             return normalized.strip()
     
     def _prettify_xml(self, xml_str: str) -> str:
-        """Add basic pretty printing to XML."""
+        """Add pretty printing to XML with configurable indentation."""
         import re
-        
+
+        # Get indent size from config (SVGO-compatible)
+        indent_size = int(self.config.get('indent', 2))
+        indent_char = ' ' * indent_size
+
         # Add newlines after major elements
         xml_str = re.sub(r'><', '>\\n<', xml_str)
-        
-        # Basic indentation (simplified)
+
+        # Basic indentation
         lines = xml_str.split('\\n')
         indented_lines = []
         indent_level = 0
-        
+
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-                
+
             if line.startswith('</'):
                 indent_level -= 1
-            
-            indented_lines.append('  ' * indent_level + line)
-            
+
+            indented_lines.append(indent_char * indent_level + line)
+
             if line.startswith('<') and not line.startswith('</') and not line.endswith('/>'):
                 indent_level += 1
-        
+
         return '\\n'.join(indented_lines)
     
     def get_stats(self, context: PreprocessingContext) -> Dict[str, int]:
@@ -277,3 +424,27 @@ def create_optimizer(preset: str = "default", **kwargs) -> SVGOptimizer:
     config.update(kwargs)
     
     return SVGOptimizer(config)
+
+
+# Example SVGO-style configuration that now works:
+"""
+cfg = {
+  "preset": "preset-default",     # or "svgo"
+  "floatPrecision": 2,
+  "multipass": True,
+  "indent": 2,
+  "plugins": [
+    "cleanup-attrs",
+    {"cleanup-numeric-values": {"floatPrecision": 2}},
+    "remove-comments",
+    "remove-empty-attrs",
+    {"convert-path-data": {"straightCurves": True}},
+    {"merge-paths": {"force": False}},
+    "collapse-groups",
+    {"convert-style-to-attrs": True},
+    {"convert-shape-to-path": False}   # explicit off
+  ]
+}
+optimizer = SVGOptimizer(cfg)
+result = optimizer.optimize(svg_string)
+"""

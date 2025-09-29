@@ -170,6 +170,7 @@ Included files:
         }
 
 
+@pytest.mark.integration
 class TestSimpleCoreConversion:
     """Test core conversion functionality without external dependencies."""
     
@@ -264,6 +265,7 @@ class TestSimpleCoreConversion:
         assert 'File too large' in result['error_message']
 
 
+@pytest.mark.integration
 class TestSimpleCoreMerging:
     """Test core merging functionality without external dependencies."""
     
@@ -347,6 +349,7 @@ class TestSimpleCoreMerging:
         assert 'Unsupported output format' in result['error_message']
 
 
+@pytest.mark.integration
 class TestWorkflowIntegration:
     """Test complete workflow integration."""
     

@@ -32,7 +32,27 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Testing and Coverage
+.pytest_cache/
+.cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
 # Virtual environments
+.env
+.venv
 venv/
 env/
 ENV/

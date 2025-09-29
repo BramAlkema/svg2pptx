@@ -71,7 +71,11 @@ dependencies = [
     # Font processing and text-to-path conversion
     "fonttools>=4.42.0",
     "uharfbuzz>=0.37.0",
-    "freetype-py>=2.4.0"
+    "freetype-py>=2.4.0",
+
+    # Color science and processing
+    "colorspacious>=1.1.0",
+    "numpy>=1.20.0"
 ]
 
 [project.optional-dependencies]
@@ -164,6 +168,7 @@ addopts = [
     # Coverage configuration
     "--cov=src",
     "--cov=api",
+    "--cov=core",
     "--cov-report=html:htmlcov",
     "--cov-report=xml:coverage.xml", 
     "--cov-report=term-missing:skip-covered",
@@ -197,6 +202,10 @@ markers = [
     "slow: Tests that take more than 10 seconds",
     
     # Component-specific markers
+    "clean_slate: Tests for clean slate architecture components",
+    "ir: Tests for intermediate representation (IR) components",
+    "mapper: Tests for IR mapper components",
+    "policy: Tests for policy engine components",
     "converter: Tests for converter modules",
     "validation: Tests for validation components",
     "processing: Tests for core processing components",
@@ -230,7 +239,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["src", "core"]
 omit = [
     "*/tests/*",
     "*/test_*",

@@ -88,19 +88,45 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
         return self._commands_to_path_data(simplified_commands, precision)
     
     def _parse_path_commands(self, path_data: str) -> List[Tuple[str, List[float]]]:
-        """Parse path data into command/coordinate pairs."""
+        """Parse path data using consolidated PathProcessor service."""
+        try:
+            # Use the consolidated PathProcessor for consistent path parsing
+            from ..utils.path_processor import path_processor
+
+            path_commands = path_processor.parse_path_string(path_data)
+
+            # Convert PathCommand objects to expected tuple format
+            result = []
+            for cmd in path_commands:
+                command_char = cmd.command.upper()
+                coordinates = []
+                for point in cmd.points:
+                    coordinates.extend([point.x, point.y])
+                result.append((command_char, coordinates))
+
+            return result
+
+        except ImportError:
+            # Fallback to legacy parsing if PathProcessor not available
+            return self._legacy_parse_path_commands(path_data)
+        except Exception:
+            # Fallback to legacy parsing on any error
+            return self._legacy_parse_path_commands(path_data)
+
+    def _legacy_parse_path_commands(self, path_data: str) -> List[Tuple[str, List[float]]]:
+        """Legacy path parsing - to be replaced once PathEngine integration is complete."""
         commands = []
-        
+
         # Split path data into command segments
         pattern = r'([MmLlHhVvCcSsQqTtAaZz])'
         parts = re.split(pattern, path_data)
-        
+
         current_command = ''
         for part in parts:
             part = part.strip()
             if not part:
                 continue
-                
+
             if re.match(r'[MmLlHhVvCcSsQqTtAaZz]', part):
                 current_command = part
             else:
@@ -118,9 +144,32 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
         return commands
     
     def _commands_to_path_data(self, commands: List[Tuple[str, List[float]]], precision: int) -> str:
-        """Convert commands back to path data string."""
+        """Convert commands back to path data string using PathProcessor."""
+        try:
+            # Use PathProcessor for consistent path string generation
+            from ..utils.path_processor import path_processor, PathCommand, PathPoint
+
+            # Convert tuple format back to PathCommand objects
+            path_commands = []
+            for cmd_type, coords in commands:
+                points = []
+                # Group coordinates into point pairs
+                for i in range(0, len(coords), 2):
+                    if i + 1 < len(coords):
+                        points.append(PathPoint(coords[i], coords[i + 1]))
+
+                path_commands.append(PathCommand(cmd_type, points))
+
+            # Use PathProcessor to generate clean path string
+            return path_processor.commands_to_path_string(path_commands, precision)
+
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         parts = []
-        
+
         for cmd_type, coords in commands:
             coord_strs = []
             for coord in coords:
@@ -131,9 +180,9 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
                 else:
                     formatted = f"{coord:.{precision}f}".rstrip('0').rstrip('.')
                     coord_strs.append(formatted if formatted else '0')
-            
+
             parts.append(cmd_type + ' '.join(coord_strs))
-        
+
         return ' '.join(parts)
 
 
@@ -177,10 +226,19 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
         return False
     
     def _parse_points(self, points_str: str) -> List[Pt]:
-        """Parse points string into coordinate pairs."""
-        # Split by whitespace and commas, filter empty strings
+        """Parse points string into coordinate pairs using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent points parsing
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+            result = preprocessor_utilities.parse_points_string(points_str)
+            return result.data if result.success else []
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         coords = [x for x in re.split(r'[\s,]+', points_str.strip()) if x]
-        
+
         points = []
         for i in range(0, len(coords) - 1, 2):
             try:
@@ -189,7 +247,7 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
                 points.append((x, y))
             except (ValueError, IndexError):
                 break
-        
+
         return points
     
     def _points_to_string(self, points: List[Pt], precision: int) -> str:
@@ -201,9 +259,18 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
             formatted_points.append(f"{x_str},{y_str}")
         
         return ' '.join(formatted_points)
-    
+
     def _format_number(self, num: float, precision: int) -> str:
-        """Format number with appropriate precision."""
+        """Format number with appropriate precision using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent number formatting
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+            return preprocessor_utilities.format_number(num, precision)
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         if abs(num) < 10**-precision:
             return '0'
         if abs(num - round(num)) < 10**-precision:
@@ -269,9 +336,19 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
         return False
     
     def _parse_points(self, points_str: str) -> List[Pt]:
-        """Parse points string into coordinate pairs."""
+        """Parse points string into coordinate pairs using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent points parsing
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+            result = preprocessor_utilities.parse_points_string(points_str)
+            return result.data if result.success else []
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         coords = [x for x in re.split(r'[\s,]+', points_str.strip()) if x]
-        
+
         points = []
         for i in range(0, len(coords) - 1, 2):
             try:
@@ -280,7 +357,7 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
                 points.append((x, y))
             except (ValueError, IndexError):
                 break
-        
+
         return points
     
     def _should_apply_smoothing(self, points: List[Pt]) -> bool:
@@ -341,9 +418,18 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
                         f"{self._format_number(p3[0], precision)},{self._format_number(p3[1], precision)}")
         
         return ' '.join(parts)
-    
+
     def _format_number(self, num: float, precision: int) -> str:
-        """Format number with appropriate precision."""
+        """Format number with appropriate precision using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent number formatting
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+            return preprocessor_utilities.format_number(num, precision)
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         if abs(num) < 10**-precision:
             return '0'
         if abs(num - round(num)) < 10**-precision:

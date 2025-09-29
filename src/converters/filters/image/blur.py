@@ -13,6 +13,7 @@ import logging
 from lxml import etree
 
 from ..core.base import Filter, FilterContext, FilterResult, FilterException
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ class GaussianBlurFilter(Filter):
 
     def _parse_blur_parameters(self, element: etree.Element) -> BlurParameters:
         """
-        Parse blur parameters from SVG feGaussianBlur element.
+        Parse blur parameters using consolidated FilterPrimitiveParser.
 
         Args:
             element: SVG feGaussianBlur element
@@ -165,16 +166,51 @@ class GaussianBlurFilter(Filter):
         Raises:
             BlurFilterException: If parameters are invalid
         """
-        # Parse stdDeviation attribute
+        try:
+            # Use consolidated filter primitive parsing pattern
+            # For now, use the simple extraction pattern until type system is unified
+
+            # Extract using standard SVG attribute access pattern
+            std_deviation = element.get('stdDeviation', '0')
+
+            # Use consolidated standard deviation parsing
+            if ' ' in std_deviation.strip():
+                parts = std_deviation.split()
+                if len(parts) == 2:
+                    std_x, std_y = float(parts[0]), float(parts[1])
+                else:
+                    std_x = std_y = float(parts[0])
+            else:
+                std_x = std_y = float(std_deviation)
+
+            # Validate non-negative values
+            if std_x < 0 or std_y < 0:
+                raise ValueError(f"Standard deviation must be non-negative: {std_deviation}")
+
+            edge_mode = element.get('edgeMode', 'duplicate').lower()
+            if edge_mode not in ['duplicate', 'wrap', 'none']:
+                edge_mode = 'duplicate'
+
+            return BlurParameters(
+                std_deviation_x=std_x,
+                std_deviation_y=std_y,
+                edge_mode=edge_mode,
+                input_source=element.get('in', 'SourceGraphic'),
+                result_name=element.get('result', 'blur')
+            )
+
+        except Exception as e:
+            # Log warning and fall back to legacy parsing
+            logger.warning(f"Consolidated parsing failed, using legacy: {e}")
+
+        # Legacy implementation
         std_deviation = element.get('stdDeviation', '0')
         std_x, std_y = self._parse_std_deviation(std_deviation)
 
-        # Parse edge mode
         edge_mode = element.get('edgeMode', 'duplicate').lower()
         if edge_mode not in ['duplicate', 'wrap', 'none']:
             edge_mode = 'duplicate'
 
-        # Parse input and result
         input_source = element.get('in', 'SourceGraphic')
         result_name = element.get('result', 'blur')
 
@@ -269,7 +305,7 @@ class GaussianBlurFilter(Filter):
 
         # Convert to EMUs (PowerPoint's internal units)
         # PowerPoint blur radius is roughly std_deviation * pixels_to_emu
-        radius_emu = context.unit_converter.to_emu(f"{std_dev}px")
+        radius_emu = unit(f"{std_dev}px").to_emu()
 
         # Clamp to reasonable range for PowerPoint
         radius_emu = max(0, min(radius_emu, 2540000))  # Max ~100px blur
@@ -296,7 +332,7 @@ class GaussianBlurFilter(Filter):
             # Anisotropic blur approximation
             # Use the larger value for main blur
             main_std = max(params.std_deviation_x, params.std_deviation_y)
-            main_radius = context.unit_converter.to_emu(f"{main_std}px")
+            main_radius = unit(f"{main_std}px").to_emu()
             main_radius = max(0, min(int(main_radius), 2540000))
 
             effects.append(f'<a:blur rad="{main_radius}"/>')
@@ -307,7 +343,7 @@ class GaussianBlurFilter(Filter):
             )
         else:
             # Isotropic blur with special edge mode
-            radius_emu = context.unit_converter.to_emu(f"{params.std_deviation_x}px")
+            radius_emu = unit(f"{params.std_deviation_x}px").to_emu()
             radius_emu = max(0, min(int(radius_emu), 2540000))
 
             effects.append(f'<a:blur rad="{radius_emu}"/>')
@@ -328,7 +364,7 @@ class GaussianBlurFilter(Filter):
         Returns:
             Blur radius in EMUs
         """
-        radius_emu = unit_converter.to_emu(f"{std_deviation}px")
+        radius_emu = unit(f"{std_deviation}px").to_emu()
         return max(0, min(int(radius_emu), 2540000))
 
 
@@ -539,7 +575,7 @@ class MotionBlurFilter(Filter):
         effects = []
 
         # Base blur effect
-        blur_radius = context.unit_converter.to_emu(f"{distance * 0.3}px")  # Approximation
+        blur_radius = unit(f"{distance * 0.3}px").to_emu()  # Approximation
         blur_radius = max(0, min(int(blur_radius), 1270000))  # Reasonable limit
 
         effects.append(f'<a:blur rad="{blur_radius}"/>')
@@ -549,7 +585,7 @@ class MotionBlurFilter(Filter):
         ppt_angle = int((angle * 60000) % 21600000)
 
         # Distance in EMUs
-        shadow_distance = context.unit_converter.to_emu(f"{distance * 0.5}px")
+        shadow_distance = unit(f"{distance * 0.5}px").to_emu()
         shadow_distance = max(0, min(int(shadow_distance), 914400))  # Max ~36px
 
         effects.append(

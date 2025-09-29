@@ -218,6 +218,78 @@ cp tests/templates/unit_test_template.py tests/unit/[category]/test_[new_feature
 
 ---
 
+## 📦 **Dependency Management & Optional Imports**
+
+The test suite uses a standardized dependency checking system to handle optional dependencies gracefully.
+
+### **Available Dependencies**
+
+| Dependency | Required For | Install Command |
+|------------|-------------|-----------------|
+| `huey` | Task queue tests | `pip install huey` |
+| `redis` | Redis-based tests | `pip install redis` |
+| `numpy` | NumPy-based tests | `pip install numpy` |
+| `fastapi` | API tests | `pip install fastapi` |
+| `google-auth` | Google Drive tests | `pip install google-auth google-api-python-client` |
+| `tools.testing` | Real-world SVG tests | Optional testing module |
+| `svg2pptx_json_v2` | JSON API tests | Optional module |
+
+### **Using Dependency Checks**
+
+#### Skip Decorators
+```python
+from tests.utils.dependency_checks import skip_if_no_numpy, skip_if_no_fastapi
+
+@skip_if_no_numpy
+def test_numpy_feature():
+    import numpy as np
+    # Test NumPy functionality
+```
+
+#### Conditional Imports
+```python
+from tests.utils.dependency_checks import conditional_import
+
+def test_optional_module():
+    with conditional_import('optional.module', 'Module not available') as module:
+        result = module.some_function()
+```
+
+#### Custom Requirements
+```python
+from tests.utils.dependency_checks import require_dependency
+
+@require_dependency(lambda: check_redis_connection(), "Redis server not running")
+def test_redis_integration():
+    # Test Redis functionality
+```
+
+### **Test Markers for Dependencies**
+
+| Marker | Description |
+|--------|-------------|
+| `requires_huey` | Tests requiring Huey task queue |
+| `requires_redis` | Tests requiring Redis |
+| `requires_numpy` | Tests requiring NumPy |
+| `requires_fastapi` | Tests requiring FastAPI |
+| `requires_google_drive` | Tests requiring Google Drive API |
+| `requires_external_deps` | Tests requiring external dependencies |
+
+### **Filtering Tests by Dependencies**
+
+```bash
+# Skip tests requiring external dependencies
+./venv/bin/python tests/run_tests.py --all -m "not requires_external_deps"
+
+# Run only Huey tests
+./venv/bin/python tests/run_tests.py --all -m "requires_huey"
+
+# Generate dependency report
+python -c "from tests.utils.dependency_checks import print_dependency_report; print_dependency_report()"
+```
+
+---
+
 ## 🎯 **REMEMBER: This is NOT a suggestion - it's MANDATORY**
 
 **NO adhoc testing. NO root clutter. NO scattered files.**

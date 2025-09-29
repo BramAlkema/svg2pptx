@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+    <text x="200" y="100" font-size="24pt" fill="red" text-anchor="middle">FIXED FONT SIZE TEST</text>
+    <text x="200" y="150" font-size="18pt" fill="blue" text-anchor="middle">Should be bigger now</text>
+    <text x="200" y="200" font-size="12pt" fill="green" text-anchor="middle">in viewport now</text>
+</svg>

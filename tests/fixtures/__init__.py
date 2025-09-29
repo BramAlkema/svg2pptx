@@ -12,3 +12,4 @@ from .api_clients import *
 from .file_fixtures import *
 from .color_fixtures import *
 from .test_data import *
+from .multislide_fixtures import *

@@ -17,7 +17,16 @@ class TestStyleConverter:
     @pytest.fixture
     def converter(self):
         """Create a StyleConverter instance."""
-        return StyleConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        return StyleConverter(services=mock_services)
     
     @pytest.fixture
     def mock_context(self):

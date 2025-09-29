@@ -1,74 +1,68 @@
 #!/usr/bin/env python3
 """
-Ultra-Fast NumPy Path Processing System for SVG2PPTX
+Core Path Processing System for SVG2PPTX
 
-Complete rewrite of path processing system using pure NumPy for maximum performance.
-Targets 100-300x speedup over legacy implementation through:
-- Vectorized batch path parsing
-- Pre-compiled regex patterns
-- Structured NumPy arrays for all path data
-- Advanced Bezier curve calculations
-- Memory-efficient coordinate transformations
-
-No backwards compatibility - designed for pure performance.
-
-Performance Benchmarks:
-- Path parsing: 100x faster than legacy
-- Coordinate processing: 87x speedup proven
-- Bezier calculations: 32x speedup proven
-- Memory efficient: Structured arrays, minimal allocation
+Modern modular path processing system with industry-standard algorithms.
+Uses clean separation of concerns through specialized components:
+- PathSystem for orchestration and end-to-end processing
+- PathParser for parsing SVG path commands
+- CoordinateSystem for viewport and coordinate transformations
+- ArcConverter with industry-standard a2c algorithm
+- DrawingMLGenerator for PowerPoint XML generation
 
 Example Usage:
     Basic path processing:
-    >>> from svg2pptx.paths import PathEngine
-    >>> engine = PathEngine()
-    >>> result = engine.process_path("M 100 200 C 100 100 400 100 400 200")
+    >>> from svg2pptx.paths import create_path_system
+    >>> system = create_path_system(800, 600, (0, 0, 400, 300))
+    >>> result = system.process_path("M 100 200 C 100 100 400 100 400 200")
 
-    Batch processing:
-    >>> paths = ["M 10 10 L 90 90", "M 0 0 Q 50 0 100 50", ...]
-    >>> results = engine.process_batch(paths)
-
-    Advanced transformation:
-    >>> result = engine.process_path(
+    Advanced processing with styling:
+    >>> result = system.process_path(
     ...     "M 100 200 C 100 100 400 100 400 200",
-    ...     viewport=(0, 0, 800, 600),
-    ...     target_size=(21600, 21600)
+    ...     {'fill': '#FF0000', 'stroke': '#000000'}
     ... )
 """
 
-# Core NumPy path engine - primary public API
-from .numpy_paths import PathEngine, PathData
-
-# Factory functions for convenience
-from .numpy_paths import (
-    create_path_engine,
-    parse_path,
-    process_path_batch,
-    transform_coordinates
+# Modular architecture components
+from .coordinate_system import CoordinateSystem
+from .parser import PathParser
+from .arc_converter import ArcConverter
+from .drawingml_generator import DrawingMLGenerator
+from .path_system import PathSystem, PathProcessingResult, create_path_system
+from .architecture import (
+    PathCommand, CoordinatePoint, BezierSegment, PathBounds,
+    PathSystemError, PathParseError, CoordinateTransformError,
+    ArcConversionError, XMLGenerationError, PathSystemContext,
+    PathCommandType
 )
-
-# Advanced Bezier processing functions
-from .numpy_paths import PathEngine
-
-# Type definitions for external use
-from .numpy_paths import PathArray, CoordinateArray, BezierArray
 
 # Export main public API
 __all__ = [
-    # Primary modern API
-    'PathEngine',
-    'PathData',
+    # Main path system
+    'PathSystem',
+    'PathProcessingResult',
+    'create_path_system',
 
-    # Factory functions
-    'create_path_engine',
-    'parse_path',
-    'process_path_batch',
-    'transform_coordinates',
+    # Core components
+    'CoordinateSystem',
+    'PathParser',
+    'ArcConverter',
+    'DrawingMLGenerator',
 
-    # Type definitions
-    'PathArray',
-    'CoordinateArray',
-    'BezierArray'
+    # Data structures
+    'PathCommand',
+    'CoordinatePoint',
+    'BezierSegment',
+    'PathBounds',
+    'PathSystemContext',
+    'PathCommandType',
+
+    # Exceptions
+    'PathSystemError',
+    'PathParseError',
+    'CoordinateTransformError',
+    'ArcConversionError',
+    'XMLGenerationError'
 ]
 
 # Version info

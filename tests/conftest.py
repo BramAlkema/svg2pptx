@@ -7,16 +7,25 @@ and provides additional pytest configuration.
 """
 
 import sys
+import os
 from pathlib import Path
 from lxml import etree as ET
 
 import pytest
 
-# Add src directory to Python path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Ensure repo root and src are importable
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+SRC = os.path.join(ROOT, "src")
+if os.path.isdir(SRC) and SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
 # Import all fixtures from centralized library
 from tests.fixtures import *
+
+# Import dependency checking utilities
+from tests.utils.dependency_checks import get_dependency_status, print_dependency_report
 
 
 # Pytest hooks for customizing test behavior
@@ -25,10 +34,18 @@ def pytest_configure(config):
     # Add custom markers
     config.addinivalue_line("markers", "slow: mark test as slow running")
     config.addinivalue_line("markers", "requires_network: mark test as requiring network access")
-    
+    config.addinivalue_line("markers", "template_generated: mark test as template generated")
+    config.addinivalue_line("markers", "converter_unit: mark test as converter unit test")
+    config.addinivalue_line("markers", "converter_integration: mark test as converter integration test")
+    config.addinivalue_line("markers", "automated_pattern: mark test as using automated pattern")
+
     # Set up logging
     import logging
     logging.basicConfig(level=logging.DEBUG if config.getoption("--verbose") else logging.WARNING)
+
+    # Print dependency report if in verbose mode
+    if config.getoption("--verbose"):
+        print_dependency_report()
 
 
 def pytest_collection_modifyitems(config, items):
@@ -39,6 +56,29 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
+
+
+@pytest.fixture
+def component_instance():
+    """
+    Generic component instance fixture for template-generated tests.
+
+    This fixture provides a basic mock component that can be used by
+    comprehensive test suites that were generated from templates.
+    """
+    from unittest.mock import Mock
+
+    mock_component = Mock()
+    mock_component.name = "test_component"
+    mock_component.version = "1.0.0"
+    mock_component.initialized = True
+
+    # Add common methods that tests might expect
+    mock_component.process = Mock(return_value="processed")
+    mock_component.validate = Mock(return_value=True)
+    mock_component.configure = Mock(return_value=True)
+
+    return mock_component
 
 
 def pytest_addoption(parser):

@@ -259,15 +259,15 @@ class BatchDriveController:
             try:
                 # Upload single file
                 upload_result = self.drive_service.upload_file(
-                    file_path=file_info['path'],
-                    file_name=file_info['converted_name'],
+                    file_path=file_info['file_path'],
+                    file_name=file_info.get('converted_name', file_info['original_filename']),
                     folder_id=folder_id
                 )
                 
                 # Create file metadata record
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=batch_job_id,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     drive_file_id=upload_result['fileId'],
                     drive_file_url=upload_result.get('shareableLink'),
                     upload_status="completed"
@@ -278,19 +278,19 @@ class BatchDriveController:
                     success=True,
                     file_id=upload_result['fileId'],
                     file_url=upload_result.get('shareableLink'),
-                    original_filename=file_info['original_name']
+                    original_filename=file_info['original_filename']
                 ))
                 
-                logger.info(f"Successfully uploaded {file_info['converted_name']}")
+                logger.info(f"Successfully uploaded {file_info.get('converted_name', file_info['original_filename'])}")
                 
             except Exception as e:
-                error_msg = f"Failed to upload {file_info['converted_name']}: {e}"
+                error_msg = f"Failed to upload {file_info.get('converted_name', file_info['original_filename'])}: {e}"
                 logger.error(error_msg)
                 
                 # Record failed upload
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=batch_job_id,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     upload_status="failed",
                     upload_error=str(e)
                 )
@@ -298,7 +298,7 @@ class BatchDriveController:
                 
                 results.append(FileUploadResult(
                     success=False,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     error_message=error_msg
                 ))
         
@@ -326,15 +326,15 @@ class BatchDriveController:
         def upload_single_file(file_info):
             try:
                 upload_result = self.drive_service.upload_file(
-                    file_path=file_info['path'],
-                    file_name=file_info['converted_name'],
+                    file_path=file_info['file_path'],
+                    file_name=file_info.get('converted_name', file_info['original_filename']),
                     folder_id=folder_id
                 )
                 
                 # Save to database
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=batch_job_id,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     drive_file_id=upload_result['fileId'],
                     drive_file_url=upload_result.get('shareableLink'),
                     upload_status="completed"
@@ -345,7 +345,7 @@ class BatchDriveController:
                     success=True,
                     file_id=upload_result['fileId'],
                     file_url=upload_result.get('shareableLink'),
-                    original_filename=file_info['original_name']
+                    original_filename=file_info['original_filename']
                 )
                 
             except Exception as e:
@@ -354,7 +354,7 @@ class BatchDriveController:
                 # Record failure
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=batch_job_id,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     upload_status="failed",
                     upload_error=error_msg
                 )
@@ -362,7 +362,7 @@ class BatchDriveController:
                 
                 return FileUploadResult(
                     success=False,
-                    original_filename=file_info['original_name'],
+                    original_filename=file_info['original_filename'],
                     error_message=error_msg
                 )
         

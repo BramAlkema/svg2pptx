@@ -1,0 +1,44 @@
+{
+  "timestamp": 1758099094.8438249,
+  "performance_check": {
+    "status": "completed",
+    "total_execution_time": 0.0,
+    "benchmarks_executed": 4
+  },
+  "results": {
+    "passed": [],
+    "warnings": [],
+    "failures": [
+      {
+        "benchmark": "ci_svg_parsing",
+        "error": "benchmark_execution_failed",
+        "message": "No result returned"
+      },
+      {
+        "benchmark": "ci_rectangle_conversion",
+        "error": "benchmark_execution_failed",
+        "message": "No result returned"
+      },
+      {
+        "benchmark": "ci_path_processing",
+        "error": "benchmark_execution_failed",
+        "message": "No result returned"
+      },
+      {
+        "benchmark": "ci_full_pipeline",
+        "error": "benchmark_execution_failed",
+        "message": "No result returned"
+      }
+    ],
+    "critical_failures": [],
+    "regressions": [],
+    "total_execution_time": 0.0
+  },
+  "summary": {
+    "passed": 0,
+    "warnings": 0,
+    "failures": 4,
+    "critical_failures": 0,
+    "regressions": 0
+  }
+}

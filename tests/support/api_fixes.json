@@ -1,0 +1,274 @@
+{
+  "tests/e2e/filters/test_filter_effects_end_to_end.py": [
+    {
+      "line": 211,
+      "old": "FilterPipeline",
+      "new": "FilterRegistry",
+      "suggested_line": "pipeline = FilterRegistry("
+    },
+    {
+      "line": 346,
+      "old": "FilterPipeline",
+      "new": "FilterRegistry",
+      "suggested_line": "high_perf_pipeline = FilterRegistry("
+    },
+    {
+      "line": 364,
+      "old": "FilterPipeline",
+      "new": "FilterRegistry",
+      "suggested_line": "quality_pipeline = FilterRegistry("
+    },
+    {
+      "line": 608,
+      "old": "FilterPipeline",
+      "new": "FilterRegistry",
+      "suggested_line": "pipeline = FilterRegistry("
+    },
+    {
+      "line": 673,
+      "old": "FilterPipeline",
+      "new": "FilterRegistry",
+      "suggested_line": "pipeline = FilterRegistry("
+    }
+  ],
+  "tests/e2e/visual/test_visual_regression_framework.py": [
+    {
+      "line": 153,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/e2e/visual/test_filter_effects_visual_regression.py": [
+    {
+      "line": 233,
+      "old": "SVG2PPTX",
+      "new": "SVGToPowerPointConverter",
+      "suggested_line": "svg_converter = SVGToPowerPointConverter()"
+    }
+  ],
+  "tests/integration/pipeline/test_modern_conversion_workflows.py": [
+    {
+      "line": 35,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 161,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 227,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 262,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 290,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 311,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/integration/converters/test_converter_registry_integration.py": [
+    {
+      "line": 62,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    }
+  ],
+  "tests/integration/preprocessing/test_preprocessing_integration.py": [
+    {
+      "line": 87,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    }
+  ],
+  "tests/quality/architecture/test_tool_consistency.py": [
+    {
+      "line": 232,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/unit/converters/test_text.py": [
+    {
+      "line": 371,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 394,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 416,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 441,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    },
+    {
+      "line": 463,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/unit/converters/test_base.py": [
+    {
+      "line": 431,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    },
+    {
+      "line": 440,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    },
+    {
+      "line": 456,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    },
+    {
+      "line": 467,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    },
+    {
+      "line": 480,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry()"
+    }
+  ],
+  "tests/unit/converters/test_text_to_path.py": [
+    {
+      "line": 43,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/unit/converters/test_base_converter_dependency_injection.py": [
+    {
+      "line": 176,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry(services=mock_conversion_services)"
+    },
+    {
+      "line": 219,
+      "old": "ConverterRegistry",
+      "new": "Use services.converter_registry",
+      "suggested_line": "registry = Use services.converter_registry(services=mock_conversion_services)"
+    }
+  ],
+  "tests/unit/converters/test_modern_systems.py": [
+    {
+      "line": 117,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "converter = UnitEngine()"
+    },
+    {
+      "line": 123,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "converter = UnitEngine()"
+    },
+    {
+      "line": 132,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "converter = UnitEngine()"
+    },
+    {
+      "line": 226,
+      "old": "UnitConverter",
+      "new": "UnitEngine",
+      "suggested_line": "unit_converter = UnitEngine()"
+    }
+  ],
+  "tests/unit/svg2pptx/test_svg2pptx.py": [
+    {
+      "line": 48,
+      "old": "load_svg",
+      "new": "convert_file",
+      "suggested_line": "result = self.converter.convert_file(svg_content)"
+    },
+    {
+      "line": 63,
+      "old": "load_svg",
+      "new": "convert_file",
+      "suggested_line": "result = self.converter.convert_file(temp_path)"
+    },
+    {
+      "line": 72,
+      "old": "load_svg",
+      "new": "convert_file",
+      "suggested_line": "self.converter.convert_file('nonexistent.svg')"
+    },
+    {
+      "line": 78,
+      "old": "load_svg",
+      "new": "convert_file",
+      "suggested_line": "self.converter.convert_file(invalid_svg)"
+    },
+    {
+      "line": 83,
+      "old": "load_svg",
+      "new": "convert_file",
+      "suggested_line": "self.converter.convert_file('')"
+    },
+    {
+      "line": 396,
+      "old": "SVG2PPTX",
+      "new": "SVGToPowerPointConverter",
+      "suggested_line": "converter = SVGToPowerPointConverter()"
+    },
+    {
+      "line": 422,
+      "old": "SVG2PPTX",
+      "new": "SVGToPowerPointConverter",
+      "suggested_line": "converter = SVGToPowerPointConverter()"
+    },
+    {
+      "line": 436,
+      "old": "SVG2PPTX",
+      "new": "SVGToPowerPointConverter",
+      "suggested_line": "self.converter = SVGToPowerPointConverter()"
+    }
+  ]
+}

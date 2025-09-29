@@ -23,6 +23,7 @@ from src.batch.models import (
 )
 
 
+@pytest.mark.integration
 class TestDatabaseManager:
     """Test the database manager and connection handling."""
     
@@ -68,6 +69,7 @@ class TestDatabaseManager:
             conn.close()
 
 
+@pytest.mark.integration
 class TestBatchJob:
     """Test the BatchJob model."""
     
@@ -125,6 +127,7 @@ class TestBatchJob:
         assert loaded_job.drive_upload_status == "completed"
 
 
+@pytest.mark.integration
 class TestBatchDriveMetadata:
     """Test the BatchDriveMetadata model."""
     
@@ -181,6 +184,7 @@ class TestBatchDriveMetadata:
             invalid_metadata.save(self.db_path)
 
 
+@pytest.mark.integration
 class TestBatchFileDriveMetadata:
     """Test the BatchFileDriveMetadata model."""
     
@@ -303,6 +307,7 @@ class TestBatchFileDriveMetadata:
         assert updated_file.preview_url is not None
 
 
+@pytest.mark.integration
 class TestDatabaseIndexes:
     """Test database indexes for performance."""
     
@@ -333,6 +338,7 @@ class TestDatabaseIndexes:
             conn.close()
 
 
+@pytest.mark.integration
 class TestDatabaseIntegration:
     """Test integrated database operations."""
     

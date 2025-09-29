@@ -1,0 +1,173 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>SVG2PPTX Conversion Result</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                    margin: 0; padding: 20px; background: #f5f5f5;
+                }
+                .header {
+                    text-align: center; background: white; padding: 30px;
+                    border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .comparison {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+                    max-width: 1200px; margin: 0 auto; margin-bottom: 30px;
+                }
+                .panel {
+                    background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .panel h3 {
+                    margin-top: 0; text-align: center; font-size: 1.4em;
+                    padding: 15px; border-radius: 8px; color: white;
+                }
+                .svg-panel h3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .pptx-panel h3 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+                .svg-container {
+                    display: flex; justify-content: center; align-items: center;
+                    border: 2px solid #ddd; border-radius: 8px; padding: 20px;
+                    background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    min-height: 200px;
+                }
+                .svg-container svg {
+                    max-width: 100%; height: auto;
+                }
+                img {
+                    max-width: 100%; height: auto; border: 2px solid #ddd; border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    object-fit: contain; background: white;
+                }
+                .download-section {
+                    background: white; padding: 30px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;
+                    max-width: 600px; margin: 0 auto;
+                }
+                .download-btn {
+                    display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 15px 30px; text-decoration: none;
+                    border-radius: 8px; font-weight: bold; font-size: 1.1em;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    transition: transform 0.2s ease;
+                }
+                .download-btn:hover { transform: translateY(-2px); }
+                .meta { color: #666; margin-top: 15px; font-size: 0.9em; }
+                .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎨 SVG2PPTX Conversion Result</h1>
+                <p><strong>Source:</strong> test_multiple_paths.svg</p>
+                <div class="success">
+                    <strong>✅ Conversion Successful!</strong> Compare the original SVG with the PowerPoint rendering.
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="panel svg-panel">
+                    <h3>📄 Original SVG</h3>
+                    <div class="svg-container">
+                        <!-- Multiple paths coordinate system test - 16 paths -->
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+
+  <!-- Row 1 - Top -->
+  <!-- Path 1: Star -->
+  <path d="M100,50 L105,65 L120,65 L108,75 L113,90 L100,80 L87,90 L92,75 L80,65 L95,65 Z"
+        fill="#f1c40f" stroke="#f39c12" stroke-width="1.5"/>
+
+  <!-- Path 2: Heart -->
+  <path d="M250,80 C230,60 200,60 180,80 C160,60 130,60 110,80 C110,100 180,150 180,150 C180,150 250,100 250,80 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- Path 3: Triangle -->
+  <path d="M280,50 L320,50 L300,90 Z"
+        fill="#3498db" stroke="#2980b9" stroke-width="1.5"/>
+
+  <!-- Path 4: Diamond -->
+  <path d="M380,50 L400,70 L420,50 L400,30 Z"
+        fill="#9b59b6" stroke="#8e44ad" stroke-width="1.5"/>
+
+  <!-- Row 2 - Upper middle -->
+  <!-- Path 5: Pentagon -->
+  <path d="M115,180 L145,160 L160,190 L130,210 L100,190 Z"
+        fill="#2ecc71" stroke="#27ae60" stroke-width="1.5"/>
+
+  <!-- Path 6: Hexagon -->
+  <path d="M180,180 L210,170 L240,190 L240,220 L210,240 L180,220 Z"
+        fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+
+  <!-- Path 7: S-curve -->
+  <path d="M280,200 C300,180 320,180 340,200 S380,220 400,200"
+        fill="none" stroke="#1abc9c" stroke-width="2.5"/>
+
+  <!-- Path 8: Arrow -->
+  <path d="M450,180 L480,195 L470,200 L500,210 L470,220 L480,225 L450,240 L460,210 Z"
+        fill="#34495e" stroke="#2c3e50" stroke-width="1"/>
+
+  <!-- Row 3 - Lower middle -->
+  <!-- Path 9: Flower petal -->
+  <path d="M100,320 Q80,300 100,290 Q120,300 100,320 Q80,340 100,350 Q120,340 100,320 Z"
+        fill="#ff69b4" stroke="#ff1493" stroke-width="1"/>
+
+  <!-- Path 10: Lightning -->
+  <path d="M200,320 L210,290 L190,300 L220,270 L190,310 L210,300 L180,330 Z"
+        fill="#f1c40f" stroke="#f39c12" stroke-width="1"/>
+
+  <!-- Path 11: Moon -->
+  <path d="M300,320 A30,30 0 1,0 300,370 A20,20 0 1,1 300,320 Z"
+        fill="#95a5a6" stroke="#7f8c8d" stroke-width="1"/>
+
+  <!-- Path 12: Cross -->
+  <path d="M380,320 L380,300 L400,300 L400,320 L420,320 L420,340 L400,340 L400,360 L380,360 L380,340 L360,340 L360,320 Z"
+        fill="#c0392b" stroke="#a93226" stroke-width="1"/>
+
+  <!-- Row 4 - Bottom -->
+  <!-- Path 13: Spline -->
+  <path d="M100,450 Q150,430 200,450 T300,450"
+        fill="none" stroke="#8e44ad" stroke-width="2"/>
+
+  <!-- Path 14: Oval cutout -->
+  <path d="M350,450 A40,20 0 1,1 350,470 A20,10 0 1,0 350,450 Z"
+        fill="#16a085" stroke="#138d75" stroke-width="1.5"/>
+
+  <!-- Path 15: Multi-segment -->
+  <path d="M450,450 L470,440 Q490,450 480,470 L500,480 Q480,490 470,480 L450,490 Q430,480 440,460 Z"
+        fill="#d68910" stroke="#b7950b" stroke-width="1.2"/>
+
+  <!-- Path 16: Complex bezier -->
+  <path d="M580,450 C560,430 520,430 500,450 C520,470 560,470 580,450 C600,430 640,430 620,450 C640,470 600,470 580,450 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="1.8"/>
+
+</svg>
+                    </div>
+                    <div class="meta">
+                        Vector SVG: 800×600px<br>
+                        Source: test_multiple_paths.svg
+                    </div>
+                </div>
+
+                <div class="panel pptx-panel">
+                    <h3>📊 PowerPoint Result</h3>
+                    <img src="test_multiple_paths.png" alt="PowerPoint rendering">
+                    <div class="meta">
+                        LibreOffice rendering of converted PPTX file
+                    </div>
+                </div>
+            </div>
+
+            <div class="download-section">
+                <h3>📥 Download Your PowerPoint File</h3>
+                <a href="test_multiple_paths.pptx" class="download-btn" download>
+                    ⬇️ Download test_multiple_paths.pptx
+                </a>
+                <div class="meta">
+                    <p>File size: 6,533 bytes</p>
+                    <p>Open in Microsoft PowerPoint, LibreOffice Impress, or Google Slides</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        

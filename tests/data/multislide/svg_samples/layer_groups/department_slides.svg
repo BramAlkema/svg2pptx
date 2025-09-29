@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <title>Department Organization - 4 Slides</title>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8f9fa"/>
+
+  <!-- Slide 1: Engineering Department -->
+  <g id="layer_engineering" class="department-slide">
+    <rect x="50" y="50" width="500" height="300" fill="#e3f2fd" stroke="#1976d2" stroke-width="3" opacity="0.9"/>
+    <text x="300" y="100" text-anchor="middle" font-size="28" fill="#1976d2" font-weight="bold">Engineering</text>
+
+    <!-- Team members -->
+    <g class="team-members">
+      <rect x="80" y="130" width="120" height="60" fill="#bbdefb" rx="5"/>
+      <text x="140" y="155" text-anchor="middle" font-size="14" fill="#0d47a1">Frontend Team</text>
+      <text x="140" y="175" text-anchor="middle" font-size="12" fill="#1565c0">8 developers</text>
+
+      <rect x="220" y="130" width="120" height="60" fill="#bbdefb" rx="5"/>
+      <text x="280" y="155" text-anchor="middle" font-size="14" fill="#0d47a1">Backend Team</text>
+      <text x="280" y="175" text-anchor="middle" font-size="12" fill="#1565c0">12 developers</text>
+
+      <rect x="360" y="130" width="120" height="60" fill="#bbdefb" rx="5"/>
+      <text x="420" y="155" text-anchor="middle" font-size="14" fill="#0d47a1">DevOps Team</text>
+      <text x="420" y="175" text-anchor="middle" font-size="12" fill="#1565c0">5 engineers</text>
+    </g>
+
+    <!-- Metrics -->
+    <text x="300" y="230" text-anchor="middle" font-size="16" fill="#424242">Q4 Deliverables: 15 features</text>
+    <text x="300" y="260" text-anchor="middle" font-size="16" fill="#424242">Team Growth: +23% this year</text>
+  </g>
+
+  <!-- Slide 2: Marketing Department -->
+  <g id="layer_marketing" class="department-slide">
+    <rect x="650" y="50" width="500" height="300" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="3" opacity="0.9"/>
+    <text x="900" y="100" text-anchor="middle" font-size="28" fill="#7b1fa2" font-weight="bold">Marketing</text>
+
+    <!-- Campaigns -->
+    <g class="campaigns">
+      <rect x="680" y="130" width="140" height="50" fill="#ce93d8" rx="5"/>
+      <text x="750" y="155" text-anchor="middle" font-size="14" fill="#4a148c">Digital Campaign</text>
+      <text x="750" y="170" text-anchor="middle" font-size="12" fill="#6a1b9a">ROI: 250%</text>
+
+      <rect x="840" y="130" width="140" height="50" fill="#ce93d8" rx="5"/>
+      <text x="910" y="155" text-anchor="middle" font-size="14" fill="#4a148c">Content Strategy</text>
+      <text x="910" y="170" text-anchor="middle" font-size="12" fill="#6a1b9a">Engagement: +45%</text>
+
+      <rect x="1000" y="130" width="140" height="50" fill="#ce93d8" rx="5"/>
+      <text x="1070" y="155" text-anchor="middle" font-size="14" fill="#4a148c">Brand Awareness</text>
+      <text x="1070" y="170" text-anchor="middle" font-size="12" fill="#6a1b9a">Reach: 2.3M</text>
+    </g>
+
+    <!-- Performance -->
+    <text x="900" y="220" text-anchor="middle" font-size="16" fill="#424242">Lead Generation: 1,847 qualified leads</text>
+    <text x="900" y="250" text-anchor="middle" font-size="16" fill="#424242">Campaign Budget: $280K utilized</text>
+  </g>
+
+  <!-- Slide 3: Sales Department -->
+  <g id="layer_sales" class="department-slide">
+    <rect x="50" y="450" width="500" height="300" fill="#e8f5e8" stroke="#388e3c" stroke-width="3" opacity="0.9"/>
+    <text x="300" y="500" text-anchor="middle" font-size="28" fill="#388e3c" font-weight="bold">Sales</text>
+
+    <!-- Sales metrics -->
+    <g class="sales-metrics">
+      <circle cx="150" cy="580" r="40" fill="#a5d6a7"/>
+      <text x="150" y="575" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">Q4</text>
+      <text x="150" y="590" text-anchor="middle" font-size="12" fill="#2e7d32">$2.1M</text>
+
+      <circle cx="300" cy="580" r="40" fill="#81c784"/>
+      <text x="300" y="575" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">YTD</text>
+      <text x="300" y="590" text-anchor="middle" font-size="12" fill="#2e7d32">$8.7M</text>
+
+      <circle cx="450" cy="580" r="40" fill="#66bb6a"/>
+      <text x="450" y="575" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="bold">Target</text>
+      <text x="450" y="590" text-anchor="middle" font-size="12" fill="#2e7d32">115%</text>
+    </g>
+
+    <!-- Team performance -->
+    <text x="300" y="660" text-anchor="middle" font-size="16" fill="#424242">Top Performer: Sarah Chen (125% quota)</text>
+    <text x="300" y="690" text-anchor="middle" font-size="16" fill="#424242">Pipeline Value: $3.2M active deals</text>
+  </g>
+
+  <!-- Slide 4: Operations Department -->
+  <g id="layer_operations" class="department-slide">
+    <rect x="650" y="450" width="500" height="300" fill="#fff3e0" stroke="#f57c00" stroke-width="3" opacity="0.9"/>
+    <text x="900" y="500" text-anchor="middle" font-size="28" fill="#f57c00" font-weight="bold">Operations</text>
+
+    <!-- Process improvements -->
+    <g class="processes">
+      <rect x="680" y="530" width="100" height="80" fill="#ffcc02" rx="8"/>
+      <text x="730" y="555" text-anchor="middle" font-size="12" fill="#e65100">Efficiency</text>
+      <text x="730" y="575" text-anchor="middle" font-size="20" fill="#bf360c" font-weight="bold">+18%</text>
+      <text x="730" y="595" text-anchor="middle" font-size="10" fill="#e65100">vs. last quarter</text>
+
+      <rect x="800" y="530" width="100" height="80" fill="#ffb74d" rx="8"/>
+      <text x="850" y="555" text-anchor="middle" font-size="12" fill="#e65100">Cost Reduction</text>
+      <text x="850" y="575" text-anchor="middle" font-size="20" fill="#bf360c" font-weight="bold">$127K</text>
+      <text x="850" y="595" text-anchor="middle" font-size="10" fill="#e65100">annual savings</text>
+
+      <rect x="920" y="530" width="100" height="80" fill="#ff9800" rx="8"/>
+      <text x="970" y="555" text-anchor="middle" font-size="12" fill="#e65100">Automation</text>
+      <text x="970" y="575" text-anchor="middle" font-size="20" fill="#bf360c" font-weight="bold">7</text>
+      <text x="970" y="595" text-anchor="middle" font-size="10" fill="#e65100">new workflows</text>
+    </g>
+
+    <!-- Initiatives -->
+    <text x="900" y="650" text-anchor="middle" font-size="16" fill="#424242">Digital Transformation: Phase 2 complete</text>
+    <text x="900" y="680" text-anchor="middle" font-size="16" fill="#424242">Quality Score: 94.2% (industry leading)</text>
+  </g>
+</svg>

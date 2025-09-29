@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from .huey_app import huey
+from ..utils.powerpoint_merger import PPTXMerger, PPTXMergeError
 
 logger = logging.getLogger(__name__)
 
@@ -182,28 +183,67 @@ def merge_presentations(conversion_results: List[Dict[str, Any]], output_format:
             merged_filename = f"merged_presentation_{batch_id}.pptx"
             merged_path = output_dir / merged_filename
             
-            # TODO: Implement actual PowerPoint merging
-            # For now, create a combined file with metadata
-            with open(merged_path, 'wb') as merged_file:
-                merged_content = f"""Merged PPTX containing {len(successful_results)} presentations:
-Generated: {datetime.utcnow().isoformat()}
-Batch ID: {batch_id}
-
-Included files:
-""".encode()
-                
-                for i, result in enumerate(successful_results, 1):
-                    file_info = f"{i}. {result['input_filename']} -> {result['output_filename']} ({result['input_size']} bytes)\n"
-                    merged_content += file_info.encode()
-                
-                # Append original file contents
+            # Implement actual PowerPoint merging using PPTXMerger
+            try:
+                # Collect paths to successful PPTX files
+                pptx_files = []
                 for result in successful_results:
                     source_path = Path(result['output_path'])
-                    if source_path.exists():
-                        merged_content += f"\n--- Content from {result['output_filename']} ---\n".encode()
-                        merged_content += source_path.read_bytes()
-                
-                merged_file.write(merged_content)
+                    if source_path.exists() and source_path.suffix.lower() == '.pptx':
+                        pptx_files.append(source_path)
+
+                if not pptx_files:
+                    logger.warning(f"No valid PPTX files found for merging in batch {batch_id}")
+                    # Create a simple text file explaining the issue
+                    with open(merged_path, 'w') as f:
+                        f.write(f"No valid PPTX files were available for merging.\n")
+                        f.write(f"Batch ID: {batch_id}\n")
+                        f.write(f"Generated: {datetime.utcnow().isoformat()}\n")
+                else:
+                    # Use PPTXMerger to create actual merged presentation
+                    merger = PPTXMerger(
+                        preserve_master_slides=True,
+                        copy_embedded_media=True,
+                        default_slide_size=(10, 7.5)
+                    )
+
+                    presentation_title = f"Merged Presentation - Batch {batch_id}"
+                    merge_result = merger.merge_presentations(
+                        input_files=pptx_files,
+                        output_path=merged_path,
+                        presentation_title=presentation_title
+                    )
+
+                    if merge_result.success:
+                        logger.info(f"Successfully merged {len(pptx_files)} presentations into {merged_path}")
+                        logger.info(f"Total slides in merged presentation: {merge_result.total_slides}")
+
+                        if merge_result.warnings:
+                            for warning in merge_result.warnings:
+                                logger.warning(f"Merge warning: {warning}")
+                    else:
+                        logger.error(f"PowerPoint merge failed: {merge_result.error_message}")
+                        # Fall back to creating a metadata file
+                        with open(merged_path, 'w') as f:
+                            f.write(f"PowerPoint merge failed: {merge_result.error_message}\n")
+                            f.write(f"Batch ID: {batch_id}\n")
+                            f.write(f"Generated: {datetime.utcnow().isoformat()}\n")
+
+            except PPTXMergeError as e:
+                logger.error(f"PowerPoint merge error for batch {batch_id}: {e}")
+                # Fall back to creating a metadata file
+                with open(merged_path, 'w') as f:
+                    f.write(f"PowerPoint merge error: {e}\n")
+                    f.write(f"Batch ID: {batch_id}\n")
+                    f.write(f"Generated: {datetime.utcnow().isoformat()}\n")
+
+            except Exception as e:
+                logger.error(f"Unexpected error during PowerPoint merge for batch {batch_id}: {e}")
+                # Fall back to creating a metadata file
+                with open(merged_path, 'w') as f:
+                    f.write(f"Unexpected merge error: {e}\n")
+                    f.write(f"Batch ID: {batch_id}\n")
+                    f.write(f"Generated: {datetime.utcnow().isoformat()}\n")
             
             final_output = str(merged_path)
             

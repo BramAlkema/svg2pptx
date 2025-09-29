@@ -1,0 +1,23 @@
+<!-- Edge position test - shapes at viewBox boundaries -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Top edge -->
+  <circle cx="200" cy="15" r="10" fill="#ff0000" id="top-edge"/>
+
+  <!-- Bottom edge -->
+  <circle cx="200" cy="285" r="10" fill="#00ff00" id="bottom-edge"/>
+
+  <!-- Left edge -->
+  <circle cx="15" cy="150" r="10" fill="#0000ff" id="left-edge"/>
+
+  <!-- Right edge -->
+  <circle cx="385" cy="150" r="10" fill="#ffff00" id="right-edge"/>
+
+  <!-- Corners -->
+  <circle cx="15" cy="15" r="8" fill="#ff00ff" id="top-left"/>
+  <circle cx="385" cy="15" r="8" fill="#00ffff" id="top-right"/>
+  <circle cx="15" cy="285" r="8" fill="#ffa500" id="bottom-left"/>
+  <circle cx="385" cy="285" r="8" fill="#800080" id="bottom-right"/>
+
+  <!-- Center reference -->
+  <circle cx="200" cy="150" r="12" fill="#000000" id="center"/>
+</svg>

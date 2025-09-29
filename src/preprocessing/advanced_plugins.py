@@ -41,22 +41,32 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
         return False
     
     def _optimize_path_data(self, path_data: str, precision: int) -> str:
-        """Optimize path data with multiple techniques."""
+        """Optimize path data using consolidated PathProcessor service."""
+        try:
+            # Use PathProcessor for comprehensive path optimization
+            from ..utils.path_processor import path_processor
+            return path_processor.optimize_path_data(path_data, precision)
+
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy path optimization implementation
         # Clean up whitespace
         path_data = re.sub(r'\s+', ' ', path_data.strip())
-        
+
         # Convert to relative coordinates where shorter
         path_data = self._convert_to_relative_coords(path_data, precision)
-        
+
         # Simplify curve commands
         path_data = self._simplify_curves(path_data, precision)
-        
+
         # Remove redundant commands
         path_data = self._remove_redundant_commands(path_data)
-        
+
         # Optimize coordinate precision
         path_data = self._optimize_coordinate_precision(path_data, precision)
-        
+
         return path_data
     
     def _convert_to_relative_coords(self, path_data: str, precision: int) -> str:
@@ -83,7 +93,26 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
         return path_data
     
     def _optimize_coordinate_precision(self, path_data: str, precision: int) -> str:
-        """Optimize coordinate precision throughout the path."""
+        """Optimize coordinate precision throughout the path using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent number formatting
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+
+            def replace_number(match):
+                num_str = match.group(0)
+                try:
+                    num = float(num_str)
+                    return preprocessor_utilities.format_number(num, precision)
+                except ValueError:
+                    return num_str
+
+            return re.sub(r'-?\d*\.?\d+', replace_number, path_data)
+
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         def replace_number(match):
             num_str = match.group(0)
             try:
@@ -97,7 +126,7 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
                     return formatted if formatted else '0'
             except ValueError:
                 return num_str
-        
+
         return re.sub(r'-?\d*\.?\d+', replace_number, path_data)
 
 
@@ -128,7 +157,7 @@ class MergePathsPlugin(PreprocessingPlugin):
         for style_key, path_group in style_groups.items():
             if len(path_group) > 1:
                 merged_path = self._merge_path_group(path_group)
-                if merged_path:
+                if merged_path is not None:
                     # Remove original paths
                     for path in path_group:
                         element.remove(path)
@@ -183,7 +212,7 @@ class ConvertTransformPlugin(PreprocessingPlugin):
     description = "collapses multiple transformations and optimizes it"
     
     def can_process(self, element: ET.Element, context: PreprocessingContext) -> bool:
-        return 'transform' in element.attrib
+        return element.get('transform') is not None
     
     def process(self, element: ET.Element, context: PreprocessingContext) -> bool:
         transform_str = element.attrib.get('transform', '')
@@ -218,20 +247,45 @@ class ConvertTransformPlugin(PreprocessingPlugin):
         return self._transforms_to_string(combined, precision)
     
     def _parse_transforms(self, transform_str: str) -> List[Dict]:
-        """Parse transform string into individual transform functions."""
+        """Parse transform string into individual transform functions using canonical TransformEngine."""
+        try:
+            # Use the canonical high-performance TransformEngine for parsing
+            from ..transforms import TransformEngine
+
+            engine = services.transform_parser
+            transforms = engine.parse(transform_str)
+
+            # Convert to expected format for backward compatibility
+            return [
+                {
+                    'type': t.get('type', ''),
+                    'params': t.get('values', [])
+                }
+                for t in transforms
+            ]
+
+        except ImportError:
+            # Fallback to legacy parsing if TransformEngine not available
+            return self._legacy_parse_transforms(transform_str)
+        except Exception:
+            # Fallback to legacy parsing on any error
+            return self._legacy_parse_transforms(transform_str)
+
+    def _legacy_parse_transforms(self, transform_str: str) -> List[Dict]:
+        """Legacy transform parsing - to be replaced once TransformEngine integration is complete."""
         transforms = []
-        
+
         # Match transform functions: translate(x,y), scale(x), rotate(angle), etc.
         pattern = r'(\w+)\s*\(\s*([^)]*)\s*\)'
         matches = re.findall(pattern, transform_str)
-        
+
         for func_name, params_str in matches:
             params = [float(p.strip()) for p in params_str.split(',') if p.strip()]
             transforms.append({
                 'type': func_name,
                 'params': params
             })
-        
+
         return transforms
     
     def _combine_transforms(self, transforms: List[Dict], precision: int) -> List[Dict]:
@@ -463,21 +517,18 @@ class MinifyStylesPlugin(PreprocessingPlugin):
     
     def _minify_style_attribute(self, style_attr: str) -> str:
         """Minify inline style attribute."""
-        # Split into property-value pairs
+        # Use canonical StyleParser with custom minification logic
+        from ..utils.style_parser import style_parser
+        style_dict = style_parser.parse_style_to_dict(style_attr)
+
+        # Apply minification logic - skip redundant properties
         properties = []
-        for prop in style_attr.split(';'):
-            prop = prop.strip()
-            if prop and ':' in prop:
-                key, value = prop.split(':', 1)
-                key = key.strip()
-                value = value.strip()
-                
-                # Skip properties with zero/none values that don't affect rendering
-                if self._is_redundant_property(key, value):
-                    continue
-                
-                properties.append(f"{key}:{value}")
-        
+        for key, value in style_dict.items():
+            # Skip properties with zero/none values that don't affect rendering
+            if self._is_redundant_property(key, value):
+                continue
+            properties.append(f"{key}:{value}")
+
         return ';'.join(properties)
     
     def _is_redundant_property(self, key: str, value: str) -> bool:

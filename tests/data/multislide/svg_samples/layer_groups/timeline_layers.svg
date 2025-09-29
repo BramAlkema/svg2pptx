@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Project Timeline Layers - 5 Slides</title>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="#f5f5f5"/>
+
+  <!-- Base timeline -->
+  <line x1="100" y1="360" x2="1180" y2="360" stroke="#37474f" stroke-width="4"/>
+
+  <!-- Slide 1: Planning Phase -->
+  <g id="layer_planning" class="timeline-layer">
+    <rect x="80" y="100" width="240" height="520" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2" rx="12" opacity="0.95"/>
+
+    <!-- Phase header -->
+    <rect x="100" y="120" width="200" height="60" fill="#3f51b5" rx="8"/>
+    <text x="200" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Planning Phase</text>
+    <text x="200" y="165" text-anchor="middle" font-size="14" fill="#c5cae9">Jan - Feb 2024</text>
+
+    <!-- Milestone marker -->
+    <circle cx="200" cy="360" r="15" fill="#3f51b5"/>
+    <text x="200" y="330" text-anchor="middle" font-size="16" fill="#1a237e" font-weight="bold">Start</text>
+
+    <!-- Tasks -->
+    <g class="planning-tasks">
+      <rect x="110" y="200" width="180" height="40" fill="#c5cae9" rx="5"/>
+      <text x="200" y="220" text-anchor="middle" font-size="12" fill="#1a237e">Requirements Gathering</text>
+      <text x="200" y="235" text-anchor="middle" font-size="10" fill="#3949ab">2 weeks</text>
+
+      <rect x="110" y="250" width="180" height="40" fill="#c5cae9" rx="5"/>
+      <text x="200" y="270" text-anchor="middle" font-size="12" fill="#1a237e">Architecture Design</text>
+      <text x="200" y="285" text-anchor="middle" font-size="10" fill="#3949ab">3 weeks</text>
+
+      <rect x="110" y="300" width="180" height="40" fill="#c5cae9" rx="5"/>
+      <text x="200" y="320" text-anchor="middle" font-size="12" fill="#1a237e">Resource Allocation</text>
+      <text x="200" y="335" text-anchor="middle" font-size="10" fill="#3949ab">1 week</text>
+
+      <rect x="110" y="400" width="180" height="40" fill="#c5cae9" rx="5"/>
+      <text x="200" y="420" text-anchor="middle" font-size="12" fill="#1a237e">Risk Assessment</text>
+      <text x="200" y="435" text-anchor="middle" font-size="10" fill="#3949ab">1 week</text>
+
+      <rect x="110" y="450" width="180" height="40" fill="#c5cae9" rx="5"/>
+      <text x="200" y="470" text-anchor="middle" font-size="12" fill="#1a237e">Timeline Finalization</text>
+      <text x="200" y="485" text-anchor="middle" font-size="10" fill="#3949ab">1 week</text>
+    </g>
+
+    <!-- Status indicator -->
+    <circle cx="200" cy="550" r="25" fill="#4caf50"/>
+    <text x="200" y="555" text-anchor="middle" font-size="14" fill="white" font-weight="bold">✓</text>
+    <text x="200" y="590" text-anchor="middle" font-size="12" fill="#2e7d32">Completed</text>
+  </g>
+
+  <!-- Slide 2: Development Phase -->
+  <g id="layer_development" class="timeline-layer">
+    <rect x="340" y="100" width="240" height="520" fill="#e8f5e8" stroke="#4caf50" stroke-width="2" rx="12" opacity="0.95"/>
+
+    <!-- Phase header -->
+    <rect x="360" y="120" width="200" height="60" fill="#4caf50" rx="8"/>
+    <text x="460" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Development</text>
+    <text x="460" y="165" text-anchor="middle" font-size="14" fill="#c8e6c9">Mar - May 2024</text>
+
+    <!-- Milestone marker -->
+    <circle cx="460" cy="360" r="15" fill="#4caf50"/>
+    <text x="460" y="330" text-anchor="middle" font-size="16" fill="#1b5e20" font-weight="bold">Dev Start</text>
+
+    <!-- Development tasks -->
+    <g class="development-tasks">
+      <rect x="370" y="200" width="180" height="40" fill="#a5d6a7" rx="5"/>
+      <text x="460" y="220" text-anchor="middle" font-size="12" fill="#1b5e20">Backend Development</text>
+      <text x="460" y="235" text-anchor="middle" font-size="10" fill="#2e7d32">6 weeks</text>
+
+      <rect x="370" y="250" width="180" height="40" fill="#a5d6a7" rx="5"/>
+      <text x="460" y="270" text-anchor="middle" font-size="12" fill="#1b5e20">Frontend Development</text>
+      <text x="460" y="285" text-anchor="middle" font-size="10" fill="#2e7d32">8 weeks</text>
+
+      <rect x="370" y="300" width="180" height="40" fill="#a5d6a7" rx="5"/>
+      <text x="460" y="320" text-anchor="middle" font-size="12" fill="#1b5e20">Database Setup</text>
+      <text x="460" y="335" text-anchor="middle" font-size="10" fill="#2e7d32">2 weeks</text>
+
+      <rect x="370" y="400" width="180" height="40" fill="#a5d6a7" rx="5"/>
+      <text x="460" y="420" text-anchor="middle" font-size="12" fill="#1b5e20">API Integration</text>
+      <text x="460" y="435" text-anchor="middle" font-size="10" fill="#2e7d32">3 weeks</text>
+
+      <rect x="370" y="450" width="180" height="40" fill="#a5d6a7" rx="5"/>
+      <text x="460" y="470" text-anchor="middle" font-size="12" fill="#1b5e20">Unit Testing</text>
+      <text x="460" y="485" text-anchor="middle" font-size="10" fill="#2e7d32">4 weeks</text>
+    </g>
+
+    <!-- Status indicator -->
+    <circle cx="460" cy="550" r="25" fill="#ff9800"/>
+    <text x="460" y="555" text-anchor="middle" font-size="14" fill="white" font-weight="bold">!</text>
+    <text x="460" y="590" text-anchor="middle" font-size="12" fill="#e65100">In Progress</text>
+  </g>
+
+  <!-- Slide 3: Testing Phase -->
+  <g id="layer_testing" class="timeline-layer">
+    <rect x="600" y="100" width="240" height="520" fill="#fff3e0" stroke="#ff9800" stroke-width="2" rx="12" opacity="0.95"/>
+
+    <!-- Phase header -->
+    <rect x="620" y="120" width="200" height="60" fill="#ff9800" rx="8"/>
+    <text x="720" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Testing Phase</text>
+    <text x="720" y="165" text-anchor="middle" font-size="14" fill="#ffe0b2">Jun - Jul 2024</text>
+
+    <!-- Milestone marker -->
+    <circle cx="720" cy="360" r="15" fill="#ff9800"/>
+    <text x="720" y="330" text-anchor="middle" font-size="16" fill="#e65100" font-weight="bold">QA Start</text>
+
+    <!-- Testing tasks -->
+    <g class="testing-tasks">
+      <rect x="630" y="200" width="180" height="40" fill="#ffcc02" rx="5"/>
+      <text x="720" y="220" text-anchor="middle" font-size="12" fill="#e65100">Integration Testing</text>
+      <text x="720" y="235" text-anchor="middle" font-size="10" fill="#f57c00">3 weeks</text>
+
+      <rect x="630" y="250" width="180" height="40" fill="#ffcc02" rx="5"/>
+      <text x="720" y="270" text-anchor="middle" font-size="12" fill="#e65100">Performance Testing</text>
+      <text x="720" y="285" text-anchor="middle" font-size="10" fill="#f57c00">2 weeks</text>
+
+      <rect x="630" y="300" width="180" height="40" fill="#ffcc02" rx="5"/>
+      <text x="720" y="320" text-anchor="middle" font-size="12" fill="#e65100">Security Testing</text>
+      <text x="720" y="335" text-anchor="middle" font-size="10" fill="#f57c00">2 weeks</text>
+
+      <rect x="630" y="400" width="180" height="40" fill="#ffcc02" rx="5"/>
+      <text x="720" y="420" text-anchor="middle" font-size="12" fill="#e65100">User Acceptance</text>
+      <text x="720" y="435" text-anchor="middle" font-size="10" fill="#f57c00">2 weeks</text>
+
+      <rect x="630" y="450" width="180" height="40" fill="#ffcc02" rx="5"/>
+      <text x="720" y="470" text-anchor="middle" font-size="12" fill="#e65100">Bug Fixes</text>
+      <text x="720" y="485" text-anchor="middle" font-size="10" fill="#f57c00">1 week</text>
+    </g>
+
+    <!-- Status indicator -->
+    <circle cx="720" cy="550" r="25" fill="#9e9e9e"/>
+    <text x="720" y="555" text-anchor="middle" font-size="14" fill="white" font-weight="bold">⋯</text>
+    <text x="720" y="590" text-anchor="middle" font-size="12" fill="#424242">Pending</text>
+  </g>
+
+  <!-- Slide 4: Deployment Phase -->
+  <g id="layer_deployment" class="timeline-layer">
+    <rect x="860" y="100" width="240" height="520" fill="#fce4ec" stroke="#e91e63" stroke-width="2" rx="12" opacity="0.95"/>
+
+    <!-- Phase header -->
+    <rect x="880" y="120" width="200" height="60" fill="#e91e63" rx="8"/>
+    <text x="980" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Deployment</text>
+    <text x="980" y="165" text-anchor="middle" font-size="14" fill="#f8bbd9">Aug 2024</text>
+
+    <!-- Milestone marker -->
+    <circle cx="980" cy="360" r="15" fill="#e91e63"/>
+    <text x="980" y="330" text-anchor="middle" font-size="16" fill="#ad1457" font-weight="bold">Go Live</text>
+
+    <!-- Deployment tasks -->
+    <g class="deployment-tasks">
+      <rect x="890" y="200" width="180" height="40" fill="#f48fb1" rx="5"/>
+      <text x="980" y="220" text-anchor="middle" font-size="12" fill="#880e4f">Production Setup</text>
+      <text x="980" y="235" text-anchor="middle" font-size="10" fill="#ad1457">1 week</text>
+
+      <rect x="890" y="250" width="180" height="40" fill="#f48fb1" rx="5"/>
+      <text x="980" y="270" text-anchor="middle" font-size="12" fill="#880e4f">Data Migration</text>
+      <text x="980" y="285" text-anchor="middle" font-size="10" fill="#ad1457">3 days</text>
+
+      <rect x="890" y="300" width="180" height="40" fill="#f48fb1" rx="5"/>
+      <text x="980" y="320" text-anchor="middle" font-size="12" fill="#880e4f">Load Testing</text>
+      <text x="980" y="335" text-anchor="middle" font-size="10" fill="#ad1457">2 days</text>
+
+      <rect x="890" y="400" width="180" height="40" fill="#f48fb1" rx="5"/>
+      <text x="980" y="420" text-anchor="middle" font-size="12" fill="#880e4f">User Training</text>
+      <text x="980" y="435" text-anchor="middle" font-size="10" fill="#ad1457">1 week</text>
+
+      <rect x="890" y="450" width="180" height="40" fill="#f48fb1" rx="5"/>
+      <text x="980" y="470" text-anchor="middle" font-size="12" fill="#880e4f">Go-Live Support</text>
+      <text x="980" y="485" text-anchor="middle" font-size="10" fill="#ad1457">2 weeks</text>
+    </g>
+
+    <!-- Status indicator -->
+    <circle cx="980" cy="550" r="25" fill="#9e9e9e"/>
+    <text x="980" y="555" text-anchor="middle" font-size="14" fill="white" font-weight="bold">⋯</text>
+    <text x="980" y="590" text-anchor="middle" font-size="12" fill="#424242">Planned</text>
+  </g>
+
+  <!-- Slide 5: Maintenance Phase -->
+  <g id="layer_maintenance" class="timeline-layer">
+    <rect x="1120" y="100" width="140" height="520" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" rx="12" opacity="0.95"/>
+
+    <!-- Phase header -->
+    <rect x="1130" y="120" width="120" height="60" fill="#9c27b0" rx="8"/>
+    <text x="1190" y="145" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Maintenance</text>
+    <text x="1190" y="165" text-anchor="middle" font-size="12" fill="#e1bee7">Ongoing</text>
+
+    <!-- Milestone marker -->
+    <circle cx="1190" cy="360" r="15" fill="#9c27b0"/>
+    <text x="1190" y="330" text-anchor="middle" font-size="14" fill="#4a148c" font-weight="bold">Support</text>
+
+    <!-- Maintenance tasks -->
+    <g class="maintenance-tasks">
+      <rect x="1135" y="200" width="110" height="35" fill="#ce93d8" rx="5"/>
+      <text x="1190" y="220" text-anchor="middle" font-size="11" fill="#4a148c">Monitoring</text>
+
+      <rect x="1135" y="245" width="110" height="35" fill="#ce93d8" rx="5"/>
+      <text x="1190" y="265" text-anchor="middle" font-size="11" fill="#4a148c">Updates</text>
+
+      <rect x="1135" y="290" width="110" height="35" fill="#ce93d8" rx="5"/>
+      <text x="1190" y="310" text-anchor="middle" font-size="11" fill="#4a148c">Backups</text>
+
+      <rect x="1135" y="400" width="110" height="35" fill="#ce93d8" rx="5"/>
+      <text x="1190" y="420" text-anchor="middle" font-size="11" fill="#4a148c">Optimization</text>
+
+      <rect x="1135" y="445" width="110" height="35" fill="#ce93d8" rx="5"/>
+      <text x="1190" y="465" text-anchor="middle" font-size="11" fill="#4a148c">Support</text>
+    </g>
+
+    <!-- Status indicator -->
+    <circle cx="1190" cy="550" r="25" fill="#9e9e9e"/>
+    <text x="1190" y="555" text-anchor="middle" font-size="14" fill="white" font-weight="bold">∞</text>
+    <text x="1190" y="590" text-anchor="middle" font-size="12" fill="#424242">Ongoing</text>
+  </g>
+</svg>

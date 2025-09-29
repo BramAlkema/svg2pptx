@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <title>Product Comparison Layers - 3 Slides</title>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#fafafa"/>
+
+  <!-- Header -->
+  <rect x="50" y="30" width="1100" height="80" fill="#263238" rx="8"/>
+  <text x="600" y="75" text-anchor="middle" font-size="32" fill="white" font-weight="bold">Product Comparison Matrix</text>
+
+  <!-- Slide 1: Basic Plan Layer -->
+  <g id="layer_basic_plan" class="comparison-layer">
+    <rect x="70" y="150" width="320" height="580" fill="#e8f5e8" stroke="#4caf50" stroke-width="3" rx="12"/>
+
+    <!-- Plan header -->
+    <rect x="90" y="170" width="280" height="100" fill="#4caf50" rx="8"/>
+    <text x="230" y="210" text-anchor="middle" font-size="28" fill="white" font-weight="bold">Basic Plan</text>
+    <text x="230" y="240" text-anchor="middle" font-size="20" fill="#c8e6c9">$9.99/month</text>
+    <text x="230" y="260" text-anchor="middle" font-size="14" fill="#e8f5e8">Perfect for individuals</text>
+
+    <!-- Features list -->
+    <g class="basic-features">
+      <!-- Storage -->
+      <rect x="100" y="300" width="260" height="50" fill="white" stroke="#81c784" stroke-width="1" rx="6"/>
+      <circle cx="125" cy="320" r="8" fill="#4caf50"/>
+      <text x="125" y="325" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="150" y="320" font-size="14" fill="#1b5e20">Storage</text>
+      <text x="350" y="320" text-anchor="end" font-size="14" fill="#2e7d32" font-weight="bold">10 GB</text>
+      <text x="150" y="340" font-size="12" fill="#4caf50">Cloud storage included</text>
+
+      <!-- Users -->
+      <rect x="100" y="365" width="260" height="50" fill="white" stroke="#81c784" stroke-width="1" rx="6"/>
+      <circle cx="125" cy="385" r="8" fill="#4caf50"/>
+      <text x="125" y="390" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="150" y="385" font-size="14" fill="#1b5e20">Users</text>
+      <text x="350" y="385" text-anchor="end" font-size="14" fill="#2e7d32" font-weight="bold">1 User</text>
+      <text x="150" y="405" font-size="12" fill="#4caf50">Single user access</text>
+
+      <!-- Support -->
+      <rect x="100" y="430" width="260" height="50" fill="white" stroke="#81c784" stroke-width="1" rx="6"/>
+      <circle cx="125" cy="450" r="8" fill="#4caf50"/>
+      <text x="125" y="455" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="150" y="450" font-size="14" fill="#1b5e20">Support</text>
+      <text x="350" y="450" text-anchor="end" font-size="14" fill="#2e7d32" font-weight="bold">Email</text>
+      <text x="150" y="470" font-size="12" fill="#4caf50">Business hours only</text>
+
+      <!-- Features -->
+      <rect x="100" y="495" width="260" height="50" fill="white" stroke="#81c784" stroke-width="1" rx="6"/>
+      <circle cx="125" cy="515" r="8" fill="#4caf50"/>
+      <text x="125" y="520" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="150" y="515" font-size="14" fill="#1b5e20">Core Features</text>
+      <text x="350" y="515" text-anchor="end" font-size="14" fill="#2e7d32" font-weight="bold">Basic</text>
+      <text x="150" y="535" font-size="12" fill="#4caf50">Essential tools included</text>
+
+      <!-- API -->
+      <rect x="100" y="560" width="260" height="50" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="1" rx="6"/>
+      <circle cx="125" cy="580" r="8" fill="#9e9e9e"/>
+      <text x="125" y="585" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✗</text>
+      <text x="150" y="580" font-size="14" fill="#757575">API Access</text>
+      <text x="350" y="580" text-anchor="end" font-size="14" fill="#9e9e9e">Not included</text>
+      <text x="150" y="600" font-size="12" fill="#9e9e9e">Upgrade for API access</text>
+    </g>
+
+    <!-- CTA Button -->
+    <rect x="120" y="640" width="220" height="50" fill="#4caf50" rx="25"/>
+    <text x="230" y="670" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Start Free Trial</text>
+  </g>
+
+  <!-- Slide 2: Professional Plan Layer -->
+  <g id="layer_professional_plan" class="comparison-layer">
+    <rect x="440" y="130" width="320" height="600" fill="#e3f2fd" stroke="#2196f3" stroke-width="3" rx="12"/>
+
+    <!-- Popular badge -->
+    <rect x="520" y="110" width="160" height="30" fill="#ff5722" rx="15"/>
+    <text x="600" y="130" text-anchor="middle" font-size="14" fill="white" font-weight="bold">MOST POPULAR</text>
+
+    <!-- Plan header -->
+    <rect x="460" y="150" width="280" height="100" fill="#2196f3" rx="8"/>
+    <text x="600" y="190" text-anchor="middle" font-size="28" fill="white" font-weight="bold">Professional</text>
+    <text x="600" y="220" text-anchor="middle" font-size="20" fill="#bbdefb">$29.99/month</text>
+    <text x="600" y="240" text-anchor="middle" font-size="14" fill="#e3f2fd">Best for teams</text>
+
+    <!-- Features list -->
+    <g class="professional-features">
+      <!-- Storage -->
+      <rect x="470" y="280" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="300" r="8" fill="#2196f3"/>
+      <text x="495" y="305" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="300" font-size="14" fill="#0d47a1">Storage</text>
+      <text x="720" y="300" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">500 GB</text>
+      <text x="520" y="320" font-size="12" fill="#2196f3">Generous cloud storage</text>
+
+      <!-- Users -->
+      <rect x="470" y="345" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="365" r="8" fill="#2196f3"/>
+      <text x="495" y="370" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="365" font-size="14" fill="#0d47a1">Users</text>
+      <text x="720" y="365" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">10 Users</text>
+      <text x="520" y="385" font-size="12" fill="#2196f3">Team collaboration</text>
+
+      <!-- Support -->
+      <rect x="470" y="410" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="430" r="8" fill="#2196f3"/>
+      <text x="495" y="435" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="430" font-size="14" fill="#0d47a1">Support</text>
+      <text x="720" y="430" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">Priority</text>
+      <text x="520" y="450" font-size="12" fill="#2196f3">24/7 chat & phone</text>
+
+      <!-- Features -->
+      <rect x="470" y="475" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="495" r="8" fill="#2196f3"/>
+      <text x="495" y="500" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="495" font-size="14" fill="#0d47a1">Advanced Features</text>
+      <text x="720" y="495" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">All</text>
+      <text x="520" y="515" font-size="12" fill="#2196f3">Complete feature set</text>
+
+      <!-- API -->
+      <rect x="470" y="540" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="560" r="8" fill="#2196f3"/>
+      <text x="495" y="565" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="560" font-size="14" fill="#0d47a1">API Access</text>
+      <text x="720" y="560" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">Standard</text>
+      <text x="520" y="580" font-size="12" fill="#2196f3">1000 calls/month</text>
+
+      <!-- Analytics -->
+      <rect x="470" y="605" width="260" height="50" fill="white" stroke="#64b5f6" stroke-width="1" rx="6"/>
+      <circle cx="495" cy="625" r="8" fill="#2196f3"/>
+      <text x="495" y="630" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="520" y="625" font-size="14" fill="#0d47a1">Analytics</text>
+      <text x="720" y="625" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">Advanced</text>
+      <text x="520" y="645" font-size="12" fill="#2196f3">Detailed insights</text>
+    </g>
+
+    <!-- CTA Button -->
+    <rect x="490" y="680" width="220" height="50" fill="#2196f3" rx="25"/>
+    <text x="600" y="710" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Get Started</text>
+  </g>
+
+  <!-- Slide 3: Enterprise Plan Layer -->
+  <g id="layer_enterprise_plan" class="comparison-layer">
+    <rect x="810" y="150" width="320" height="580" fill="#fce4ec" stroke="#e91e63" stroke-width="3" rx="12"/>
+
+    <!-- Plan header -->
+    <rect x="830" y="170" width="280" height="100" fill="#e91e63" rx="8"/>
+    <text x="970" y="210" text-anchor="middle" font-size="28" fill="white" font-weight="bold">Enterprise</text>
+    <text x="970" y="240" text-anchor="middle" font-size="20" fill="#f8bbd9">Custom Pricing</text>
+    <text x="970" y="260" text-anchor="middle" font-size="14" fill="#fce4ec">For large organizations</text>
+
+    <!-- Features list -->
+    <g class="enterprise-features">
+      <!-- Storage -->
+      <rect x="840" y="300" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="320" r="8" fill="#e91e63"/>
+      <text x="865" y="325" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="320" font-size="14" fill="#880e4f">Storage</text>
+      <text x="1090" y="320" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Unlimited</text>
+      <text x="890" y="340" font-size="12" fill="#e91e63">No storage limits</text>
+
+      <!-- Users -->
+      <rect x="840" y="365" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="385" r="8" fill="#e91e63"/>
+      <text x="865" y="390" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="385" font-size="14" fill="#880e4f">Users</text>
+      <text x="1090" y="385" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Unlimited</text>
+      <text x="890" y="405" font-size="12" fill="#e91e63">Organization-wide access</text>
+
+      <!-- Support -->
+      <rect x="840" y="430" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="450" r="8" fill="#e91e63"/>
+      <text x="865" y="455" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="450" font-size="14" fill="#880e4f">Support</text>
+      <text x="1090" y="450" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Dedicated</text>
+      <text x="890" y="470" font-size="12" fill="#e91e63">Personal account manager</text>
+
+      <!-- Features -->
+      <rect x="840" y="495" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="515" r="8" fill="#e91e63"/>
+      <text x="865" y="520" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="515" font-size="14" fill="#880e4f">Custom Features</text>
+      <text x="1090" y="515" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Bespoke</text>
+      <text x="890" y="535" font-size="12" fill="#e91e63">Tailored to your needs</text>
+
+      <!-- API -->
+      <rect x="840" y="560" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="580" r="8" fill="#e91e63"/>
+      <text x="865" y="585" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="580" font-size="14" fill="#880e4f">API Access</text>
+      <text x="1090" y="580" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Unlimited</text>
+      <text x="890" y="600" font-size="12" fill="#e91e63">Full API access</text>
+
+      <!-- Security -->
+      <rect x="840" y="625" width="260" height="50" fill="white" stroke="#f06292" stroke-width="1" rx="6"/>
+      <circle cx="865" cy="645" r="8" fill="#e91e63"/>
+      <text x="865" y="650" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+      <text x="890" y="645" font-size="14" fill="#880e4f">Enterprise Security</text>
+      <text x="1090" y="645" text-anchor="end" font-size="14" fill="#ad1457" font-weight="bold">Premium</text>
+      <text x="890" y="665" font-size="12" fill="#e91e63">SSO, LDAP, compliance</text>
+    </g>
+
+    <!-- CTA Button -->
+    <rect x="860" y="690" width="220" height="50" fill="#e91e63" rx="25"/>
+    <text x="970" y="720" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Contact Sales</text>
+  </g>
+</svg>

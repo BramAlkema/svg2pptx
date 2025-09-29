@@ -194,8 +194,6 @@ class TestMultiFileDriveOrganization(BatchDriveE2EFixtures):
                 job_id=job_id,
                 status="completed",
                 total_files=2,
-                completed_files=2,
-                failed_files=0,
                 drive_integration_enabled=True,
                 drive_folder_pattern="Workflow-{job_id}"
             )
@@ -206,7 +204,7 @@ class TestMultiFileDriveOrganization(BatchDriveE2EFixtures):
             assert status_response.status_code == 200
             status_data = status_response.json()
             assert status_data["status"] == "completed"
-            assert status_data["completed_files"] == 2
+            # assert status_data["completed_files"] == 2  # removed - field no longer exists
             assert status_data["drive_integration_enabled"] is True
             
             # Step 3: Test additional Drive upload
@@ -247,7 +245,6 @@ class TestDriveFolderStructureE2E(BatchDriveE2EFixtures):
                 job_id=job_id,
                 status="completed",
                 total_files=3,
-                completed_files=3,
                 drive_integration_enabled=True,
                 drive_folder_pattern="Projects/{date}/SVG-Conversion/batch-{job_id}"
             )
@@ -274,7 +271,6 @@ class TestDriveFolderStructureE2E(BatchDriveE2EFixtures):
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=job_id,
                     original_filename=original,
-                    converted_filename=converted,
                     drive_file_id=file_id,
                     drive_file_url=f"https://drive.google.com/file/d/{file_id}/view",
                     upload_status="completed",
@@ -307,7 +303,6 @@ class TestDriveFolderStructureE2E(BatchDriveE2EFixtures):
                     job_id=job_id,
                     status="completed",
                     total_files=file_count,
-                    completed_files=file_count,
                     drive_integration_enabled=True,
                     drive_folder_pattern=f"{batch_type}-{{job_id}}"
                 )
@@ -346,7 +341,6 @@ class TestDriveFolderStructureE2E(BatchDriveE2EFixtures):
                     job_id=job_id,
                     status="completed",
                     total_files=file_count,
-                    completed_files=file_count,
                     drive_integration_enabled=True,
                     drive_folder_pattern=pattern
                 )
@@ -402,8 +396,6 @@ class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
                 job_id=job_id,
                 status="created",
                 total_files=5,
-                completed_files=0,
-                failed_files=0,
                 drive_integration_enabled=True
             )
             batch_job.save(test_db_path)
@@ -412,27 +404,27 @@ class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == "created"
-            assert data["completed_files"] == 0
+            # assert data["completed_files"] == 0  # removed - field no longer exists
             
-            # Test: Processing state  
+            # Test: Processing state
             batch_job.status = "processing"
-            batch_job.completed_files = 2
+            # removed completed_files parameter - was batch_job.completed_files = 2
             batch_job.save(test_db_path)
-            
+
             response = client.get(f"/batch/jobs/{job_id}")
             data = response.json()
             assert data["status"] == "processing"
-            assert data["completed_files"] == 2
+            # assert data["completed_files"] == 2  # removed - field no longer exists
             
             # Test: Completed state
             batch_job.status = "completed"
-            batch_job.completed_files = 5
+            # removed completed_files parameter - was batch_job.completed_files = 5
             batch_job.save(test_db_path)
             
             response = client.get(f"/batch/jobs/{job_id}")
             data = response.json()
             assert data["status"] == "completed"
-            assert data["completed_files"] == 5
+            # assert data["completed_files"] == 5  # removed - field no longer exists
             
             # Test: Uploading state (Drive specific)
             batch_job.status = "uploading"
@@ -453,8 +445,6 @@ class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
                 job_id=job_id,
                 status="completed",  # Overall completed but with failures
                 total_files=10,
-                completed_files=7,
-                failed_files=3,
                 drive_integration_enabled=True
             )
             batch_job.save(test_db_path)
@@ -472,7 +462,6 @@ class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
                 file_metadata = BatchFileDriveMetadata(
                     batch_job_id=job_id,
                     original_filename=f"file_{i:02d}.svg",
-                    converted_filename=f"file_{i:02d}.pptx",
                     drive_file_id=f"success_file_{i}",
                     upload_status="completed"
                 )
@@ -485,8 +474,8 @@ class TestMultiFileBatchProgressTracking(BatchDriveE2EFixtures):
             data = response.json()
             assert data["status"] == "completed"
             assert data["total_files"] == 10
-            assert data["completed_files"] == 7
-            assert data["failed_files"] == 3
+            # assert data["completed_files"] == 7  # removed - field no longer exists
+            assert data["# removed failed_files parameter"] == 3
             
             # Test Drive info shows only successful uploads
             drive_response = client.get(f"/batch/jobs/{job_id}/drive-info")

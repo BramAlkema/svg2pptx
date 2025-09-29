@@ -1,0 +1,1844 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG2PPTX Comprehensive Debug Report</title>
+    <style>
+        body { font-family: 'Courier New', monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .section { margin: 20px 0; padding: 15px; border-left: 4px solid #007acc; background: #f9f9f9; }
+        .error { border-left-color: #ff4444; background: #fff5f5; }
+        .success { border-left-color: #44ff44; background: #f5fff5; }
+        .warning { border-left-color: #ffaa00; background: #fffaf0; }
+        .code { background: #f0f0f0; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #007acc; color: white; }
+        .metric { display: inline-block; margin: 10px; padding: 10px; background: #e7f3ff; border-radius: 4px; }
+        .recommendations { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 SVG2PPTX Comprehensive Debug Report</h1>
+        <p><strong>Generated:</strong> 2025-09-24T00:38:57.844155</p>
+
+        <div class="section">
+            <h2>📄 SVG Analysis Summary</h2>
+            
+        <div class="metric">📐 ViewBox: 0 0 400 300</div>
+        <div class="metric">📏 Dimensions: 400 × 300</div>
+        <div class="metric">🔢 Total Elements: 24</div>
+
+        <h3>Element Breakdown:</h3>
+        <table>
+            <tr><th>Element Type</th><th>Count</th><th>Sample Attributes</th></tr>
+        
+                <tr>
+                    <td>text</td>
+                    <td>12</td>
+                    <td>x, y, text-anchor, font-family, font-size</td>
+                </tr>
+                
+                <tr>
+                    <td>rect</td>
+                    <td>1</td>
+                    <td>x, y, width, height, fill</td>
+                </tr>
+                
+                <tr>
+                    <td>circle</td>
+                    <td>1</td>
+                    <td>cx, cy, r, fill, stroke</td>
+                </tr>
+                
+                <tr>
+                    <td>ellipse</td>
+                    <td>1</td>
+                    <td>cx, cy, rx, ry, fill</td>
+                </tr>
+                
+                <tr>
+                    <td>line</td>
+                    <td>1</td>
+                    <td>x1, y1, x2, y2, stroke</td>
+                </tr>
+                
+                <tr>
+                    <td>path</td>
+                    <td>4</td>
+                    <td>d, fill, stroke, stroke-width</td>
+                </tr>
+                
+                <tr>
+                    <td>polygon</td>
+                    <td>1</td>
+                    <td>points, fill, stroke, stroke-width</td>
+                </tr>
+                
+                <tr>
+                    <td>polyline</td>
+                    <td>1</td>
+                    <td>points, fill, stroke, stroke-width</td>
+                </tr>
+                </table>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Conversion Analysis</h2>
+            
+        <div class="metric">⏱️ Conversion Time: 1.322s</div>
+        <div class="metric">📦 Output Size: 6394 bytes</div>
+        <div class="metric">⚠️ Errors: 0</div>
+
+        <h3>Viewport Mapping:</h3>
+        <table>
+            <tr><th>Property</th><th>Value</th></tr>
+            <tr><td>Scale X</td><td>22860.0</td></tr>
+            <tr><td>Scale Y</td><td>22860.0</td></tr>
+            <tr><td>Translate X</td><td>0.0</td></tr>
+            <tr><td>Translate Y</td><td>0.0</td></tr>
+        </table>
+        
+        </div>
+
+        <div class="section">
+            <h2>📊 PPTX Analysis Summary</h2>
+            
+        <div class="metric">📦 Total Shapes: 22</div>
+        <div class="metric">📝 Text Shapes: 21</div>
+        
+            <div class="metric">📐 X Range: 0.52" to 6.25"</div>
+            <div class="metric">📐 Y Range: 0.52" to 7.16"</div>
+            
+        </div>
+
+        <div class="section">
+            <h2>🎯 Accuracy Comparison</h2>
+            
+        <div class="metric">🎯 Text Position Accuracy: 0%</div>
+        <div class="metric">✅ Correctly Positioned: 0/0</div>
+
+        <h3>Text Element Analysis:</h3>
+        <table>
+            <tr><th>Index</th><th>Text</th><th>Expected Position</th><th>Actual Position</th><th>Error</th><th>Status</th></tr>
+        </table>
+        </div>
+
+        <div class="section recommendations">
+            <h2>💡 Recommendations</h2>
+            <ul><li>🎯 CRITICAL: Text positioning accuracy is below 80%. Check viewport mapping and coordinate transformation.</li><li>📝 9 text elements have fonts smaller than 18pt. Consider boosting for readability.</li><li>🔧 viewport_handler is not properly initialized.</li><li>🔧 font_service is not properly initialized.</li><li>🔧 clip_service is not properly initialized.</li></ul>
+        </div>
+
+        <div class="section">
+            <h2>📋 Raw Debug Data</h2>
+            <div class="code">
+                <pre>{
+  "timestamp": "2025-09-24T00:38:57.844155",
+  "svg_analysis": {
+    "file_info": {
+      "filename": "w3c_working_test.svg",
+      "size_bytes": 2895,
+      "line_count": 59
+    },
+    "root_attributes": {
+      "width": "400",
+      "height": "300",
+      "viewBox": "0 0 400 300"
+    },
+    "elements_by_type": {
+      "svg": [
+        {
+          "tag": "svg",
+          "attributes": {
+            "width": "400",
+            "height": "300",
+            "viewBox": "0 0 400 300"
+          },
+          "text_content": "",
+          "children_count": 23,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "title": [
+        {
+          "tag": "title",
+          "attributes": {},
+          "text_content": "W3C Working Test - All Shapes Visible",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "text": [
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "200",
+            "y": "25",
+            "text-anchor": "middle",
+            "font-family": "Arial",
+            "font-size": "16",
+            "font-weight": "bold",
+            "fill": "#333"
+          },
+          "text_content": "W3C SVG Compatibility Test",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "85",
+            "y": "75",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "white"
+          },
+          "text_content": "Rect",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "85",
+            "y": "135",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "white"
+          },
+          "text_content": "Circle",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "190",
+            "y": "75",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "white"
+          },
+          "text_content": "Ellipse",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "185",
+            "y": "155",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "#fd7e14"
+          },
+          "text_content": "Line",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "290",
+            "y": "70",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "white"
+          },
+          "text_content": "Path",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "280",
+            "y": "125",
+            "text-anchor": "middle",
+            "font-size": "10",
+            "fill": "white"
+          },
+          "text_content": "Curves",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "85",
+            "y": "220",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "#198754"
+          },
+          "text_content": "Arc",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "200",
+            "y": "185",
+            "text-anchor": "middle",
+            "font-size": "10",
+            "fill": "#333"
+          },
+          "text_content": "Complex",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "280",
+            "y": "195",
+            "text-anchor": "middle",
+            "font-size": "10",
+            "fill": "white"
+          },
+          "text_content": "Polygon",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "90",
+            "y": "265",
+            "text-anchor": "middle",
+            "font-size": "11",
+            "fill": "#6610f2"
+          },
+          "text_content": "Polyline",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "text",
+          "attributes": {
+            "x": "200",
+            "y": "285",
+            "text-anchor": "middle",
+            "font-size": "10",
+            "fill": "#666"
+          },
+          "text_content": "All shapes should be visible - No overlays",
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "rect": [
+        {
+          "tag": "rect",
+          "attributes": {
+            "x": "50",
+            "y": "50",
+            "width": "70",
+            "height": "40",
+            "fill": "#ff6b6b",
+            "stroke": "#d63384",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "circle": [
+        {
+          "tag": "circle",
+          "attributes": {
+            "cx": "85",
+            "cy": "130",
+            "r": "25",
+            "fill": "#4ecdc4",
+            "stroke": "#20c997",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "ellipse": [
+        {
+          "tag": "ellipse",
+          "attributes": {
+            "cx": "190",
+            "cy": "70",
+            "rx": "35",
+            "ry": "20",
+            "fill": "#45b7d1",
+            "stroke": "#0d6efd",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "line": [
+        {
+          "tag": "line",
+          "attributes": {
+            "x1": "150",
+            "y1": "110",
+            "x2": "220",
+            "y2": "140",
+            "stroke": "#fd7e14",
+            "stroke-width": "3"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "path": [
+        {
+          "tag": "path",
+          "attributes": {
+            "d": "M 270 50 L 310 50 L 290 90 Z",
+            "fill": "#6f42c1",
+            "stroke": "#6610f2",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "path",
+          "attributes": {
+            "d": "M 250 110 Q 280 100 310 110 Q 300 140 280 135 Q 260 140 250 135 Z",
+            "fill": "#e83e8c",
+            "stroke": "#d63384",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "path",
+          "attributes": {
+            "d": "M 50 180 A 35 25 0 0 1 120 180 A 35 25 0 0 1 50 205",
+            "fill": "none",
+            "stroke": "#198754",
+            "stroke-width": "3"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        },
+        {
+          "tag": "path",
+          "attributes": {
+            "d": "M 170 180 L 180 160 L 200 170 L 210 180 L 220 160 L 230 180 L 210 200 L 190 190 Z",
+            "fill": "#ffc107",
+            "stroke": "#fd7e14",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "polygon": [
+        {
+          "tag": "polygon",
+          "attributes": {
+            "points": "280,160 300,170 310,190 300,210 280,220 260,210 250,190 260,170",
+            "fill": "#20c997",
+            "stroke": "#198754",
+            "stroke-width": "2"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ],
+      "polyline": [
+        {
+          "tag": "polyline",
+          "attributes": {
+            "points": "50,240 70,230 90,245 110,235 130,250",
+            "fill": "none",
+            "stroke": "#6610f2",
+            "stroke-width": "3"
+          },
+          "text_content": null,
+          "children_count": 0,
+          "namespace": "{http://www.w3.org/2000/svg"
+        }
+      ]
+    },
+    "coordinate_systems": {
+      "viewBox": "0 0 400 300",
+      "width": "400",
+      "height": "300",
+      "viewBox_parsed": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "width": 400.0,
+        "height": 300.0
+      },
+      "implicit_dimensions": {
+        "width": 400.0,
+        "height": 300.0
+      }
+    },
+    "style_analysis": {},
+    "transform_analysis": {},
+    "gradient_analysis": {},
+    "text_analysis": {},
+    "path_analysis": {},
+    "shape_analysis": {},
+    "namespace_analysis": {}
+  },
+  "conversion_analysis": {
+    "input_file": "w3c_working_test.svg",
+    "output_file": "w3c_comprehensive_debug_test.pptx",
+    "services_debug": {
+      "unit_converter": "<class 'src.units.core.UnitConverter'>",
+      "viewport_handler": "<class 'NoneType'>",
+      "font_service": "<class 'NoneType'>",
+      "gradient_service": "<class 'src.services.gradient_service.GradientService'>",
+      "pattern_service": "<class 'src.services.pattern_service.PatternService'>",
+      "clip_service": "<class 'NoneType'>",
+      "style_parser": "<class 'src.utils.style_parser.StyleParser'>",
+      "font_processor": "<class 'src.utils.font_processor.FontProcessor'>"
+    },
+    "converter_debug": {},
+    "coordinate_debug": [
+      {
+        "description": "Origin",
+        "svg_coordinates": [
+          0,
+          0
+        ],
+        "emu_coordinates": [
+          0,
+          0
+        ],
+        "inch_coordinates": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "description": "Center",
+        "svg_coordinates": [
+          200,
+          150
+        ],
+        "emu_coordinates": [
+          4572000,
+          3429000
+        ],
+        "inch_coordinates": [
+          5.0,
+          3.75
+        ]
+      },
+      {
+        "description": "Max",
+        "svg_coordinates": [
+          400,
+          300
+        ],
+        "emu_coordinates": [
+          9144000,
+          6858000
+        ],
+        "inch_coordinates": [
+          10.0,
+          7.5
+        ]
+      },
+      {
+        "description": "Rectangle",
+        "svg_coordinates": [
+          50,
+          50
+        ],
+        "emu_coordinates": [
+          1143000,
+          1143000
+        ],
+        "inch_coordinates": [
+          1.25,
+          1.25
+        ]
+      },
+      {
+        "description": "Circle",
+        "svg_coordinates": [
+          85,
+          130
+        ],
+        "emu_coordinates": [
+          1943100,
+          2971800
+        ],
+        "inch_coordinates": [
+          2.125,
+          3.25
+        ]
+      },
+      {
+        "description": "Ellipse",
+        "svg_coordinates": [
+          190,
+          70
+        ],
+        "emu_coordinates": [
+          4343400,
+          1600200
+        ],
+        "inch_coordinates": [
+          4.75,
+          1.75
+        ]
+      }
+    ],
+    "viewport_debug": {
+      "scale_x": 22860.0,
+      "scale_y": 22860.0,
+      "translate_x": 0.0,
+      "translate_y": 0.0,
+      "viewport_width": 9144000,
+      "viewport_height": 6858000,
+      "content_width": 9144000,
+      "content_height": 6858000
+    },
+    "registry_debug": {},
+    "errors": [],
+    "warnings": [],
+    "performance": {
+      "conversion_time_seconds": 1.322,
+      "output_file_size": 6394
+    }
+  },
+  "pptx_analysis": {
+    "file_info": {
+      "filename": "w3c_comprehensive_debug_test.pptx",
+      "file_size": 6394
+    },
+    "structure_analysis": {
+      "total_files": 9,
+      "slides": [
+        "ppt/slides/slide1.xml"
+      ],
+      "relationships": [
+        "_rels/.rels",
+        "ppt/_rels/presentation.xml.rels",
+        "ppt/slides/_rels/slide1.xml.rels"
+      ],
+      "media": [],
+      "theme": [
+        "ppt/theme/theme1.xml"
+      ]
+    },
+    "shape_analysis": {
+      "total_shapes": 22,
+      "shapes": [
+        {
+          "index": 0,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 3028950,
+            "y_emu": 608750,
+            "width_emu": 3086100,
+            "height_emu": 617220,
+            "x_inches": 3.312,
+            "y_inches": 0.666,
+            "width_inches": 3.375,
+            "height_inches": 0.675
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1000",
+          "id": "1000",
+          "geometry_preset": "rect",
+          "text_content": "W3C SVG Compatibility Test",
+          "font_properties": {
+            "size_pts": 21.6,
+            "bold": true,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 1,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 1143000,
+            "y_emu": 1143000,
+            "width_emu": 1600200,
+            "height_emu": 914400,
+            "x_inches": 1.25,
+            "y_inches": 1.25,
+            "width_inches": 1.75,
+            "height_inches": 1.0
+          },
+          "styling": {},
+          "content": {},
+          "name": "Rectangle 1001",
+          "id": "1001",
+          "geometry_preset": "rect",
+          "text_content": ""
+        },
+        {
+          "index": 2,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 1745541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 1.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1002",
+          "id": "1002",
+          "geometry_preset": "rect",
+          "text_content": "Rect",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 3,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 1371600,
+            "y_emu": 2400300,
+            "width_emu": 1143000,
+            "height_emu": 1143000,
+            "x_inches": 1.5,
+            "y_inches": 2.625,
+            "width_inches": 1.25,
+            "height_inches": 1.25
+          },
+          "styling": {},
+          "content": {},
+          "name": "Circle 1003",
+          "id": "1003",
+          "geometry_preset": "ellipse",
+          "text_content": ""
+        },
+        {
+          "index": 4,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 3117141,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 3.409,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1004",
+          "id": "1004",
+          "geometry_preset": "rect",
+          "text_content": "Circle",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 5,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 3543300,
+            "y_emu": 1143000,
+            "width_emu": 1600200,
+            "height_emu": 914400,
+            "x_inches": 3.875,
+            "y_inches": 1.25,
+            "width_inches": 1.75,
+            "height_inches": 1.0
+          },
+          "styling": {},
+          "content": {},
+          "name": "Ellipse 1005",
+          "id": "1005",
+          "geometry_preset": "ellipse",
+          "text_content": ""
+        },
+        {
+          "index": 6,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 3057525,
+            "y_emu": 1745541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.344,
+            "y_inches": 1.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1006",
+          "id": "1006",
+          "geometry_preset": "rect",
+          "text_content": "Ellipse",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 7,
+          "is_text_shape": false,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 3429000,
+            "y_emu": 2514600,
+            "width_emu": 1600200,
+            "height_emu": 685800,
+            "x_inches": 3.75,
+            "y_inches": 2.75,
+            "width_inches": 1.75,
+            "height_inches": 0.75
+          },
+          "styling": {},
+          "content": {},
+          "name": "Line 1007",
+          "id": "1007",
+          "custom_paths": 1
+        },
+        {
+          "index": 8,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 2943225,
+            "y_emu": 3574341,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.219,
+            "y_inches": 3.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1008",
+          "id": "1008",
+          "geometry_preset": "rect",
+          "text_content": "Line",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 9,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 2571750,
+            "y_emu": 476250,
+            "width_emu": 381000,
+            "height_emu": 381000,
+            "x_inches": 2.812,
+            "y_inches": 0.521,
+            "width_inches": 0.417,
+            "height_inches": 0.417
+          },
+          "styling": {},
+          "content": {},
+          "name": "Custom Shape",
+          "id": "1",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 10,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 5343525,
+            "y_emu": 1631241,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.844,
+            "y_inches": 1.784,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1009",
+          "id": "1009",
+          "geometry_preset": "rect",
+          "text_content": "Path",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 11,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 2381250,
+            "y_emu": 952500,
+            "width_emu": 571500,
+            "height_emu": 381000,
+            "x_inches": 2.604,
+            "y_inches": 1.042,
+            "width_inches": 0.625,
+            "height_inches": 0.417
+          },
+          "styling": {},
+          "content": {},
+          "name": "Custom Shape",
+          "id": "1",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 12,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 5114925,
+            "y_emu": 2888541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.594,
+            "y_inches": 3.159,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1010",
+          "id": "1010",
+          "geometry_preset": "rect",
+          "text_content": "Curves",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 13,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 476250,
+            "y_emu": 1714500,
+            "width_emu": 666750,
+            "height_emu": 238125,
+            "x_inches": 0.521,
+            "y_inches": 1.875,
+            "width_inches": 0.729,
+            "height_inches": 0.26
+          },
+          "styling": {},
+          "content": {},
+          "name": "Custom Shape",
+          "id": "1",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 14,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 5060241,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 5.534,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1011",
+          "id": "1011",
+          "geometry_preset": "rect",
+          "text_content": "Arc",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 15,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 1619250,
+            "y_emu": 1524000,
+            "width_emu": 571500,
+            "height_emu": 381000,
+            "x_inches": 1.771,
+            "y_inches": 1.667,
+            "width_inches": 0.625,
+            "height_inches": 0.417
+          },
+          "styling": {},
+          "content": {},
+          "name": "Custom Shape",
+          "id": "1",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 16,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 3286125,
+            "y_emu": 4260141,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.594,
+            "y_inches": 4.659,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1012",
+          "id": "1012",
+          "geometry_preset": "rect",
+          "text_content": "Complex",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 17,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 5715000,
+            "y_emu": 3657600,
+            "width_emu": 1371600,
+            "height_emu": 1371600,
+            "x_inches": 6.25,
+            "y_inches": 4.0,
+            "width_inches": 1.5,
+            "height_inches": 1.5
+          },
+          "styling": {},
+          "content": {},
+          "name": "Polygon 1013",
+          "id": "1013",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 18,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 5114925,
+            "y_emu": 4488741,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.594,
+            "y_inches": 4.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1014",
+          "id": "1014",
+          "geometry_preset": "rect",
+          "text_content": "Polygon",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 19,
+          "is_text_shape": true,
+          "geometry_type": "custom",
+          "positioning": {
+            "x_emu": 1143000,
+            "y_emu": 5257800,
+            "width_emu": 1828800,
+            "height_emu": 457200,
+            "x_inches": 1.25,
+            "y_inches": 5.75,
+            "width_inches": 2.0,
+            "height_inches": 0.5
+          },
+          "styling": {},
+          "content": {},
+          "name": "Polyline 1015",
+          "id": "1015",
+          "custom_paths": 1,
+          "text_content": ""
+        },
+        {
+          "index": 20,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 771525,
+            "y_emu": 6088941,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.844,
+            "y_inches": 6.659,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1016",
+          "id": "1016",
+          "geometry_preset": "rect",
+          "text_content": "Polyline",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        },
+        {
+          "index": 21,
+          "is_text_shape": true,
+          "geometry_type": "preset",
+          "positioning": {
+            "x_emu": 2591753,
+            "y_emu": 6546141,
+            "width_emu": 3960495,
+            "height_emu": 514350,
+            "x_inches": 2.834,
+            "y_inches": 7.159,
+            "width_inches": 4.331,
+            "height_inches": 0.562
+          },
+          "styling": {},
+          "content": {},
+          "name": "Text 1017",
+          "id": "1017",
+          "geometry_preset": "rect",
+          "text_content": "All shapes should be visible - No overlays",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          }
+        }
+      ]
+    },
+    "text_analysis": {
+      "total_text_shapes": 21,
+      "text_shapes": [
+        {
+          "shape_index": 0,
+          "text_content": "W3C SVG Compatibility Test",
+          "font_properties": {
+            "size_pts": 21.6,
+            "bold": true,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 3028950,
+            "y_emu": 608750,
+            "width_emu": 3086100,
+            "height_emu": 617220,
+            "x_inches": 3.312,
+            "y_inches": 0.666,
+            "width_inches": 3.375,
+            "height_inches": 0.675
+          }
+        },
+        {
+          "shape_index": 1,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 1143000,
+            "y_emu": 1143000,
+            "width_emu": 1600200,
+            "height_emu": 914400,
+            "x_inches": 1.25,
+            "y_inches": 1.25,
+            "width_inches": 1.75,
+            "height_inches": 1.0
+          }
+        },
+        {
+          "shape_index": 2,
+          "text_content": "Rect",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 1745541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 1.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 3,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 1371600,
+            "y_emu": 2400300,
+            "width_emu": 1143000,
+            "height_emu": 1143000,
+            "x_inches": 1.5,
+            "y_inches": 2.625,
+            "width_inches": 1.25,
+            "height_inches": 1.25
+          }
+        },
+        {
+          "shape_index": 4,
+          "text_content": "Circle",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 3117141,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 3.409,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 5,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 3543300,
+            "y_emu": 1143000,
+            "width_emu": 1600200,
+            "height_emu": 914400,
+            "x_inches": 3.875,
+            "y_inches": 1.25,
+            "width_inches": 1.75,
+            "height_inches": 1.0
+          }
+        },
+        {
+          "shape_index": 6,
+          "text_content": "Ellipse",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 3057525,
+            "y_emu": 1745541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.344,
+            "y_inches": 1.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 8,
+          "text_content": "Line",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 2943225,
+            "y_emu": 3574341,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.219,
+            "y_inches": 3.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 9,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 2571750,
+            "y_emu": 476250,
+            "width_emu": 381000,
+            "height_emu": 381000,
+            "x_inches": 2.812,
+            "y_inches": 0.521,
+            "width_inches": 0.417,
+            "height_inches": 0.417
+          }
+        },
+        {
+          "shape_index": 10,
+          "text_content": "Path",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 5343525,
+            "y_emu": 1631241,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.844,
+            "y_inches": 1.784,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 11,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 2381250,
+            "y_emu": 952500,
+            "width_emu": 571500,
+            "height_emu": 381000,
+            "x_inches": 2.604,
+            "y_inches": 1.042,
+            "width_inches": 0.625,
+            "height_inches": 0.417
+          }
+        },
+        {
+          "shape_index": 12,
+          "text_content": "Curves",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 5114925,
+            "y_emu": 2888541,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.594,
+            "y_inches": 3.159,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 13,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 476250,
+            "y_emu": 1714500,
+            "width_emu": 666750,
+            "height_emu": 238125,
+            "x_inches": 0.521,
+            "y_inches": 1.875,
+            "width_inches": 0.729,
+            "height_inches": 0.26
+          }
+        },
+        {
+          "shape_index": 14,
+          "text_content": "Arc",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 657225,
+            "y_emu": 5060241,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.719,
+            "y_inches": 5.534,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 15,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 1619250,
+            "y_emu": 1524000,
+            "width_emu": 571500,
+            "height_emu": 381000,
+            "x_inches": 1.771,
+            "y_inches": 1.667,
+            "width_inches": 0.625,
+            "height_inches": 0.417
+          }
+        },
+        {
+          "shape_index": 16,
+          "text_content": "Complex",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 3286125,
+            "y_emu": 4260141,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 3.594,
+            "y_inches": 4.659,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 17,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 5715000,
+            "y_emu": 3657600,
+            "width_emu": 1371600,
+            "height_emu": 1371600,
+            "x_inches": 6.25,
+            "y_inches": 4.0,
+            "width_inches": 1.5,
+            "height_inches": 1.5
+          }
+        },
+        {
+          "shape_index": 18,
+          "text_content": "Polygon",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 5114925,
+            "y_emu": 4488741,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 5.594,
+            "y_inches": 4.909,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 19,
+          "text_content": "",
+          "font_properties": {},
+          "positioning": {
+            "x_emu": 1143000,
+            "y_emu": 5257800,
+            "width_emu": 1828800,
+            "height_emu": 457200,
+            "x_inches": 1.25,
+            "y_inches": 5.75,
+            "width_inches": 2.0,
+            "height_inches": 0.5
+          }
+        },
+        {
+          "shape_index": 20,
+          "text_content": "Polyline",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 771525,
+            "y_emu": 6088941,
+            "width_emu": 2571750,
+            "height_emu": 514350,
+            "x_inches": 0.844,
+            "y_inches": 6.659,
+            "width_inches": 2.812,
+            "height_inches": 0.562
+          }
+        },
+        {
+          "shape_index": 21,
+          "text_content": "All shapes should be visible - No overlays",
+          "font_properties": {
+            "size_pts": 18.0,
+            "bold": false,
+            "italic": false,
+            "lang": "en-US",
+            "typeface": "+mn-lt"
+          },
+          "positioning": {
+            "x_emu": 2591753,
+            "y_emu": 6546141,
+            "width_emu": 3960495,
+            "height_emu": 514350,
+            "x_inches": 2.834,
+            "y_inches": 7.159,
+            "width_inches": 4.331,
+            "height_inches": 0.562
+          }
+        }
+      ]
+    },
+    "coordinate_analysis": {
+      "coordinate_ranges": {
+        "x_min": 0.521,
+        "x_max": 6.25,
+        "y_min": 0.521,
+        "y_max": 7.159,
+        "slide_usage_x": 5.729,
+        "slide_usage_y": 6.638
+      },
+      "positioning_data": [
+        {
+          "shape_index": 0,
+          "shape_name": "Text 1000",
+          "x_emu": 3028950,
+          "y_emu": 608750,
+          "x_inches": 3.312,
+          "y_inches": 0.666,
+          "width_emu": 3086100,
+          "height_emu": 617220
+        },
+        {
+          "shape_index": 1,
+          "shape_name": "Rectangle 1001",
+          "x_emu": 1143000,
+          "y_emu": 1143000,
+          "x_inches": 1.25,
+          "y_inches": 1.25,
+          "width_emu": 1600200,
+          "height_emu": 914400
+        },
+        {
+          "shape_index": 2,
+          "shape_name": "Text 1002",
+          "x_emu": 657225,
+          "y_emu": 1745541,
+          "x_inches": 0.719,
+          "y_inches": 1.909,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 3,
+          "shape_name": "Circle 1003",
+          "x_emu": 1371600,
+          "y_emu": 2400300,
+          "x_inches": 1.5,
+          "y_inches": 2.625,
+          "width_emu": 1143000,
+          "height_emu": 1143000
+        },
+        {
+          "shape_index": 4,
+          "shape_name": "Text 1004",
+          "x_emu": 657225,
+          "y_emu": 3117141,
+          "x_inches": 0.719,
+          "y_inches": 3.409,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 5,
+          "shape_name": "Ellipse 1005",
+          "x_emu": 3543300,
+          "y_emu": 1143000,
+          "x_inches": 3.875,
+          "y_inches": 1.25,
+          "width_emu": 1600200,
+          "height_emu": 914400
+        },
+        {
+          "shape_index": 6,
+          "shape_name": "Text 1006",
+          "x_emu": 3057525,
+          "y_emu": 1745541,
+          "x_inches": 3.344,
+          "y_inches": 1.909,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 7,
+          "shape_name": "Line 1007",
+          "x_emu": 3429000,
+          "y_emu": 2514600,
+          "x_inches": 3.75,
+          "y_inches": 2.75,
+          "width_emu": 1600200,
+          "height_emu": 685800
+        },
+        {
+          "shape_index": 8,
+          "shape_name": "Text 1008",
+          "x_emu": 2943225,
+          "y_emu": 3574341,
+          "x_inches": 3.219,
+          "y_inches": 3.909,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 9,
+          "shape_name": "Custom Shape",
+          "x_emu": 2571750,
+          "y_emu": 476250,
+          "x_inches": 2.812,
+          "y_inches": 0.521,
+          "width_emu": 381000,
+          "height_emu": 381000
+        },
+        {
+          "shape_index": 10,
+          "shape_name": "Text 1009",
+          "x_emu": 5343525,
+          "y_emu": 1631241,
+          "x_inches": 5.844,
+          "y_inches": 1.784,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 11,
+          "shape_name": "Custom Shape",
+          "x_emu": 2381250,
+          "y_emu": 952500,
+          "x_inches": 2.604,
+          "y_inches": 1.042,
+          "width_emu": 571500,
+          "height_emu": 381000
+        },
+        {
+          "shape_index": 12,
+          "shape_name": "Text 1010",
+          "x_emu": 5114925,
+          "y_emu": 2888541,
+          "x_inches": 5.594,
+          "y_inches": 3.159,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 13,
+          "shape_name": "Custom Shape",
+          "x_emu": 476250,
+          "y_emu": 1714500,
+          "x_inches": 0.521,
+          "y_inches": 1.875,
+          "width_emu": 666750,
+          "height_emu": 238125
+        },
+        {
+          "shape_index": 14,
+          "shape_name": "Text 1011",
+          "x_emu": 657225,
+          "y_emu": 5060241,
+          "x_inches": 0.719,
+          "y_inches": 5.534,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 15,
+          "shape_name": "Custom Shape",
+          "x_emu": 1619250,
+          "y_emu": 1524000,
+          "x_inches": 1.771,
+          "y_inches": 1.667,
+          "width_emu": 571500,
+          "height_emu": 381000
+        },
+        {
+          "shape_index": 16,
+          "shape_name": "Text 1012",
+          "x_emu": 3286125,
+          "y_emu": 4260141,
+          "x_inches": 3.594,
+          "y_inches": 4.659,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 17,
+          "shape_name": "Polygon 1013",
+          "x_emu": 5715000,
+          "y_emu": 3657600,
+          "x_inches": 6.25,
+          "y_inches": 4.0,
+          "width_emu": 1371600,
+          "height_emu": 1371600
+        },
+        {
+          "shape_index": 18,
+          "shape_name": "Text 1014",
+          "x_emu": 5114925,
+          "y_emu": 4488741,
+          "x_inches": 5.594,
+          "y_inches": 4.909,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 19,
+          "shape_name": "Polyline 1015",
+          "x_emu": 1143000,
+          "y_emu": 5257800,
+          "x_inches": 1.25,
+          "y_inches": 5.75,
+          "width_emu": 1828800,
+          "height_emu": 457200
+        },
+        {
+          "shape_index": 20,
+          "shape_name": "Text 1016",
+          "x_emu": 771525,
+          "y_emu": 6088941,
+          "x_inches": 0.844,
+          "y_inches": 6.659,
+          "width_emu": 2571750,
+          "height_emu": 514350
+        },
+        {
+          "shape_index": 21,
+          "shape_name": "Text 1017",
+          "x_emu": 2591753,
+          "y_emu": 6546141,
+          "x_inches": 2.834,
+          "y_inches": 7.159,
+          "width_emu": 3960495,
+          "height_emu": 514350
+        }
+      ]
+    },
+    "style_analysis": {},
+    "content_validation": {}
+  },
+  "coordinate_analysis": {},
+  "service_analysis": {},
+  "error_analysis": {},
+  "performance_analysis": {},
+  "recommendations": [
+    "\ud83c\udfaf CRITICAL: Text positioning accuracy is below 80%. Check viewport mapping and coordinate transformation.",
+    "\ud83d\udcdd 9 text elements have fonts smaller than 18pt. Consider boosting for readability.",
+    "\ud83d\udd27 viewport_handler is not properly initialized.",
+    "\ud83d\udd27 font_service is not properly initialized.",
+    "\ud83d\udd27 clip_service is not properly initialized."
+  ],
+  "comparison_analysis": {
+    "element_mapping": [],
+    "coordinate_accuracy": [],
+    "text_accuracy": [],
+    "style_preservation": [],
+    "overall_fidelity": {}
+  }
+}</pre>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Advanced NumPy Gradient Features Engine for SVG2PPTX
+Advanced Gradient Features Engine for SVG2PPTX
 
 Implements advanced gradient processing capabilities including:
 - Batch gradient transformations with coordinate system conversions
@@ -40,12 +40,12 @@ from collections import OrderedDict
 import json
 
 try:
-    from .numpy_gradient_engine import NumPyColorProcessor, NumPyTransformProcessor
+    from .core import ColorProcessor, TransformProcessor
     from .linear_gradient_engine import LinearGradientEngine, LinearGradientData
     from .radial_gradient_engine import RadialGradientEngine, RadialGradientData
 except ImportError:
     # For direct testing, create stub classes
-    class NumPyColorProcessor:
+    class ColorProcessor:
         def parse_color_single(self, color_str):
             return np.array([0.0, 0.0, 0.0])
         def rgb_to_lab_single(self, rgb):
@@ -53,7 +53,7 @@ except ImportError:
         def lab_to_rgb_batch(self, lab):
             return lab
 
-    class NumPyTransformProcessor:
+    class TransformProcessor:
         def apply_transform_batch(self, points, transforms):
             return points
 
@@ -198,8 +198,8 @@ class AdvancedGradientEngine:
 
     def __init__(self, cache_size: int = 1000, memory_limit_mb: int = 100):
         """Initialize advanced gradient engine"""
-        self.color_processor = NumPyColorProcessor()
-        self.transform_processor = NumPyTransformProcessor()
+        self.color_processor = ColorProcessor()
+        self.transform_processor = TransformProcessor()
         self.linear_engine = LinearGradientEngine()
         self.radial_engine = RadialGradientEngine()
 

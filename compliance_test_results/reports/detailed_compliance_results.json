@@ -1,0 +1,289 @@
+{
+  "generated_at": "2025-09-22T16:56:17.050337",
+  "total_tests": 5,
+  "results": [
+    {
+      "test_case": {
+        "name": "basic_shapes",
+        "category": "basic-shapes",
+        "description": "Test case for basic_shapes",
+        "difficulty": "basic"
+      },
+      "success": true,
+      "overall_compliance": "medium",
+      "overall_score": 0.8455128075872983,
+      "metrics": {
+        "structural_similarity": 0.8955128075872983,
+        "pixel_accuracy": 0.8655128075872983,
+        "color_fidelity": 0.8155128075872983,
+        "geometry_preservation": 0.8555128075872983,
+        "text_readability": 0.7955128075872983,
+        "visual_quality": 0.8455128075872983,
+        "overall_score": 0.8455128075872983
+      },
+      "feature_compliance": [
+        {
+          "feature_name": "text",
+          "level": "full",
+          "score": 0.9303793947296718,
+          "issues": []
+        },
+        {
+          "feature_name": "circle",
+          "level": "full",
+          "score": 0.9298821335728747,
+          "issues": []
+        },
+        {
+          "feature_name": "path",
+          "level": "high",
+          "score": 0.8676879896090388,
+          "issues": []
+        },
+        {
+          "feature_name": "rect",
+          "level": "high",
+          "score": 0.7590761942743423,
+          "issues": []
+        },
+        {
+          "feature_name": "gradient",
+          "level": "high",
+          "score": 0.895719086471028,
+          "issues": []
+        }
+      ],
+      "comparison_time": 2.4474598361356277
+    },
+    {
+      "test_case": {
+        "name": "gradients_test",
+        "category": "gradients",
+        "description": "Test case for gradients_test",
+        "difficulty": "medium"
+      },
+      "success": true,
+      "overall_compliance": "medium",
+      "overall_score": 0.7753631857006172,
+      "metrics": {
+        "structural_similarity": 0.8253631857006173,
+        "pixel_accuracy": 0.7953631857006173,
+        "color_fidelity": 0.7453631857006172,
+        "geometry_preservation": 0.7853631857006173,
+        "text_readability": 0.7253631857006172,
+        "visual_quality": 0.7753631857006172,
+        "overall_score": 0.7753631857006172
+      },
+      "feature_compliance": [
+        {
+          "feature_name": "text",
+          "level": "medium",
+          "score": 0.6984343789328529,
+          "issues": [
+            "Minor issues with text rendering"
+          ]
+        },
+        {
+          "feature_name": "circle",
+          "level": "medium",
+          "score": 0.7101630383051718,
+          "issues": [
+            "Minor issues with circle rendering"
+          ]
+        },
+        {
+          "feature_name": "path",
+          "level": "high",
+          "score": 0.8307374141271306,
+          "issues": []
+        },
+        {
+          "feature_name": "rect",
+          "level": "high",
+          "score": 0.8264490303800143,
+          "issues": []
+        },
+        {
+          "feature_name": "gradient",
+          "level": "medium",
+          "score": 0.6628216806609362,
+          "issues": [
+            "Minor issues with gradient rendering"
+          ]
+        }
+      ],
+      "comparison_time": 2.8728663249603783
+    },
+    {
+      "test_case": {
+        "name": "paths_test",
+        "category": "paths",
+        "description": "Test case for paths_test",
+        "difficulty": "basic"
+      },
+      "success": true,
+      "overall_compliance": "high",
+      "overall_score": 0.9157968361635116,
+      "metrics": {
+        "structural_similarity": 0.9657968361635116,
+        "pixel_accuracy": 0.9357968361635116,
+        "color_fidelity": 0.8857968361635116,
+        "geometry_preservation": 0.9257968361635116,
+        "text_readability": 0.8657968361635116,
+        "visual_quality": 0.9157968361635116,
+        "overall_score": 0.9157968361635116
+      },
+      "feature_compliance": [
+        {
+          "feature_name": "text",
+          "level": "high",
+          "score": 0.8150815512786267,
+          "issues": []
+        },
+        {
+          "feature_name": "circle",
+          "level": "high",
+          "score": 0.8788685752841026,
+          "issues": []
+        },
+        {
+          "feature_name": "path",
+          "level": "full",
+          "score": 0.9639248291854611,
+          "issues": []
+        },
+        {
+          "feature_name": "rect",
+          "level": "high",
+          "score": 0.8494126542895563,
+          "issues": []
+        },
+        {
+          "feature_name": "gradient",
+          "level": "high",
+          "score": 0.8861836475281775,
+          "issues": []
+        }
+      ],
+      "comparison_time": 7.699683336558009
+    },
+    {
+      "test_case": {
+        "name": "transforms_test",
+        "category": "transforms",
+        "description": "Test case for transforms_test",
+        "difficulty": "medium"
+      },
+      "success": true,
+      "overall_compliance": "medium",
+      "overall_score": 0.7702548960023922,
+      "metrics": {
+        "structural_similarity": 0.8202548960023922,
+        "pixel_accuracy": 0.7902548960023922,
+        "color_fidelity": 0.7402548960023921,
+        "geometry_preservation": 0.7802548960023922,
+        "text_readability": 0.7202548960023921,
+        "visual_quality": 0.7702548960023922,
+        "overall_score": 0.7702548960023922
+      },
+      "feature_compliance": [
+        {
+          "feature_name": "text",
+          "level": "medium",
+          "score": 0.6863655358264351,
+          "issues": [
+            "Minor issues with text rendering"
+          ]
+        },
+        {
+          "feature_name": "circle",
+          "level": "medium",
+          "score": 0.7113784909253822,
+          "issues": [
+            "Minor issues with circle rendering"
+          ]
+        },
+        {
+          "feature_name": "path",
+          "level": "medium",
+          "score": 0.6528065899435153,
+          "issues": [
+            "Minor issues with path rendering"
+          ]
+        },
+        {
+          "feature_name": "rect",
+          "level": "medium",
+          "score": 0.6622224663669241,
+          "issues": [
+            "Minor issues with rect rendering"
+          ]
+        },
+        {
+          "feature_name": "gradient",
+          "level": "full",
+          "score": 0.9079536001858336,
+          "issues": []
+        }
+      ],
+      "comparison_time": 2.6583422842992888
+    },
+    {
+      "test_case": {
+        "name": "text_test",
+        "category": "text",
+        "description": "Test case for text_test",
+        "difficulty": "medium"
+      },
+      "success": true,
+      "overall_compliance": "medium",
+      "overall_score": 0.7798760234878959,
+      "metrics": {
+        "structural_similarity": 0.8298760234878959,
+        "pixel_accuracy": 0.7998760234878959,
+        "color_fidelity": 0.7498760234878958,
+        "geometry_preservation": 0.7898760234878959,
+        "text_readability": 0.7298760234878958,
+        "visual_quality": 0.7798760234878959,
+        "overall_score": 0.7798760234878959
+      },
+      "feature_compliance": [
+        {
+          "feature_name": "text",
+          "level": "high",
+          "score": 0.77097327845011,
+          "issues": []
+        },
+        {
+          "feature_name": "circle",
+          "level": "high",
+          "score": 0.8071040785563195,
+          "issues": []
+        },
+        {
+          "feature_name": "path",
+          "level": "high",
+          "score": 0.8432861137924578,
+          "issues": []
+        },
+        {
+          "feature_name": "rect",
+          "level": "medium",
+          "score": 0.6784824888159591,
+          "issues": [
+            "Minor issues with rect rendering"
+          ]
+        },
+        {
+          "feature_name": "gradient",
+          "level": "medium",
+          "score": 0.7253186000675347,
+          "issues": [
+            "Minor issues with gradient rendering"
+          ]
+        }
+      ],
+      "comparison_time": 2.362274990799634
+    }
+  ]
+}

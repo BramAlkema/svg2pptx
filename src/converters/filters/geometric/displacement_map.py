@@ -36,6 +36,7 @@ from lxml import etree
 from dataclasses import dataclass
 
 from ..core.base import Filter, FilterContext, FilterResult
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -331,7 +332,7 @@ class DisplacementMapFilter(Filter):
             PowerPoint DrawingML for simple displacement
         """
         # Calculate basic displacement effect
-        scale_emu = context.unit_converter.to_emu(f"{abs(params.scale)}px")
+        scale_emu = unit(f"{abs(params.scale)}px").to_emu()
 
         return f'''<!-- feDisplacementMap Vector-First Simple Displacement -->
 <a:custGeom>
@@ -373,7 +374,7 @@ class DisplacementMapFilter(Filter):
         """
         # Calculate subdivision parameters
         subdivision_count = self._calculate_adaptive_subdivisions(params, 100.0)
-        scale_emu = context.unit_converter.to_emu(f"{abs(params.scale)}px")
+        scale_emu = unit(f"{abs(params.scale)}px").to_emu()
 
         return f'''<!-- feDisplacementMap Vector-First Complex Displacement -->
 <a:custGeom>
@@ -979,8 +980,8 @@ class DisplacementMapFilter(Filter):
         # Convert points to EMU units
         emu_points = []
         for x, y in displaced_points:
-            emu_x = context.unit_converter.to_emu(f"{x}px")
-            emu_y = context.unit_converter.to_emu(f"{y}px")
+            emu_x = unit(f"{x}px").to_emu()
+            emu_y = unit(f"{y}px").to_emu()
             emu_points.append((emu_x, emu_y))
 
         # Build path commands
@@ -1032,8 +1033,8 @@ class DisplacementMapFilter(Filter):
         # Convert to EMU
         emu_points = []
         for x, y in displaced_curve_points:
-            emu_x = context.unit_converter.to_emu(f"{x}px")
-            emu_y = context.unit_converter.to_emu(f"{y}px")
+            emu_x = unit(f"{x}px").to_emu()
+            emu_y = unit(f"{y}px").to_emu()
             emu_points.append((emu_x, emu_y))
 
         if path_type == "cubic_bezier" and len(emu_points) == 4:
@@ -1088,8 +1089,8 @@ class DisplacementMapFilter(Filter):
             # Convert points to EMU units
             emu_points = []
             for x, y in sub_path:
-                emu_x = context.unit_converter.to_emu(f"{x}px")
-                emu_y = context.unit_converter.to_emu(f"{y}px")
+                emu_x = unit(f"{x}px").to_emu()
+                emu_y = unit(f"{y}px").to_emu()
                 emu_points.append((emu_x, emu_y))
 
             # Build path commands for this sub-path

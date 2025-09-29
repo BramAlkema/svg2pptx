@@ -1,0 +1,96 @@
+{
+  "test_case": "department_slides",
+  "detection_strategy": "layer_groups",
+  "expected_result": {
+    "is_multislide": true,
+    "slide_count": 4,
+    "detection_method": "layer_group_analysis",
+    "slides": [
+      {
+        "slide_number": 1,
+        "elements": ["layer_engineering"],
+        "content_summary": "Engineering Department overview with team structure",
+        "layer_id": "layer_engineering",
+        "css_class": "department-slide",
+        "department": "Engineering",
+        "team_count": 3,
+        "total_members": 25,
+        "key_metrics": {
+          "q4_deliverables": 15,
+          "team_growth": "+23%"
+        },
+        "teams": [
+          {"name": "Frontend Team", "size": 8},
+          {"name": "Backend Team", "size": 12},
+          {"name": "DevOps Team", "size": 5}
+        ]
+      },
+      {
+        "slide_number": 2,
+        "elements": ["layer_marketing"],
+        "content_summary": "Marketing Department with campaign performance",
+        "layer_id": "layer_marketing",
+        "css_class": "department-slide",
+        "department": "Marketing",
+        "campaign_count": 3,
+        "key_metrics": {
+          "lead_generation": 1847,
+          "campaign_budget": "$280K"
+        },
+        "campaigns": [
+          {"name": "Digital Campaign", "roi": "250%"},
+          {"name": "Content Strategy", "engagement": "+45%"},
+          {"name": "Brand Awareness", "reach": "2.3M"}
+        ]
+      },
+      {
+        "slide_number": 3,
+        "elements": ["layer_sales"],
+        "content_summary": "Sales Department performance and metrics",
+        "layer_id": "layer_sales",
+        "css_class": "department-slide",
+        "department": "Sales",
+        "key_metrics": {
+          "q4_revenue": "$2.1M",
+          "ytd_revenue": "$8.7M",
+          "target_achievement": "115%",
+          "pipeline_value": "$3.2M"
+        },
+        "top_performer": "Sarah Chen (125% quota)"
+      },
+      {
+        "slide_number": 4,
+        "elements": ["layer_operations"],
+        "content_summary": "Operations Department efficiency and improvements",
+        "layer_id": "layer_operations",
+        "css_class": "department-slide",
+        "department": "Operations",
+        "key_metrics": {
+          "efficiency_improvement": "+18%",
+          "cost_reduction": "$127K",
+          "automation_workflows": 7,
+          "quality_score": "94.2%"
+        },
+        "initiatives": ["Digital Transformation Phase 2 complete"]
+      }
+    ],
+    "metadata": {
+      "layer_detection_method": "id_attribute_analysis",
+      "grouping_strategy": "department_based",
+      "layout_type": "grid_organization",
+      "element_count": 45,
+      "color_coding": {
+        "engineering": "#1976d2",
+        "marketing": "#7b1fa2",
+        "sales": "#388e3c",
+        "operations": "#f57c00"
+      }
+    },
+    "validation_criteria": {
+      "layer_grouping": "should detect 4 distinct department layers",
+      "element_assignment": "should assign elements to correct department layer",
+      "css_class_detection": "should identify department-slide class",
+      "content_extraction": "should extract department-specific metrics and data"
+    }
+  }
+}

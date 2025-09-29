@@ -24,7 +24,8 @@ SVG Marker Reference:
 
 import re
 import math
-from typing import List, Dict, Tuple, Optional, Any
+import logging
+from typing import List, Dict, Tuple, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from enum import Enum
 from lxml import etree as ET
@@ -32,8 +33,12 @@ from lxml import etree as ET
 from .base import BaseConverter
 from .base import ConversionContext
 from ..services.conversion_services import ConversionServices
-from ..colors import ColorInfo
-from ..transforms import Matrix
+from ..transforms.core import Matrix
+
+if TYPE_CHECKING:
+    from ..color import Color
+
+logger = logging.getLogger(__name__)
 
 
 class MarkerPosition(Enum):
@@ -96,7 +101,7 @@ class MarkerInstance:
     y: float
     angle: float  # Path tangent angle at position
     stroke_width: float
-    color: Optional[ColorInfo]
+    color: Optional["Color"]
 
 
 class MarkerConverter(BaseConverter):
@@ -265,7 +270,7 @@ class MarkerConverter(BaseConverter):
         
         # Parse transform
         transform_str = use_element.get('transform', '')
-        transform_matrix = self.transform_parser.parse_to_matrix(transform_str)
+        transform_matrix = self.services.transform_parser.parse_to_matrix(transform_str)
         
         # Parse position
         x = float(use_element.get('x', '0'))
@@ -313,7 +318,7 @@ class MarkerConverter(BaseConverter):
         
         # Parse stroke properties for marker scaling
         stroke_width = float(path_element.get('stroke-width', '1'))
-        stroke_color = self.color_parser.parse(path_element.get('stroke', 'black'))
+        stroke_color = self.services.color_parser.parse(path_element.get('stroke', 'black'))
         
         markers_xml = []
         
@@ -445,7 +450,8 @@ class MarkerConverter(BaseConverter):
             )
             transform_matrix = transform_matrix.multiply(vb_transform)
         
-        # Generate group with transform
+        # Generate group with proper transform structure
+        xfrm_attrs, xfrm_body = self._xfrm_attrs_and_body(transform_matrix, context)
         group_xml = f'''<p:grpSp>
             <p:nvGrpSpPr>
                 <p:cNvPr id="{shape_id}" name="symbol_{symbol_def.id}"/>
@@ -453,9 +459,7 @@ class MarkerConverter(BaseConverter):
                 <p:nvPr/>
             </p:nvGrpSpPr>
             <p:grpSpPr>
-                <a:xfrm>
-                    {self._matrix_to_drawingml_transform(transform_matrix)}
-                </a:xfrm>
+                <a:xfrm{xfrm_attrs}>{xfrm_body}</a:xfrm>
             </p:grpSpPr>
             {symbol_def.content_xml}
         </p:grpSp>'''
@@ -564,16 +568,31 @@ class MarkerConverter(BaseConverter):
         return "M 5 0 L 10 5 L 5 10 L 0 5 Z"
     
     def _generate_standard_arrow_drawingml(self, arrow_type: str, transform_matrix: Matrix,
-                                         color: Optional[ColorInfo], context: ConversionContext) -> str:
-        """Generate DrawingML for standard arrow types."""
-        path_data = self.standard_arrows[arrow_type]
+                                         color: Optional["Color"], context: ConversionContext) -> str:
+        """Generate DrawingML for standard arrow types using preset geometries."""
         shape_id = context.get_next_shape_id()
-        
-        # Generate color fill
+
+        # Map arrow types to DrawingML preset geometries
+        prst_map = {
+            'arrow': 'triangle',
+            'circle': 'ellipse',
+            'square': 'rect',
+            'diamond': 'diamond'
+        }
+        prst = prst_map.get(arrow_type, 'triangle')
+
+        # Small canonical size in EMU (10px equivalent)
+        cx_emu = self.services.unit_converter.to_emu(10, 'px') if hasattr(self.services, 'unit_converter') else 91440
+        cy_emu = cx_emu
+
+        # Generate proper transform structure
+        xfrm_attrs, xfrm_body = self._xfrm_attrs_and_body(transform_matrix, context)
+
+        # Generate color fill using existing color system
         fill_xml = ""
         if color:
-            fill_xml = f'<a:solidFill>{self.color_parser.to_drawingml(color)}</a:solidFill>'
-        
+            fill_xml = f'<a:solidFill>{self.services.color_parser.to_drawingml(color)}</a:solidFill>'
+
         return f'''<p:sp>
             <p:nvSpPr>
                 <p:cNvPr id="{shape_id}" name="marker_{arrow_type}"/>
@@ -581,22 +600,17 @@ class MarkerConverter(BaseConverter):
                 <p:nvPr/>
             </p:nvSpPr>
             <p:spPr>
-                <a:xfrm>
-                    {self._matrix_to_drawingml_transform(transform_matrix)}
+                <a:xfrm{xfrm_attrs}>
+                    {xfrm_body}
+                    <a:ext cx="{cx_emu}" cy="{cy_emu}"/>
                 </a:xfrm>
-                <a:custGeom>
-                    <a:pathLst>
-                        <a:path>
-                            <a:pathData d="{path_data}"/>
-                        </a:path>
-                    </a:pathLst>
-                </a:custGeom>
+                <a:prstGeom prst="{prst}"><a:avLst/></a:prstGeom>
                 {fill_xml}
             </p:spPr>
         </p:sp>'''
     
     def _generate_custom_marker_drawingml(self, marker_def: MarkerDefinition, 
-                                        transform_matrix: Matrix, color: Optional[ColorInfo],
+                                        transform_matrix: Matrix, color: Optional["Color"],
                                         context: ConversionContext) -> str:
         """Generate DrawingML for custom marker geometry."""
         shape_id = context.get_next_shape_id()
@@ -605,6 +619,9 @@ class MarkerConverter(BaseConverter):
         # This would need to recursively process the marker's child elements
         content_drawingml = marker_def.content_xml  # Simplified
         
+        # Use proper transform structure
+        xfrm_attrs, xfrm_body = self._xfrm_attrs_and_body(transform_matrix, context)
+
         return f'''<p:grpSp>
             <p:nvGrpSpPr>
                 <p:cNvPr id="{shape_id}" name="marker_{marker_def.id}"/>
@@ -612,9 +629,7 @@ class MarkerConverter(BaseConverter):
                 <p:nvPr/>
             </p:nvGrpSpPr>
             <p:grpSpPr>
-                <a:xfrm>
-                    {self._matrix_to_drawingml_transform(transform_matrix)}
-                </a:xfrm>
+                <a:xfrm{xfrm_attrs}>{xfrm_body}</a:xfrm>
             </p:grpSpPr>
             {content_drawingml}
         </p:grpSp>'''
@@ -642,19 +657,41 @@ class MarkerConverter(BaseConverter):
         return (Matrix.translate(-vb_x, -vb_y).
                multiply(Matrix.scale(scale_x, scale_y)))
     
-    def _matrix_to_drawingml_transform(self, matrix: Matrix) -> str:
-        """Convert transform matrix to DrawingML transform elements."""
-        decomp = matrix.decompose()
-        
-        elements = []
-        
-        if abs(decomp['translateX']) > 1e-6 or abs(decomp['translateY']) > 1e-6:
-            tx_emu = self.to_emu(f"{decomp['translateX']}px")
-            ty_emu = self.to_emu(f"{decomp['translateY']}px")
-            elements.append(f'<a:off x="{tx_emu}" y="{ty_emu}"/>')
-        
-        if abs(decomp['rotation']) > 1e-6:
-            angle_units = int(decomp['rotation'] * 60000)
-            elements.append(f'<a:rot angle="{angle_units}"/>')
-        
-        return ''.join(elements)
+    def _xfrm_attrs_and_body(self, matrix: Matrix, context: ConversionContext) -> Tuple[str, str]:
+        """
+        Build DrawingML transform with proper rot attribute and off child.
+
+        Args:
+            matrix: Transform matrix to convert
+            context: Conversion context for EMU conversion
+
+        Returns:
+            Tuple of (attribute_string, body_xml) for <a:xfrm rot="...">{body}</a:xfrm>
+        """
+        try:
+            decomp = matrix.decompose()
+            attrs = ''
+            body = ''
+
+            # Rotation attribute in DrawingML (units = deg * 60000)
+            if abs(decomp['rotation']) > 1e-9:
+                attrs = f' rot="{int(decomp["rotation"] * 60000)}"'
+
+            # Translation child element
+            if abs(decomp['translateX']) > 1e-9 or abs(decomp['translateY']) > 1e-9:
+                # Use context.to_emu if available, otherwise fallback to service
+                if hasattr(context, 'to_emu'):
+                    tx_emu = context.to_emu(f"{decomp['translateX']}px")
+                    ty_emu = context.to_emu(f"{decomp['translateY']}px")
+                else:
+                    # Fallback to services unit converter
+                    tx_emu = self.services.unit_converter.to_emu(decomp['translateX'], 'px')
+                    ty_emu = self.services.unit_converter.to_emu(decomp['translateY'], 'px')
+                body = f'<a:off x="{tx_emu}" y="{ty_emu}"/>'
+
+            return attrs, body
+
+        except Exception as e:
+            # Graceful fallback - return empty transform
+            logger.warning(f"Transform conversion failed: {e}, using identity")
+            return '', ''

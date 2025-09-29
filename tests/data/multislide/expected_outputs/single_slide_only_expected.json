@@ -1,0 +1,74 @@
+{
+  "test_case": "single_slide_only",
+  "detection_strategy": "negative_test",
+  "expected_result": {
+    "is_multislide": false,
+    "slide_count": 1,
+    "detection_method": "none",
+    "reason": "unified_content_layout",
+    "slides": [
+      {
+        "slide_number": 1,
+        "elements": ["entire_document"],
+        "content_summary": "Single cohesive annual report layout",
+        "title": "Company Annual Report",
+        "subtitle": "Fiscal Year 2024",
+        "sections": [
+          {
+            "type": "executive_summary",
+            "content": "Growth achievements and key highlights"
+          },
+          {
+            "type": "financial_highlights",
+            "metrics": {
+              "revenue": "$4.7M",
+              "profit": "$1.2M",
+              "growth": "+34%"
+            }
+          }
+        ],
+        "background_color": "#f8f9fa"
+      }
+    ],
+    "negative_indicators": {
+      "no_slide_boundaries": true,
+      "no_animation_keyframes": true,
+      "no_section_markers": true,
+      "no_nested_documents": true,
+      "no_layer_groups": true,
+      "unified_design_system": true,
+      "continuous_layout": true,
+      "single_document_flow": true
+    },
+    "misleading_elements_ignored": [
+      {
+        "element": "slide_content_section",
+        "reason": "id contains 'slide' but is clearly a content section"
+      },
+      {
+        "element": "animate element",
+        "reason": "visual animation effect, not slide transition"
+      },
+      {
+        "element": "nested layout groups",
+        "reason": "layout structure, not slide hierarchy"
+      }
+    ],
+    "metadata": {
+      "layout_type": "single_page_report",
+      "design_coherence": "unified",
+      "content_flow": "linear",
+      "element_count": 23,
+      "has_header": true,
+      "has_footer": true,
+      "has_navigation": false
+    },
+    "validation_criteria": {
+      "multislide_detection": "should NOT be detected as multislide",
+      "false_positive_avoidance": "should ignore misleading slide-like elements",
+      "unified_layout_recognition": "should recognize single cohesive layout",
+      "content_continuity": "should detect continuous content flow",
+      "design_system_analysis": "should recognize unified design elements"
+    }
+  }
+}

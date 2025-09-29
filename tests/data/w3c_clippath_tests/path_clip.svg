@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <defs>
+    <clipPath id="starClip">
+      <path d="M150,20 L180,80 L240,80 L195,120 L210,180 L150,145 L90,180 L105,120 L60,80 L120,80 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="300" height="200" fill="green" clip-path="url(#starClip)"/>
+</svg>

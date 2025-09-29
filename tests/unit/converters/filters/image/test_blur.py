@@ -201,20 +201,26 @@ class TestGaussianBlurFilter:
         assert result.success is True
 
     def test_integration_with_dependencies(self, gaussian_blur_instance, setup_test_data):
-        """Test GaussianBlurFilter integration with unit converter and other dependencies."""
+        """Test GaussianBlurFilter integration with unit conversion and dependencies."""
+        from unittest.mock import patch
+
         filter_obj = gaussian_blur_instance
 
-        # Test unit conversion integration
-        setup_test_data['mock_unit_converter'].to_emu.return_value = 25400  # Different conversion value
+        # Mock the fluent unit API that GaussianBlurFilter actually uses
+        with patch('src.converters.filters.image.blur.unit') as mock_unit:
+            mock_unit_instance = Mock()
+            mock_unit_instance.to_emu.return_value = 25400  # Different conversion value
+            mock_unit.return_value = mock_unit_instance
 
-        result = filter_obj.apply(
-            setup_test_data['mock_blur_element'],
-            setup_test_data['mock_context']
-        )
+            result = filter_obj.apply(
+                setup_test_data['mock_blur_element'],
+                setup_test_data['mock_context']
+            )
 
-        # Verify unit converter was called
-        setup_test_data['mock_unit_converter'].to_emu.assert_called()
-        assert result.success is True
+            # Verify unit converter integration
+            assert mock_unit.called  # Verify unit() was called
+            assert mock_unit_instance.to_emu.called  # Verify conversion occurred
+            assert result.success is True
 
         # Test context property integration
         setup_test_data['mock_context'].get_property.return_value = 'some_value'
@@ -357,16 +363,21 @@ class TestGaussianBlurFilter:
 
     def test_ooxml_radius_conversion(self, gaussian_blur_instance, setup_test_data):
         """Test _convert_to_ooxml_radius method for EMU conversion."""
+        from unittest.mock import patch
+
         filter_obj = gaussian_blur_instance
 
-        # Mock unit converter for testing
-        setup_test_data['mock_unit_converter'].to_emu.return_value = 63500  # 2.5px in EMUs
+        # Mock the fluent unit API that _convert_to_ooxml_radius actually uses
+        with patch('src.converters.filters.image.blur.unit') as mock_unit:
+            mock_unit_instance = Mock()
+            mock_unit_instance.to_emu.return_value = 63500  # 2.5px in EMUs
+            mock_unit.return_value = mock_unit_instance
 
-        radius = filter_obj._convert_to_ooxml_radius(2.5, setup_test_data['mock_unit_converter'])
-        assert radius == 63500
+            radius = filter_obj._convert_to_ooxml_radius(2.5, setup_test_data['mock_unit_converter'])
+            assert radius == 63500
 
-        # Verify unit converter was called with correct parameters
-        setup_test_data['mock_unit_converter'].to_emu.assert_called_with("2.5px")
+            # Verify unit() was called with correct parameters
+            mock_unit.assert_called_with("2.5px")
 
 
 class TestMotionBlurFilter:

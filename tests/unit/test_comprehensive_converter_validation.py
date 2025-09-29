@@ -122,11 +122,7 @@ class TestComprehensiveConverterValidation:
 
     def test_svg_to_drawingml_converter(self, services):
         """Test the main SVG to DrawingML converter."""
-        svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-            <rect x="20" y="20" width="160" height="160" fill="lightblue"/>
-            <circle cx="100" cy="100" r="40" fill="orange"/>
-            <text x="100" y="180" text-anchor="middle" font-size="14">Test SVG</text>
-        </svg>'''
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="20" y="20" width="160" height="160" fill="lightblue"/><circle cx="100" cy="100" r="40" fill="orange"/><text x="100" y="180" text-anchor="middle" font-size="14">Test SVG</text></svg>'
 
         converter = SVGToDrawingMLConverter()
 
@@ -190,15 +186,7 @@ class TestRealWorldConversionScenarios:
 
     def test_complex_svg_with_gradients(self, services):
         """Test conversion of SVG with gradients."""
-        svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
-            <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <rect width="300" height="200" fill="url(#grad1)" />
-        </svg>'''
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" /><stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" /></linearGradient></defs><rect width="300" height="200" fill="url(#grad1)" /></svg>'
 
         converter = SVGToDrawingMLConverter()
 
@@ -211,11 +199,7 @@ class TestRealWorldConversionScenarios:
 
     def test_complex_svg_with_transforms(self, services):
         """Test conversion of SVG with transforms."""
-        svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-            <g transform="translate(100,100) rotate(45) scale(1.5)">
-                <rect x="-25" y="-25" width="50" height="50" fill="blue"/>
-            </g>
-        </svg>'''
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><g transform="translate(100,100) rotate(45) scale(1.5)"><rect x="-25" y="-25" width="50" height="50" fill="blue"/></g></svg>'
 
         converter = SVGToDrawingMLConverter()
 
@@ -228,8 +212,7 @@ class TestRealWorldConversionScenarios:
 
     def test_edge_case_empty_svg(self, services):
         """Test conversion of empty SVG."""
-        svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-        </svg>'''
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>'
 
         converter = SVGToDrawingMLConverter()
 
@@ -243,9 +226,7 @@ class TestRealWorldConversionScenarios:
 
     def test_malformed_svg_handling(self, services):
         """Test handling of malformed SVG."""
-        svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-            <rect x="10" y="10" width="80" height="80" fill="red"
-        </svg>'''  # Missing closing >
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" fill="red"</svg>'  # Missing closing >
 
         converter = SVGToDrawingMLConverter()
 

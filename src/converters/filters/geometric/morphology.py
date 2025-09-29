@@ -34,6 +34,7 @@ from lxml import etree
 from dataclasses import dataclass
 
 from ..core.base import Filter, FilterContext, FilterResult
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -306,8 +307,8 @@ class MorphologyFilter(Filter):
             PowerPoint DrawingML string for dilate operation
         """
         # Convert radius to EMU units for PowerPoint compatibility (Subtask 2.1.7)
-        radius_x_emu = context.unit_converter.to_emu(f"{params.radius_x}px")
-        radius_y_emu = context.unit_converter.to_emu(f"{params.radius_y}px")
+        radius_x_emu = unit(f"{params.radius_x}px").to_emu()
+        radius_y_emu = unit(f"{params.radius_y}px").to_emu()
 
         # For dilate, stroke thickness should be 2 * radius (expanding outward)
         stroke_thickness_x = radius_x_emu * 2
@@ -379,8 +380,8 @@ class MorphologyFilter(Filter):
             PowerPoint DrawingML string for erode operation
         """
         # Convert radius to EMU units
-        radius_x_emu = context.unit_converter.to_emu(f"{params.radius_x}px")
-        radius_y_emu = context.unit_converter.to_emu(f"{params.radius_y}px")
+        radius_x_emu = unit(f"{params.radius_x}px").to_emu()
+        radius_y_emu = unit(f"{params.radius_y}px").to_emu()
 
         return f'''<!-- Morphology Erode: Vector-First Approach -->
 <a:effectLst>

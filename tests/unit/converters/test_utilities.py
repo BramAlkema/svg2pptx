@@ -187,7 +187,7 @@ class PPTXMockValidator:
         return mock_outputs.get(element_type, {})
 
 
-class TestDataManager:
+class DataManager:
     """Manages test data files and directories"""
     
     def __init__(self, base_dir: Optional[Path] = None):
@@ -318,7 +318,7 @@ def create_comprehensive_test_suite():
     return {
         'parser': SVGElementParser,
         'validator': PPTXMockValidator,
-        'data_manager': TestDataManager,
+        'data_manager': DataManager,
         'benchmarker': PerformanceBenchmarker,
         'mock_creator': create_mock_converter
     }

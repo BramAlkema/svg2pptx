@@ -1,0 +1,94 @@
+{
+  "test_case": "simple_fade_animation",
+  "detection_strategy": "animation_sequences",
+  "expected_result": {
+    "is_multislide": true,
+    "slide_count": 3,
+    "detection_method": "animation_keyframes",
+    "slides": [
+      {
+        "slide_number": 1,
+        "start_time": 0.0,
+        "end_time": 2.0,
+        "duration": 2.0,
+        "elements": ["slide1"],
+        "animation_triggers": [
+          {
+            "element": "slide1 text",
+            "attribute": "opacity",
+            "keyframes": [
+              {"time": 0.0, "value": "1"},
+              {"time": 2.0, "value": "1"},
+              {"time": 6.0, "value": "0"}
+            ]
+          }
+        ],
+        "content_summary": "Welcome slide with fade-out animation",
+        "background_color": "#f0f0f0"
+      },
+      {
+        "slide_number": 2,
+        "start_time": 2.0,
+        "end_time": 4.0,
+        "duration": 2.0,
+        "elements": ["slide2"],
+        "animation_triggers": [
+          {
+            "element": "slide2 text (Key Points)",
+            "attribute": "opacity",
+            "keyframes": [
+              {"time": 0.0, "value": "0"},
+              {"time": 2.0, "value": "1"},
+              {"time": 4.0, "value": "1"},
+              {"time": 6.0, "value": "0"}
+            ]
+          },
+          {
+            "element": "slide2 text (Point 1)",
+            "attribute": "opacity",
+            "keyframes": [
+              {"time": 0.0, "value": "0"},
+              {"time": 2.0, "value": "1"},
+              {"time": 4.0, "value": "1"},
+              {"time": 6.0, "value": "0"}
+            ]
+          }
+        ],
+        "content_summary": "Key points slide with bullet point",
+        "background_color": "#e0e0e0"
+      },
+      {
+        "slide_number": 3,
+        "start_time": 4.0,
+        "end_time": 6.0,
+        "duration": 2.0,
+        "elements": ["slide3"],
+        "animation_triggers": [
+          {
+            "element": "slide3 text",
+            "attribute": "opacity",
+            "keyframes": [
+              {"time": 0.0, "value": "0"},
+              {"time": 4.0, "value": "1"}
+            ]
+          }
+        ],
+        "content_summary": "Thank you slide with fade-in animation",
+        "background_color": "#d0d0d0"
+      }
+    ],
+    "metadata": {
+      "total_duration": 6.0,
+      "animation_complexity": "simple",
+      "slide_transitions": "fade",
+      "element_count": 7,
+      "file_size_kb": 1.2
+    },
+    "validation_criteria": {
+      "timeline_parsing": "should detect 3 distinct animation phases",
+      "element_grouping": "should group elements by animation timing",
+      "keyframe_analysis": "should extract opacity animation keyframes",
+      "slide_boundaries": "should detect boundaries at 0s, 2s, 4s, 6s"
+    }
+  }
+}

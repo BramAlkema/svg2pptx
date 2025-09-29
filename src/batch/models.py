@@ -385,10 +385,30 @@ def create_tables(db_path: str):
         """)
         
         cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_batch_file_drive_metadata_status 
+            CREATE INDEX IF NOT EXISTS idx_batch_file_drive_metadata_status
             ON batch_file_drive_metadata(upload_status)
         """)
-        
+
+        # Create batch_file_storage table for file manager integration
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS batch_file_storage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                batch_job_id VARCHAR(255) NOT NULL,
+                original_filename VARCHAR(255) NOT NULL,
+                stored_path VARCHAR(500) NOT NULL,
+                file_size INTEGER NOT NULL,
+                storage_metadata TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (batch_job_id) REFERENCES batch_jobs(job_id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_batch_file_storage_job_id
+            ON batch_file_storage(batch_job_id)
+        """)
+
         conn.commit()
         logger.info("Database tables and indexes created successfully")
 

@@ -17,7 +17,10 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import re
 import math
+import numpy as np
 from .units import EMU_PER_POINT
+from .viewbox import ViewportEngine, AspectAlign, MeetOrSlice
+from .services.conversion_services import ConversionServices
 from .converters.base import ConverterRegistryFactory, CoordinateSystem, ConversionContext
 
 
@@ -25,26 +28,32 @@ class SVGParser:
     """Parse SVG XML and extract vector graphics elements."""
     
     def __init__(self, svg_content: str):
-        self.root = ET.fromstring(svg_content)
+        # Handle XML declarations properly
+        if isinstance(svg_content, str) and svg_content.strip().startswith('<?xml'):
+            svg_bytes = svg_content.encode('utf-8')
+            self.root = ET.fromstring(svg_bytes)
+        else:
+            self.root = ET.fromstring(svg_content)
         self.width, self.height = self._parse_dimensions()
         self.viewbox = self._parse_viewbox()
         self.gradients = self._parse_gradients()
     
     def _parse_viewbox(self) -> Tuple[float, float, float, float]:
-        """Parse SVG viewBox attribute using canonical ViewportResolver."""
+        """Parse SVG viewBox attribute using canonical ViewportEngine."""
         viewbox = self.root.get('viewBox')
         if viewbox:
             try:
-                # Use the canonical high-performance ViewportResolver for parsing
-                from .viewbox import ViewportResolver
+                # Use ConversionServices for ViewportEngine
+                from .services.conversion_services import ConversionServices
                 import numpy as np
 
-                resolver = ViewportResolver()
+                services = ConversionServices.create_default()
+                resolver = services.viewport_resolver
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox]))
                 if len(parsed) > 0 and len(parsed[0]) >= 4:
                     return tuple(parsed[0][:4])
             except ImportError:
-                # Fallback to legacy parsing if ViewportResolver not available
+                # Fallback to legacy parsing if ViewportEngine not available
                 pass
             except Exception:
                 # Fallback on any parsing error
@@ -110,7 +119,16 @@ class SVGParser:
     
     def _extract_recursive(self, element: ET.Element, elements: List[Dict]) -> None:
         """Recursively extract elements from SVG tree."""
-        tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+        # Handle case where element.tag might be a Cython function
+        try:
+            tag_str = str(element.tag) if hasattr(element.tag, 'split') else element.tag
+            tag = tag_str.split('}')[-1] if '}' in tag_str else tag_str
+        except (TypeError, AttributeError):
+            # Fallback for Cython functions or other edge cases
+            tag = getattr(element, 'tag', 'unknown')
+            if hasattr(tag, '__call__'):
+                tag = str(tag)
+            tag = tag.split('}')[-1] if '}' in str(tag) else str(tag)
         
         if tag in ['rect', 'circle', 'ellipse', 'line', 'path', 'polygon', 'polyline', 'text', 'image', 'g', 'use', 'symbol']:
             elements.append({
@@ -196,52 +214,61 @@ class SVGParser:
         return stops
 
 
-class CoordinateMapper:
-    """Convert between SVG and DrawingML coordinate systems."""
-    
-    def __init__(self, svg_viewbox: Tuple[float, float, float, float], 
-                 slide_width: float = 9144000, slide_height: float = 6858000):
+class ViewportMapping:
+    """Professional viewport-based coordinate transformation using ViewportEngine structured arrays."""
+
+    def __init__(self, viewport_structured_array):
         """
-        Initialize coordinate mapper.
-        
+        Initialize with ViewportEngine calculated structured array.
+
         Args:
-            svg_viewbox: (min_x, min_y, width, height) from SVG
-            slide_width: PowerPoint slide width in EMUs (default: 10 inches)
-            slide_height: PowerPoint slide height in EMUs (default: 7.5 inches)
+            viewport_structured_array: NumPy structured array from ViewportEngine
         """
-        self.svg_viewbox = svg_viewbox
-        self.slide_width = slide_width
-        self.slide_height = slide_height
-        
-        # Calculate scaling factors
-        svg_width = svg_viewbox[2]
-        svg_height = svg_viewbox[3]
-        self.scale_x = slide_width / svg_width
-        self.scale_y = slide_height / svg_height
-    
+        self.mapping = viewport_structured_array
+        self.scale_x = float(viewport_structured_array['scale_x'])
+        self.scale_y = float(viewport_structured_array['scale_y'])
+        self.translate_x = float(viewport_structured_array['translate_x'])
+        self.translate_y = float(viewport_structured_array['translate_y'])
+
     def svg_to_emu(self, x: float, y: float) -> Tuple[int, int]:
-        """Convert SVG coordinates to DrawingML EMUs (English Metric Units)."""
-        # Adjust for viewbox offset
-        x -= self.svg_viewbox[0]
-        y -= self.svg_viewbox[1]
-        
-        # Scale to slide dimensions
-        emu_x = int(x * self.scale_x)
-        emu_y = int(y * self.scale_y)
-        
+        """Convert SVG coordinates to DrawingML EMUs using proper viewport transformation."""
+        # Apply viewport transformation: scale + translate
+        emu_x = int(x * self.scale_x + self.translate_x)
+        emu_y = int(y * self.scale_y + self.translate_y)
         return emu_x, emu_y
-    
+
     def svg_length_to_emu(self, length: float, axis: str = 'x') -> int:
-        """Convert SVG length to EMU."""
+        """Convert SVG length to EMU using uniform scaling."""
+        # Use uniform scale (aspect ratio preserved)
         scale = self.scale_x if axis == 'x' else self.scale_y
         return int(length * scale)
+
+    def calculate_shape_bounding_box_and_relative_coords(self, svg_coords):
+        """
+        Calculate bounding box and convert coordinates to relative positions for DrawingML.
+
+        This method delegates to the ViewportEngine for centralized coordinate transformation.
+
+        Args:
+            svg_coords: List of (x, y) tuples in SVG coordinate space
+
+        Returns:
+            tuple: (emu_x, emu_y, emu_width, emu_height, relative_coords)
+                - emu_x, emu_y: Bounding box position in EMU
+                - emu_width, emu_height: Bounding box size in EMU
+                - relative_coords: List of (rel_x, rel_y) tuples in 0-100000 range for DrawingML
+        """
+        # Delegate to ViewportEngine for centralized coordinate transformation
+        from .viewbox import ViewportEngine
+        engine = ViewportEngine(None)  # Unit converter not needed for this method
+        return engine.calculate_shape_bounding_box_and_relative_coords(svg_coords, self.mapping)
 
 
 class DrawingMLGenerator:
     """Generate DrawingML XML markup from SVG elements."""
-    
-    def __init__(self, coordinate_mapper: CoordinateMapper, gradients: Dict[str, Dict] = None):
-        self.coord_mapper = coordinate_mapper
+
+    def __init__(self, viewport_mapping: ViewportMapping, gradients: Dict[str, Dict] = None):
+        self.coord_mapper = viewport_mapping  # Keep same interface for compatibility
         self.gradients = gradients or {}
         self.shape_id = 1000  # Starting ID for shapes
     
@@ -467,30 +494,76 @@ class DrawingMLGenerator:
         </p:cxnSp>'''
     
     def _generate_path(self, svg_element: Dict) -> str:
-        """Generate DrawingML for SVG path (basic implementation).
+        """Generate DrawingML for SVG path element.
 
-        TODO: Convert SVG paths into actual DrawingML geometry
-        ====================================================
-        PROBLEM: _generate_path currently outputs a placeholder rectangle
-        with comments instead of translating the SVG path data, so arbitrary
-        <path> elements never become real vector shapes.
-
-        FIX NEEDED: Parse SVG path data (d attribute) and convert to
-        DrawingML custom geometry with proper commands (moveTo, lineTo,
-        curveTo, etc.).
+        Converts SVG path with 'd' attribute to DrawingML custom geometry.
+        Supports all SVG path commands: moveTo, lineTo, curveTo, arc, etc.
         """
         attrs = svg_element['attributes']
         path_data = attrs.get('d', '')
 
-        # TODO: Parse path_data and convert to actual DrawingML geometry
-        # This is a simplified path implementation
-        # Full SVG path parsing would require more complex logic
+        if not path_data.strip():
+            return f"<!-- Empty path data -->"
+
+        # Parse SVG path data using modern PathSystem
+        try:
+            from .paths import create_path_system
+
+            # Use proper SVG viewBox dimensions instead of hardcoded 21600x21600
+            # Extract viewBox from SVG root element
+            viewbox_attr = self.parser.root.get('viewBox', '0 0 400 300')
+            try:
+                viewbox_parts = viewbox_attr.strip().split()
+                if len(viewbox_parts) == 4:
+                    vb_min_x, vb_min_y, vb_width, vb_height = [float(p) for p in viewbox_parts]
+                else:
+                    vb_min_x, vb_min_y, vb_width, vb_height = 0, 0, 400, 300
+            except (ValueError, TypeError):
+                vb_min_x, vb_min_y, vb_width, vb_height = 0, 0, 400, 300
+
+            # Create PathSystem with proper SVG dimensions and viewBox
+            path_system = create_path_system(
+                int(vb_width), int(vb_height),
+                (int(vb_min_x), int(vb_min_y), int(vb_width), int(vb_height))
+            )
+            result = path_system.process_path(path_data)
+
+            if not result or not result.path_xml:
+                return f"<!-- Failed to parse path data: {path_data[:100]}... -->"
+
+            # Use calculated bounds from PathSystem
+            bounds = result.bounds
+            min_x = bounds.min_x
+            min_y = bounds.min_y
+            max_x = bounds.max_x
+            max_y = bounds.max_y
+            width = bounds.width
+            height = bounds.height
+            if width <= 0:
+                width = 1
+            if height <= 0:
+                height = 1
+
+            # Use the pre-generated DrawingML path XML from PathSystem
+            path_commands = result.path_xml
+            if not path_commands:
+                return f"<!-- No valid path commands generated -->"
+
+        except Exception as e:
+            # Fallback to comment for debugging
+            return f"<!-- Path parsing error: {str(e)[:100]}... Original: {path_data[:100]}... -->"
+
+        # Bounding box already calculated above in the try block
+
+        # Convert to EMUs
+        emu_x, emu_y = self.coord_mapper.svg_to_emu(min_x, min_y)
+        emu_width = self.coord_mapper.svg_length_to_emu(width, 'x')
+        emu_height = self.coord_mapper.svg_length_to_emu(height, 'y')
+
         shape_id = self.shape_id
         self.shape_id += 1
-        
+
         return f'''
-        <!-- SVG Path: {path_data} -->
-        <!-- Path conversion requires more complex implementation -->
         <p:sp>
             <p:nvSpPr>
                 <p:cNvPr id="{shape_id}" name="Path {shape_id}"/>
@@ -499,12 +572,17 @@ class DrawingMLGenerator:
             </p:nvSpPr>
             <p:spPr>
                 <a:xfrm>
-                    <a:off x="0" y="0"/>
-                    <a:ext cx="914400" cy="914400"/>
+                    <a:off x="{emu_x}" y="{emu_y}"/>
+                    <a:ext cx="{emu_width}" cy="{emu_height}"/>
                 </a:xfrm>
-                <a:prstGeom prst="rect">
+                <a:custGeom>
                     <a:avLst/>
-                </a:prstGeom>
+                    <a:gdLst/>
+                    <a:ahLst/>
+                    <a:cxnLst/>
+                    <a:rect l="0" t="0" r="100000" b="100000"/>
+                    {path_commands}
+                </a:custGeom>
                 {self._generate_fill_and_stroke(attrs)}
             </p:spPr>
             <p:txBody>
@@ -516,6 +594,7 @@ class DrawingMLGenerator:
                 </a:p>
             </p:txBody>
         </p:sp>'''
+
 
     def _generate_polygon(self, svg_element: Dict) -> str:
         """Generate DrawingML for SVG polygon element.
@@ -573,7 +652,7 @@ class DrawingMLGenerator:
                     <a:cxnLst/>
                     <a:rect l="0" t="0" r="0" b="0"/>
                     <a:pathLst>
-                        <a:path w="{emu_width}" h="{emu_height}">
+                        <a:path w="100000" h="100000">
                             {path_commands}
                         </a:path>
                     </a:pathLst>
@@ -646,7 +725,7 @@ class DrawingMLGenerator:
                     <a:cxnLst/>
                     <a:rect l="0" t="0" r="0" b="0"/>
                     <a:pathLst>
-                        <a:path w="{emu_width}" h="{emu_height}">
+                        <a:path w="100000" h="100000">
                             {path_commands}
                         </a:path>
                     </a:pathLst>
@@ -928,22 +1007,32 @@ class DrawingMLGenerator:
 class SVGToDrawingMLConverter:
     """Main converter class that orchestrates the conversion process."""
 
-    def __init__(self, services: 'ConversionServices' = None):
+    def __init__(self, services: 'ConversionServices' = None, use_clean_slate: bool = False):
         """Initialize SVGToDrawingMLConverter with ConversionServices.
 
         Args:
             services: ConversionServices instance (required for new usage, optional for migration)
+            use_clean_slate: If True, enables clean slate architecture integration
         """
         self.parser = None
         self.coord_mapper = None
         self.generator = None
+        self.use_clean_slate = use_clean_slate
 
         # Import here to avoid circular imports
         from .services.conversion_services import ConversionServices
 
         # Create default services if none provided (for migration compatibility)
         if services is None:
-            services = ConversionServices.create_default()
+            if use_clean_slate:
+                # Try to create services with clean slate components
+                try:
+                    services = ConversionServices.create_with_clean_slate()
+                except Exception:
+                    # Fallback to default if clean slate not available
+                    services = ConversionServices.create_default()
+            else:
+                services = ConversionServices.create_default()
 
         self.services = services
     
@@ -953,24 +1042,66 @@ class SVGToDrawingMLConverter:
         self.parser = SVGParser(svg_content)
         elements = self.parser.extract_elements()
         
-        # Set up coordinate mapping
-        self.coord_mapper = CoordinateMapper(self.parser.viewbox)
+        # Use services bootstrap to wire all services properly
+        from services_bootstrap import build_services
+
+        # Set up professional viewport mapping using ViewportEngine fluent API
+        # Use standard PowerPoint slide dimensions for proper scaling
+        STANDARD_SLIDE_WIDTH_EMU = 9144000   # 10 inches
+        STANDARD_SLIDE_HEIGHT_EMU = 6858000  # 7.5 inches
+
+        # Build properly wired services with viewport mapping
+        self.services = build_services(self.parser.root, STANDARD_SLIDE_WIDTH_EMU, STANDARD_SLIDE_HEIGHT_EMU)
+
+        # Get viewport mapping from services for coord_mapper compatibility
+        viewport_mapping = self.services.get_viewport_mapping()
+
+        # Create viewport mapping wrapper for coordinate transformation
+        self.coord_mapper = ViewportMapping(viewport_mapping)
         
         # Get the converter registry with services
-        registry = ConverterRegistryFactory.get_registry(services=self.services)
-        
-        # Create conversion context with proper coordinate system
-        svg_root = ET.fromstring(svg_content)
-        coord_sys = CoordinateSystem(self.parser.viewbox)
-        context = ConversionContext(svg_root, services=self.services)
-        context.coordinate_system = coord_sys
+        if self.use_clean_slate:
+            # Use hybrid registry with clean slate components
+            try:
+                from .config.hybrid_config import HybridConversionConfig
+                hybrid_config = HybridConversionConfig.create_hybrid_paths_only()
+                registry = ConverterRegistryFactory.get_hybrid_registry(services=self.services, hybrid_config=hybrid_config)
+            except ImportError:
+                # Fallback to regular registry if hybrid config not available
+                registry = ConverterRegistryFactory.get_registry(services=self.services)
+        else:
+            registry = ConverterRegistryFactory.get_registry(services=self.services)
+
+        # Create conversion context with proper coordinate system from services
+        context = ConversionContext(self.parser.root, services=self.services)
+
+        # Use coordinate system from services (which has proper viewport mapping integration)
+        if hasattr(self.services, 'coordinate_system'):
+            context.coordinate_system = self.services.coordinate_system
+        else:
+            # Fallback to original coordinate system
+            coord_sys = CoordinateSystem(self.parser.viewbox)
+            context.coordinate_system = coord_sys
+
+        context.converter_registry = registry
+
+        # Pass SVG viewport dimensions to context for proper coordinate scaling
+        context.svg_width = self.parser.width
+        context.svg_height = self.parser.height
+
+        # Pass viewport mapping to context for consistent coordinate transformation
+        # Use the wrapped viewport mapping if available, otherwise use raw mapping
+        if hasattr(self.services, 'viewport_mapping_wrapper'):
+            context.viewport_mapping = self.services.viewport_mapping_wrapper
+        else:
+            context.viewport_mapping = viewport_mapping
         
         # Add parsed gradients to context
         context.gradients = self.parser.gradients
 
         # Register gradients with gradient service for DrawingML conversion
         if self.parser.gradients and self.services.gradient_service:
-            svg_root = ET.fromstring(svg_content)
+            svg_root = self.parser.root
             defs = svg_root.find('.//defs') or svg_root.find('.//{http://www.w3.org/2000/svg}defs')
             if defs is not None:
                 # Register linear gradients

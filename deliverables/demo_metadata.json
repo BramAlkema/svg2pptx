@@ -1,0 +1,10 @@
+{
+  "conversion_time": 1.4454326629638672,
+  "timestamp": "2025-09-23T22:02:18.476626",
+  "input_file": "/Users/ynse/projects/svg2pptx/deliverables/test_complex_paths.svg",
+  "output_file": "/Users/ynse/projects/svg2pptx/deliverables/demo_output.pptx",
+  "input_size": 3683,
+  "output_size": 6848,
+  "path_count": 13,
+  "path_system_version": "2.0.0"
+}

@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <title>Malformed Structure Test - Should Handle Gracefully</title>
+
+  <!-- Test case: Malformed SVG structure that should be handled robustly -->
+
+  <!-- Missing closing tags test -->
+  <g id="unclosed_group">
+    <rect width="800" height="600" fill="#fff5f5"/>
+    <text x="400" y="50" text-anchor="middle" font-size="24" fill="#dc3545" font-weight="bold">Malformed Structure Test</text>
+
+    <!-- Intentionally missing closing g tag -->
+    <g class="malformed-group">
+      <rect x="50" y="100" width="300" height="200" fill="#f8d7da" stroke="#dc3545" stroke-width="2" rx="8"/>
+      <text x="200" y="140" text-anchor="middle" font-size="16" fill="#721c24" font-weight="bold">Unclosed Group</text>
+      <text x="200" y="165" text-anchor="middle" font-size="12" fill="#721c24">This group is not properly closed</text>
+
+      <!-- Nested unclosed group -->
+      <g class="nested-malformed">
+        <circle cx="200" cy="220" r="30" fill="#dc3545"/>
+        <text x="200" y="225" text-anchor="middle" font-size="12" fill="white">Nested</text>
+        <!-- Missing closing tag -->
+
+    <!-- Orphaned elements (missing opening tag) -->
+    <text x="200" y="280" text-anchor="middle" font-size="12" fill="#721c24">Orphaned text element</text>
+    </rect> <!-- Wrong closing tag -->
+
+  <!-- Slide 1: Invalid attributes and malformed elements -->
+  <g id="slide_1_malformed" class="slide-boundary" data-invalid-attr="test">
+    <rect x="400" y="100" width="350" height="200" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="8"/>
+    <text x="575" y="140" text-anchor="middle" font-size="16" fill="#856404" font-weight="bold">Invalid Attributes</text>
+
+    <!-- Element with invalid attributes -->
+    <rect x="420" y="160" width="310" height="50"
+          fill="invalid-color"
+          stroke-width="not-a-number"
+          rx="negative-radius"
+          invalid-attribute="test"/>
+    <text x="575" y="185" text-anchor="middle" font-size="12" fill="#856404">Rectangle with invalid attributes</text>
+
+    <!-- Malformed coordinates -->
+    <circle cx="not-a-number" cy="abc" r="invalid" fill="#ffc107"/>
+    <text x="575" y="210" text-anchor="middle" font-size="12" fill="#856404">Circle with invalid coordinates</text>
+
+    <!-- Self-closing tag incorrectly closed -->
+    <line x1="430" y1="240" x2="720" y2="240" stroke="#856404" stroke-width="2"></line>
+
+    <!-- Empty elements -->
+    <g></g>
+    <rect></rect>
+    <text></text>
+  </g>
+
+  <!-- Slide 2: Mixed namespaces and unknown elements -->
+  <g id="slide_2_mixed" class="slide-boundary" transform="translate(0, 300)">
+    <rect width="800" height="300" fill="#e8f5e8"/>
+    <text x="400" y="40" text-anchor="middle" font-size="16" fill="#155724" font-weight="bold">Mixed Namespaces &amp; Unknown Elements</text>
+
+    <!-- Unknown namespace elements -->
+    <unknown:element unknown:attr="value">
+      <rect x="50" y="60" width="200" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+      <text x="150" y="100" text-anchor="middle" font-size="14" fill="#155724">Unknown namespace</text>
+      <text x="150" y="120" text-anchor="middle" font-size="12" fill="#155724">Should be ignored safely</text>
+    </unknown:element>
+
+    <!-- Custom elements that don't exist in SVG spec -->
+    <customElement attr1="value1" attr2="value2">
+      <rect x="280" y="60" width="200" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+      <text x="380" y="100" text-anchor="middle" font-size="14" fill="#155724">Custom element</text>
+      <text x="380" y="120" text-anchor="middle" font-size="12" fill="#155724">Non-standard SVG</text>
+    </customElement>
+
+    <!-- Elements with script-like content (security test) -->
+    <rect x="510" y="60" width="240" height="100" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="8"/>
+    <text x="630" y="90" text-anchor="middle" font-size="14" fill="#155724">Script-like content</text>
+    <text x="630" y="110" text-anchor="middle" font-size="12" fill="#155724">onclick="alert('test')"</text>
+    <text x="630" y="130" text-anchor="middle" font-size="12" fill="#155724">Should be sanitized</text>
+
+    <!-- Deeply nested malformed structure -->
+    <g>
+      <g>
+        <g>
+          <g>
+            <g>
+              <!-- Extremely deep nesting -->
+              <rect x="100" y="180" width="150" height="80" fill="#a8d8a8"/>
+              <text x="175" y="220" text-anchor="middle" font-size="12" fill="#155724">Deep nesting</text>
+              <!-- Missing multiple closing tags -->
+
+    <!-- Invalid transform attributes -->
+    <g transform="invalid-transform-value">
+      <rect x="300" y="180" width="150" height="80" fill="#a8d8a8"/>
+      <text x="375" y="220" text-anchor="middle" font-size="12" fill="#155724">Invalid transform</text>
+    </g>
+
+    <!-- Circular references in use/def -->
+    <defs>
+      <g id="circular1">
+        <use href="#circular2"/>
+      </g>
+      <g id="circular2">
+        <use href="#circular1"/>
+      </g>
+    </defs>
+    <use href="#circular1" x="500" y="180"/>
+
+    <!-- Extremely large numbers -->
+    <rect x="99999999999" y="99999999999" width="999999999" height="999999999" fill="#28a745" opacity="0.1"/>
+
+    <!-- Negative dimensions -->
+    <rect x="600" y="180" width="-50" height="-30" fill="#dc3545"/>
+
+  </g>
+
+  <!-- Incomplete slide (no closing tag at all) -->
+  <g id="slide_3_incomplete" class="slide-boundary" transform="translate(0, 500)">
+    <rect width="800" height="100" fill="#fce4ec"/>
+    <text x="400" y="30" text-anchor="middle" font-size="16" fill="#880e4f" font-weight="bold">Incomplete Slide</text>
+
+    <rect x="50" y="40" width="700" height="50" fill="#f8bbd9" stroke="#e91e63" stroke-width="2" rx="8"/>
+    <text x="400" y="70" text-anchor="middle" font-size="14" fill="#880e4f">This slide is missing its closing tag</text>
+
+    <!-- This slide deliberately has no closing </g> tag -->
+
+  <!-- Invalid CDATA sections -->
+  <![CDATA[
+    This CDATA section contains invalid content
+    <script>alert('This should not execute')</script>
+    ]]>
+
+  <!-- Comments in wrong places -->
+  <!-- This comment is outside of proper structure -->
+
+  <!-- Orphaned closing tags -->
+  </g>
+  </rect>
+  </circle>
+  </unknown:element>
+
+  <!-- Test annotations -->
+  <g class="test-annotations" opacity="0.7">
+    <rect x="20" y="520" width="760" height="60" fill="white" stroke="#6c757d" stroke-width="1" rx="4"/>
+    <text x="400" y="540" text-anchor="middle" font-size="12" fill="#495057" font-weight="bold">Malformed Structure Test</text>
+    <text x="30" y="555" font-size="10" fill="#6c757d">Tests: Unclosed tags, invalid attributes, unknown elements, circular references</text>
+    <text x="30" y="570" font-size="10" fill="#6c757d">Expected: Graceful handling without crashes, proper error recovery</text>
+  </g>
+
+<!-- Deliberately missing closing SVG tag to test parser robustness -->

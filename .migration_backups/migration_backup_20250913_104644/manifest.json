@@ -1,9 +1,0 @@
-{
-  "backup_id": "migration_backup_20250913_104644",
-  "timestamp": "20250913_104644",
-  "description": "Test backup",
-  "files": [
-    "test_unit_converter_comprehensive.py"
-  ],
-  "project_root": "/Users/ynse/projects/svg2pptx"
-}

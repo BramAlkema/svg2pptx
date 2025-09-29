@@ -34,54 +34,105 @@ if TYPE_CHECKING:
         from ..units import UnitConverter
         from ..color import Color
         from ..transforms import Transform
-        from ..viewbox import ViewportResolver
+        from ..viewbox import ViewportEngine
     except ImportError:
         from src.units import UnitConverter
         from src.color import Color
         from src.transforms import Transform
-        from src.viewbox import ViewportResolver
+        from src.viewbox import ViewportEngine
 
 logger = logging.getLogger(__name__)
 
 
 class CoordinateSystem:
-    """Manages coordinate transformations between SVG and DrawingML."""
-    
+    """Manages coordinate transformations between SVG and DrawingML with SVG-compliant alignment."""
+
     def __init__(self, viewbox: Tuple[float, float, float, float],
-                 slide_width: float = 9144000, 
-                 slide_height: float = 6858000):
+                 slide_width: Optional[float] = None,
+                 slide_height: Optional[float] = None,
+                 preserve_aspect_ratio: bool = True,
+                 align: str = "xMidYMid"):
         """
-        Initialize coordinate system.
-        
+        Initialize coordinate system with SVG preserveAspectRatio support.
+
         Args:
             viewbox: SVG viewBox (x, y, width, height)
-            slide_width: PowerPoint slide width in EMUs
-            slide_height: PowerPoint slide height in EMUs
+            slide_width: PowerPoint slide width in EMUs (defaults to standard 10" slide)
+            slide_height: PowerPoint slide height in EMUs (defaults to standard 7.5" slide)
+            preserve_aspect_ratio: Whether to preserve aspect ratio (SVG 'meet' behavior)
+            align: SVG alignment mode - one of 9 modes:
+                   xMinYMin, xMidYMin, xMaxYMin,
+                   xMinYMid, xMidYMid, xMaxYMid,
+                   xMinYMax, xMidYMax, xMaxYMax
         """
+        # Import slide constants from units module
+        try:
+            from ..units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
+        except ImportError:
+            # Fallback for test environments
+            from src.units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
+
         self.viewbox = viewbox
-        self.slide_width = slide_width
-        self.slide_height = slide_height
-        
+        self.slide_width = slide_width if slide_width is not None else SLIDE_WIDTH_EMU
+        self.slide_height = slide_height if slide_height is not None else SLIDE_HEIGHT_EMU
+        self.preserve_aspect_ratio = preserve_aspect_ratio
+        self.align = align or "xMidYMid"
+
         # Extract SVG dimensions from viewbox for compatibility
         self.svg_width = viewbox[2]
         self.svg_height = viewbox[3]
-        
+
         # Calculate scaling factors
-        self.scale_x = slide_width / viewbox[2] if viewbox[2] > 0 else 1
-        self.scale_y = slide_height / viewbox[3] if viewbox[3] > 0 else 1
-        
-        # Maintain aspect ratio option
-        self.preserve_aspect_ratio = True
+        self.scale_x = self.slide_width / viewbox[2] if viewbox[2] > 0 else 1
+        self.scale_y = self.slide_height / viewbox[3] if viewbox[3] > 0 else 1
+
         if self.preserve_aspect_ratio:
+            # Uniform scaling (SVG 'meet' behavior)
             self.scale = min(self.scale_x, self.scale_y)
             self.scale_x = self.scale_y = self.scale
-            
-            # Center the content if aspect ratio is preserved
-            self.offset_x = (slide_width - viewbox[2] * self.scale) / 2
-            self.offset_y = (slide_height - viewbox[3] * self.scale) / 2
+            # Calculate alignment offsets
+            self.offset_x, self.offset_y = self._compute_alignment_offsets()
         else:
-            self.offset_x = 0
-            self.offset_y = 0
+            # Non-uniform scaling (SVG 'none' behavior - stretch to fit)
+            self.offset_x = 0.0
+            self.offset_y = 0.0
+
+    def _compute_alignment_offsets(self) -> Tuple[float, float]:
+        """
+        Compute alignment offsets for SVG-compliant positioning.
+
+        Supports all 9 SVG alignment modes:
+        - X alignment: xMin (left), xMid (center), xMax (right)
+        - Y alignment: YMin (top), YMid (middle), YMax (bottom)
+
+        Returns:
+            Tuple of (offset_x, offset_y) in EMU units
+        """
+        # Calculate scaled dimensions
+        scaled_width = self.viewbox[2] * self.scale
+        scaled_height = self.viewbox[3] * self.scale
+
+        # Available space for alignment
+        extra_width = self.slide_width - scaled_width
+        extra_height = self.slide_height - scaled_height
+
+        # Horizontal alignment
+        if self.align.startswith("xMin"):
+            offset_x = 0.0
+        elif self.align.startswith("xMax"):
+            offset_x = extra_width
+        else:  # xMid (default)
+            offset_x = extra_width / 2.0
+
+        # Vertical alignment
+        if self.align.endswith("YMin"):
+            offset_y = 0.0
+        elif self.align.endswith("YMax"):
+            offset_y = extra_height
+        else:  # YMid (default)
+            offset_y = extra_height / 2.0
+
+        return offset_x, offset_y
     
     def svg_to_emu(self, x: float, y: float) -> Tuple[int, int]:
         """Convert SVG coordinates to EMUs."""
@@ -112,23 +163,30 @@ class ConversionContext:
     with SVG's actual dimensions. Falls back to 800×600 default when no metadata available.
     """
 
-    def __init__(self, svg_root: Optional[ET.Element] = None, services: ConversionServices = None):
-        """Initialize ConversionContext with backward compatibility.
+    def __init__(self, svg_root: Optional[ET.Element] = None, services: ConversionServices = None,
+                 parent_ctm: Optional['numpy.ndarray'] = None, viewport_matrix: Optional['numpy.ndarray'] = None,
+                 parent_style: Optional[Dict[str, str]] = None):
+        """Initialize ConversionContext with CTM and CSS style support.
 
         Args:
             svg_root: Optional SVG root element
             services: ConversionServices instance (auto-created if None for backward compatibility)
+            parent_ctm: Parent element's Current Transformation Matrix (3x3 numpy array)
+            viewport_matrix: Root viewport transformation matrix (3x3 numpy array)
+            parent_style: Parent element's computed CSS style for inheritance
         """
         # Backward compatibility: auto-create services if not provided
         if services is None:
             from ..services.conversion_services import ConversionServices
-            services = ConversionServices.create_default()
-            # Log warning about deprecated usage
-            import logging
-            logging.warning(
+            services = ConversionServices.create_default(svg_root=svg_root)
+            # Issue deprecation warning
+            import warnings
+            warnings.warn(
                 "ConversionContext created without explicit ConversionServices. "
                 "This usage is deprecated and will be removed in future versions. "
-                "Please provide ConversionServices explicitly."
+                "Please provide ConversionServices explicitly.",
+                DeprecationWarning,
+                stacklevel=2
             )
 
         self.coordinate_system: Optional[CoordinateSystem] = None
@@ -145,11 +203,33 @@ class ConversionContext:
         # Use services for all service access
         self.services = services
 
+        # CSS style inheritance
+        self.parent_style = parent_style or {}
+
         # Initialize viewport context from SVG metadata
         self.viewport_context = self._create_viewport_context(svg_root)
 
-        # Initialize coordinate system from SVG metadata
-        self.coordinate_system = self._create_coordinate_system(svg_root)
+        # Initialize coordinate system from services or SVG metadata
+        if hasattr(services, 'coordinate_system') and services.coordinate_system is not None:
+            # Use coordinate system from services (includes proper viewport mapping)
+            self.coordinate_system = services.coordinate_system
+        else:
+            # Fallback to creating coordinate system from SVG metadata
+            self.coordinate_system = self._create_coordinate_system(svg_root)
+
+        # Initialize CTM (Current Transformation Matrix) support
+        self.parent_ctm = parent_ctm
+        self.viewport_matrix = viewport_matrix
+        self.element_ctm: Optional['numpy.ndarray'] = None
+
+        # Calculate element CTM if we have the necessary components
+        if svg_root is not None and viewport_matrix is not None:
+            try:
+                from ..transforms.matrix_composer import element_ctm
+                self.element_ctm = element_ctm(svg_root, parent_ctm, viewport_matrix)
+            except ImportError:
+                # Transforms module not available, use fallback
+                self.element_ctm = None
 
         # Initialize converter registry for nested conversions
         self.converter_registry: Optional[ConverterRegistry] = None
@@ -298,7 +378,7 @@ class ConversionContext:
 
     def _create_coordinate_system(self, svg_root: Optional[ET.Element]) -> Optional[CoordinateSystem]:
         """
-        Create coordinate system from SVG root element.
+        Create coordinate system from SVG root element with preserveAspectRatio support.
 
         Args:
             svg_root: Optional SVG root element
@@ -326,8 +406,66 @@ class ConversionContext:
         else:
             viewbox = (0, 0, width, height)
 
-        # Create and return coordinate system
-        return CoordinateSystem(viewbox)
+        # Parse preserveAspectRatio attribute (SVG 'meet|slice|none' + alignment)
+        preserve_aspect_ratio_attr = (svg_root.get('preserveAspectRatio') or '').strip()
+        if not preserve_aspect_ratio_attr:
+            # Default to SVG specification default
+            preserve_aspect_ratio_attr = 'xMidYMid meet'
+
+        preserve_aspect_ratio, align = self._parse_preserve_aspect_ratio(preserve_aspect_ratio_attr)
+
+        logger.debug(f"SVG preserveAspectRatio: '{preserve_aspect_ratio_attr}' -> "
+                    f"preserve={preserve_aspect_ratio}, align='{align}'")
+
+        # Create and return coordinate system with SVG-compliant parameters
+        return CoordinateSystem(viewbox,
+                              preserve_aspect_ratio=preserve_aspect_ratio,
+                              align=align)
+
+    def _parse_preserve_aspect_ratio(self, preserve_aspect_ratio_attr: str) -> Tuple[bool, str]:
+        """
+        Parse SVG preserveAspectRatio attribute.
+
+        Format: [<align>] [meet | slice | none]
+        - align: xMinYMin | xMidYMin | xMaxYMin | xMinYMid | xMidYMid | xMaxYMid |
+                 xMinYMax | xMidYMax | xMaxYMax
+        - meet: preserve aspect ratio, scale to fit entirely (default)
+        - slice: preserve aspect ratio, scale to fill entirely (crop if needed)
+        - none: do not preserve aspect ratio (stretch to fit)
+
+        Args:
+            preserve_aspect_ratio_attr: The preserveAspectRatio attribute value
+
+        Returns:
+            Tuple of (preserve_aspect_ratio: bool, align: str)
+        """
+        if preserve_aspect_ratio_attr.lower() == 'none':
+            return False, 'xMidYMid'
+
+        # Split into components
+        parts = preserve_aspect_ratio_attr.split()
+
+        # Extract alignment (first part if it looks like an alignment, otherwise default)
+        align = 'xMidYMid'  # SVG default
+        meet_or_slice = 'meet'  # SVG default
+
+        for part in parts:
+            part = part.strip()
+            if part in ('xMinYMin', 'xMidYMin', 'xMaxYMin',
+                       'xMinYMid', 'xMidYMid', 'xMaxYMid',
+                       'xMinYMax', 'xMidYMax', 'xMaxYMax'):
+                align = part
+            elif part.lower() in ('meet', 'slice', 'none'):
+                meet_or_slice = part.lower()
+
+        # For now, we only support 'meet' and 'none' behaviors
+        # 'slice' would require cropping support which is more complex
+        preserve = meet_or_slice in ('meet', 'slice')
+
+        if meet_or_slice == 'slice':
+            logger.warning(f"preserveAspectRatio 'slice' not fully supported, treating as 'meet'")
+
+        return preserve, align
 
     def _extract_svg_dimensions(self, svg_root: ET.Element) -> tuple[float, float]:
         """
@@ -348,11 +486,18 @@ class ConversionContext:
         viewbox = svg_root.get('viewBox')
         if viewbox:
             try:
-                # Use the high-performance ViewportResolver for parsing
-                from ..viewbox import ViewportResolver
+                # Use ConversionServices for ViewportEngine
                 import numpy as np
 
-                resolver = ViewportResolver()
+                # Try to get from services if available
+                if hasattr(self, 'services') and self.services and hasattr(self.services, 'viewport_resolver'):
+                    resolver = self.services.viewport_resolver
+                else:
+                    # Fallback to ConversionServices
+                    from ..services.conversion_services import ConversionServices
+                    services = ConversionServices.create_default()
+                    resolver = services.viewport_resolver
+
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox]))
                 if len(parsed) > 0 and len(parsed[0]) >= 4:
                     # viewBox format: "x y width height"
@@ -454,40 +599,126 @@ class ConversionContext:
             return points
 
     def get_cumulative_transform(self, element: ET.Element, viewport_context: Optional = None):
-        """Get cumulative transform matrix including parent transforms."""
+        """
+        Get cumulative transform matrix using robust composition with multiple fallback strategies.
+
+        Uses the new compose() API when available, with graceful fallbacks for reliability.
+        Maintains parent→child composition order per SVG specification.
+        """
         transforms = []
         current = element
 
-        # Collect transforms from element and all parents
+        # Collect transforms from element up to root (child→parent order)
         while current is not None:
             transform_attr = current.get('transform', '')
-            if transform_attr:
+            if transform_attr and transform_attr.strip():
                 transforms.append(transform_attr)
 
             # Check for CSS transforms as well
             css_transform = self._extract_css_transforms(current)
-            if css_transform:
+            if css_transform and css_transform.strip():
                 transforms.append(css_transform)
 
             current = current.getparent()
 
         if not transforms:
-            return self.services.transform_parser.parse_to_matrix('', viewport_context)
+            # No transforms found, return identity
+            parser = self.services.transform_parser
+            if hasattr(parser, 'identity'):
+                return parser.identity()
+            else:
+                return parser.parse_to_matrix('', viewport_context)
 
+        # Use parser's compose() method if available (primary path)
+        parser = self.services.transform_parser
         try:
-            # Apply transforms in reverse order (parent to child)
-            engine = self.services.transform_parser.__class__()
-            for transform_str in reversed(transforms):
-                engine.apply_combined_transforms([transform_str])
+            if hasattr(parser, 'compose'):
+                # Parent→child order (reverse collected order)
+                return parser.compose(reversed(transforms), viewport_context)
 
-            # Convert to legacy Matrix format
-            m = engine.current_matrix
+            # Fallback: incremental multiplication using @ operator
             from ..transforms.core import Matrix
-            return Matrix(m[0,0], m[1,0], m[0,1], m[1,1], m[0,2], m[1,2])
+            result = Matrix.identity()
+            for transform_str in reversed(transforms):
+                try:
+                    transform_matrix = parser.parse_to_matrix(transform_str, viewport_context)
+                    result = result @ transform_matrix if hasattr(result, '__matmul__') else result.multiply(transform_matrix)
+                except Exception as e:
+                    logger.debug(f"Failed to parse transform '{transform_str}': {e}, skipping")
+                    continue
+
+            return result
 
         except Exception as e:
-            logger.warning(f"Cumulative transform calculation failed: {e}, using identity")
-            return self.services.transform_parser.parse_to_matrix('', viewport_context)
+            logger.warning(f"Transform composition failed: {e}, using identity matrix")
+            # Final fallback: return identity matrix
+            if hasattr(parser, 'identity'):
+                return parser.identity()
+            else:
+                return parser.parse_to_matrix('', viewport_context)
+
+    def transform_point(self, x: float, y: float) -> Tuple[float, float]:
+        """
+        Transform a point using the current element's CTM or coordinate system.
+
+        Args:
+            x, y: Point coordinates in SVG user units
+
+        Returns:
+            Transformed coordinates (x, y) in EMU
+        """
+        if self.element_ctm is not None:
+            from ..viewbox.ctm_utils import transform_point_with_ctm
+            return transform_point_with_ctm(self.element_ctm, x, y)
+        elif self.coordinate_system:
+            return self.coordinate_system.svg_to_emu(x, y)
+        else:
+            return x, y
+
+    def transform_length(self, length: float, direction: str = 'x') -> float:
+        """
+        Transform a length using the current element's CTM scale or coordinate system.
+
+        Args:
+            length: Length value in SVG user units
+            direction: 'x' or 'y' for directional scaling
+
+        Returns:
+            Transformed length in EMU
+        """
+        if self.element_ctm is not None:
+            from ..viewbox.ctm_utils import extract_scale_from_ctm
+            scale = extract_scale_from_ctm(self.element_ctm, direction)
+            return length * scale
+        elif self.coordinate_system:
+            return self.coordinate_system.svg_length_to_emu(length, direction)
+        else:
+            return length
+
+    def create_child_context(self, child_element: ET.Element) -> 'ConversionContext':
+        """
+        Create a child ConversionContext with proper CTM and CSS style inheritance.
+
+        Args:
+            child_element: Child SVG element
+
+        Returns:
+            New ConversionContext with proper CTM chain and inherited styles
+        """
+        from ..viewbox.ctm_utils import create_child_context_with_ctm
+
+        # Create child context with CTM propagation
+        child_context = create_child_context_with_ctm(self, child_element)
+
+        # Compute styles for the child element with inheritance
+        if hasattr(self.services, 'style_service'):
+            computed_style = self.services.style_service.compute_style(
+                child_element,
+                self.parent_style
+            )
+            child_context.parent_style = computed_style
+
+        return child_context
 
 
 class BaseConverter(ABC):
@@ -499,7 +730,7 @@ class BaseConverter(ABC):
     must inherit from this class and implement the abstract methods.
 
     The converter uses ConversionServices for dependency injection, providing
-    access to UnitConverter, ColorParser, Transform, and ViewportResolver
+    access to UnitConverter, ColorParser, Transform, and ViewportEngine
     through both direct service access and backward-compatible property accessors.
 
     Example:
@@ -543,14 +774,11 @@ class BaseConverter(ABC):
         self._filter_fallback_chain = None
         self._filter_bounds_calculator = None
 
-    @property
-    def color_parser(self):
-        """Get Color class from services for direct color creation."""
-        return self.services.color_factory
 
     def validate_services(self) -> bool:
         """Validate that all required services are available."""
         return self.services.validate_services()
+
 
     @classmethod
     def create_with_default_services(cls, config: Optional[ConversionConfig] = None) -> 'BaseConverter':
@@ -729,8 +957,7 @@ class BaseConverter(ABC):
 
         # Use the modern Color system for all other colors
         try:
-            from ..color import Color
-            color_obj = Color(color)
+            color_obj = self.services.color_parser(color)
 
             # Handle transparent colors
             if color_obj._alpha == 0:
@@ -1675,6 +1902,7 @@ class ConverterRegistry:
         self.services = services
         self.converters: List[BaseConverter] = []
         self.element_map: Dict[str, List[BaseConverter]] = {}
+        self.ir_bridge: Optional[BaseConverter] = None  # IRConverterBridge for hybrid mode
         
     def register(self, converter: BaseConverter):
         """Register a converter."""
@@ -1688,7 +1916,17 @@ class ConverterRegistry:
         
         logger.info(f"Registered converter: {converter.__class__.__name__} "
                    f"for elements: {converter.supported_elements}")
-    
+
+    def register_ir_bridge(self, ir_bridge: BaseConverter):
+        """
+        Register IRConverterBridge for hybrid mode.
+
+        Args:
+            ir_bridge: IRConverterBridge instance for clean slate integration
+        """
+        self.ir_bridge = ir_bridge
+        logger.info(f"Registered IR bridge: {ir_bridge.__class__.__name__}")
+
     def register_class(self, converter_class: Type[BaseConverter]):
         """Register a converter class (instantiates it with services)."""
         if self.services:
@@ -1700,22 +1938,26 @@ class ConverterRegistry:
     
     def get_converter(self, element: ET.Element) -> Optional[BaseConverter]:
         """Get appropriate converter for an element."""
+        # Check IR bridge first if available and it can handle the element
+        if self.ir_bridge and self.ir_bridge.can_convert(element):
+            return self.ir_bridge
+
         # Extract tag without namespace
         tag = element.tag
         if '}' in tag:
             tag = tag.split('}')[-1]
-            
+
         # Check mapped converters first
         if tag in self.element_map:
             for converter in self.element_map[tag]:
                 if converter.can_convert(element):
                     return converter
-        
+
         # Fallback to checking all converters
         for converter in self.converters:
             if converter.can_convert(element):
                 return converter
-                
+
         return None
     
     def convert_element(self, element: ET.Element, context: ConversionContext) -> Optional[str]:
@@ -1750,7 +1992,7 @@ class ConverterRegistry:
         """Register all default converters for SVG elements."""
         converters_registered = []
         
-        # Register shape converters (enhanced with ViewportResolver)
+        # Register shape converters (enhanced with ViewportEngine)
         try:
             from .shapes import RectangleConverter, CircleConverter, EllipseConverter, PolygonConverter, LineConverter
             self.register_class(RectangleConverter)
@@ -1864,12 +2106,68 @@ class ConverterRegistryFactory:
             registry = ConverterRegistry(services=services)
             registry.register_default_converters()
 
+            # Register IR bridge if clean slate services are available
+            if services and cls._has_clean_slate_services(services):
+                cls._register_ir_bridge(registry, services)
+
             if not force_new:
                 cls._registry_instance = registry
 
             return registry
 
         return cls._registry_instance
+
+    @classmethod
+    def get_hybrid_registry(cls, services: ConversionServices, hybrid_config: Optional[Any] = None) -> ConverterRegistry:
+        """
+        Get a registry configured for hybrid mode with IR bridge.
+
+        Args:
+            services: ConversionServices with clean slate components
+            hybrid_config: Optional hybrid configuration
+
+        Returns:
+            ConverterRegistry with IR bridge configured
+        """
+        registry = ConverterRegistry(services=services)
+        registry.register_default_converters()
+
+        # Always register IR bridge for hybrid mode
+        cls._register_ir_bridge(registry, services, hybrid_config)
+
+        return registry
+
+    @classmethod
+    def _has_clean_slate_services(cls, services: ConversionServices) -> bool:
+        """Check if services has clean slate components available"""
+        return all([
+            hasattr(services, 'ir_scene_factory') and services.ir_scene_factory is not None,
+            hasattr(services, 'policy_engine') and services.policy_engine is not None,
+            hasattr(services, 'mapper_registry') and services.mapper_registry is not None,
+            hasattr(services, 'drawingml_embedder') and services.drawingml_embedder is not None
+        ])
+
+    @classmethod
+    def _register_ir_bridge(cls, registry: ConverterRegistry, services: ConversionServices, hybrid_config: Optional[Any] = None):
+        """Register IR bridge converter with the registry"""
+        try:
+            from .ir_bridge import IRConverterBridge
+            from ..config.hybrid_config import HybridConversionConfig
+
+            # Use provided config or create default hybrid config
+            if hybrid_config is None:
+                hybrid_config = HybridConversionConfig.create_hybrid_paths_only()
+
+            # Create and register IR bridge
+            ir_bridge = IRConverterBridge(services, hybrid_config)
+            registry.register_ir_bridge(ir_bridge)
+
+            logger.info(f"IR bridge registered with mode: {hybrid_config.conversion_mode.value}")
+
+        except ImportError as e:
+            logger.warning(f"Failed to register IR bridge: {e}")
+        except Exception as e:
+            logger.error(f"Error registering IR bridge: {e}")
     
     @classmethod
     def create_test_registry(cls) -> ConverterRegistry:
@@ -1890,3 +2188,7 @@ class ConverterRegistryFactory:
     def reset(cls):
         """Reset the singleton registry instance."""
         cls._registry_instance = None
+
+
+
+

@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Golden Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .summary { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .skip { color: orange; }
+        .error { color: darkred; }
+        .test-case { border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .metrics { font-family: monospace; font-size: 12px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Golden Test Framework Report</h1>
+
+    <div class="summary">
+        <h2>Summary</h2>
+        <p><strong>Total Tests:</strong> 28</p>
+        <p><strong>Pass Rate:</strong> 0.0%</p>
+        <p><strong>Passed:</strong> <span class="pass">0</span></p>
+        <p><strong>Failed:</strong> <span class="fail">21</span></p>
+        <p><strong>Skipped:</strong> <span class="skip">0</span></p>
+        <p><strong>Errors:</strong> <span class="error">7</span></p>
+        <p><strong>Duration:</strong> 0.16 seconds</p>
+        <p><strong>Avg Test Duration:</strong> 0.000 seconds</p>
+    </div>
+
+    <h2>Results by Comparison Type</h2>
+    <table>
+        <tr><th>Comparison Type</th><th>Pass</th><th>Fail</th><th>Skip</th><th>Error</th></tr>
+
+        <tr>
+            <td>pptx_binary</td>
+            <td class="pass">0</td>
+            <td class="fail">7</td>
+            <td class="skip">0</td>
+            <td class="error">0</td>
+        </tr>
+
+        <tr>
+            <td>xml_structure</td>
+            <td class="pass">0</td>
+            <td class="fail">0</td>
+            <td class="skip">0</td>
+            <td class="error">7</td>
+        </tr>
+
+        <tr>
+            <td>performance</td>
+            <td class="pass">0</td>
+            <td class="fail">7</td>
+            <td class="skip">0</td>
+            <td class="error">0</td>
+        </tr>
+
+        <tr>
+            <td>metrics</td>
+            <td class="pass">0</td>
+            <td class="fail">7</td>
+            <td class="skip">0</td>
+            <td class="error">0</td>
+        </tr>
+
+    </table>
+
+    <h2>Test Cases</h2>
+
+    <div class="test-case">
+        <h3>basic_rectangle</h3>
+        <p><strong>Description:</strong> Simple rectangle with fill and stroke</p>
+        <p><strong>Tags:</strong> basic, shapes, rectangle</p>
+        <p><strong>Complexity:</strong> 5</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="80" height="30" fill="blue" stroke="black" stroke-width="2"/>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>basic_circle</h3>
+        <p><strong>Description:</strong> Circle with opacity</p>
+        <p><strong>Tags:</strong> basic, shapes, circle</p>
+        <p><strong>Complexity:</strong> 6</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="40" fill="red" opacity="0.7"/>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>simple_text</h3>
+        <p><strong>Description:</strong> Simple text element</p>
+        <p><strong>Tags:</strong> text, basic</p>
+        <p><strong>Complexity:</strong> 8</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
+            <text x="10" y="30" font-family="Arial" font-size="16" fill="black">Hello World</text>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>complex_text_anchor</h3>
+        <p><strong>Description:</strong> Complex text with anchor and tspan styling (tests documented fixes)</p>
+        <p><strong>Tags:</strong> text, complex, anchor, tspan</p>
+        <p><strong>Complexity:</strong> 15</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+            <text x="100" y="30" text-anchor="middle" font-family="Arial" font-size="14" fill="blue">
+                Centered Text
+                <tspan x="100" y="50" fill="red" font-weight="bold">Bold Line</tspan>
+                <tspan x="100" y="70" font-style="italic">Italic Line</tspan>
+            </text>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>simple_path</h3>
+        <p><strong>Description:</strong> Simple path with lines</p>
+        <p><strong>Tags:</strong> paths, basic</p>
+        <p><strong>Complexity:</strong> 10</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10 10 L 90 10 L 90 90 L 10 90 Z" fill="green" stroke="darkgreen"/>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>arc_path</h3>
+        <p><strong>Description:</strong> Path with arc command (tests a2c conversion)</p>
+        <p><strong>Tags:</strong> paths, arcs, complex</p>
+        <p><strong>Complexity:</strong> 20</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="purple" stroke-width="3"/>
+        </svg></pre>
+        </details>
+    </div>
+
+    <div class="test-case">
+        <h3>linear_gradient</h3>
+        <p><strong>Description:</strong> Rectangle with linear gradient</p>
+        <p><strong>Tags:</strong> gradients, complex</p>
+        <p><strong>Complexity:</strong> 25</p>
+        <details>
+            <summary>SVG Content</summary>
+            <pre><svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <rect width="100" height="100" fill="url(#grad1)" />
+        </svg></pre>
+        </details>
+    </div>
+
+    <h2>Worst Failures</h2>
+    <table>
+        <tr><th>Test Name</th><th>Comparison Type</th><th>Differences</th><th>Error</th></tr>
+
+        <tr>
+            <td>basic_rectangle</td>
+            <td>pptx_binary</td>
+            <td>5</td>
+            <td>None</td>
+        </tr>
+
+        <tr>
+            <td>basic_circle</td>
+            <td>pptx_binary</td>
+            <td>5</td>
+            <td>None</td>
+        </tr>
+
+        <tr>
+            <td>simple_text</td>
+            <td>pptx_binary</td>
+            <td>5</td>
+            <td>None</td>
+        </tr>
+
+        <tr>
+            <td>complex_text_anchor</td>
+            <td>pptx_binary</td>
+            <td>5</td>
+            <td>None</td>
+        </tr>
+
+        <tr>
+            <td>simple_path</td>
+            <td>pptx_binary</td>
+            <td>5</td>
+            <td>None</td>
+        </tr>
+</table>
+    <footer>
+        <p><em>Generated by SVG2PPTX Golden Test Framework</em></p>
+    </footer>
+</body>
+</html>

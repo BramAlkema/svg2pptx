@@ -62,9 +62,10 @@ sys.path.insert(0, str(project_root / "src"))
 
 from src.converters.base import BaseConverter, ConversionContext
 from src.units import UnitConverter
-from src.colors import ColorParser
-from src.transforms import TransformParser
-from src.viewbox import ViewportResolver
+from src.color import Color
+from src.transforms import TransformEngine
+from src.viewbox import ViewportEngine
+
 
 
 @dataclass
@@ -304,7 +305,7 @@ class CodebaseAnalyzer:
         """Verify all converters properly use standardized tools."""
         converter_files = list(self.converter_path.glob("*.py"))
         
-        required_tools = ['UnitConverter', 'ColorParser', 'TransformParser', 'ViewportResolver']
+        required_tools = ['UnitConverter', 'ColorParser', 'TransformParser', 'ViewportEngine']
         
         for converter_file in converter_files:
             if converter_file.name in ['__init__.py', 'base.py']:

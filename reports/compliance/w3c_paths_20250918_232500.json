@@ -1,0 +1,58 @@
+{
+  "category": "w3c_paths",
+  "timestamp": "2025-09-18T23:25:00.049933",
+  "summary": {
+    "total_tests": 1,
+    "passed": 0,
+    "failed": 1,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "median_score": 0.0,
+    "min_score": 0.0,
+    "max_score": 0.0,
+    "std_deviation": 0.0
+  },
+  "details": [
+    {
+      "test_id": "paths-basic-01-t",
+      "score": 0.0,
+      "passed": false,
+      "category": "paths",
+      "errors": [
+        "'SVGToPowerPointConverter' object has no attribute 'convert_svg_element'"
+      ]
+    }
+  ],
+  "visualizations": {
+    "by_category": {
+      "paths": 0.0
+    },
+    "score_distribution": {
+      "0-20%": 1,
+      "20-40%": 0,
+      "40-60%": 0,
+      "60-80%": 0,
+      "80-100%": 0
+    },
+    "test_results": {
+      "paths-basic-01-t": {
+        "score": 0.0,
+        "passed": false,
+        "category": "paths"
+      }
+    },
+    "trends": {
+      "failing_categories": {
+        "paths": 1
+      },
+      "high_performing_categories": {},
+      "total_errors": 1
+    }
+  },
+  "recommendations": [
+    "Overall pass rate is below 70%. Consider reviewing core conversion algorithms.",
+    "Average score is below 75%. Review visual fidelity and structure preservation.",
+    "Focus improvement efforts on 'paths' category (1 failing tests).",
+    "High error rate detected. Review test infrastructure and conversion pipeline."
+  ]
+}

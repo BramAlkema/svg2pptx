@@ -1,0 +1,102 @@
+{
+  "timestamp": "2025-09-23T22:17:41.513152",
+  "svg_file": "/Users/ynse/projects/svg2pptx/deliverables/test_complex_paths.svg",
+  "pptx_file": "/Users/ynse/projects/svg2pptx/deliverables/test_complex_paths_output.pptx",
+  "screenshot_file": "/Users/ynse/projects/svg2pptx/deliverables/test_complex_paths_output_screenshot.png",
+  "conversion_stats": {
+    "input_size": 3683,
+    "output_size": 6848,
+    "conversion_time": 1.4127333164215088,
+    "path_count": 13,
+    "text_count": 12,
+    "processing_rate": 9.202019835512443,
+    "compression_ratio": 1.8593537876730926
+  },
+  "debug_log": [
+    {
+      "timestamp": "22:17:37.638",
+      "category": "INFO",
+      "message": "Starting complete visual comparison"
+    },
+    {
+      "timestamp": "22:17:37.638",
+      "category": "DEBUG",
+      "message": "Testing PathSystem components"
+    },
+    {
+      "timestamp": "22:17:37.640",
+      "category": "SUCCESS",
+      "message": "\u2705 PathSystem created successfully"
+    },
+    {
+      "timestamp": "22:17:37.640",
+      "category": "SUCCESS",
+      "message": "\u2705 Simple line: 2 commands, 301 bytes XML, 0.2ms"
+    },
+    {
+      "timestamp": "22:17:37.640",
+      "category": "SUCCESS",
+      "message": "\u2705 Cubic curve: 2 commands, 457 bytes XML, 0.1ms"
+    },
+    {
+      "timestamp": "22:17:37.641",
+      "category": "SUCCESS",
+      "message": "\u2705 Quadratic curve: 2 commands, 468 bytes XML, 0.5ms"
+    },
+    {
+      "timestamp": "22:17:37.641",
+      "category": "SUCCESS",
+      "message": "\u2705 Arc command: 2 commands, 662 bytes XML, 0.3ms"
+    },
+    {
+      "timestamp": "22:17:37.642",
+      "category": "SUCCESS",
+      "message": "\u2705 Complex mixed: 4 commands, 943 bytes XML, 0.3ms"
+    },
+    {
+      "timestamp": "22:17:37.642",
+      "category": "CONVERSION",
+      "message": "Starting conversion: /Users/ynse/projects/svg2pptx/deliverables/test_complex_paths.svg \u2192 /Users/ynse/projects/svg2pptx/deliverables/test_complex_paths_output.pptx"
+    },
+    {
+      "timestamp": "22:17:37.642",
+      "category": "INFO",
+      "message": "\ud83d\udcc4 SVG size: 3,683 bytes"
+    },
+    {
+      "timestamp": "22:17:37.642",
+      "category": "INFO",
+      "message": "\ud83d\udcca Elements: 13 paths, 12 text, 1 rects, 0 circles"
+    },
+    {
+      "timestamp": "22:17:39.055",
+      "category": "SUCCESS",
+      "message": "\u2705 Conversion completed in 1.413s"
+    },
+    {
+      "timestamp": "22:17:39.055",
+      "category": "INFO",
+      "message": "\ud83d\udcc1 Output: 6,848 bytes (1.9x ratio)"
+    },
+    {
+      "timestamp": "22:17:39.055",
+      "category": "SCREENSHOT",
+      "message": "Capturing LibreOffice screenshot"
+    },
+    {
+      "timestamp": "22:17:39.055",
+      "category": "INFO",
+      "message": "\ud83d\udccb Using LibreOffice: /Applications/LibreOffice.app/Contents/MacOS/soffice"
+    },
+    {
+      "timestamp": "22:17:39.055",
+      "category": "DEBUG",
+      "message": "\ud83d\uddbc\ufe0f  Running: /Applications/LibreOffice.app/Contents/MacOS/soffice --headless --convert-to png --outdir /var/folders/3g/3rkl35yj77b70dwg3zf42zs40000gn/T/tmpzzmt7e58 /Users/ynse/projects/svg2pptx/deliverables/test_complex_paths_output.pptx"
+    },
+    {
+      "timestamp": "22:17:41.510",
+      "category": "SUCCESS",
+      "message": "\u2705 Screenshot saved: /Users/ynse/projects/svg2pptx/deliverables/test_complex_paths_output_screenshot.png"
+    }
+  ]
+}

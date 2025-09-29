@@ -6,6 +6,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SVG2PPTX is a high-fidelity Python library for converting SVG files to PowerPoint presentations. The codebase uses a modular converter architecture with dependency injection, comprehensive preprocessing pipeline, and Google Drive integration.
 
+## Critical Requirements
+
+### XML Processing - MANDATORY
+**NEVER use xml.etree.ElementTree - ALWAYS use lxml.etree**
+
+```python
+# ❌ FORBIDDEN - Never use this
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element, fromstring
+
+# ✅ REQUIRED - Always use this
+from lxml import etree as ET
+from lxml.etree import Element, fromstring
+```
+
+**Rationale**:
+- The project uses lxml exclusively for better performance and features
+- ElementTree lacks namespace handling needed for SVG processing
+- lxml provides better error handling and XPath support
+- Mixed usage causes compatibility issues and crashes
+
+**Exception Handling**:
+```python
+# ❌ FORBIDDEN
+from xml.etree.ElementTree import ParseError
+
+# ✅ REQUIRED
+from lxml.etree import XMLSyntaxError as ParseError
+```
+
+### Transform Safety - MANDATORY
+**NEVER use attribute membership tests on lxml elements**
+
+```python
+# ❌ FORBIDDEN - Causes cython crashes
+if 'transform' in element.attrib:
+
+# ✅ REQUIRED - Always use .get()
+if element.get('transform'):
+```
+
 ## Essential Commands
 
 ### Environment Setup
@@ -92,6 +133,20 @@ registry.register(PathConverter(services))
 converter = registry.get_converter('rect')
 ```
 
+### CTM (Current Transformation Matrix) System
+```python
+# Create root context with viewport matrix
+from src.viewbox.ctm_utils import create_root_context_with_viewport
+
+context = create_root_context_with_viewport(svg_root, services)
+
+# Create child contexts with CTM propagation
+child_context = context.create_child_context(child_element)
+
+# Transform coordinates using CTM
+x, y = context.transform_point(svg_x, svg_y)
+```
+
 ### Preprocessing Pipeline
 The preprocessing system optimizes SVG before conversion:
 - **Plugins**: Attribute cleanup, numeric precision, style optimization
@@ -111,6 +166,8 @@ All coordinates flow through a unified EMU (English Metric Units) system:
 - `src/services/` - Dependency injection services (ConversionServices)
 - `src/preprocessing/` - SVG optimization pipeline
 - `src/performance/` - Performance optimization (caching, pools, profiling)
+- `src/transforms/` - Matrix composition and CTM propagation system
+- `src/viewbox/` - Viewport and coordinate transformation utilities
 - `api/` - FastAPI web service and Google Drive integration
 - `tests/` - Comprehensive test suite (unit, integration, E2E)
 
@@ -118,6 +175,8 @@ All coordinates flow through a unified EMU (English Metric Units) system:
 - `src/converters/base.py` - BaseConverter, ConversionContext, ConverterRegistry
 - `src/services/conversion_services.py` - Central service container
 - `src/preprocessing/optimizer.py` - Main preprocessing orchestrator
+- `src/transforms/matrix_composer.py` - Core matrix composition system
+- `src/viewbox/ctm_utils.py` - CTM propagation utilities
 - `api/main.py` - FastAPI application entry point
 
 ## Testing Patterns
@@ -169,10 +228,30 @@ def test_numpy_feature():
 - Files with 0% coverage should be moved to `development/prototypes/`
 - All production code in `src/` must have corresponding tests
 
-### XML Processing
-- Never use `ET.fromstring()` with XML declarations directly
-- Use `ET.fromstring(svg_bytes)` for content with XML declarations
-- The preprocessing pipeline handles XML declarations correctly
+### Color System Testing Requirements
+**MANDATORY: Always check color system test coverage before implementing new features.**
+
+When working with color-related functionality, you MUST:
+
+1. **Check Coverage First**: Run color module coverage check:
+   ```bash
+   source venv/bin/activate && PYTHONPATH=. pytest tests/unit/color/ --cov=src.color --cov-report=term-missing --tb=no -q
+   ```
+
+2. **Required Coverage Levels**:
+   - ColorHarmony: 100% coverage (49 tests)
+   - ColorAccessibility: 94.54% coverage (32 tests)
+   - ColorManipulation: 98.26% coverage (74 tests)
+   - ColorBatch: 100% coverage (56 tests)
+   - Overall color module: >96% coverage
+
+3. **Test Templates**: Use existing test templates from:
+   - `tests/unit/color/test_harmony.py` - Color harmony generation
+   - `tests/unit/color/test_accessibility.py` - WCAG compliance and accessibility
+   - `tests/unit/color/test_manipulation.py` - Advanced color operations
+   - `tests/unit/color/test_batch.py` - Vectorized batch operations
+
+4. **Coverage Enforcement**: Any color system changes that drop coverage below 90% must include new comprehensive tests using the established patterns and templates.
 
 ### Performance Considerations
 - Preprocessing uses native Python (not NumPy) for optimal XML/regex performance
@@ -193,6 +272,28 @@ GOOGLE_DRIVE_CLIENT_SECRET=your-client-secret
 GOOGLE_SERVICE_ACCOUNT_FILE=path/to/service-account.json
 ```
 
+## Recent Improvements (2024)
+
+### Unlocked Features
+1. **Filter Effects System v2.0.0** - 330 tests passing, full filter pipeline operational
+   - See `docs/FILTER_EFFECTS_GUIDE.md` for complete documentation
+   - Updated API: `apply()` instead of `process()`, `can_apply()` instead of `can_process()`
+   - Fluent unit API: `unit("5px").to_emu()` not `context.unit_converter.to_emu()`
+
+2. **Content Normalization System** - Automatic detection and correction of off-slide content
+   - See `docs/CONTENT_NORMALIZATION_GUIDE.md` for usage
+   - Handles corporate logos and design tool exports with extreme positioning
+   - 4 sophisticated heuristics for detection
+
+3. **Color System (97.4% coverage)** - Advanced color operations with full DrawingML support
+   - 311 passing tests across all color modules
+   - Performance: 29,000+ operations/second
+   - Full integration with filter system
+
+4. **Performance Optimizations** - Repository size reduced by 200MB
+   - Comprehensive .gitignore patterns for cache files
+   - Improved test execution speed
+
 ## Common Development Workflows
 
 ### Adding a New Converter
@@ -200,6 +301,27 @@ GOOGLE_SERVICE_ACCOUNT_FILE=path/to/service-account.json
 2. Implement `can_convert()` and `convert()` methods
 3. Register in `ConverterRegistry`
 4. Add comprehensive tests in `tests/unit/converters/`
+
+### Working with Filters
+1. Use updated API: `filter.apply()` not `filter.process()`
+2. Create FilterContext with proper parameters:
+   ```python
+   context = FilterContext(
+       element=element,
+       viewport={'width': 100, 'height': 100},
+       unit_converter=services.unit_converter,
+       transform_parser=Mock(),
+       color_parser=Mock()
+   )
+   ```
+3. Use fluent unit API: `unit("5px").to_emu()` not `context.unit_converter.to_emu()`
+4. See `docs/FILTER_EFFECTS_GUIDE.md` for complete examples
+
+### Content Normalization
+1. Automatically applied via `create_root_context_with_viewport()`
+2. Check if needed: `needs_normalise(svg_root)`
+3. Access transformation: `context.viewport_matrix`
+4. See `docs/CONTENT_NORMALIZATION_GUIDE.md` for details
 
 ### Debugging Test Failures
 1. Run with `--tb=short` for concise tracebacks
@@ -212,3 +334,15 @@ GOOGLE_SERVICE_ACCOUNT_FILE=path/to/service-account.json
 2. Create realistic SVG test data without XML declarations
 3. Test multiple configurations (minimal, standard, aggressive)
 4. Validate metrics: file size reduction, optimization count, processing time
+
+## Pre-commit Checks
+
+Before making any commits, ALWAYS run:
+
+```bash
+# Check for forbidden ElementTree imports
+source venv/bin/activate && grep -r "xml.etree.ElementTree" src/ && echo "❌ FORBIDDEN: Found ElementTree imports" || echo "✅ No ElementTree imports found"
+
+# Run core tests
+source venv/bin/activate && PYTHONPATH=. pytest tests/unit/transforms/ tests/unit/converters/test_ctm_propagation.py -v --tb=short --no-cov
+```

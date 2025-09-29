@@ -1,0 +1,6 @@
+<!-- Polygon path isolation test -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Path 4: Complex polygon-like path only -->
+  <path d="M300,200 L320,180 L340,185 L355,205 L345,225 L325,235 L305,230 L290,210 Z"
+        fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+</svg>

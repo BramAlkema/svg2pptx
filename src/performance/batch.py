@@ -407,9 +407,9 @@ class BatchProcessor:
             'tag': tag,
             'attribute_count': len(element.attrib),
             'child_count': len(list(element)),
-            'has_transform': 'transform' in element.attrib,
-            'has_style': 'style' in element.attrib,
-            'has_class': 'class' in element.attrib
+            'has_transform': element.get('transform') is not None,
+            'has_style': element.get('style') is not None,
+            'has_class': element.get('class') is not None
         }
     
     def _hash_context(self, context) -> str:

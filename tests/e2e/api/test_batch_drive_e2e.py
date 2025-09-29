@@ -225,7 +225,6 @@ class TestBatchDriveWorkflowValidation(BatchDriveE2EFixtures):
                 job_id=job_id,
                 status="completed",
                 total_files=2,
-                completed_files=2,
                 drive_integration_enabled=False  # Will be enabled by upload request
             )
             batch_job.save(test_db_path)
@@ -275,7 +274,6 @@ class TestBatchDriveWorkflowValidation(BatchDriveE2EFixtures):
             file_metadata = BatchFileDriveMetadata(
                 batch_job_id=job_id,
                 original_filename="test.svg",
-                converted_filename="test.pptx",
                 drive_file_id="test_file_e2e",
                 upload_status="completed"
             )

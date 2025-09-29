@@ -1,0 +1,130 @@
+{
+  "test_case": "explicit_slide_boundaries",
+  "detection_strategy": "section_markers",
+  "expected_result": {
+    "is_multislide": true,
+    "slide_count": 4,
+    "detection_method": "explicit_boundary_markers",
+    "slides": [
+      {
+        "slide_number": 1,
+        "elements": ["slide-1"],
+        "content_summary": "Project Overview slide with key objectives",
+        "slide_id": "slide-1",
+        "css_class": "slide-boundary",
+        "data_attributes": {
+          "slide-number": "1"
+        },
+        "title": "Project Overview",
+        "subtitle": "Strategic Initiative Q1 2024",
+        "key_points": [
+          "Increase market share by 15%",
+          "Launch new product line",
+          "Expand team by 25 members"
+        ],
+        "navigation": "1 of 4",
+        "background_color": "#f8f9fa"
+      },
+      {
+        "slide_number": 2,
+        "elements": ["slide-2"],
+        "content_summary": "Market Analysis with segment breakdown",
+        "slide_id": "slide-2",
+        "css_class": "slide-boundary",
+        "data_attributes": {
+          "slide-number": "2"
+        },
+        "title": "Market Analysis",
+        "market_segments": [
+          {
+            "name": "Enterprise",
+            "market_size": "$2.1B",
+            "growth_rate": "12%",
+            "our_share": "8%"
+          },
+          {
+            "name": "SMB",
+            "market_size": "$800M",
+            "growth_rate": "18%",
+            "our_share": "15%"
+          },
+          {
+            "name": "Startup",
+            "market_size": "$320M",
+            "growth_rate": "35%",
+            "our_share": "22%"
+          }
+        ],
+        "key_insight": "Startup segment shows highest growth potential",
+        "recommendation": "Recommend focusing 40% of resources here",
+        "navigation": "2 of 4",
+        "background_color": "#e8f4fd"
+      },
+      {
+        "slide_number": 3,
+        "elements": ["slide-3"],
+        "content_summary": "Financial Projections and key metrics",
+        "slide_id": "slide-3",
+        "css_class": "slide-boundary",
+        "data_attributes": {
+          "slide-number": "3"
+        },
+        "title": "Financial Projections",
+        "revenue_forecast": [
+          {"quarter": "Q1", "amount": "$1.2M"},
+          {"quarter": "Q2", "amount": "$1.6M"},
+          {"quarter": "Q3", "amount": "$2.0M"},
+          {"quarter": "Q4", "amount": "$2.6M"}
+        ],
+        "key_metrics": {
+          "total_revenue_target": "$7.4M (+45%)",
+          "profit_margin": "23% (+5%)",
+          "customer_growth": "2,500 (+38%)",
+          "market_share": "15% (+7%)"
+        },
+        "navigation": "3 of 4",
+        "background_color": "#e8f5e8"
+      },
+      {
+        "slide_number": 4,
+        "elements": ["slide-4"],
+        "content_summary": "Action Plan and timeline with critical success factors",
+        "slide_id": "slide-4",
+        "css_class": "slide-boundary",
+        "data_attributes": {
+          "slide-number": "4"
+        },
+        "title": "Action Plan & Next Steps",
+        "timeline_phases": [
+          {"phase": "Phase 1", "activity": "Team Expansion", "timeframe": "Q1 2024"},
+          {"phase": "Phase 2", "activity": "Product Launch", "timeframe": "Q2 2024"},
+          {"phase": "Phase 3", "activity": "Market Expansion", "timeframe": "Q3-Q4 2024"},
+          {"phase": "Phase 4", "activity": "Scale & Optimize", "timeframe": "Q1 2025"}
+        ],
+        "critical_success_factors": [
+          "Team Readiness: Complete hiring by March 15",
+          "Technology Stack: Infrastructure scaling completed",
+          "Market Validation: Beta testing with 50 customers",
+          "Financial Control: Monthly budget reviews"
+        ],
+        "navigation": "4 of 4",
+        "background_color": "#fef5e7"
+      }
+    ],
+    "metadata": {
+      "boundary_detection_method": "explicit_markers",
+      "marker_attributes": ["id", "class", "data-slide-number"],
+      "separator_elements": "dashed lines between slides",
+      "transform_usage": "translate transforms for slide positioning",
+      "navigation_system": "sequential numbering (1 of 4, 2 of 4, etc.)",
+      "element_count": 52
+    },
+    "validation_criteria": {
+      "explicit_boundaries": "should detect slide-boundary class elements",
+      "data_attributes": "should extract data-slide-number attributes",
+      "sequential_ordering": "should maintain slide order 1-4",
+      "content_isolation": "should isolate content within each boundary",
+      "navigation_parsing": "should detect navigation indicators"
+    }
+  }
+}

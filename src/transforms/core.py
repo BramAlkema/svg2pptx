@@ -171,6 +171,18 @@ class Matrix:
             self.b * other.e + self.d * other.f + self.f
         )
 
+    def __matmul__(self, other: 'Matrix') -> 'Matrix':
+        """
+        Matrix multiplication using @ operator (Python 3.5+).
+
+        Args:
+            other: Matrix to multiply with
+
+        Returns:
+            Result of matrix multiplication (same as multiply())
+        """
+        return self.multiply(other)
+
     def inverse(self) -> Optional['Matrix']:
         """
         Calculate matrix inverse.

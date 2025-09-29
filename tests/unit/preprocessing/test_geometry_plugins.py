@@ -228,7 +228,8 @@ class TestSimplifyPolygonPlugin:
         points = [(0.0, 0.0), (5.0, 0.0), (10.0, 0.0)]  # Straight line
         tolerance = 0.1
 
-        simplified = plugin._douglas_peucker(points, tolerance)
+        # Test legacy implementation (fallback when geometry_simplify unavailable)
+        simplified = plugin._douglas_peucker_legacy(points, tolerance)
 
         # Should remove middle point (5,0) as it's on the line
         assert len(simplified) == 2
@@ -241,7 +242,8 @@ class TestSimplifyPolygonPlugin:
         points = [(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)]
         tolerance = 0.1
 
-        simplified = plugin._douglas_peucker(points, tolerance)
+        # Test legacy implementation (fallback when geometry_simplify unavailable)
+        simplified = plugin._douglas_peucker_legacy(points, tolerance)
 
         # Should preserve all points (no redundancy in triangle)
         assert len(simplified) == 3
@@ -253,7 +255,8 @@ class TestSimplifyPolygonPlugin:
         line_start = (0.0, 0.0)
         line_end = (10.0, 0.0)
 
-        distance = plugin._perpendicular_distance(point, line_start, line_end)
+        # Test legacy implementation (fallback when geometry_simplify unavailable)
+        distance = plugin._perpendicular_distance_legacy(point, line_start, line_end)
 
         assert distance == 5.0  # Point is 5 units above the line
 

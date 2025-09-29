@@ -19,8 +19,8 @@ Performance Benchmarks:
 
 Example Usage:
     Basic gradient processing:
-    >>> from svg2pptx.converters.gradients import NumPyGradientEngine
-    >>> engine = NumPyGradientEngine()
+    >>> from svg2pptx.converters.gradients import GradientEngine
+    >>> engine = GradientEngine()
     >>> drawingml_xml = engine.process_gradients_batch(gradient_elements)
 
     High-performance batch processing:
@@ -28,8 +28,8 @@ Example Usage:
     >>> results = process_gradients_batch(many_gradients)
 
     Advanced color operations:
-    >>> from svg2pptx.converters.gradients import NumPyColorProcessor
-    >>> color_processor = NumPyColorProcessor()
+    >>> from svg2pptx.converters.gradients import ColorProcessor
+    >>> color_processor = ColorProcessor()
     >>> rgb_colors = color_processor.parse_colors_batch(color_strings)
     >>> interpolated = color_processor.interpolate_colors_lab_batch(
     ...     start_colors, end_colors, factors
@@ -37,42 +37,54 @@ Example Usage:
 """
 
 # Core NumPy gradient engine - primary public API
-from .numpy_gradient_engine import (
-    NumPyGradientEngine,
-    NumPyColorProcessor,
-    NumPyTransformProcessor,
+from .core import (
+    GradientEngine,
+    ColorProcessor,
+    TransformProcessor,
     GradientData,
     GradientType
 )
 
-# Specialized gradient engines
-from .linear_gradient_engine import (
-    LinearGradientEngine,
-    LinearGradientParams,
-    create_linear_gradient_engine,
-    process_linear_gradients_fast
-)
+# Specialized gradient engines (temporarily commented out while fixing imports)
+# from .linear_gradient_engine import (
+#     LinearGradientEngine,
+#     LinearGradientParams,
+#     create_linear_gradient_engine,
+#     process_linear_gradients_fast
+# )
+#
+# from .radial_gradient_engine import (
+#     RadialGradientEngine,
+#     RadialGradientData,
+#     create_radial_gradient_engine,
+#     process_radial_gradients_batch
+# )
+#
+# from .advanced_gradient_engine import (
+#     AdvancedGradientEngine,
+#     OptimizedGradientData,
+#     TransformationBatch,
+#     GradientCache,
+#     ColorSpace,
+#     InterpolationMethod,
+#     create_advanced_gradient_engine,
+#     process_advanced_gradients_batch
+# )
 
-from .radial_gradient_engine import (
-    RadialGradientEngine,
-    RadialGradientData,
-    create_radial_gradient_engine,
-    process_radial_gradients_batch
-)
+# Main converter class for registry integration
+from .converter import GradientConverter
 
-from .advanced_gradient_engine import (
-    AdvancedGradientEngine,
-    OptimizedGradientData,
-    TransformationBatch,
-    GradientCache,
-    ColorSpace,
-    InterpolationMethod,
-    create_advanced_gradient_engine,
-    process_advanced_gradients_batch
+# Mesh gradient engine
+from .mesh_engine import (
+    MeshGradientEngine,
+    MeshPatch,
+    ColorInterpolator,
+    create_mesh_gradient_engine,
+    convert_mesh_gradient
 )
 
 # Factory functions for convenience
-from .numpy_gradient_engine import (
+from .core import (
     create_gradient_engine,
     process_gradients_batch
 )
@@ -84,16 +96,15 @@ try:
 except ImportError:
     _LEGACY_AVAILABLE = False
 
-# Backward compatibility alias
-GradientConverter = NumPyGradientEngine
+# GradientConverter is now properly imported from .converter
 
 
 # Export main public API
 __all__ = [
     # Primary modern API
-    'NumPyGradientEngine',
-    'NumPyColorProcessor',
-    'NumPyTransformProcessor',
+    'GradientEngine',
+    'ColorProcessor',
+    'TransformProcessor',
     'GradientData',
     'GradientType',
 
@@ -118,6 +129,13 @@ __all__ = [
     # Factory functions
     'create_gradient_engine',
     'process_gradients_batch',
+
+    # Mesh gradient engine
+    'MeshGradientEngine',
+    'MeshPatch',
+    'ColorInterpolator',
+    'create_mesh_gradient_engine',
+    'convert_mesh_gradient',
 
     # Legacy compatibility
     'GradientConverter',

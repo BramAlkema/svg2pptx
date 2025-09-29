@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <defs>
+    <clipPath id="outerClip">
+      <rect x="20" y="20" width="260" height="160"/>
+    </clipPath>
+    <clipPath id="innerClip">
+      <circle cx="150" cy="100" r="60" clip-path="url(#outerClip)"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="300" height="200" fill="cyan" clip-path="url(#innerClip)"/>
+</svg>

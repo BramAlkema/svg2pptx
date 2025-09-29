@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from ..auth import get_current_user
 from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
 from src.batch.drive_controller import BatchDriveController, BatchDriveError
+from src.batch.file_manager import get_default_file_manager, ConvertedFile
 from ..services.conversion_service import ConversionService, ConversionError
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ class BatchJobCreate(BaseModel):
     drive_folder_pattern: Optional[str] = Field(default=None, description="Custom folder naming pattern")
     preprocessing_preset: Optional[str] = Field(default="default", description="Preprocessing preset: minimal, default, aggressive")
     generate_previews: bool = Field(default=True, description="Generate PNG previews for uploaded files")
+    use_clean_slate: Optional[bool] = Field(default=None, description="Enable clean slate architecture (experimental)")
 
 
 class BatchJobStatus(BaseModel):
@@ -159,7 +161,8 @@ async def create_batch_job(
             # Schedule Huey task for complete workflow
             conversion_options = {
                 'preprocessing_preset': job_request.preprocessing_preset,
-                'generate_previews': job_request.generate_previews
+                'generate_previews': job_request.generate_previews,
+                'use_clean_slate': job_request.use_clean_slate
             }
             
             task = coordinate_batch_workflow(job_id, job_request.urls, conversion_options)
@@ -176,7 +179,8 @@ async def create_batch_job(
                 job_request.preprocessing_preset,
                 job_request.drive_integration_enabled,
                 job_request.drive_folder_pattern,
-                job_request.generate_previews
+                job_request.generate_previews,
+                job_request.use_clean_slate
             )
         
         # Estimate processing time (rough calculation: 3 seconds per file)
@@ -345,9 +349,17 @@ async def upload_batch_to_drive(
         try:
             from src.batch.drive_tasks import coordinate_upload_only_workflow
             
-            # This would need the converted files - for now we'll use a placeholder
-            # In a real implementation, this would retrieve the converted files from storage
-            converted_files = []  # TODO: Get actual converted files
+            # Retrieve actual converted files from storage
+            file_manager = get_default_file_manager()
+            try:
+                converted_files = file_manager.get_converted_files(job_id)
+                logger.info(f"Retrieved {len(converted_files)} files for batch job {job_id}")
+            except FileNotFoundError:
+                logger.warning(f"No converted files found for batch job {job_id}")
+                converted_files = []
+            except Exception as e:
+                logger.error(f"Failed to retrieve converted files for job {job_id}: {e}")
+                converted_files = []
             
             # Schedule Huey task for Drive upload
             task = coordinate_upload_only_workflow(
@@ -508,7 +520,8 @@ async def get_batch_drive_info(
                     "original_filename": file_meta.original_filename,
                     "drive_file_id": file_meta.drive_file_id,
                     "drive_file_url": file_meta.drive_file_url,
-                    "uploaded_at": file_meta.created_at.isoformat()
+                    "uploaded_at": file_meta.created_at.isoformat(),
+                    "upload_status": file_meta.upload_status
                 }
                 uploaded_files.append(file_info)
                 
@@ -563,7 +576,8 @@ async def _process_batch_job(
     preprocessing_preset: str,
     drive_integration_enabled: bool,
     drive_folder_pattern: Optional[str],
-    generate_previews: bool
+    generate_previews: bool,
+    use_clean_slate: Optional[bool] = None
 ):
     """
     Background task to process batch job.
@@ -660,10 +674,31 @@ async def _upload_batch_to_drive(
         # Initialize Drive controller
         drive_controller = BatchDriveController()
         
-        # TODO: Get processed files from temporary storage
-        # For now, this is a placeholder - in real implementation,
-        # you'd retrieve the processed files from the batch job
-        files = []  # This would be populated with actual file info
+        # Get processed files from temporary storage
+        file_manager = get_default_file_manager()
+        try:
+            converted_files = file_manager.get_converted_files(job_id)
+
+            # Convert ConvertedFile objects to file info for Drive controller
+            files = []
+            for converted_file in converted_files:
+                file_info = {
+                    'original_filename': converted_file.original_filename,
+                    'converted_path': str(converted_file.converted_path),
+                    'file_size': converted_file.file_size,
+                    'conversion_metadata': converted_file.conversion_metadata,
+                    'created_at': converted_file.created_at.isoformat()
+                }
+                files.append(file_info)
+
+            logger.info(f"Retrieved {len(files)} processed files for batch job {job_id}")
+
+        except FileNotFoundError:
+            logger.warning(f"No processed files found for batch job {job_id}")
+            files = []
+        except Exception as e:
+            logger.error(f"Failed to retrieve processed files for job {job_id}: {e}")
+            files = []
         
         # Execute complete Drive workflow
         workflow_result = drive_controller.execute_complete_batch_workflow(

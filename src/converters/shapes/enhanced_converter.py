@@ -313,6 +313,7 @@ class EnhancedShapeConverter(BaseConverter):
         # Batch process valid polygons
         valid_points = [points for _, points in valid_polygons]
         valid_close_flags = [close_paths[i] for i, _ in valid_polygons]
+        valid_idx = {i for i, _ in valid_polygons}  # O(1) lookup
 
         geometries = self.geometry_engine.process_polygons_batch(valid_points, valid_close_flags)
 
@@ -321,7 +322,7 @@ class EnhancedShapeConverter(BaseConverter):
         geom_idx = 0
 
         for i, info in enumerate(elements_info):
-            if i in [idx for idx, _ in valid_polygons]:
+            if i in valid_idx:
                 if geom_idx < len(geometries):
                     result = self._generate_polygon_drawingml(
                         info['element'], geometries[geom_idx], context, 0
@@ -388,13 +389,27 @@ class EnhancedShapeConverter(BaseConverter):
         rx_emu = context.coordinate_system.svg_length_to_emu(rx, 'x') if rx > 0 else 0
         ry_emu = context.coordinate_system.svg_length_to_emu(ry, 'y') if ry > 0 else 0
 
-        # Get style attributes
-        fill = self.get_attribute_with_style(element, 'fill', 'black')
-        stroke = self.get_attribute_with_style(element, 'stroke', 'none')
-        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
-        opacity = self.get_attribute_with_style(element, 'opacity', '1')
-        fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
-        stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
+        # Get computed CSS style with cascade + inheritance + specificity
+        if hasattr(context.services, 'style_service'):
+            computed_style = context.services.style_service.compute_style(
+                element, context.parent_style
+            )
+
+            # Use CSS-aware property access with proper cascade
+            fill = context.services.style_service.fill(computed_style, 'black')
+            stroke = context.services.style_service.stroke(computed_style, 'none')
+            stroke_width = context.services.style_service.stroke_width(computed_style, '1')
+            opacity = context.services.style_service.opacity(computed_style, '1')
+            fill_opacity = computed_style.get('fill-opacity', opacity)
+            stroke_opacity = computed_style.get('stroke-opacity', opacity)
+        else:
+            # Fallback to legacy attribute parsing
+            fill = self.get_attribute_with_style(element, 'fill', 'black')
+            stroke = self.get_attribute_with_style(element, 'stroke', 'none')
+            stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
+            opacity = self.get_attribute_with_style(element, 'opacity', '1')
+            fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
+            stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
 
         # Generate shape preset
         if rx_emu > 0 or ry_emu > 0:
@@ -474,13 +489,27 @@ class EnhancedShapeConverter(BaseConverter):
         if abs(emu_diameter_x - emu_diameter_y) > 1000:  # More than ~0.07pt difference
             self.logger.debug(f"Circle diameter discrepancy: x={emu_diameter_x}, y={emu_diameter_y}, using max")
 
-        # Get style attributes
-        fill = self.get_attribute_with_style(element, 'fill', 'black')
-        stroke = self.get_attribute_with_style(element, 'stroke', 'none')
-        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
-        opacity = self.get_attribute_with_style(element, 'opacity', '1')
-        fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
-        stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
+        # Get computed CSS style with cascade + inheritance + specificity
+        if hasattr(context.services, 'style_service'):
+            computed_style = context.services.style_service.compute_style(
+                element, context.parent_style
+            )
+
+            # Use CSS-aware property access with proper cascade
+            fill = context.services.style_service.fill(computed_style, 'black')
+            stroke = context.services.style_service.stroke(computed_style, 'none')
+            stroke_width = context.services.style_service.stroke_width(computed_style, '1')
+            opacity = context.services.style_service.opacity(computed_style, '1')
+            fill_opacity = computed_style.get('fill-opacity', opacity)
+            stroke_opacity = computed_style.get('stroke-opacity', opacity)
+        else:
+            # Fallback to legacy attribute parsing
+            fill = self.get_attribute_with_style(element, 'fill', 'black')
+            stroke = self.get_attribute_with_style(element, 'stroke', 'none')
+            stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
+            opacity = self.get_attribute_with_style(element, 'opacity', '1')
+            fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
+            stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
 
         shape_id = context.get_next_shape_id()
 
@@ -501,7 +530,7 @@ class EnhancedShapeConverter(BaseConverter):
                     <a:avLst/>
                 </a:prstGeom>
                 {self.generate_fill(fill, fill_opacity, context)}
-                {self.generate_stroke(stroke, stroke_width, stroke_opacity)}
+                {self.generate_stroke(stroke, stroke_width, stroke_opacity, context)}
             </p:spPr>
             <p:txBody>
                 <a:bodyPr/>
@@ -534,13 +563,27 @@ class EnhancedShapeConverter(BaseConverter):
         emu_width = context.coordinate_system.svg_length_to_emu(width, 'x')
         emu_height = context.coordinate_system.svg_length_to_emu(height, 'y')
 
-        # Get style attributes
-        fill = self.get_attribute_with_style(element, 'fill', 'black')
-        stroke = self.get_attribute_with_style(element, 'stroke', 'none')
-        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
-        opacity = self.get_attribute_with_style(element, 'opacity', '1')
-        fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
-        stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
+        # Get computed CSS style with cascade + inheritance + specificity
+        if hasattr(context.services, 'style_service'):
+            computed_style = context.services.style_service.compute_style(
+                element, context.parent_style
+            )
+
+            # Use CSS-aware property access with proper cascade
+            fill = context.services.style_service.fill(computed_style, 'black')
+            stroke = context.services.style_service.stroke(computed_style, 'none')
+            stroke_width = context.services.style_service.stroke_width(computed_style, '1')
+            opacity = context.services.style_service.opacity(computed_style, '1')
+            fill_opacity = computed_style.get('fill-opacity', opacity)
+            stroke_opacity = computed_style.get('stroke-opacity', opacity)
+        else:
+            # Fallback to legacy attribute parsing
+            fill = self.get_attribute_with_style(element, 'fill', 'black')
+            stroke = self.get_attribute_with_style(element, 'stroke', 'none')
+            stroke_width = self.get_attribute_with_style(element, 'stroke-width', '1')
+            opacity = self.get_attribute_with_style(element, 'opacity', '1')
+            fill_opacity = self.get_attribute_with_style(element, 'fill-opacity', opacity)
+            stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
 
         shape_id = context.get_next_shape_id()
 
@@ -575,8 +618,9 @@ class EnhancedShapeConverter(BaseConverter):
     def _generate_polygon_drawingml(self, element: ET.Element, geometry: ShapeGeometry,
                                   context: ConversionContext, index: int) -> str:
         """Generate DrawingML for polygon using vectorized geometry data."""
-        if not hasattr(geometry, '_points'):
-            return '<!-- Missing polygon points data -->'
+        # Validate geometry type for polygon rendering
+        if not hasattr(geometry, 'shape_type') or geometry.shape_type not in ['polygon', 'polyline']:
+            return '<!-- Unexpected geometry type for polygon rendering -->'
 
         # Convert to EMU coordinates
         emu_x, emu_y = self._convert_svg_to_drawingml_coords(
@@ -648,9 +692,8 @@ class EnhancedShapeConverter(BaseConverter):
         min_x, max_x = min(x1, x2), max(x1, x2)
         min_y, max_y = min(y1, y2), max(y1, y2)
 
-        # Convert to EMU coordinates
-        emu_x = context.coordinate_system.svg_to_emu(min_x, min_y)[0]
-        emu_y = context.coordinate_system.svg_to_emu(min_x, min_y)[1]
+        # Convert to EMU coordinates - fix: unpack single call
+        emu_x, emu_y = context.coordinate_system.svg_to_emu(min_x, min_y)
 
         # Line dimensions (minimum 1 unit to ensure visibility)
         line_width = max(max_x - min_x, 1)
@@ -672,11 +715,21 @@ class EnhancedShapeConverter(BaseConverter):
             end_x = int(((x2 - min_x) / line_width) * 21600)
             end_y = int(((y2 - min_y) / line_height) * 21600)
 
-        # Get style attributes
-        stroke = self.get_attribute_with_style(element, 'stroke', 'purple')
-        stroke_width = self.get_attribute_with_style(element, 'stroke-width', '3')
-        opacity = self.get_attribute_with_style(element, 'opacity', '1')
-        stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
+        # Get computed CSS style with cascade + inheritance + specificity
+        if hasattr(context.services, 'style_service'):
+            computed_style = context.services.style_service.compute_style(
+                element, context.parent_style
+            )
+            stroke = context.services.style_service.stroke(computed_style, 'purple')
+            stroke_width = context.services.style_service.stroke_width(computed_style, '3')
+            opacity = context.services.style_service.opacity(computed_style, '1')
+            stroke_opacity = computed_style.get('stroke-opacity', opacity)
+        else:
+            # Fallback to legacy attribute parsing
+            stroke = self.get_attribute_with_style(element, 'stroke', 'purple')
+            stroke_width = self.get_attribute_with_style(element, 'stroke-width', '3')
+            opacity = self.get_attribute_with_style(element, 'opacity', '1')
+            stroke_opacity = self.get_attribute_with_style(element, 'stroke-opacity', opacity)
 
         shape_id = context.get_next_shape_id()
 
@@ -760,13 +813,16 @@ class EnhancedShapeConverter(BaseConverter):
 
 # ==================== Factory Functions ====================
 
-def create_enhanced_shape_converter(optimization_level: int = 2) -> EnhancedShapeConverter:
+def create_enhanced_shape_converter(services: 'ConversionServices',
+                                    optimization_level: int = 2) -> EnhancedShapeConverter:
     """Create an enhanced shape converter with specified optimization level."""
-    return EnhancedShapeConverter(optimization_level)
+    return EnhancedShapeConverter(services=services, optimization_level=optimization_level)
 
-def register_enhanced_converters(converter_registry: Any) -> None:
+def register_enhanced_converters(converter_registry: Any,
+                                 services: 'ConversionServices',
+                                 optimization_level: int = 2) -> None:
     """Register enhanced shape converters with the main converter registry."""
-    enhanced_converter = EnhancedShapeConverter()
+    enhanced_converter = EnhancedShapeConverter(services=services, optimization_level=optimization_level)
 
     # Register for all supported shape types
     for shape_type in enhanced_converter.supported_elements:

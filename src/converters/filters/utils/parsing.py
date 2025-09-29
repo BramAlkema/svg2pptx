@@ -17,7 +17,7 @@ Architecture Integration:
 - Uses existing ColorParser for color parameter parsing
 - Integrates with UnitConverter for length/coordinate conversion
 - Maintains consistency with established parsing patterns
-- Supports existing ViewBox and TransformParser workflows
+- Supports existing ViewBox and TransformEngine workflows
 """
 
 import re
@@ -27,8 +27,9 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 # Import existing architecture components
-from ....colors import ColorInfo
+from ....color import Color
 from ....services.conversion_services import ConversionServices
+from ....units import unit
 
 
 class FilterParsingException(Exception):
@@ -497,7 +498,7 @@ class FilterParameterExtractor:
         except ValueError:
             raise FilterParsingException(f"Invalid numeric value for {param_name}: {value}")
 
-    def extract_color_parameter(self, element: ET.Element, param_name: str) -> ColorInfo:
+    def extract_color_parameter(self, element: ET.Element, param_name: str) -> Color:
         """Extract and parse a color parameter."""
         color_value = element.get(param_name)
         if not color_value:
@@ -515,7 +516,7 @@ class FilterParameterExtractor:
             raise FilterParsingException(f"Missing required length parameter: {param_name}")
 
         try:
-            return self.unit_converter.to_emu(length_value)
+            return unit(length_value).to_emu()
         except Exception as e:
             raise FilterParsingException(f"Invalid length value for {param_name}: {length_value}")
 
@@ -591,13 +592,13 @@ class FilterValueParser:
                 # Use width as default reference for percentage calculations
                 reference = bounds.get('width', 100)
                 pixel_value = (percentage / 100.0) * reference
-                return self.unit_converter.to_emu(f"{pixel_value}px")
+                return unit(f"{pixel_value}px").to_emu()
             else:
                 # Check if value is parseable
                 if value_str == "invalid":
                     raise ValueError("Invalid value")
                 # Absolute value with or without units
-                return self.unit_converter.to_emu(value_str)
+                return unit(value_str).to_emu()
         except (ValueError, TypeError, AttributeError) as e:
             raise FilterParsingException(f"Invalid value format: {value_str}")
 

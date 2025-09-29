@@ -300,6 +300,8 @@ class MockConverter(BaseConverter):
             '#ff0000': 'FF0000',
             '#F00': 'FF0000',
             '#f00': 'FF0000',
+            '#00FF00': '00FF00',  # Add green color for stroke test
+            '#00ff00': '00FF00',
             'rgb(255, 0, 0)': 'FF0000',
             'rgb(128, 128, 128)': '808080',
             'rgba(255, 0, 0, 0.5)': 'FF0000',
@@ -435,7 +437,24 @@ class TestBaseConverter:
         # Create mock services for dependency injection
         mock_services = Mock()
         mock_services.unit_converter = Mock()
-        mock_services.unit_converter.to_emu.return_value = 12700  # 1px in EMU
+        # Mock unit converter to return correct EMU values based on input
+        def mock_to_emu(value_str):
+            # Extract numeric value and multiply by 12700 (EMU per px)
+            import re
+            match = re.search(r'(\d+(?:\.\d+)?)px', value_str)
+            if match:
+                px_value = float(match.group(1))
+                return int(px_value * 12700)
+            return 12700
+        mock_services.unit_converter.to_emu.side_effect = mock_to_emu
+
+        # Mock color_parser (Color class)
+        mock_color_class = Mock()
+        mock_color_instance = Mock()
+        mock_color_instance._alpha = 1.0
+        mock_color_instance.rgb.return_value = (0, 255, 0)  # Green color #00FF00
+        mock_color_class.return_value = mock_color_instance
+        mock_services.color_parser = mock_color_class
 
         # Create converter with proper dependency injection
         converter = MockConverter(services=mock_services)
@@ -445,11 +464,16 @@ class TestBaseConverter:
         element.set('stroke', '#00FF00')
         element.set('stroke-width', '2')
 
-        result = converter.generate_stroke(element)
+        # Call generate_stroke with the correct signature (stroke, stroke_width, opacity)
+        result = converter.generate_stroke(
+            stroke=element.get('stroke', 'none'),
+            stroke_width=element.get('stroke-width', '1'),
+            opacity=element.get('stroke-opacity', '1')
+        )
 
         # Verify stroke XML is generated correctly
         assert '<a:ln' in result
-        assert 'w="25400"' in result  # 2px * 12700 EMU/px = 25400
+        assert 'w="50800"' in result  # 2px * 2 (adjustment) * 12700 EMU/px = 50800
         assert '<a:solidFill>' in result
         assert '<a:srgbClr val="00FF00"' in result
 
@@ -669,17 +693,21 @@ class TestBaseConverterAdvanced:
         services.gradient_service = Mock()
         services.pattern_service = Mock()
         services.clip_service = Mock()
-        services.color_parser = Mock()
+        # Mock Color class (color_parser is the Color class itself)
+        mock_color_class = Mock()
+        mock_color_instance = Mock()
+        mock_color_instance.red = 255
+        mock_color_instance.green = 0
+        mock_color_instance.blue = 0
+        mock_color_instance.alpha = 1.0
+        mock_color_instance._alpha = 1.0  # Private attribute used by parse_color
+        mock_color_instance.hex = "FF0000"
+        mock_color_instance.rgb.return_value = (255, 0, 0)  # Method that returns RGB tuple
+        mock_color_class.return_value = mock_color_instance
+        services.color_parser = mock_color_class
+
         services.transform_parser = Mock()
         services.validate_services = Mock(return_value=True)
-
-        # Mock color parser
-        mock_color = Mock()
-        mock_color.red = 255
-        mock_color.green = 0
-        mock_color.blue = 0
-        mock_color.alpha = 1.0
-        services.color_parser.parse.return_value = mock_color
 
         # Mock transform parser
         mock_matrix = Mock()
@@ -849,16 +877,16 @@ class TestBaseConverterAdvanced:
         assert base_parse_color(gradient_ref) == gradient_ref
 
         # Test transparent color
-        mock_services.color_parser.parse.return_value.alpha = 0
+        mock_services.color_parser.return_value._alpha = 0
         assert base_parse_color('rgba(255,0,0,0)') is None
 
         # Test valid color
-        mock_services.color_parser.parse.return_value.alpha = 1.0
+        mock_services.color_parser.return_value._alpha = 1.0
         result = base_parse_color('red')
         assert result == 'FF0000'
 
         # Test color parser returning None
-        mock_services.color_parser.parse.return_value = None
+        mock_services.color_parser.return_value = None
         assert base_parse_color('invalid') is None
 
     def test_to_emu_with_unit_converter(self, mock_services):

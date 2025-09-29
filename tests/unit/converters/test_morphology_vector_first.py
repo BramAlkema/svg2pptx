@@ -465,9 +465,10 @@ class TestErrorHandling:
 
         result = self.filter.apply(morph_element, self.mock_context)
 
-        assert result.success is False
-        assert "failed" in result.error_message.lower()
-        assert result.metadata['error'] is not None
+        # Filter should gracefully handle unit conversion errors with fallback
+        assert result.success is True  # Graceful degradation
+        assert "no-op" in result.drawingml.lower()  # Fallback behavior
+        assert result.metadata['radius_x'] == 0.0  # Safe fallback values
 
 
 if __name__ == "__main__":

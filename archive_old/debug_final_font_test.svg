@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+    <text x="200" y="60" font-size="36pt" fill="red" text-anchor="middle">LARGE 36pt TEXT</text>
+    <text x="200" y="120" font-size="24pt" fill="blue" text-anchor="middle">MEDIUM 24pt TEXT</text>
+    <text x="200" y="180" font-size="18pt" fill="green" text-anchor="middle">NORMAL 18pt TEXT</text>
+    <text x="200" y="240" font-size="12pt" fill="purple" text-anchor="middle">SMALL 12pt TEXT</text>
+</svg>

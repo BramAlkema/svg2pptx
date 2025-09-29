@@ -12,19 +12,31 @@ from src.converters.text_to_path import TextToPathConverter
 from src.converters.base import ConversionContext, CoordinateSystem
 from src.converters.font_metrics import FontMetrics, GlyphOutline
 from src.units import UnitConverter
-from src.colors import ColorParser
+from src.color import Color
 
 
 class TestTextToPathConverter:
     """Test suite for TextToPathConverter functionality."""
     
     @pytest.fixture
-    def converter(self):
-        """Create TextToPathConverter instance for testing."""
-        return TextToPathConverter()
-    
+    def mock_services(self):
+        """Create mock services for dependency injection."""
+        services = Mock()
+        services.unit_converter = Mock()
+        services.viewport_handler = Mock()
+        services.font_service = Mock()
+        services.gradient_service = Mock()
+        services.pattern_service = Mock()
+        services.clip_service = Mock()
+        return services
+
     @pytest.fixture
-    def custom_converter(self):
+    def converter(self, mock_services):
+        """Create TextToPathConverter instance for testing."""
+        return TextToPathConverter(services=mock_services)
+
+    @pytest.fixture
+    def custom_converter(self, mock_services):
         """Create TextToPathConverter with custom configuration."""
         config = {
             'font_detection_enabled': True,
@@ -32,7 +44,7 @@ class TestTextToPathConverter:
             'path_optimization_level': 2,
             'max_cache_size': 64
         }
-        return TextToPathConverter(config=config)
+        return TextToPathConverter(services=mock_services, config=config)
     
     @pytest.fixture
     def mock_context(self):
@@ -231,9 +243,8 @@ class TestTextToPathConverter:
     def test_get_fill_color_xml(self, converter):
         """Test fill color extraction as DrawingML XML."""
         element = ET.fromstring('<text fill="red">Test</text>')
-        # Use ColorParser to get expected hex value
-        color_parser = ColorParser()
-        expected_hex = color_parser.parse('red').hex.upper()
+        # Use modern Color API to get expected hex value
+        expected_hex = Color('red').hex().replace('#', '').upper()
         with patch.object(converter, 'parse_color', return_value=expected_hex):
             color_xml = converter._get_fill_color_xml(element)
             assert '<a:solidFill>' in color_xml
@@ -254,9 +265,8 @@ class TestTextToPathConverter:
             </text>
         ''')
         
-        # Use ColorParser to get expected hex value for blue
-        color_parser = ColorParser()
-        expected_blue_hex = color_parser.parse('blue').hex.upper()
+        # Use modern Color API to get expected hex value for blue
+        expected_blue_hex = Color('blue').hex().replace('#', '').upper()
         with patch.object(converter, 'parse_color', return_value=expected_blue_hex):
             props = converter._extract_text_properties(element, mock_context)
             
@@ -480,15 +490,33 @@ class TestTextToPathConverter:
 @pytest.mark.integration
 class TestTextToPathConverterIntegration:
     """Integration tests for TextToPathConverter with real dependencies."""
+
+    @pytest.fixture
+    def mock_services(self):
+        """Create mock services for dependency injection."""
+        services = Mock()
+        services.unit_converter = Mock()
+        services.viewport_handler = Mock()
+        services.font_service = Mock()
+        services.gradient_service = Mock()
+        services.pattern_service = Mock()
+        services.clip_service = Mock()
+        return services
+
+    @pytest.fixture
+    def converter(self, mock_services):
+        return TextToPathConverter(services=mock_services)
     
     @pytest.fixture
-    def converter(self):
-        return TextToPathConverter()
-    
-    @pytest.fixture
-    def context(self):
-        coord_system = CoordinateSystem(width=1920, height=1080, viewbox=(0, 0, 1920, 1080))
-        return ConversionContext(coordinate_system=coord_system)
+    def context(self, mock_services):
+        svg_root = ET.fromstring('<svg viewBox="0 0 1920 1080"></svg>')
+        context = ConversionContext(svg_root=svg_root, services=mock_services)
+
+        # Set up coordinate system for text conversion
+        context.coordinate_system = Mock(spec=CoordinateSystem)
+        context.coordinate_system.svg_to_emu.return_value = (914400, 914400)  # 1pt in EMU
+
+        return context
     
     def test_end_to_end_conversion_path(self, converter, context):
         """Test end-to-end conversion to path (mocked)."""
@@ -519,31 +547,43 @@ class TestTextToPathConverterIntegration:
 
 class TestTextToPathConverterConfiguration:
     """Test configuration handling for TextToPathConverter."""
-    
-    def test_config_merging(self):
+
+    @pytest.fixture
+    def mock_services(self):
+        """Create mock services for dependency injection."""
+        services = Mock()
+        services.unit_converter = Mock()
+        services.viewport_handler = Mock()
+        services.font_service = Mock()
+        services.gradient_service = Mock()
+        services.pattern_service = Mock()
+        services.clip_service = Mock()
+        return services
+
+    def test_config_merging(self, mock_services):
         """Test that custom config merges with defaults."""
         custom_config = {
             'path_optimization_level': 2,
             'custom_setting': 'test_value'
         }
-        
-        converter = TextToPathConverter(config=custom_config)
+
+        converter = TextToPathConverter(services=mock_services, config=custom_config)
         
         # Should merge with defaults
         assert converter.config['font_detection_enabled'] is True  # Default
         assert converter.config['path_optimization_level'] == 2    # Custom
         assert converter.config['custom_setting'] == 'test_value' # Custom
     
-    def test_config_none(self):
+    def test_config_none(self, mock_services):
         """Test initialization with None config."""
-        converter = TextToPathConverter(config=None)
+        converter = TextToPathConverter(services=mock_services, config=None)
         
         # Should use all defaults
         assert converter.config == TextToPathConverter.DEFAULT_CONFIG
     
-    def test_config_empty(self):
+    def test_config_empty(self, mock_services):
         """Test initialization with empty config."""
-        converter = TextToPathConverter(config={})
+        converter = TextToPathConverter(services=mock_services, config={})
         
         # Should use all defaults
         assert converter.config == TextToPathConverter.DEFAULT_CONFIG

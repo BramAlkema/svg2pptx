@@ -1,0 +1,16 @@
+<!-- Test SVG with multiple command types for switch system -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+
+  <!-- Path using MOVE_TO, LINE_TO, HORIZONTAL, VERTICAL, CLOSE_PATH -->
+  <path d="M50,50 L100,50 H150 V100 L100,100 Z"
+        fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+
+  <!-- Path using CUBIC_CURVE -->
+  <path d="M180,50 C200,30 220,30 240,50 C240,70 220,90 180,70 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- Path using ARC -->
+  <path d="M50,150 A25,25 0 0,1 100,150"
+        fill="none" stroke="#f39c12" stroke-width="3"/>
+
+</svg>

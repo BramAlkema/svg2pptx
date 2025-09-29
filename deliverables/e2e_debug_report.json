@@ -1,0 +1,259 @@
+{
+  "timestamp": "2025-09-23T22:17:42.012306",
+  "pipeline_steps": [
+    {
+      "step": "SVG Input Analysis",
+      "status": "success",
+      "timestamp": "2025-09-23T22:17:43.253984",
+      "details": {
+        "file_size": 3683,
+        "dimensions": "800 \u00d7 600",
+        "viewBox": "0 0 800 600",
+        "total_elements": 27,
+        "element_breakdown": {
+          "path": 13,
+          "text": 12,
+          "rect": 1,
+          "circle": 0,
+          "ellipse": 0,
+          "line": 0,
+          "polygon": 0,
+          "polyline": 0,
+          "g": 1
+        },
+        "path_complexity": {
+          "total_paths": 13,
+          "command_types": {
+            "m": 13,
+            "c": 9,
+            "s": 1,
+            "z": 9,
+            "l": 28,
+            "a": 4,
+            "q": 3,
+            "t": 1
+          },
+          "relative_commands": 5,
+          "absolute_commands": 63,
+          "scientific_notation": 1,
+          "complex_arcs": 2,
+          "bezier_curves": 4
+        },
+        "advanced_features": {
+          "gradients": 0,
+          "patterns": 0,
+          "filters": 0,
+          "masks": 0,
+          "clipPaths": 0,
+          "animations": 0,
+          "transforms": 0,
+          "css_styles": 0,
+          "external_refs": 0
+        }
+      },
+      "timing_ms": 1.8830299377441406
+    },
+    {
+      "step": "PathSystem Processing",
+      "status": "success",
+      "timestamp": "2025-09-23T22:17:43.255394",
+      "details": {
+        "paths_processed": 13,
+        "successful_paths": 13,
+        "failed_paths": 0,
+        "total_commands": 68,
+        "total_xml_size": 10286,
+        "avg_commands_per_path": 5.230769230769231,
+        "processing_details": [
+          {
+            "path_index": 0,
+            "input_length": 73,
+            "commands_generated": 4,
+            "xml_size": 902,
+            "success": true
+          },
+          {
+            "path_index": 1,
+            "input_length": 167,
+            "commands_generated": 8,
+            "xml_size": 1597,
+            "success": true
+          },
+          {
+            "path_index": 2,
+            "input_length": 97,
+            "commands_generated": 11,
+            "xml_size": 853,
+            "success": true
+          },
+          {
+            "path_index": 3,
+            "input_length": 53,
+            "commands_generated": 3,
+            "xml_size": 1085,
+            "success": true
+          },
+          {
+            "path_index": 4,
+            "input_length": 105,
+            "commands_generated": 7,
+            "xml_size": 1693,
+            "success": true
+          },
+          {
+            "path_index": 5,
+            "input_length": 37,
+            "commands_generated": 3,
+            "xml_size": 532,
+            "success": true
+          },
+          {
+            "path_index": 6,
+            "input_length": 39,
+            "commands_generated": 4,
+            "xml_size": 397,
+            "success": true
+          },
+          {
+            "path_index": 7,
+            "input_length": 44,
+            "commands_generated": 6,
+            "xml_size": 498,
+            "success": true
+          },
+          {
+            "path_index": 8,
+            "input_length": 32,
+            "commands_generated": 2,
+            "xml_size": 881,
+            "success": true
+          },
+          {
+            "path_index": 9,
+            "input_length": 41,
+            "commands_generated": 5,
+            "xml_size": 462,
+            "success": true
+          },
+          {
+            "path_index": 10,
+            "input_length": 41,
+            "commands_generated": 5,
+            "xml_size": 462,
+            "success": true
+          },
+          {
+            "path_index": 11,
+            "input_length": 41,
+            "commands_generated": 5,
+            "xml_size": 462,
+            "success": true
+          },
+          {
+            "path_index": 12,
+            "input_length": 41,
+            "commands_generated": 5,
+            "xml_size": 462,
+            "success": true
+          }
+        ]
+      },
+      "timing_ms": 1.3880729675292969
+    },
+    {
+      "step": "SVG2DrawingML Conversion",
+      "status": "success",
+      "timestamp": "2025-09-23T22:17:43.259281",
+      "details": {
+        "output_size": 57862,
+        "contains_path_elements": true,
+        "contains_shape_elements": true,
+        "contains_text_elements": false,
+        "xml_structure_valid": false,
+        "drawingml_namespaces": true,
+        "path_count": 34,
+        "shape_count": 36,
+        "text_run_count": 0,
+        "transform_count": 62
+      },
+      "timing_ms": 3.8580894470214844
+    },
+    {
+      "step": "PPTX Structure Analysis",
+      "status": "success",
+      "timestamp": "2025-09-23T22:17:43.259958",
+      "details": {
+        "file_size": 6848,
+        "is_valid_zip": true,
+        "contains_slide": true,
+        "contains_relationships": false,
+        "slide_content_size": 604,
+        "xml_files": [
+          "[Content_Types].xml",
+          "ppt/presentation.xml",
+          "ppt/slideLayouts/slideLayout1.xml",
+          "ppt/slideMasters/slideMaster1.xml",
+          "ppt/slides/slide1.xml",
+          "ppt/theme/theme1.xml"
+        ],
+        "media_files": []
+      },
+      "timing_ms": 0.6539821624755859
+    },
+    {
+      "step": "Fidelity Issue Analysis",
+      "status": "success",
+      "timestamp": "2025-09-23T22:17:43.260068",
+      "details": {
+        "total_issues": 2,
+        "high_severity": 0,
+        "medium_severity": 1,
+        "low_severity": 1,
+        "issues": [
+          {
+            "category": "text_rendering",
+            "severity": "medium",
+            "description": "Text elements with 1 different fonts may not render identically",
+            "fonts_used": [
+              "Arial, sans-serif"
+            ],
+            "recommendation": "Verify font availability in PowerPoint"
+          },
+          {
+            "category": "path_complexity",
+            "severity": "low",
+            "description": "3 paths contain arc commands which are converted to bezier curves",
+            "recommendation": "Check arc rendering fidelity in PowerPoint output"
+          }
+        ]
+      },
+      "timing_ms": null
+    }
+  ],
+  "fidelity_issues": [
+    {
+      "category": "text_rendering",
+      "severity": "medium",
+      "description": "Text elements with 1 different fonts may not render identically",
+      "fonts_used": [
+        "Arial, sans-serif"
+      ],
+      "recommendation": "Verify font availability in PowerPoint"
+    },
+    {
+      "category": "path_complexity",
+      "severity": "low",
+      "description": "3 paths contain arc commands which are converted to bezier curves",
+      "recommendation": "Check arc rendering fidelity in PowerPoint output"
+    }
+  ],
+  "performance_metrics": {},
+  "component_analysis": {},
+  "summary": {
+    "total_steps": 5,
+    "successful_steps": 5,
+    "failed_steps": 0,
+    "total_issues": 2,
+    "high_priority_issues": 0
+  }
+}

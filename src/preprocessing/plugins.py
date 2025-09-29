@@ -71,10 +71,26 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
         return modified
     
     def _clean_numeric_value(self, value: str, precision: int) -> str:
-        """Clean a single numeric value."""
+        """Clean numeric values using consolidated PreprocessorUtilities."""
+        try:
+            # Use PreprocessorUtilities for consistent number cleaning
+            from ..utils.preprocessor_utilities import preprocessor_utilities
+            return preprocessor_utilities.clean_numeric_value(value, precision)
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy implementation
         # Remove 'px' units
-        value = value.replace('px', '')
-        
+        from ..utils.input_validator import InputValidator
+        validator = InputValidator()
+        parsed_value = validator.parse_length_safe(value, default_unit='px')
+        if parsed_value is not None:
+            value = str(parsed_value)
+        else:
+            # Fallback for non-numeric values
+            value = value.replace('px', '')
+
         try:
             # Try to parse as float and round
             num = float(value)
@@ -86,8 +102,20 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
             return value
     
     def _clean_path_data(self, path_data: str, precision: int) -> str:
-        """Clean numeric values in path data."""
-        # Match numbers (including negative and decimal)
+        """Clean path data using consolidated PathProcessor service."""
+        if not path_data:
+            return ""
+
+        try:
+            # Use PathProcessor for consistent path cleaning and optimization
+            from ..utils.path_processor import path_processor
+            return path_processor.clean_path_data(path_data, precision)
+
+        except ImportError:
+            # Fallback to legacy implementation
+            pass
+
+        # Legacy path cleaning implementation
         def replace_number(match):
             num_str = match.group(0)
             try:
@@ -98,7 +126,7 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
                     return f"{num:.{precision}f}".rstrip('0').rstrip('.')
             except ValueError:
                 return num_str
-        
+
         return re.sub(r'-?\d*\.?\d+', replace_number, path_data)
 
 
@@ -186,27 +214,26 @@ class ConvertColorsPlugin(PreprocessingPlugin):
         return modified
     
     def _convert_color(self, color: str) -> str:
-        """Convert a color value to its shortest representation."""
-        color = color.strip()
-        
-        # Convert rgb() to hex
-        rgb_match = re.match(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', color)
-        if rgb_match:
-            r, g, b = map(int, rgb_match.groups())
-            hex_color = f"#{r:02x}{g:02x}{b:02x}"
-            # Try to shorten to 3-digit hex
-            if hex_color[1] == hex_color[2] and hex_color[3] == hex_color[4] and hex_color[5] == hex_color[6]:
+        """Convert a color value to its shortest representation using canonical Color system."""
+        try:
+            # Use canonical Color class for parsing and optimization
+            from ..color import Color
+            color_obj = Color(color.strip())
+
+            # Get hex color
+            hex_color = color_obj.hex()
+
+            # Optimize to 3-digit hex if possible
+            if (len(hex_color) == 7 and
+                hex_color[1] == hex_color[2] and
+                hex_color[3] == hex_color[4] and
+                hex_color[5] == hex_color[6]):
                 return f"#{hex_color[1]}{hex_color[3]}{hex_color[5]}"
+
             return hex_color
-        
-        # Convert 6-digit hex to 3-digit if possible
-        hex_match = re.match(r'#([0-9a-fA-F]{6})', color)
-        if hex_match:
-            hex_val = hex_match.group(1).lower()
-            if hex_val[0] == hex_val[1] and hex_val[2] == hex_val[3] and hex_val[4] == hex_val[5]:
-                return f"#{hex_val[0]}{hex_val[2]}{hex_val[4]}"
-        
-        return color
+        except (ValueError, TypeError):
+            # Return original color if parsing fails
+            return color
 
 
 class CollapseGroupsPlugin(PreprocessingPlugin):
@@ -309,7 +336,7 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
         return False
     
     def _rect_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
-        """Convert rectangle to path data."""
+        """Convert rectangle to path data using consolidated PathProcessor."""
         try:
             x = float(element.get('x', 0))
             y = float(element.get('y', 0))
@@ -317,14 +344,23 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             height = float(element.get('height', 0))
             rx = float(element.get('rx', 0))
             ry = float(element.get('ry', 0))
-            
+
+            # Use PathProcessor for consistent shape-to-path conversion
+            try:
+                from ..utils.path_processor import path_processor
+                return path_processor.rect_to_path(x, y, width, height, rx, ry, precision)
+            except ImportError:
+                # Fallback to legacy implementation
+                pass
+
+            # Legacy implementation
             # Helper to format number with precision
             def fmt(num):
                 if num == int(num):
                     return str(int(num))
                 else:
                     return f"{num:.{precision}f}".rstrip('0').rstrip('.')
-            
+
             if rx == 0 and ry == 0:
                 # Simple rectangle
                 return f"M{fmt(x)},{fmt(y)}h{fmt(width)}v{fmt(height)}h{fmt(-width)}z"
@@ -335,32 +371,50 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             return None
     
     def _circle_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
-        """Convert circle to path data."""
+        """Convert circle to path data using consolidated PathProcessor."""
         try:
             cx = float(element.get('cx', 0))
             cy = float(element.get('cy', 0))
             r = float(element.get('r', 0))
-            
+
+            # Use PathProcessor for consistent shape-to-path conversion
+            try:
+                from ..utils.path_processor import path_processor
+                return path_processor.circle_to_path(cx, cy, r, precision)
+            except ImportError:
+                # Fallback to legacy implementation
+                pass
+
+            # Legacy implementation
             # Helper to format number with precision
             def fmt(num):
                 if num == int(num):
                     return str(int(num))
                 else:
                     return f"{num:.{precision}f}".rstrip('0').rstrip('.')
-            
+
             # Circle as two semicircle arcs
             return f"M{fmt(cx-r)},{fmt(cy)}A{fmt(r)},{fmt(r)} 0 1 1 {fmt(cx+r)},{fmt(cy)}A{fmt(r)},{fmt(r)} 0 1 1 {fmt(cx-r)},{fmt(cy)}z"
         except (ValueError, TypeError):
             return None
     
     def _ellipse_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
-        """Convert ellipse to path data."""
+        """Convert ellipse to path data using consolidated PathProcessor."""
         try:
             cx = float(element.get('cx', 0))
             cy = float(element.get('cy', 0))
             rx = float(element.get('rx', 0))
             ry = float(element.get('ry', 0))
-            
+
+            # Use PathProcessor for consistent shape-to-path conversion
+            try:
+                from ..utils.path_processor import path_processor
+                return path_processor.ellipse_to_path(cx, cy, rx, ry, precision)
+            except ImportError:
+                # Fallback to legacy implementation
+                pass
+
+            # Legacy implementation
             # Helper to format number with precision
             def fmt(num):
                 if num == int(num):
@@ -374,20 +428,29 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
             return None
     
     def _line_to_path(self, element: ET.Element, precision: int = 3) -> Optional[str]:
-        """Convert line to path data."""
+        """Convert line to path data using consolidated PathProcessor."""
         try:
             x1 = float(element.get('x1', 0))
             y1 = float(element.get('y1', 0))
             x2 = float(element.get('x2', 0))
             y2 = float(element.get('y2', 0))
-            
+
+            # Use PathProcessor for consistent shape-to-path conversion
+            try:
+                from ..utils.path_processor import path_processor
+                return path_processor.line_to_path(x1, y1, x2, y2, precision)
+            except ImportError:
+                # Fallback to legacy implementation
+                pass
+
+            # Legacy implementation
             # Helper to format number with precision
             def fmt(num):
                 if num == int(num):
                     return str(int(num))
                 else:
                     return f"{num:.{precision}f}".rstrip('0').rstrip('.')
-            
+
             return f"M{fmt(x1)},{fmt(y1)}L{fmt(x2)},{fmt(y2)}"
         except (ValueError, TypeError):
             return None

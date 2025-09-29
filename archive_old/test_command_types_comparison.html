@@ -1,0 +1,117 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>SVG2PPTX Conversion Result</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                    margin: 0; padding: 20px; background: #f5f5f5;
+                }
+                .header {
+                    text-align: center; background: white; padding: 30px;
+                    border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .comparison {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+                    max-width: 1200px; margin: 0 auto; margin-bottom: 30px;
+                }
+                .panel {
+                    background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .panel h3 {
+                    margin-top: 0; text-align: center; font-size: 1.4em;
+                    padding: 15px; border-radius: 8px; color: white;
+                }
+                .svg-panel h3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .pptx-panel h3 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+                .svg-container {
+                    display: flex; justify-content: center; align-items: center;
+                    border: 2px solid #ddd; border-radius: 8px; padding: 20px;
+                    background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    min-height: 200px;
+                }
+                .svg-container svg {
+                    max-width: 100%; height: auto;
+                }
+                img {
+                    max-width: 100%; height: auto; border: 2px solid #ddd; border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    object-fit: contain; background: white;
+                }
+                .download-section {
+                    background: white; padding: 30px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;
+                    max-width: 600px; margin: 0 auto;
+                }
+                .download-btn {
+                    display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 15px 30px; text-decoration: none;
+                    border-radius: 8px; font-weight: bold; font-size: 1.1em;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    transition: transform 0.2s ease;
+                }
+                .download-btn:hover { transform: translateY(-2px); }
+                .meta { color: #666; margin-top: 15px; font-size: 0.9em; }
+                .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎨 SVG2PPTX Conversion Result</h1>
+                <p><strong>Source:</strong> test_command_types.svg</p>
+                <div class="success">
+                    <strong>✅ Conversion Successful!</strong> Compare the original SVG with the PowerPoint rendering.
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="panel svg-panel">
+                    <h3>📄 Original SVG</h3>
+                    <div class="svg-container">
+                        <!-- Test SVG with multiple command types for switch system -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+
+  <!-- Path using MOVE_TO, LINE_TO, HORIZONTAL, VERTICAL, CLOSE_PATH -->
+  <path d="M50,50 L100,50 H150 V100 L100,100 Z"
+        fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+
+  <!-- Path using CUBIC_CURVE -->
+  <path d="M180,50 C200,30 220,30 240,50 C240,70 220,90 180,70 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- Path using ARC -->
+  <path d="M50,150 A25,25 0 0,1 100,150"
+        fill="none" stroke="#f39c12" stroke-width="3"/>
+
+</svg>
+                    </div>
+                    <div class="meta">
+                        Vector SVG: 300×200px<br>
+                        Source: test_command_types.svg
+                    </div>
+                </div>
+
+                <div class="panel pptx-panel">
+                    <h3>📊 PowerPoint Result</h3>
+                    <img src="test_command_types.png" alt="PowerPoint rendering">
+                    <div class="meta">
+                        LibreOffice rendering of converted PPTX file
+                    </div>
+                </div>
+            </div>
+
+            <div class="download-section">
+                <h3>📥 Download Your PowerPoint File</h3>
+                <a href="test_command_types.pptx" class="download-btn" download>
+                    ⬇️ Download test_command_types.pptx
+                </a>
+                <div class="meta">
+                    <p>File size: 5,065 bytes</p>
+                    <p>Open in Microsoft PowerPoint, LibreOffice Impress, or Google Slides</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        

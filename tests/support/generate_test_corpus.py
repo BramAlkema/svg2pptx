@@ -5,35 +5,57 @@ SVG Test Corpus Generator
 This script generates a comprehensive collection of SVG test files
 for validating the SVG2PPTX conversion system across all supported
 features and edge cases.
+
+Enhanced with converter-specific template patterns for comprehensive testing.
 """
 
 import os
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from lxml import etree as ET
+
+# Import the new template pattern system
+try:
+    from .template_patterns import TemplatePatternGenerator, TestGenerationConfig, generate_comprehensive_test_suite
+    from ..data.generators.converter_patterns import ConverterType
+    TEMPLATE_PATTERNS_AVAILABLE = True
+except ImportError:
+    TEMPLATE_PATTERNS_AVAILABLE = False
+    print("Warning: Template patterns not available. Using legacy generation only.")
 
 
 class SVGTestCorpusGenerator:
     """Generate comprehensive SVG test corpus."""
-    
-    def __init__(self, output_dir: str = "tests/test_data/svg_corpus"):
+
+    def __init__(self, output_dir: str = "tests/test_data/svg_corpus",
+                 use_template_patterns: bool = True):
         """Initialize test corpus generator.
-        
+
         Args:
             output_dir: Directory to create test corpus
+            use_template_patterns: Whether to use converter-specific template patterns
         """
         self.output_dir = Path(output_dir)
         self.test_metadata = {}
+        self.use_template_patterns = use_template_patterns and TEMPLATE_PATTERNS_AVAILABLE
+
+        if self.use_template_patterns:
+            self.template_generator = TemplatePatternGenerator()
+            print("🎯 Enhanced corpus generation with converter-specific template patterns enabled")
     
     def generate_corpus(self):
         """Generate the complete test corpus."""
         print("🔨 Generating SVG test corpus...")
-        
+
         # Create directory structure
         self._create_directories()
-        
-        # Generate test files by category
+
+        # Generate converter-specific templates if available
+        if self.use_template_patterns:
+            self._generate_converter_specific_tests()
+
+        # Generate legacy test files by category
         self._generate_basic_shapes()
         self._generate_complex_paths()
         self._generate_text_elements()
@@ -43,12 +65,140 @@ class SVGTestCorpusGenerator:
         self._generate_filters_and_effects()
         self._generate_edge_cases()
         self._generate_stress_tests()
-        
+
         # Generate test metadata
         self._generate_metadata()
-        
+
         print(f"✅ Generated {len(self.test_metadata)} SVG test files")
-    
+
+    def generate_enhanced_corpus(self):
+        """Generate enhanced corpus with converter-specific template patterns only."""
+        if not self.use_template_patterns:
+            raise RuntimeError("Template patterns not available. Cannot generate enhanced corpus.")
+
+        print("🎯 Generating enhanced SVG test corpus with converter-specific patterns...")
+
+        # Create enhanced directory structure
+        self._create_enhanced_directories()
+
+        # Generate converter-specific tests using template patterns
+        self._generate_converter_specific_tests()
+
+        # Generate enhanced metadata
+        self._generate_enhanced_metadata()
+
+        print(f"✅ Generated enhanced corpus with {len(self.test_metadata)} converter-specific test files")
+
+    def _create_enhanced_directories(self):
+        """Create enhanced directory structure for converter-specific tests."""
+        # Create directories for each converter type
+        for converter_type in ConverterType:
+            converter_dir = self.output_dir / "converter_specific" / converter_type.value
+            converter_dir.mkdir(parents=True, exist_ok=True)
+
+            # Create subdirectories for test categories
+            for category in ['scenarios', 'edge_cases', 'performance']:
+                (converter_dir / category).mkdir(parents=True, exist_ok=True)
+
+    def _generate_converter_specific_tests(self):
+        """Generate converter-specific test files using template patterns."""
+        if not self.use_template_patterns:
+            return
+
+        print("  📝 Generating converter-specific template pattern tests...")
+
+        # Generate test suites for each converter type
+        for converter_type in ConverterType:
+            try:
+                print(f"    🔧 Generating tests for {converter_type.value} converter...")
+
+                # Generate test suite for this converter
+                test_suite = self.template_generator.generate_converter_test_suite(converter_type)
+
+                # Process and store each test
+                converter_dir = "converter_specific" / Path(converter_type.value)
+
+                for test_name, svg_content in test_suite.items():
+                    # Determine category based on test name
+                    if any(edge in test_name for edge in ['zero_dimensions', 'negative', 'extremely', 'empty', 'invalid']):
+                        category = 'edge_cases'
+                    elif any(perf in test_name for perf in ['batch', 'performance', 'single_', '10_', '100_', '1000_']):
+                        category = 'performance'
+                    else:
+                        category = 'scenarios'
+
+                    file_path = converter_dir / category / f"{test_name}.svg"
+
+                    # Store test metadata
+                    self.test_metadata[str(file_path)] = {
+                        'converter_type': converter_type.value,
+                        'test_category': category,
+                        'test_name': test_name,
+                        'file_size': len(svg_content.encode('utf-8')),
+                        'template_generated': True,
+                        'generation_method': 'converter_specific_template'
+                    }
+
+                    # Write SVG file
+                    full_path = self.output_dir / file_path
+                    full_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    with open(full_path, 'w', encoding='utf-8') as f:
+                        f.write(svg_content)
+
+                print(f"      ✅ Generated {len(test_suite)} tests for {converter_type.value}")
+
+            except Exception as e:
+                print(f"      ⚠️  Warning: Failed to generate tests for {converter_type.value}: {e}")
+                continue
+
+    def _generate_enhanced_metadata(self):
+        """Generate enhanced metadata for converter-specific tests."""
+        # Group metadata by converter type
+        converter_metadata = {}
+        for file_path, metadata in self.test_metadata.items():
+            converter_type = metadata.get('converter_type', 'unknown')
+            if converter_type not in converter_metadata:
+                converter_metadata[converter_type] = {
+                    'tests': [],
+                    'total_count': 0,
+                    'categories': set()
+                }
+
+            converter_metadata[converter_type]['tests'].append({
+                'file_path': file_path,
+                'test_name': metadata['test_name'],
+                'category': metadata['test_category'],
+                'file_size': metadata['file_size']
+            })
+            converter_metadata[converter_type]['total_count'] += 1
+            converter_metadata[converter_type]['categories'].add(metadata['test_category'])
+
+        # Convert sets to lists for JSON serialization
+        for converter_type in converter_metadata:
+            converter_metadata[converter_type]['categories'] = list(converter_metadata[converter_type]['categories'])
+
+        # Create comprehensive metadata
+        enhanced_metadata = {
+            'corpus_info': {
+                'generation_method': 'enhanced_template_patterns',
+                'generated_by': 'SVGTestCorpusGenerator with TemplatePatternGenerator',
+                'total_files': len(self.test_metadata),
+                'converter_types': list(converter_metadata.keys()),
+                'total_converters': len(converter_metadata),
+                'template_patterns_version': '1.0'
+            },
+            'converter_breakdown': converter_metadata,
+            'test_files': self.test_metadata
+        }
+
+        # Save enhanced metadata
+        metadata_path = self.output_dir / 'enhanced_corpus_metadata.json'
+        with open(metadata_path, 'w', encoding='utf-8') as f:
+            json.dump(enhanced_metadata, f, indent=2)
+
+        print(f"✅ Generated enhanced metadata: {metadata_path}")
+
     def _create_directories(self):
         """Create directory structure for test corpus."""
         categories = [

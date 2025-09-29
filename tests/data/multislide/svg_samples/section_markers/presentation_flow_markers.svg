@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1366" height="768" viewBox="0 0 1366 768">
+  <title>Presentation Flow Markers - 5 Slides</title>
+
+  <!-- Global navigation breadcrumb -->
+  <rect x="0" y="0" width="1366" height="60" fill="#343a40"/>
+  <text x="50" y="35" font-size="18" fill="white" font-weight="bold">Executive Quarterly Review</text>
+  <text x="1200" y="35" font-size="14" fill="#adb5bd">Q4 2024</text>
+
+  <!-- Slide 1: Executive Summary -->
+  <g id="flow_slide_1" class="flow-marker" data-flow-step="1" data-section="executive-summary">
+    <rect x="0" y="60" width="1366" height="708" fill="#f8f9fa"/>
+
+    <!-- Flow indicator -->
+    <rect x="50" y="80" width="1266" height="50" fill="#007bff" rx="10"/>
+    <circle cx="100" cy="105" r="15" fill="white"/>
+    <text x="100" y="110" text-anchor="middle" font-size="12" fill="#007bff" font-weight="bold">1</text>
+    <text x="140" y="110" font-size="20" fill="white" font-weight="bold">Executive Summary</text>
+
+    <!-- Progress dots -->
+    <circle cx="1150" cy="105" r="8" fill="white"/>
+    <circle cx="1180" cy="105" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1210" cy="105" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1240" cy="105" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1270" cy="105" r="8" fill="rgba(255,255,255,0.5)"/>
+
+    <!-- Content area -->
+    <rect x="100" y="160" width="1166" height="550" fill="white" stroke="#dee2e6" stroke-width="2" rx="12"/>
+
+    <!-- Key achievements summary -->
+    <text x="683" y="220" text-anchor="middle" font-size="36" fill="#212529" font-weight="bold">Q4 Performance Highlights</text>
+
+    <!-- Achievement grid -->
+    <g class="achievement-grid">
+      <!-- Revenue -->
+      <rect x="150" y="270" width="280" height="150" fill="#d4edda" stroke="#28a745" stroke-width="3" rx="10"/>
+      <text x="290" y="310" text-anchor="middle" font-size="24" fill="#155724" font-weight="bold">Revenue Growth</text>
+      <text x="290" y="350" text-anchor="middle" font-size="48" fill="#28a745" font-weight="bold">+23%</text>
+      <text x="290" y="385" text-anchor="middle" font-size="16" fill="#155724">$4.7M vs $3.8M Q3</text>
+      <text x="290" y="405" text-anchor="middle" font-size="14" fill="#28a745">Exceeded target by 8%</text>
+
+      <!-- Customers -->
+      <rect x="450" y="270" width="280" height="150" fill="#cce7ff" stroke="#007bff" stroke-width="3" rx="10"/>
+      <text x="590" y="310" text-anchor="middle" font-size="24" fill="#004085" font-weight="bold">New Customers</text>
+      <text x="590" y="350" text-anchor="middle" font-size="48" fill="#007bff" font-weight="bold">847</text>
+      <text x="590" y="385" text-anchor="middle" font-size="16" fill="#004085">35% increase vs Q3</text>
+      <text x="590" y="405" text-anchor="middle" font-size="14" fill="#007bff">Strong enterprise uptake</text>
+
+      <!-- Product Launch -->
+      <rect x="750" y="270" width="280" height="150" fill="#fff3cd" stroke="#ffc107" stroke-width="3" rx="10"/>
+      <text x="890" y="310" text-anchor="middle" font-size="24" fill="#856404" font-weight="bold">Product Launch</text>
+      <text x="890" y="350" text-anchor="middle" font-size="32" fill="#ffc107" font-weight="bold">Success</text>
+      <text x="890" y="385" text-anchor="middle" font-size="16" fill="#856404">AI Platform v2.0</text>
+      <text x="890" y="405" text-anchor="middle" font-size="14" fill="#ffc107">2,340 early adopters</text>
+
+      <!-- Team Growth -->
+      <rect x="1050" y="270" width="230" height="150" fill="#e2d9f3" stroke="#6f42c1" stroke-width="3" rx="10"/>
+      <text x="1165" y="310" text-anchor="middle" font-size="24" fill="#3f1a78" font-weight="bold">Team Growth</text>
+      <text x="1165" y="350" text-anchor="middle" font-size="48" fill="#6f42c1" font-weight="bold">+42</text>
+      <text x="1165" y="385" text-anchor="middle" font-size="16" fill="#3f1a78">New hires in Q4</text>
+      <text x="1165" y="405" text-anchor="middle" font-size="14" fill="#6f42c1">18% headcount growth</text>
+    </g>
+
+    <!-- Strategic initiatives status -->
+    <rect x="200" y="450" width="966" height="200" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2" rx="8"/>
+    <text x="683" y="480" text-anchor="middle" font-size="20" fill="#495057" font-weight="bold">Strategic Initiative Progress</text>
+
+    <!-- Initiative bars -->
+    <text x="250" y="510" font-size="14" fill="#495057">Digital Transformation</text>
+    <rect x="250" y="520" width="400" height="20" fill="#e9ecef" rx="10"/>
+    <rect x="250" y="520" width="320" height="20" fill="#28a745" rx="10"/>
+    <text x="670" y="535" font-size="12" fill="#28a745" font-weight="bold">80% Complete</text>
+
+    <text x="250" y="560" font-size="14" fill="#495057">Market Expansion</text>
+    <rect x="250" y="570" width="400" height="20" fill="#e9ecef" rx="10"/>
+    <rect x="250" y="570" width="240" height="20" fill="#ffc107" rx="10"/>
+    <text x="670" y="585" font-size="12" fill="#856404" font-weight="bold">60% Complete</text>
+
+    <text x="750" y="510" font-size="14" fill="#495057">Technology Platform</text>
+    <rect x="750" y="520" width="400" height="20" fill="#e9ecef" rx="10"/>
+    <rect x="750" y="520" width="360" height="20" fill="#007bff" rx="10"/>
+    <text x="1170" y="535" font-size="12" fill="#007bff" font-weight="bold">90% Complete</text>
+
+    <text x="750" y="560" font-size="14" fill="#495057">Sustainability Goals</text>
+    <rect x="750" y="570" width="400" height="20" fill="#e9ecef" rx="10"/>
+    <rect x="750" y="570" width="180" height="20" fill="#dc3545" rx="10"/>
+    <text x="1170" y="585" font-size="12" fill="#dc3545" font-weight="bold">45% Complete</text>
+
+    <!-- Key insights -->
+    <rect x="300" y="610" width="766" height="60" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="8"/>
+    <text x="683" y="635" text-anchor="middle" font-size="16" fill="#0c5460" font-weight="bold">Key Insight</text>
+    <text x="683" y="655" text-anchor="middle" font-size="14" fill="#0c5460">Strong momentum across all business units - positioned for exceptional 2025 growth</text>
+
+    <!-- Next section indicator -->
+    <polygon points="1320,700 1340,720 1320,740" fill="#007bff"/>
+    <text x="1280" y="725" text-anchor="end" font-size="12" fill="#007bff">Next: Financial</text>
+  </g>
+
+  <!-- Flow transition -->
+  <rect x="0" y="768" width="1366" height="10" fill="#007bff" opacity="0.2"/>
+
+  <!-- Slide 2: Financial Performance -->
+  <g id="flow_slide_2" class="flow-marker" data-flow-step="2" data-section="financial" transform="translate(0, 778)">
+    <rect x="0" y="0" width="1366" height="708" fill="#e8f4fd"/>
+
+    <!-- Flow indicator -->
+    <rect x="50" y="20" width="1266" height="50" fill="#0056b3" rx="10"/>
+    <circle cx="100" cy="45" r="15" fill="white"/>
+    <text x="100" y="50" text-anchor="middle" font-size="12" fill="#0056b3" font-weight="bold">2</text>
+    <text x="140" y="50" font-size="20" fill="white" font-weight="bold">Financial Performance</text>
+
+    <!-- Progress dots -->
+    <circle cx="1150" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1180" cy="45" r="8" fill="white"/>
+    <circle cx="1210" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1240" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1270" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+
+    <!-- Financial content placeholder -->
+    <rect x="100" y="100" width="1166" height="550" fill="white" stroke="#b3d7ff" stroke-width="2" rx="12"/>
+    <text x="683" y="200" text-anchor="middle" font-size="36" fill="#0056b3" font-weight="bold">Financial Deep Dive</text>
+
+    <!-- Revenue chart area -->
+    <rect x="150" y="250" width="500" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="6"/>
+    <text x="400" y="280" text-anchor="middle" font-size="18" fill="#495057" font-weight="bold">Revenue Trends</text>
+
+    <!-- KPI summary -->
+    <rect x="700" y="250" width="516" height="300" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="6"/>
+    <text x="958" y="280" text-anchor="middle" font-size="18" fill="#495057" font-weight="bold">Key Financial Metrics</text>
+
+    <!-- Navigation -->
+    <polygon points="1320,640 1340,660 1320,680" fill="#0056b3"/>
+    <text x="1280" y="665" text-anchor="end" font-size="12" fill="#0056b3">Next: Operations</text>
+  </g>
+
+  <!-- Slide 3: Operations -->
+  <g id="flow_slide_3" class="flow-marker" data-flow-step="3" data-section="operations" transform="translate(0, 1556)">
+    <rect x="0" y="0" width="1366" height="708" fill="#e8f5e8"/>
+
+    <!-- Flow indicator -->
+    <rect x="50" y="20" width="1266" height="50" fill="#1e7e34" rx="10"/>
+    <circle cx="100" cy="45" r="15" fill="white"/>
+    <text x="100" y="50" text-anchor="middle" font-size="12" fill="#1e7e34" font-weight="bold">3</text>
+    <text x="140" y="50" font-size="20" fill="white" font-weight="bold">Operations Excellence</text>
+
+    <!-- Progress dots -->
+    <circle cx="1150" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1180" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1210" cy="45" r="8" fill="white"/>
+    <circle cx="1240" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1270" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+
+    <!-- Operations content -->
+    <rect x="100" y="100" width="1166" height="550" fill="white" stroke="#80d187" stroke-width="2" rx="12"/>
+    <text x="683" y="200" text-anchor="middle" font-size="36" fill="#155724" font-weight="bold">Operational Metrics</text>
+
+    <!-- Navigation -->
+    <polygon points="1320,640 1340,660 1320,680" fill="#1e7e34"/>
+    <text x="1280" y="665" text-anchor="end" font-size="12" fill="#1e7e34">Next: Technology</text>
+  </g>
+
+  <!-- Slide 4: Technology -->
+  <g id="flow_slide_4" class="flow-marker" data-flow-step="4" data-section="technology" transform="translate(0, 2334)">
+    <rect x="0" y="0" width="1366" height="708" fill="#fff3e0"/>
+
+    <!-- Flow indicator -->
+    <rect x="50" y="20" width="1266" height="50" fill="#e65100" rx="10"/>
+    <circle cx="100" cy="45" r="15" fill="white"/>
+    <text x="100" y="50" text-anchor="middle" font-size="12" fill="#e65100" font-weight="bold">4</text>
+    <text x="140" y="50" font-size="20" fill="white" font-weight="bold">Technology Innovation</text>
+
+    <!-- Progress dots -->
+    <circle cx="1150" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1180" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1210" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1240" cy="45" r="8" fill="white"/>
+    <circle cx="1270" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+
+    <!-- Technology content -->
+    <rect x="100" y="100" width="1166" height="550" fill="white" stroke="#ffb74d" stroke-width="2" rx="12"/>
+    <text x="683" y="200" text-anchor="middle" font-size="36" fill="#e65100" font-weight="bold">Tech Stack &amp; Innovation</text>
+
+    <!-- Navigation -->
+    <polygon points="1320,640 1340,660 1320,680" fill="#e65100"/>
+    <text x="1280" y="665" text-anchor="end" font-size="12" fill="#e65100">Next: Strategy</text>
+  </g>
+
+  <!-- Slide 5: Future Strategy -->
+  <g id="flow_slide_5" class="flow-marker" data-flow-step="5" data-section="strategy" transform="translate(0, 3112)">
+    <rect x="0" y="0" width="1366" height="708" fill="#f3e5f5"/>
+
+    <!-- Flow indicator -->
+    <rect x="50" y="20" width="1266" height="50" fill="#7b1fa2" rx="10"/>
+    <circle cx="100" cy="45" r="15" fill="white"/>
+    <text x="100" y="50" text-anchor="middle" font-size="12" fill="#7b1fa2" font-weight="bold">5</text>
+    <text x="140" y="50" font-size="20" fill="white" font-weight="bold">Future Strategy &amp; Goals</text>
+
+    <!-- Progress dots -->
+    <circle cx="1150" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1180" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1210" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1240" cy="45" r="8" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="1270" cy="45" r="8" fill="white"/>
+
+    <!-- Strategy content -->
+    <rect x="100" y="100" width="1166" height="550" fill="white" stroke="#ce93d8" stroke-width="2" rx="12"/>
+    <text x="683" y="200" text-anchor="middle" font-size="36" fill="#4a148c" font-weight="bold">2025 Strategic Roadmap</text>
+
+    <!-- Roadmap timeline -->
+    <line x1="200" y1="300" x2="1166" y2="300" stroke="#7b1fa2" stroke-width="4"/>
+
+    <!-- Q1 -->
+    <circle cx="300" cy="300" r="12" fill="#7b1fa2"/>
+    <text x="300" y="330" text-anchor="middle" font-size="16" fill="#4a148c" font-weight="bold">Q1</text>
+    <text x="300" y="350" text-anchor="middle" font-size="12" fill="#6a1b9a">Platform Upgrade</text>
+
+    <!-- Q2 -->
+    <circle cx="500" cy="300" r="12" fill="#7b1fa2"/>
+    <text x="500" y="330" text-anchor="middle" font-size="16" fill="#4a148c" font-weight="bold">Q2</text>
+    <text x="500" y="350" text-anchor="middle" font-size="12" fill="#6a1b9a">Market Expansion</text>
+
+    <!-- Q3 -->
+    <circle cx="700" cy="300" r="12" fill="#7b1fa2"/>
+    <text x="700" y="330" text-anchor="middle" font-size="16" fill="#4a148c" font-weight="bold">Q3</text>
+    <text x="700" y="350" text-anchor="middle" font-size="12" fill="#6a1b9a">AI Integration</text>
+
+    <!-- Q4 -->
+    <circle cx="900" cy="300" r="12" fill="#7b1fa2"/>
+    <text x="900" y="330" text-anchor="middle" font-size="16" fill="#4a148c" font-weight="bold">Q4</text>
+    <text x="900" y="350" text-anchor="middle" font-size="12" fill="#6a1b9a">Global Launch</text>
+
+    <!-- Strategic goals -->
+    <rect x="250" y="400" width="866" height="200" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2" rx="8"/>
+    <text x="683" y="430" text-anchor="middle" font-size="20" fill="#495057" font-weight="bold">2025 Success Metrics</text>
+
+    <text x="400" y="470" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Revenue Target</text>
+    <text x="400" y="495" text-anchor="middle" font-size="24" fill="#28a745" font-weight="bold">$12M</text>
+    <text x="400" y="515" text-anchor="middle" font-size="12" fill="#6c757d">+60% growth</text>
+
+    <text x="683" y="470" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Market Share</text>
+    <text x="683" y="495" text-anchor="middle" font-size="24" fill="#007bff" font-weight="bold">25%</text>
+    <text x="683" y="515" text-anchor="middle" font-size="12" fill="#6c757d">+10 percentage points</text>
+
+    <text x="966" y="470" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Team Size</text>
+    <text x="966" y="495" text-anchor="middle" font-size="24" fill="#ffc107" font-weight="bold">200+</text>
+    <text x="966" y="515" text-anchor="middle" font-size="12" fill="#6c757d">+60 new hires</text>
+
+    <!-- Final call to action -->
+    <rect x="400" y="540" width="566" height="40" fill="#7b1fa2" rx="20"/>
+    <text x="683" y="565" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Execution starts January 2025</text>
+
+    <!-- End indicator -->
+    <circle cx="1320" cy="660" r="12" fill="#7b1fa2"/>
+    <text x="1320" y="665" text-anchor="middle" font-size="12" fill="white" font-weight="bold">✓</text>
+    <text x="1280" y="685" text-anchor="end" font-size="12" fill="#7b1fa2">End of Presentation</text>
+  </g>
+</svg>

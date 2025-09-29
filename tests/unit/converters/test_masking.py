@@ -77,13 +77,22 @@ class TestMaskingConverter:
 
         Instantiate MaskingConverter with mock dependencies.
         """
-        converter = MaskingConverter()
-        # Mock required dependencies
-        converter.unit_converter = Mock()
-        converter.unit_converter.convert_to_emu.return_value = 914400  # 1 inch in EMUs
-        converter.unit_converter.convert_to_user_units.return_value = 10.0
-        converter.transform_parser = Mock()
-        converter.transform_parser.parse_transform.return_value = [1, 0, 0, 1, 0, 0]
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        converter = MaskingConverter(services=mock_services)
+        # Mock required dependencies through services
+        mock_services.unit_converter.convert_to_emu.return_value = 914400  # 1 inch in EMUs
+        mock_services.unit_converter.convert_to_user_units.return_value = 10.0
+        # Add transform parser to services
+        mock_services.transform_parser = Mock()
+        mock_services.transform_parser.parse_transform.return_value = [1, 0, 0, 1, 0, 0]
         return converter
 
     def test_initialization(self, component_instance):
@@ -337,7 +346,16 @@ class TestMaskingConverterHelperFunctions:
         """
         Test conversion of basic shapes to path data.
         """
-        converter = MaskingConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        converter = MaskingConverter(services=mock_services)
         context = Mock(spec=ConversionContext)
 
         # Test rectangle conversion
@@ -366,7 +384,16 @@ class TestMaskingConverterHelperFunctions:
         """
         Test detection of masks that require rasterization.
         """
-        converter = MaskingConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        converter = MaskingConverter(services=mock_services)
 
         # Create simple mask definition (should not require rasterization)
         simple_mask = MaskDefinition(
@@ -415,10 +442,18 @@ class TestMaskingConverterIntegration:
         """
         Test complete workflow from mask definition to PowerPoint output.
         """
-        converter = MaskingConverter()
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        converter = MaskingConverter(services=mock_services)
         # Mock required dependencies
-        converter.unit_converter = Mock()
-        converter.unit_converter.convert_to_emu.return_value = 914400
+        mock_services.unit_converter.convert_to_emu.return_value = 914400
         converter.unit_converter.convert_to_user_units.return_value = 10.0
 
         context = Mock(spec=ConversionContext)
@@ -456,9 +491,17 @@ class TestMaskingConverterIntegration:
         """
         Test with real-world mask and clipPath scenarios.
         """
-        converter = MaskingConverter()
-        converter.unit_converter = Mock()
-        converter.unit_converter.convert_to_user_units.return_value = 10.0
+        # Create mock services for dependency injection
+        mock_services = Mock()
+        mock_services.unit_converter = Mock()
+        mock_services.viewport_handler = Mock()
+        mock_services.font_service = Mock()
+        mock_services.gradient_service = Mock()
+        mock_services.pattern_service = Mock()
+        mock_services.clip_service = Mock()
+
+        converter = MaskingConverter(services=mock_services)
+        mock_services.unit_converter.convert_to_user_units.return_value = 10.0
 
         context = Mock(spec=ConversionContext)
 

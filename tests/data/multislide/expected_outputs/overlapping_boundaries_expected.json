@@ -1,0 +1,122 @@
+{
+  "test_case": "overlapping_boundaries",
+  "detection_strategy": "edge_case_handling",
+  "expected_result": {
+    "is_multislide": true,
+    "slide_count": 3,
+    "detection_method": "boundary_conflict_resolution",
+    "slides": [
+      {
+        "slide_number": 1,
+        "elements": ["slide_1_base"],
+        "content_summary": "Base slide with overlapping elements extending to other slides",
+        "slide_id": "slide_1_base",
+        "css_class": "slide-boundary",
+        "z_index": 1,
+        "overlapping_elements": [
+          {
+            "element": "overlapping_element_rect",
+            "type": "rect",
+            "position": {"x": 350, "y": 400, "width": 600, "height": 200},
+            "extends_to": ["slide_2", "slide_3"],
+            "resolution": "assign_to_primary_slide"
+          },
+          {
+            "element": "circular_overlap",
+            "type": "circle",
+            "position": {"cx": 800, "cy": 350, "r": 100},
+            "extends_to": ["slide_2"],
+            "resolution": "assign_to_primary_slide"
+          }
+        ],
+        "background_color": "#f8f9fa"
+      },
+      {
+        "slide_number": 2,
+        "elements": ["slide_2_mid"],
+        "content_summary": "Mid-layer slide with complex multi-boundary content",
+        "slide_id": "slide_2_mid",
+        "css_class": "slide-boundary",
+        "z_index": 2,
+        "transform": "translate(0, 300)",
+        "overlapping_elements": [
+          {
+            "element": "multi_boundary_content",
+            "type": "rect",
+            "position": {"x": 200, "y": 100, "width": 800, "height": 150},
+            "extends_to": ["slide_1", "slide_3"],
+            "resolution": "assign_to_highest_overlap_percentage"
+          },
+          {
+            "element": "nested_overlap_group",
+            "type": "group",
+            "conflict_zone": {"x": 250, "y": 350, "width": 150, "height": 150},
+            "resolution": "split_by_dominant_layer"
+          }
+        ],
+        "background_color": "#e8f4fd"
+      },
+      {
+        "slide_number": 3,
+        "elements": ["slide_3_top"],
+        "content_summary": "Top layer slide with priority conflicts",
+        "slide_id": "slide_3_top",
+        "css_class": "slide-boundary",
+        "z_index": 3,
+        "transform": "translate(0, 600)",
+        "conflict_resolution": [
+          {
+            "element": "conflicting_element",
+            "type": "rect",
+            "position": {"x": 300, "y": 100, "width": 600, "height": 150},
+            "conflicts_with": ["slide_1", "slide_2"],
+            "resolution": "highest_z_index_wins",
+            "priority": "top_layer"
+          },
+          {
+            "element": "boundary_test_shapes",
+            "type": "group",
+            "edge_case": "exact_boundary_coordinates",
+            "resolution": "include_in_containing_slide"
+          }
+        ],
+        "background_color": "#e8f5e8"
+      }
+    ],
+    "conflict_resolution_strategy": {
+      "primary_method": "z_index_priority",
+      "fallback_methods": [
+        "overlap_percentage_analysis",
+        "geometric_containment",
+        "temporal_ordering"
+      ],
+      "edge_case_handling": {
+        "exact_boundary_elements": "assign_to_containing_slide",
+        "split_elements": "assign_to_dominant_area",
+        "nested_conflicts": "resolve_by_hierarchy"
+      }
+    },
+    "metadata": {
+      "complexity_level": "high",
+      "overlap_count": 8,
+      "conflict_zones": 3,
+      "resolution_accuracy": "should_be_above_90_percent",
+      "element_count": 34,
+      "boundary_markers": "dashed_lines_with_opacity"
+    },
+    "validation_criteria": {
+      "overlap_detection": "should identify all overlapping elements",
+      "conflict_resolution": "should resolve conflicts using z-index priority",
+      "element_assignment": "should assign each element to exactly one slide",
+      "boundary_handling": "should handle edge cases at exact coordinates",
+      "priority_system": "should respect hierarchical priority rules",
+      "performance": "should resolve conflicts within reasonable time"
+    },
+    "test_annotations": {
+      "purpose": "test overlapping boundaries resolution",
+      "expected_slides": 3,
+      "challenge": "resolve element conflicts and overlaps",
+      "legend_provided": true
+    }
+  }
+}

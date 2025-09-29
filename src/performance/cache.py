@@ -119,14 +119,52 @@ class PathCache(BaseCache):
         self._path_complexity_cache = {}
     
     def get_parsed_path(self, path_data: str) -> Optional[List[Tuple[str, List[float]]]]:
-        """Get parsed path commands from cache."""
-        key = f"parse:{self._generate_key(path_data)}"
-        return self.get(key)
-    
+        """Get parsed path commands using modern PathSystem."""
+        try:
+            # Use PathSystem for modern path processing
+            if not hasattr(self, '_path_system') or self._path_system is None:
+                from ..paths import create_path_system
+                self._path_system = create_path_system(800, 600, (0, 0, 800, 600))
+
+            result = self._path_system.process_path(path_data)
+
+            # Convert to legacy format for compatibility
+            commands = []
+            for cmd in result.commands:
+                coords = []
+                for pt in cmd.coordinates:
+                    coords.extend([pt.x, pt.y])
+                commands.append((cmd.command_type.value.upper(), coords))
+            return commands
+
+        except ImportError:
+            # Fallback to cache-based approach
+            key = f"parse:{self._generate_key(path_data)}"
+            return self.get(key)
+        except Exception:
+            # Fallback to cache-based approach
+            key = f"parse:{self._generate_key(path_data)}"
+            return self.get(key)
+
     def cache_parsed_path(self, path_data: str, parsed_commands: List[Tuple[str, List[float]]]):
-        """Cache parsed path commands."""
-        key = f"parse:{self._generate_key(path_data)}"
-        self.put(key, parsed_commands)
+        """Cache parsed path commands - PathSystem has built-in efficiency."""
+        try:
+            # PathSystem has optimized processing, so explicit caching is less needed
+            # Just validate that PathSystem can parse this data
+            if not hasattr(self, '_path_system') or self._path_system is None:
+                from ..paths import create_path_system
+                self._path_system = create_path_system(800, 600, (0, 0, 800, 600))
+
+            self._path_system.process_path(path_data)  # This validates the path
+
+        except ImportError:
+            # Fallback to local caching
+            key = f"parse:{self._generate_key(path_data)}"
+            self.put(key, parsed_commands)
+        except Exception:
+            # Fallback to local caching
+            key = f"parse:{self._generate_key(path_data)}"
+            self.put(key, parsed_commands)
     
     def get_simplified_path(self, path_data: str, tolerance: float) -> Optional[str]:
         """Get simplified path from cache."""
@@ -203,14 +241,54 @@ class TransformCache(BaseCache):
         super().__init__(max_size)
     
     def get_parsed_transform(self, transform_str: str) -> Optional[List[List[float]]]:
-        """Get parsed transform matrix from cache."""
-        key = f"parse:{self._generate_key(transform_str)}"
-        return self.get(key)
-    
+        """Get parsed transform matrix using canonical TransformEngine cache."""
+        try:
+            # Delegate to TransformEngine which has superior built-in caching
+            from ..transforms import TransformEngine
+
+            engine = services.transform_parser
+            matrix = engine.parse_to_matrix(transform_str)
+
+            # Convert Matrix to expected legacy format
+            if hasattr(matrix, 'to_array'):
+                return matrix.to_array()
+            elif hasattr(matrix, 'a'):  # Matrix class format
+                # Convert Matrix [a,b,c,d,e,f] to 3x3 array format
+                return [
+                    [matrix.a, matrix.c, matrix.e],
+                    [matrix.b, matrix.d, matrix.f],
+                    [0.0, 0.0, 1.0]
+                ]
+            else:
+                return None
+
+        except ImportError:
+            # Fallback to cache-based approach
+            key = f"parse:{self._generate_key(transform_str)}"
+            return self.get(key)
+        except Exception:
+            # Fallback to cache-based approach
+            key = f"parse:{self._generate_key(transform_str)}"
+            return self.get(key)
+
     def cache_parsed_transform(self, transform_str: str, matrix: List[List[float]]):
-        """Cache parsed transform matrix."""
-        key = f"parse:{self._generate_key(transform_str)}"
-        self.put(key, matrix)
+        """Cache parsed transform matrix - now delegates to TransformEngine's superior caching."""
+        try:
+            # TransformEngine has built-in caching, so we don't need to cache here
+            # Just validate that TransformEngine can parse this data
+            from ..transforms import TransformEngine
+
+            engine = services.transform_parser
+            engine.parse_to_matrix(transform_str)  # This will cache internally
+
+        except ImportError:
+            # Fallback to local caching
+            key = f"parse:{self._generate_key(transform_str)}"
+            self.put(key, matrix)
+        except Exception:
+            # Fallback to local caching
+            key = f"parse:{self._generate_key(transform_str)}"
+            self.put(key, matrix)
     
     def get_combined_transform(self, *transforms: str) -> Optional[List[List[float]]]:
         """Get combined transform matrix from cache."""

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <rect x="50" y="50" width="60" height="40" fill="blue"/>
+    <rect x="150" y="50" width="60" height="40" fill="red" transform="rotate(45 180 70)"/>
+    <rect x="250" y="50" width="60" height="40" fill="green" transform="scale(1.5)"/>
+    <rect x="50" y="150" width="60" height="40" fill="purple" transform="translate(50, 30)"/>
+    <rect x="200" y="150" width="60" height="40" fill="orange" transform="skewX(20)"/>
+    <text x="200" y="250" text-anchor="middle" font-family="Arial" font-size="16">Transforms Test</text>
+</svg>

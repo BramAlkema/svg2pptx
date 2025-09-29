@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- Path definition for complex motion -->
+  <defs>
+    <path id="complexPath" d="M 50,100 Q 150,50 250,100 Q 150,150 50,100 Z"/>
+  </defs>
+
+  <!-- Show the path -->
+  <use href="#complexPath" fill="none" stroke="#bdc3c7" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- Circle following the complex path -->
+  <circle r="8" fill="#e74c3c">
+    <animateMotion dur="5s" repeatCount="indefinite">
+      <mpath href="#complexPath"/>
+    </animateMotion>
+    <animate attributeName="r" values="8;12;8" dur="1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Rectangle following a simple path -->
+  <rect width="12" height="12" fill="#3498db">
+    <animateMotion
+      path="M 20,20 L 280,20 L 280,180 L 20,180 Z"
+      dur="8s"
+      repeatCount="indefinite"/>
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      values="0;360"
+      dur="2s"
+      repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Text following a wavy path -->
+  <text font-family="Arial" font-size="14" fill="#2c3e50" text-anchor="middle">
+    Hello!
+    <animateMotion
+      path="M 50,50 Q 100,30 150,50 Q 200,70 250,50"
+      dur="4s"
+      repeatCount="indefinite"/>
+  </text>
+</svg>

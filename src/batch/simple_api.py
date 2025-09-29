@@ -289,7 +289,7 @@ def create_simple_router() -> APIRouter:
 
     @router.post("/convert-files", response_model=SimpleJobResponse)
     async def convert_multiple_files(
-        files: List[UploadFile] = File(...),
+        files: List[UploadFile] = File(default=[]),
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),

@@ -1,0 +1,43 @@
+{
+  "single_document_test": {
+    "legacy_time_ms": 8.586124997236766,
+    "optimized_time_ms": 7.978041991009377,
+    "improvement_percent": 14.899496012645209,
+    "speedup_factor": 1.076219579555065
+  },
+  "scalability_test": {
+    "document_sizes": [
+      200,
+      500,
+      1000,
+      2000,
+      3000
+    ],
+    "legacy_times_ms": [
+      0.5964579904684797,
+      1.3884579966543242,
+      2.8320839919615537,
+      5.709416989702731,
+      8.586124997236766
+    ],
+    "optimized_times_ms": [
+      0.5368340061977506,
+      1.3502080109901726,
+      2.6375000015832484,
+      6.340291991364211,
+      7.978041991009377
+    ],
+    "overall_improvement_percent": 1.4109372021705833
+  },
+  "complexity_analysis": {
+    "legacy_complexity": "O(n log n) - Linearithmic",
+    "optimized_complexity": "O(n log n) - Linearithmic",
+    "legacy_scaling_factor": 1.9718506180115287,
+    "optimized_scaling_factor": 2.0326861216692866
+  },
+  "goal_assessment": {
+    "target_improvement_percent": 50.0,
+    "achieved_improvement_percent": 1.4109372021705833,
+    "goal_met": false
+  }
+}

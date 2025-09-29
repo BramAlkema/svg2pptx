@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <title>Overlapping Boundaries Test - 3 Slides</title>
+
+  <!-- Test case: Elements that cross slide boundaries -->
+
+  <!-- Slide 1: Base layer with overlapping elements -->
+  <g id="slide_1_base" class="slide-boundary">
+    <rect width="1200" height="900" fill="#f8f9fa"/>
+
+    <!-- Slide indicator -->
+    <rect x="50" y="50" width="120" height="40" fill="#007bff" rx="5"/>
+    <text x="110" y="75" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Slide 1</text>
+
+    <!-- Element that extends beyond slide boundary -->
+    <rect x="100" y="200" width="400" height="300" fill="#e3f2fd" stroke="#1976d2" stroke-width="3" rx="10"/>
+    <text x="300" y="240" text-anchor="middle" font-size="20" fill="#0d47a1" font-weight="bold">Base Content Area</text>
+
+    <!-- This element intentionally overlaps with slide 2 -->
+    <rect x="350" y="400" width="600" height="200" fill="rgba(255, 193, 7, 0.8)" stroke="#ff8f00" stroke-width="2" rx="8"/>
+    <text x="650" y="440" text-anchor="middle" font-size="18" fill="#e65100" font-weight="bold">Overlapping Element</text>
+    <text x="650" y="470" text-anchor="middle" font-size="14" fill="#e65100">This spans across slide boundaries</text>
+    <text x="650" y="495" text-anchor="middle" font-size="14" fill="#e65100">Should be handled gracefully</text>
+
+    <!-- Another overlapping shape -->
+    <circle cx="800" cy="350" r="100" fill="rgba(233, 30, 99, 0.6)" stroke="#ad1457"/>
+    <text x="800" y="350" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Circular</text>
+    <text x="800" y="370" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Overlap</text>
+  </g>
+
+  <!-- Boundary marker -->
+  <line x1="0" y1="600" x2="1200" y2="600" stroke="#007bff" stroke-width="2" stroke-dasharray="5,5" opacity="0.7"/>
+
+  <!-- Slide 2: Mid layer with complex overlaps -->
+  <g id="slide_2_mid" class="slide-boundary" transform="translate(0, 300)">
+    <rect width="1200" height="900" fill="#e8f4fd" opacity="0.9"/>
+
+    <!-- Slide indicator -->
+    <rect x="50" y="50" width="120" height="40" fill="#0056b3" rx="5"/>
+    <text x="110" y="75" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Slide 2</text>
+
+    <!-- Content that overlaps with both slide 1 and 3 -->
+    <rect x="200" y="100" width="800" height="150" fill="rgba(76, 175, 80, 0.7)" stroke="#2e7d32" stroke-width="2" rx="8"/>
+    <text x="600" y="140" text-anchor="middle" font-size="18" fill="#1b5e20" font-weight="bold">Multi-Boundary Content</text>
+    <text x="600" y="165" text-anchor="middle" font-size="14" fill="#1b5e20">Crosses multiple slide regions</text>
+    <text x="600" y="185" text-anchor="middle" font-size="14" fill="#1b5e20">Tests boundary detection algorithms</text>
+    <text x="600" y="205" text-anchor="middle" font-size="14" fill="#1b5e20">Priority resolution required</text>
+
+    <!-- Nested overlapping group -->
+    <g class="nested-overlap">
+      <rect x="100" y="300" width="300" height="200" fill="rgba(156, 39, 176, 0.5)" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+      <text x="250" y="340" text-anchor="middle" font-size="16" fill="#4a148c" font-weight="bold">Nested Group A</text>
+
+      <rect x="250" y="350" width="300" height="200" fill="rgba(255, 87, 34, 0.5)" stroke="#d84315" stroke-width="2" rx="10"/>
+      <text x="400" y="390" text-anchor="middle" font-size="16" fill="#bf360c" font-weight="bold">Nested Group B</text>
+
+      <!-- Overlapping area indicator -->
+      <rect x="250" y="350" width="150" height="150" fill="rgba(0, 0, 0, 0.1)" stroke="#000" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="325" y="420" text-anchor="middle" font-size="12" fill="#000" font-weight="bold">Overlap Zone</text>
+    </g>
+
+    <!-- Element extending to slide 3 -->
+    <polygon points="900,250 1100,350 1000,550 800,450" fill="rgba(103, 58, 183, 0.6)" stroke="#512da8" stroke-width="2"/>
+    <text x="950" y="400" text-anchor="middle" font-size="14" fill="white" font-weight="bold">Complex Shape</text>
+    <text x="950" y="420" text-anchor="middle" font-size="14" fill="white" font-weight="bold">Boundary Cross</text>
+  </g>
+
+  <!-- Boundary marker -->
+  <line x1="0" y1="900" x2="1200" y2="900" stroke="#0056b3" stroke-width="2" stroke-dasharray="5,5" opacity="0.7"/>
+
+  <!-- Slide 3: Top layer with resolution conflicts -->
+  <g id="slide_3_top" class="slide-boundary" transform="translate(0, 600)">
+    <rect width="1200" height="300" fill="#e8f5e8" opacity="0.9"/>
+
+    <!-- Slide indicator -->
+    <rect x="50" y="50" width="120" height="40" fill="#28a745" rx="5"/>
+    <text x="110" y="75" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Slide 3</text>
+
+    <!-- Element that conflicts with previous slides -->
+    <rect x="300" y="100" width="600" height="150" fill="rgba(220, 53, 69, 0.8)" stroke="#c82333" stroke-width="3" rx="10"/>
+    <text x="600" y="140" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Conflicting Element</text>
+    <text x="600" y="165" text-anchor="middle" font-size="14" fill="white">Same position as previous slides</text>
+    <text x="600" y="185" text-anchor="middle" font-size="14" fill="white">Tests priority resolution</text>
+    <text x="600" y="205" text-anchor="middle" font-size="14" fill="white">Should appear on top</text>
+
+    <!-- Overlapping text blocks -->
+    <text x="150" y="150" font-size="20" fill="#dc3545" font-weight="bold" opacity="0.8">Text Block 1</text>
+    <text x="140" y="170" font-size="20" fill="#28a745" font-weight="bold" opacity="0.8">Text Block 2</text>
+    <text x="130" y="190" font-size="20" fill="#007bff" font-weight="bold" opacity="0.8">Text Block 3</text>
+    <text x="120" y="210" font-size="20" fill="#ffc107" font-weight="bold" opacity="0.8">Text Block 4</text>
+
+    <!-- Boundary test shapes -->
+    <g class="boundary-test">
+      <!-- Shape that touches multiple boundaries -->
+      <path d="M 950 50 L 1150 50 L 1150 200 L 950 250 Z" fill="rgba(0, 123, 255, 0.6)" stroke="#007bff" stroke-width="2"/>
+      <text x="1050" y="130" text-anchor="middle" font-size="12" fill="white" font-weight="bold">Boundary Test</text>
+      <text x="1050" y="150" text-anchor="middle" font-size="12" fill="white" font-weight="bold">Shape</text>
+
+      <!-- Edge case: Elements at exact boundary coordinates -->
+      <circle cx="0" cy="0" r="30" fill="rgba(255, 193, 7, 0.7)" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="1200" cy="0" r="30" fill="rgba(255, 193, 7, 0.7)" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="0" cy="300" r="30" fill="rgba(255, 193, 7, 0.7)" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="1200" cy="300" r="30" fill="rgba(255, 193, 7, 0.7)" stroke="#ffc107" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- Global annotations for testing -->
+  <g class="test-annotations" opacity="0.5">
+    <text x="50" y="920" font-size="12" fill="#6c757d">Test Case: Overlapping boundaries</text>
+    <text x="50" y="940" font-size="12" fill="#6c757d">Expected: 3 slides with proper element assignment</text>
+    <text x="50" y="960" font-size="12" fill="#6c757d">Challenge: Resolve element conflicts and overlaps</text>
+
+    <!-- Legend -->
+    <rect x="1000" y="920" width="180" height="80" fill="white" stroke="#ccc" stroke-width="1" rx="4"/>
+    <text x="1090" y="935" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Legend</text>
+    <rect x="1010" y="945" width="15" height="10" fill="rgba(255, 193, 7, 0.8)"/>
+    <text x="1030" y="953" font-size="10" fill="#333">Overlapping elements</text>
+    <line x1="1010" y1="965" x2="1025" y2="965" stroke="#007bff" stroke-width="2" stroke-dasharray="3,3"/>
+    <text x="1030" y="968" font-size="10" fill="#333">Slide boundaries</text>
+    <rect x="1010" y="975" width="15" height="10" fill="rgba(0, 0, 0, 0.1)" stroke="#000" stroke-dasharray="2,2"/>
+    <text x="1030" y="983" font-size="10" fill="#333">Conflict zones</text>
+  </g>
+</svg>

@@ -1,0 +1,72 @@
+{
+  "category": "w3c_shapes",
+  "timestamp": "2025-09-18T23:44:21.385635",
+  "summary": {
+    "total_tests": 2,
+    "passed": 0,
+    "failed": 2,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "median_score": 0.0,
+    "min_score": 0.0,
+    "max_score": 0.0,
+    "std_deviation": 0.0
+  },
+  "details": [
+    {
+      "test_id": "shapes-rect-02-t",
+      "score": 0.0,
+      "passed": false,
+      "category": "shapes",
+      "errors": [
+        "'SVGToPowerPointConverter' object has no attribute 'convert_svg_element'"
+      ]
+    },
+    {
+      "test_id": "shapes-rect-01-t",
+      "score": 0.0,
+      "passed": false,
+      "category": "shapes",
+      "errors": [
+        "'SVGToPowerPointConverter' object has no attribute 'convert_svg_element'"
+      ]
+    }
+  ],
+  "visualizations": {
+    "by_category": {
+      "shapes": 0.0
+    },
+    "score_distribution": {
+      "0-20%": 2,
+      "20-40%": 0,
+      "40-60%": 0,
+      "60-80%": 0,
+      "80-100%": 0
+    },
+    "test_results": {
+      "shapes-rect-02-t": {
+        "score": 0.0,
+        "passed": false,
+        "category": "shapes"
+      },
+      "shapes-rect-01-t": {
+        "score": 0.0,
+        "passed": false,
+        "category": "shapes"
+      }
+    },
+    "trends": {
+      "failing_categories": {
+        "shapes": 2
+      },
+      "high_performing_categories": {},
+      "total_errors": 2
+    }
+  },
+  "recommendations": [
+    "Overall pass rate is below 70%. Consider reviewing core conversion algorithms.",
+    "Average score is below 75%. Review visual fidelity and structure preservation.",
+    "Focus improvement efforts on 'shapes' category (2 failing tests).",
+    "High error rate detected. Review test infrastructure and conversion pipeline."
+  ]
+}

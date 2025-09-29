@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="174.58mm" height="42.967mm" version="1.1" viewBox="0 0 174.58 42.967" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fixed version with coordinates properly positioned within viewBox -->
+    <g>
+        <!-- Main logo shape (blue) - scaled and positioned within viewBox -->
+        <path d="M20 5 L30 5 L30 25 C25 28 20 28 15 25 L15 5 Z" fill="#24394b"/>
+
+        <!-- Orange vertical stripes - positioned across the logo -->
+        <rect x="35" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="40" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="45" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="50" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="55" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="60" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="65" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="70" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="75" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="80" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="85" y="8" width="2" height="20" fill="#e2681a"/>
+        <rect x="90" y="8" width="2" height="20" fill="#e2681a"/>
+    </g>
+</svg>

@@ -1,0 +1,271 @@
+2025-09-27 23:22:00,875 - pipeline.demo - INFO - Starting Path Pipeline MVP demonstration
+2025-09-27 23:22:00,875 - pipeline.demo - INFO - Testing 7 test cases with 3 policy configurations
+2025-09-27 23:22:00,875 - pipeline.demo - INFO - Testing with speed policy configuration
+2025-09-27 23:22:00,875 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:00,875 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,876 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,876 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.001s
+2025-09-27 23:22:00,876 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_speed.pptx
+2025-09-27 23:22:00,876 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.001s)
+2025-09-27 23:22:00,876 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:00,876 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,877 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,877 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.001s
+2025-09-27 23:22:00,877 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_speed.pptx
+2025-09-27 23:22:00,877 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.001s)
+2025-09-27 23:22:00,877 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:00,877 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,877 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,878 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_speed.pptx
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:00,878 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,878 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,878 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_speed.pptx
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,878 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:00,878 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,879 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,879 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,879 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_speed.pptx
+2025-09-27 23:22:00,879 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,879 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:00,879 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,879 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,879 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_speed.pptx
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:00,880 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,880 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,880 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.001s
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_speed.pptx
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.001s)
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - speed policy: 100.0% success rate (7/7)
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - Testing with balanced policy configuration
+2025-09-27 23:22:00,880 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:00,880 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,881 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,881 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_balanced.pptx
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:00,881 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,881 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,881 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_balanced.pptx
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,881 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:00,881 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,882 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,882 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_balanced.pptx
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:00,882 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,882 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,882 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_balanced.pptx
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,882 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:00,882 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,883 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,883 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,883 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_balanced.pptx
+2025-09-27 23:22:00,883 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,883 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:00,883 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,883 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,883 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,883 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_balanced.pptx
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:00,884 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,884 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,884 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.001s
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_balanced.pptx
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.001s)
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - balanced policy: 100.0% success rate (7/7)
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - Testing with quality policy configuration
+2025-09-27 23:22:00,884 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:00,884 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,885 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,885 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_quality.pptx
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:00,885 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,885 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,885 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_quality.pptx
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,885 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:00,885 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,886 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,886 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,886 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_quality.pptx
+2025-09-27 23:22:00,886 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,886 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:00,886 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,886 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,886 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,886 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_quality.pptx
+2025-09-27 23:22:00,886 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:00,887 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,887 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,887 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_quality.pptx
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:00,887 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,887 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,887 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_quality.pptx
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,887 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:00,887 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:00,888 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:00,888 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:00,888 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_quality.pptx
+2025-09-27 23:22:00,888 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.000s)
+2025-09-27 23:22:00,888 - pipeline.demo - INFO - quality policy: 100.0% success rate (7/7)
+2025-09-27 23:22:11,325 - pipeline.demo - INFO - Starting Path Pipeline MVP demonstration
+2025-09-27 23:22:11,325 - pipeline.demo - INFO - Testing 7 test cases with 3 policy configurations
+2025-09-27 23:22:11,325 - pipeline.demo - INFO - Testing with speed policy configuration
+2025-09-27 23:22:11,325 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:11,325 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,325 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,326 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_speed.pptx
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:11,326 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,326 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,326 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_speed.pptx
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,326 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:11,326 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,327 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,327 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_speed.pptx
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:11,327 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,327 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,327 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_speed.pptx
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,327 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:11,327 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,328 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,328 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_speed.pptx
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:11,328 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,328 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,328 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_speed.pptx
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,328 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:11,328 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,328 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,329 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_speed.pptx
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - speed policy: 100.0% success rate (7/7)
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - Testing with balanced policy configuration
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:11,329 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,329 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,329 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_balanced.pptx
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,329 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:11,329 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,329 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,330 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_balanced.pptx
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:11,330 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,330 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,330 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_balanced.pptx
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:11,330 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,330 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,330 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_balanced.pptx
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,330 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:11,331 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,331 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,331 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_balanced.pptx
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:11,331 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,331 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,331 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_balanced.pptx
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,331 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:11,331 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,332 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,332 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,332 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_balanced.pptx
+2025-09-27 23:22:11,332 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,332 - pipeline.demo - INFO - balanced policy: 100.0% success rate (7/7)
+2025-09-27 23:22:11,332 - pipeline.demo - INFO - Testing with quality policy configuration
+2025-09-27 23:22:11,332 - pipeline.demo - INFO - Converting: basic_rectangle (low)
+2025-09-27 23:22:11,332 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,332 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,333 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/basic_rectangle_quality.pptx
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - ✅ basic_rectangle: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - Converting: circle_bezier (medium)
+2025-09-27 23:22:11,333 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,333 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,333 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/circle_bezier_quality.pptx
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - ✅ circle_bezier: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,333 - pipeline.demo - INFO - Converting: simple_path (medium)
+2025-09-27 23:22:11,333 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,333 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,333 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/simple_path_quality.pptx
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - ✅ simple_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Converting: arc_path_a2c (high)
+2025-09-27 23:22:11,334 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,334 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,334 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/arc_path_a2c_quality.pptx
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - ✅ arc_path_a2c: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Converting: complex_path (very_high)
+2025-09-27 23:22:11,334 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,334 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,334 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/complex_path_quality.pptx
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - ✅ complex_path: 1 elements, 1 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,334 - pipeline.demo - INFO - Converting: multiple_shapes (medium)
+2025-09-27 23:22:11,334 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,335 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,335 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,335 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/multiple_shapes_quality.pptx
+2025-09-27 23:22:11,335 - pipeline.demo - INFO - ✅ multiple_shapes: 3 elements, 3 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,335 - pipeline.demo - INFO - Converting: stress_test (high)
+2025-09-27 23:22:11,335 - pipeline.path_pipeline - INFO - Starting path pipeline conversion
+2025-09-27 23:22:11,335 - adapters.legacy_io - INFO - Created presentation context: 9144000×6858000 EMU
+2025-09-27 23:22:11,336 - pipeline.path_pipeline - INFO - Pipeline completed successfully in 0.000s
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - Saved PPTX: pipeline/validation_results/stress_test_quality.pptx
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - ✅ stress_test: 10 elements, 10 native, 0 EMF (0.000s)
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - quality policy: 100.0% success rate (7/7)
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - Path pipeline demo completed in 0.01s
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - Overall success rate: 21/21
+2025-09-27 23:22:11,336 - pipeline.demo - INFO - Detailed report: pipeline/validation_results/path_pipeline_report.html

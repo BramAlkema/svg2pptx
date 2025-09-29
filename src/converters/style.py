@@ -135,7 +135,7 @@ class StyleConverter(BaseConverter):
             return element.get(attr_name) == attr_value
         else:
             # [attribute] - just check presence
-            return attr_name in element.attrib
+            return element.get(attr_name) is not None
     
     def apply_css_styles(self, element: ET.Element, context: ConversionContext) -> None:
         """Apply CSS styles to an element by setting attributes."""
@@ -168,7 +168,7 @@ class StyleConverter(BaseConverter):
         for css_prop, svg_attr in css_to_svg_mapping.items():
             if css_prop in css_styles:
                 # Only set if not already present as attribute (attributes have higher precedence)
-                if svg_attr not in element.attrib:
+                if element.get(svg_attr) is None:
                     element.set(svg_attr, css_styles[css_prop])
     
     def merge_css_with_attributes(self, element: ET.Element, context: ConversionContext) -> Dict[str, str]:
@@ -187,7 +187,7 @@ class StyleConverter(BaseConverter):
         ]
         
         for prop in svg_properties:
-            if prop in element.attrib:
+            if element.get(prop) is not None:
                 merged[prop] = element.get(prop)
         
         return merged
@@ -196,7 +196,7 @@ class StyleConverter(BaseConverter):
                                 context: ConversionContext, default: str = '') -> str:
         """Get computed style value for a property, considering CSS and attributes."""
         # Check element attribute first (highest precedence)
-        if property_name in element.attrib:
+        if element.get(property_name) is not None:
             return element.get(property_name)
         
         # Check CSS styles

@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import working components that we verified
 from src.transforms import Matrix
-from src.colors import ColorParser, ColorInfo
+from src.color import Color
 from src.units import UnitConverter
 from src.converters.base import ConversionContext, CoordinateSystem
 
@@ -71,39 +71,35 @@ class TestColorSystem:
     """
 
     def test_color_parser_creation(self):
-        """Test ColorParser initialization."""
-        parser = ColorParser()
-        assert parser is not None
+        """Test modern Color initialization."""
+        color = Color("#FF0000")
+        assert color is not None
 
     def test_color_info_creation(self):
-        """Test ColorInfo initialization."""
-        # Test with RGB values and required parameters
-        from src.colors import ColorFormat
-        color = ColorInfo(
-            red=255, green=0, blue=0,
-            alpha=1.0,
-            format=ColorFormat.RGB,
-            original="rgb(255,0,0)"
-        )
-        assert color is not None
+        """Test modern Color RGB access."""
+        color = Color("rgb(255,0,0)")
+        r, g, b = color.rgb()
+        assert r == 255
+        assert g == 0
+        assert b == 0
 
     def test_color_parsing_hex(self):
         """Test hex color parsing."""
-        parser = ColorParser()
-        color = parser.parse("#FF0000")
-        assert color is not None
+        color = Color("#FF0000")
+        r, g, b = color.rgb()
+        assert r == 255 and g == 0 and b == 0
 
     def test_color_parsing_rgb(self):
         """Test RGB color parsing."""
-        parser = ColorParser()
-        color = parser.parse("rgb(255, 0, 0)")
-        assert color is not None
+        color = Color("rgb(255, 0, 0)")
+        r, g, b = color.rgb()
+        assert r == 255 and g == 0 and b == 0
 
     def test_color_parsing_named(self):
         """Test named color parsing."""
-        parser = ColorParser()
-        color = parser.parse("red")
-        assert color is not None
+        color = Color("red")
+        r, g, b = color.rgb()
+        assert r == 255 and g == 0 and b == 0
 
 
 class TestUnitsSystem:
@@ -221,13 +217,12 @@ class TestModernSystemsIntegration:
 
     def test_color_with_units_system(self):
         """Test color system integration with units system."""
-        # Create color parser and unit converter
-        color_parser = ColorParser()
+        # Create unit converter
         unit_converter = UnitConverter()
 
-        # Parse a color and convert some units
+        # Parse a color using modern API and convert some units
         from src.units import ConversionContext
-        color = color_parser.parse("#FF0000")
+        color = Color("#FF0000")
         context = ConversionContext()
         emu_size = unit_converter.to_emu("16px", context)
 
@@ -238,14 +233,13 @@ class TestModernSystemsIntegration:
         """Test that all modern systems can be imported together."""
         # This test verifies no circular dependencies or import conflicts
         from src.transforms import Matrix
-        from src.colors import ColorParser, ColorInfo
+        from src.color import Color
         from src.units import UnitConverter
         from src.converters.base import CoordinateSystem, ConversionContext
 
         # All should be importable without errors
         assert Matrix is not None
-        assert ColorParser is not None
-        assert ColorInfo is not None
+        assert Color is not None
         assert UnitConverter is not None
         assert CoordinateSystem is not None
         assert ConversionContext is not None

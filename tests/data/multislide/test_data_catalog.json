@@ -1,0 +1,244 @@
+{
+  "test_data_catalog": {
+    "version": "1.0",
+    "created_date": "2025-01-19",
+    "description": "Comprehensive test data corpus for multislide detection and processing",
+    "total_samples": 18,
+    "categories": {
+      "animation_sequences": {
+        "count": 4,
+        "description": "SVG samples with animation keyframes for timeline-based slide detection",
+        "samples": [
+          {
+            "filename": "simple_fade_animation.svg",
+            "description": "Basic 3-slide fade animation with opacity keyframes",
+            "slide_count": 3,
+            "complexity": "simple",
+            "duration": "6s",
+            "animation_type": "opacity_fade",
+            "expected_output": "simple_fade_animation_expected.json"
+          },
+          {
+            "filename": "complex_transform_animation.svg",
+            "description": "4-slide presentation with scale, rotate, and translate animations",
+            "slide_count": 4,
+            "complexity": "complex",
+            "duration": "8s",
+            "animation_type": "transform_sequence",
+            "expected_output": null
+          },
+          {
+            "filename": "timeline_presentation.svg",
+            "description": "5-slide timeline with progressive reveal animations",
+            "slide_count": 5,
+            "complexity": "medium",
+            "duration": "10s",
+            "animation_type": "progressive_reveal",
+            "expected_output": null
+          }
+        ]
+      },
+      "nested_documents": {
+        "count": 2,
+        "description": "SVG samples with nested svg elements and hierarchical structures",
+        "samples": [
+          {
+            "filename": "simple_nested_slides.svg",
+            "description": "3-slide presentation with nested SVG containers",
+            "slide_count": 3,
+            "complexity": "medium",
+            "nesting_levels": 2,
+            "detection_method": "nested_svg_analysis",
+            "expected_output": null
+          },
+          {
+            "filename": "deep_hierarchy.svg",
+            "description": "Complex 4-slide structure with 5-level deep nesting",
+            "slide_count": 4,
+            "complexity": "high",
+            "nesting_levels": 5,
+            "detection_method": "deep_hierarchy_analysis",
+            "expected_output": null
+          }
+        ]
+      },
+      "layer_groups": {
+        "count": 5,
+        "description": "SVG samples organized by logical layers or groups",
+        "samples": [
+          {
+            "filename": "department_slides.svg",
+            "description": "4-slide department organization presentation",
+            "slide_count": 4,
+            "complexity": "medium",
+            "organization_type": "department_based",
+            "departments": ["Engineering", "Marketing", "Sales", "Operations"],
+            "expected_output": "department_slides_expected.json"
+          },
+          {
+            "filename": "product_feature_layers.svg",
+            "description": "3-slide product feature breakdown by layers",
+            "slide_count": 3,
+            "complexity": "medium",
+            "organization_type": "feature_based",
+            "layers": ["Core Features", "Advanced Features", "Infrastructure"],
+            "expected_output": null
+          },
+          {
+            "filename": "timeline_layers.svg",
+            "description": "5-slide project timeline with phase layers",
+            "slide_count": 5,
+            "complexity": "high",
+            "organization_type": "timeline_based",
+            "phases": ["Planning", "Development", "Testing", "Deployment", "Maintenance"],
+            "expected_output": null
+          },
+          {
+            "filename": "comparison_layers.svg",
+            "description": "3-slide product comparison matrix",
+            "slide_count": 3,
+            "complexity": "medium",
+            "organization_type": "comparison_based",
+            "products": ["Basic Plan", "Professional", "Enterprise"],
+            "expected_output": null
+          },
+          {
+            "filename": "dashboard_layers.svg",
+            "description": "4-slide dashboard with widget layers",
+            "slide_count": 4,
+            "complexity": "high",
+            "organization_type": "dashboard_based",
+            "widgets": ["Revenue", "Customers", "Operations", "Team Performance"],
+            "expected_output": null
+          }
+        ]
+      },
+      "section_markers": {
+        "count": 3,
+        "description": "SVG samples with explicit section boundaries and markers",
+        "samples": [
+          {
+            "filename": "explicit_slide_boundaries.svg",
+            "description": "4-slide presentation with explicit boundary markers",
+            "slide_count": 4,
+            "complexity": "medium",
+            "marker_type": "explicit_boundaries",
+            "attributes": ["slide-boundary", "data-slide-number"],
+            "expected_output": "explicit_slide_boundaries_expected.json"
+          },
+          {
+            "filename": "title_based_sections.svg",
+            "description": "3-slide presentation with title-based section detection",
+            "slide_count": 3,
+            "complexity": "medium",
+            "marker_type": "title_sections",
+            "sections": ["Introduction", "Our Products", "Get in Touch"],
+            "expected_output": null
+          },
+          {
+            "filename": "presentation_flow_markers.svg",
+            "description": "5-slide executive review with flow indicators",
+            "slide_count": 5,
+            "complexity": "high",
+            "marker_type": "flow_indicators",
+            "sections": ["Executive Summary", "Financial", "Operations", "Technology", "Strategy"],
+            "expected_output": null
+          }
+        ]
+      },
+      "edge_cases": {
+        "count": 5,
+        "description": "Edge cases and error conditions for robust testing",
+        "samples": [
+          {
+            "filename": "overlapping_boundaries.svg",
+            "description": "3-slide test with overlapping element boundaries",
+            "slide_count": 3,
+            "complexity": "high",
+            "edge_case_type": "boundary_conflicts",
+            "challenge": "element assignment conflicts",
+            "expected_output": "overlapping_boundaries_expected.json"
+          },
+          {
+            "filename": "malformed_structure.svg",
+            "description": "Malformed SVG structure for error handling",
+            "slide_count": 3,
+            "complexity": "error_case",
+            "edge_case_type": "malformed_xml",
+            "challenge": "parser robustness",
+            "expected_output": null
+          },
+          {
+            "filename": "empty_and_minimal.svg",
+            "description": "Empty and minimal content scenarios",
+            "slide_count": 6,
+            "complexity": "minimal",
+            "edge_case_type": "content_edge_cases",
+            "challenge": "empty slide detection",
+            "expected_output": null
+          },
+          {
+            "filename": "performance_stress.svg",
+            "description": "Large document with 1000+ elements for performance testing",
+            "slide_count": 2,
+            "complexity": "performance_test",
+            "edge_case_type": "high_element_count",
+            "challenge": "processing speed and memory",
+            "element_count": "1000+",
+            "expected_output": null
+          },
+          {
+            "filename": "single_slide_only.svg",
+            "description": "Single slide document that should NOT be detected as multislide",
+            "slide_count": 1,
+            "complexity": "negative_test",
+            "edge_case_type": "false_positive_prevention",
+            "challenge": "avoid false multislide detection",
+            "expected_output": "single_slide_only_expected.json"
+          }
+        ]
+      }
+    },
+    "testing_matrix": {
+      "detection_strategies": [
+        "animation_keyframe_analysis",
+        "nested_document_detection",
+        "layer_group_identification",
+        "section_marker_recognition",
+        "boundary_conflict_resolution"
+      ],
+      "complexity_levels": ["simple", "medium", "high", "error_case", "performance_test"],
+      "validation_types": [
+        "positive_detection",
+        "negative_detection",
+        "edge_case_handling",
+        "performance_testing",
+        "error_recovery"
+      ]
+    },
+    "expected_outputs": {
+      "count": 5,
+      "description": "JSON files containing expected detection results for validation",
+      "files": [
+        "simple_fade_animation_expected.json",
+        "department_slides_expected.json",
+        "explicit_slide_boundaries_expected.json",
+        "single_slide_only_expected.json",
+        "overlapping_boundaries_expected.json"
+      ]
+    },
+    "usage_guidelines": {
+      "test_selection": "Choose samples based on detection strategy being tested",
+      "validation": "Compare actual results against expected_outputs where available",
+      "performance_baseline": "performance_stress.svg should process within 5 seconds",
+      "error_handling": "malformed_structure.svg should not crash the parser",
+      "negative_testing": "single_slide_only.svg should return is_multislide: false"
+    },
+    "metadata": {
+      "total_file_size": "approximately 150KB",
+      "creation_tool": "manual creation for comprehensive coverage",
+      "validation_status": "ready_for_testing",
+      "maintenance_notes": "Add more samples as edge cases are discovered"
+    }
+  }
+}

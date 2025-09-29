@@ -1,1 +1,0 @@
-# E2E Visual Fidelity Testing Package

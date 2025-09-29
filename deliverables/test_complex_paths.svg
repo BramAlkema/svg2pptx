@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <title>SVG2PPTX Path System Demonstration</title>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f8f9fa" stroke="none"/>
+
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2c3e50">
+    SVG2PPTX Path System Test Suite
+  </text>
+
+  <!-- Complex curved path with bezier curves -->
+  <path d="M 50 100 C 50 50 150 50 150 100 S 250 150 250 100 C 250 50 350 50 350 100"
+        stroke="#e74c3c" stroke-width="3" fill="none"/>
+  <text x="200" y="140" text-anchor="middle" font-size="12" fill="#7f8c8d">Smooth Cubic Curves</text>
+
+  <!-- Heart shape using complex path -->
+  <path d="M 500 150 C 500 130 480 130 480 150 C 480 130 460 130 460 150 C 460 170 500 210 500 210 C 500 210 540 170 540 150 C 540 130 520 130 520 150 C 520 130 500 130 500 150 Z"
+        fill="#e91e63" stroke="#ad1457" stroke-width="2"/>
+  <text x="500" y="240" text-anchor="middle" font-size="12" fill="#7f8c8d">Complex Heart Shape</text>
+
+  <!-- Star with multiple line segments -->
+  <path d="M 100 300 L 110 330 L 140 330 L 120 350 L 130 380 L 100 360 L 70 380 L 80 350 L 60 330 L 90 330 Z"
+        fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+  <text x="100" y="400" text-anchor="middle" font-size="12" fill="#7f8c8d">Multi-segment Star</text>
+
+  <!-- Arc demonstration -->
+  <path d="M 250 300 A 50 30 0 0 1 350 300 A 50 30 0 0 1 250 300"
+        fill="none" stroke="#3498db" stroke-width="4"/>
+  <text x="300" y="340" text-anchor="middle" font-size="12" fill="#7f8c8d">Elliptical Arcs</text>
+
+  <!-- Complex mixed path with all command types -->
+  <path d="M 450 280 L 500 260 Q 540 280 520 320 C 530 350 480 360 460 340 A 20 20 0 1 0 440 320 Q 430 300 450 280 Z"
+        fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+  <text x="480" y="380" text-anchor="middle" font-size="12" fill="#7f8c8d">Mixed Commands</text>
+
+  <!-- Quadratic bezier curve -->
+  <path d="M 600 300 Q 650 250 700 300 T 750 320"
+        stroke="#16a085" stroke-width="3" fill="none"/>
+  <text x="675" y="340" text-anchor="middle" font-size="12" fill="#7f8c8d">Quadratic Bezier</text>
+
+  <!-- Scientific notation coordinates test -->
+  <path d="M 1e2 4.5e2 L 1.5e2 4.2e2 L 2e2 4.8e2 Z"
+        fill="#34495e" stroke="#2c3e50" stroke-width="2"/>
+  <text x="150" y="490" text-anchor="middle" font-size="12" fill="#7f8c8d">Scientific Notation</text>
+
+  <!-- Relative coordinates path -->
+  <path d="M 300 450 l 50 0 l 0 30 l -25 20 l -25 -20 z"
+        fill="#27ae60" stroke="#229954" stroke-width="2"/>
+  <text x="325" y="520" text-anchor="middle" font-size="12" fill="#7f8c8d">Relative Coords</text>
+
+  <!-- Large arc with sweep flags -->
+  <path d="M 500 450 A 60 40 30 1 1 600 480"
+        stroke="#e67e22" stroke-width="4" fill="none"/>
+  <text x="550" y="510" text-anchor="middle" font-size="12" fill="#7f8c8d">Large Arc Sweep</text>
+
+  <!-- Performance test - many small paths -->
+  <g>
+    <path d="M 650 450 L 660 440 L 670 450 L 660 460 Z" fill="#f1c40f"/>
+    <path d="M 670 450 L 680 440 L 690 450 L 680 460 Z" fill="#f39c12"/>
+    <path d="M 690 450 L 700 440 L 710 450 L 700 460 Z" fill="#e67e22"/>
+    <path d="M 710 450 L 720 440 L 730 450 L 720 460 Z" fill="#d35400"/>
+    <text x="690" y="480" text-anchor="middle" font-size="12" fill="#7f8c8d">Multiple Paths</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="400" y="570" text-anchor="middle" font-size="14" fill="#7f8c8d">
+    Comprehensive test of PathSystem: Parser → CoordinateSystem → ArcConverter → DrawingMLGenerator
+  </text>
+</svg>

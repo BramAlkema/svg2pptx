@@ -1,0 +1,276 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <title>Dashboard Widget Layers - 4 Slides</title>
+
+  <!-- Background -->
+  <rect width="1440" height="900" fill="#f8f9fa"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1440" height="80" fill="#343a40"/>
+  <text x="720" y="50" text-anchor="middle" font-size="28" fill="white" font-weight="bold">Executive Dashboard</text>
+
+  <!-- Slide 1: Revenue Metrics Layer -->
+  <g id="layer_revenue" class="dashboard-layer">
+    <rect x="30" y="100" width="680" height="380" fill="white" stroke="#dee2e6" stroke-width="2" rx="12" opacity="0.98"/>
+
+    <!-- Widget header -->
+    <rect x="50" y="120" width="640" height="60" fill="#28a745" rx="8"/>
+    <text x="370" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Revenue Analytics</text>
+    <text x="370" y="165" text-anchor="middle" font-size="14" fill="#d4edda">Q4 2024 Performance</text>
+
+    <!-- Revenue KPIs -->
+    <g class="revenue-kpis">
+      <!-- Total Revenue -->
+      <rect x="70" y="200" width="140" height="100" fill="#d4edda" rx="8"/>
+      <text x="140" y="225" text-anchor="middle" font-size="14" fill="#155724" font-weight="bold">Total Revenue</text>
+      <text x="140" y="255" text-anchor="middle" font-size="28" fill="#28a745" font-weight="bold">$2.4M</text>
+      <text x="140" y="280" text-anchor="middle" font-size="12" fill="#6c757d">+18% YoY</text>
+
+      <!-- MRR -->
+      <rect x="230" y="200" width="140" height="100" fill="#d4edda" rx="8"/>
+      <text x="300" y="225" text-anchor="middle" font-size="14" fill="#155724" font-weight="bold">Monthly Recurring</text>
+      <text x="300" y="255" text-anchor="middle" font-size="28" fill="#28a745" font-weight="bold">$240K</text>
+      <text x="300" y="280" text-anchor="middle" font-size="12" fill="#6c757d">+12% MoM</text>
+
+      <!-- ARPU -->
+      <rect x="390" y="200" width="140" height="100" fill="#d4edda" rx="8"/>
+      <text x="460" y="225" text-anchor="middle" font-size="14" fill="#155724" font-weight="bold">ARPU</text>
+      <text x="460" y="255" text-anchor="middle" font-size="28" fill="#28a745" font-weight="bold">$127</text>
+      <text x="460" y="280" text-anchor="middle" font-size="12" fill="#6c757d">+5% QoQ</text>
+
+      <!-- Churn Rate -->
+      <rect x="550" y="200" width="120" height="100" fill="#f8d7da" rx="8"/>
+      <text x="610" y="225" text-anchor="middle" font-size="14" fill="#721c24" font-weight="bold">Churn Rate</text>
+      <text x="610" y="255" text-anchor="middle" font-size="28" fill="#dc3545" font-weight="bold">2.3%</text>
+      <text x="610" y="280" text-anchor="middle" font-size="12" fill="#6c757d">-0.8% MoM</text>
+    </g>
+
+    <!-- Revenue chart -->
+    <g class="revenue-chart">
+      <rect x="70" y="320" width="600" height="140" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="4"/>
+      <text x="370" y="340" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Revenue Trend (6 Months)</text>
+
+      <!-- Chart bars -->
+      <rect x="100" y="400" width="50" height="40" fill="#28a745"/>
+      <rect x="170" y="390" width="50" height="50" fill="#28a745"/>
+      <rect x="240" y="380" width="50" height="60" fill="#28a745"/>
+      <rect x="310" y="370" width="50" height="70" fill="#28a745"/>
+      <rect x="380" y="360" width="50" height="80" fill="#28a745"/>
+      <rect x="450" y="350" width="50" height="90" fill="#28a745"/>
+
+      <!-- Month labels -->
+      <text x="125" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Jul</text>
+      <text x="195" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Aug</text>
+      <text x="265" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Sep</text>
+      <text x="335" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Oct</text>
+      <text x="405" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Nov</text>
+      <text x="475" y="455" text-anchor="middle" font-size="10" fill="#6c757d">Dec</text>
+    </g>
+  </g>
+
+  <!-- Slide 2: Customer Metrics Layer -->
+  <g id="layer_customers" class="dashboard-layer">
+    <rect x="730" y="100" width="680" height="380" fill="white" stroke="#dee2e6" stroke-width="2" rx="12" opacity="0.98"/>
+
+    <!-- Widget header -->
+    <rect x="750" y="120" width="640" height="60" fill="#007bff" rx="8"/>
+    <text x="1070" y="145" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Customer Insights</text>
+    <text x="1070" y="165" text-anchor="middle" font-size="14" fill="#cce7ff">Growth & Engagement</text>
+
+    <!-- Customer KPIs -->
+    <g class="customer-kpis">
+      <!-- Total Customers -->
+      <rect x="770" y="200" width="140" height="100" fill="#cce7ff" rx="8"/>
+      <text x="840" y="225" text-anchor="middle" font-size="14" fill="#004085" font-weight="bold">Total Customers</text>
+      <text x="840" y="255" text-anchor="middle" font-size="28" fill="#007bff" font-weight="bold">18,947</text>
+      <text x="840" y="280" text-anchor="middle" font-size="12" fill="#6c757d">+23% YoY</text>
+
+      <!-- New Signups -->
+      <rect x="930" y="200" width="140" height="100" fill="#cce7ff" rx="8"/>
+      <text x="1000" y="225" text-anchor="middle" font-size="14" fill="#004085" font-weight="bold">New Signups</text>
+      <text x="1000" y="255" text-anchor="middle" font-size="28" fill="#007bff" font-weight="bold">1,247</text>
+      <text x="1000" y="280" text-anchor="middle" font-size="12" fill="#6c757d">This month</text>
+
+      <!-- Active Users -->
+      <rect x="1090" y="200" width="140" height="100" fill="#cce7ff" rx="8"/>
+      <text x="1160" y="225" text-anchor="middle" font-size="14" fill="#004085" font-weight="bold">Active Users</text>
+      <text x="1160" y="255" text-anchor="middle" font-size="28" fill="#007bff" font-weight="bold">14,231</text>
+      <text x="1160" y="280" text-anchor="middle" font-size="12" fill="#6c757d">Daily avg</text>
+
+      <!-- Satisfaction -->
+      <rect x="1250" y="200" width="140" height="100" fill="#d1ecf1" rx="8"/>
+      <text x="1320" y="225" text-anchor="middle" font-size="14" fill="#0c5460" font-weight="bold">Satisfaction</text>
+      <text x="1320" y="255" text-anchor="middle" font-size="28" fill="#17a2b8" font-weight="bold">4.8/5</text>
+      <text x="1320" y="280" text-anchor="middle" font-size="12" fill="#6c757d">NPS Score</text>
+    </g>
+
+    <!-- Customer segments pie chart -->
+    <g class="customer-segments">
+      <rect x="770" y="320" width="600" height="140" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="4"/>
+      <text x="1070" y="340" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Customer Segments</text>
+
+      <!-- Pie chart representation -->
+      <circle cx="900" cy="400" r="50" fill="#007bff"/>
+      <path d="M 900 350 A 50 50 0 0 1 950 400 L 900 400 Z" fill="#28a745"/>
+      <path d="M 950 400 A 50 50 0 0 1 920 440 L 900 400 Z" fill="#ffc107"/>
+      <path d="M 920 440 A 50 50 0 1 1 900 350 L 900 400 Z" fill="#dc3545"/>
+
+      <!-- Legend -->
+      <rect x="1000" y="370" width="15" height="15" fill="#007bff"/>
+      <text x="1025" y="382" font-size="12" fill="#495057">Enterprise (45%)</text>
+      <rect x="1000" y="395" width="15" height="15" fill="#28a745"/>
+      <text x="1025" y="407" font-size="12" fill="#495057">Professional (30%)</text>
+      <rect x="1150" y="370" width="15" height="15" fill="#ffc107"/>
+      <text x="1175" y="382" font-size="12" fill="#495057">Starter (20%)</text>
+      <rect x="1150" y="395" width="15" height="15" fill="#dc3545"/>
+      <text x="1175" y="407" font-size="12" fill="#495057">Trial (5%)</text>
+    </g>
+  </g>
+
+  <!-- Slide 3: Operations Layer -->
+  <g id="layer_operations" class="dashboard-layer">
+    <rect x="30" y="500" width="680" height="370" fill="white" stroke="#dee2e6" stroke-width="2" rx="12" opacity="0.98"/>
+
+    <!-- Widget header -->
+    <rect x="50" y="520" width="640" height="60" fill="#fd7e14" rx="8"/>
+    <text x="370" y="545" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Operations Dashboard</text>
+    <text x="370" y="565" text-anchor="middle" font-size="14" fill="#ffe3cd">System Performance</text>
+
+    <!-- Operations metrics -->
+    <g class="operations-metrics">
+      <!-- Uptime -->
+      <rect x="70" y="600" width="120" height="80" fill="#ffe3cd" rx="8"/>
+      <text x="130" y="620" text-anchor="middle" font-size="12" fill="#833200" font-weight="bold">Uptime</text>
+      <text x="130" y="645" text-anchor="middle" font-size="24" fill="#fd7e14" font-weight="bold">99.97%</text>
+      <text x="130" y="665" text-anchor="middle" font-size="10" fill="#6c757d">30 days</text>
+
+      <!-- Response Time -->
+      <rect x="210" y="600" width="120" height="80" fill="#ffe3cd" rx="8"/>
+      <text x="270" y="620" text-anchor="middle" font-size="12" fill="#833200" font-weight="bold">Response</text>
+      <text x="270" y="645" text-anchor="middle" font-size="24" fill="#fd7e14" font-weight="bold">142ms</text>
+      <text x="270" y="665" text-anchor="middle" font-size="10" fill="#6c757d">Average</text>
+
+      <!-- Throughput -->
+      <rect x="350" y="600" width="120" height="80" fill="#ffe3cd" rx="8"/>
+      <text x="410" y="620" text-anchor="middle" font-size="12" fill="#833200" font-weight="bold">Throughput</text>
+      <text x="410" y="645" text-anchor="middle" font-size="24" fill="#fd7e14" font-weight="bold">2.4K</text>
+      <text x="410" y="665" text-anchor="middle" font-size="10" fill="#6c757d">req/min</text>
+
+      <!-- Error Rate -->
+      <rect x="490" y="600" width="120" height="80" fill="#f5c6cb" rx="8"/>
+      <text x="550" y="620" text-anchor="middle" font-size="12" fill="#721c24" font-weight="bold">Error Rate</text>
+      <text x="550" y="645" text-anchor="middle" font-size="24" fill="#dc3545" font-weight="bold">0.03%</text>
+      <text x="550" y="665" text-anchor="middle" font-size="10" fill="#6c757d">24h avg</text>
+    </g>
+
+    <!-- System health indicators -->
+    <g class="system-health">
+      <text x="370" y="710" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Service Status</text>
+
+      <!-- Service indicators -->
+      <rect x="100" y="730" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="120" cy="745" r="6" fill="#28a745"/>
+      <text x="140" y="750" font-size="12" fill="#155724">API Gateway</text>
+
+      <rect x="220" y="730" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="240" cy="745" r="6" fill="#28a745"/>
+      <text x="260" y="750" font-size="12" fill="#155724">Database</text>
+
+      <rect x="340" y="730" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="360" cy="745" r="6" fill="#28a745"/>
+      <text x="380" y="750" font-size="12" fill="#155724">Cache</text>
+
+      <rect x="460" y="730" width="100" height="30" fill="#fff3cd" rx="15"/>
+      <circle cx="480" cy="745" r="6" fill="#ffc107"/>
+      <text x="500" y="750" font-size="12" fill="#856404">Queue</text>
+
+      <rect x="100" y="770" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="120" cy="785" r="6" fill="#28a745"/>
+      <text x="140" y="790" font-size="12" fill="#155724">Storage</text>
+
+      <rect x="220" y="770" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="240" cy="785" r="6" fill="#28a745"/>
+      <text x="260" y="790" font-size="12" fill="#155724">CDN</text>
+
+      <rect x="340" y="770" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="360" cy="785" r="6" fill="#28a745"/>
+      <text x="380" y="790" font-size="12" fill="#155724">Auth</text>
+
+      <rect x="460" y="770" width="100" height="30" fill="#d4edda" rx="15"/>
+      <circle cx="480" cy="785" r="6" fill="#28a745"/>
+      <text x="500" y="790" font-size="12" fill="#155724">Monitoring</text>
+    </g>
+
+    <!-- Recent alerts -->
+    <rect x="580" y="720" width="90" height="80" fill="#f8d7da" stroke="#f5c6cb" stroke-width="1" rx="6"/>
+    <text x="625" y="735" text-anchor="middle" font-size="12" fill="#721c24" font-weight="bold">Alerts</text>
+    <text x="625" y="755" text-anchor="middle" font-size="20" fill="#dc3545" font-weight="bold">2</text>
+    <text x="625" y="775" text-anchor="middle" font-size="10" fill="#6c757d">Active</text>
+    <text x="625" y="790" text-anchor="middle" font-size="10" fill="#6c757d">High CPU</text>
+  </g>
+
+  <!-- Slide 4: Team Performance Layer -->
+  <g id="layer_team" class="dashboard-layer">
+    <rect x="730" y="500" width="680" height="370" fill="white" stroke="#dee2e6" stroke-width="2" rx="12" opacity="0.98"/>
+
+    <!-- Widget header -->
+    <rect x="750" y="520" width="640" height="60" fill="#6f42c1" rx="8"/>
+    <text x="1070" y="545" text-anchor="middle" font-size="20" fill="white" font-weight="bold">Team Performance</text>
+    <text x="1070" y="565" text-anchor="middle" font-size="14" fill="#e2d9f3">Sprint Metrics</text>
+
+    <!-- Team metrics -->
+    <g class="team-metrics">
+      <!-- Velocity -->
+      <rect x="770" y="600" width="140" height="80" fill="#e2d9f3" rx="8"/>
+      <text x="840" y="620" text-anchor="middle" font-size="12" fill="#3f1a78" font-weight="bold">Sprint Velocity</text>
+      <text x="840" y="645" text-anchor="middle" font-size="24" fill="#6f42c1" font-weight="bold">47</text>
+      <text x="840" y="665" text-anchor="middle" font-size="10" fill="#6c757d">Story points</text>
+
+      <!-- Burndown -->
+      <rect x="930" y="600" width="140" height="80" fill="#e2d9f3" rx="8"/>
+      <text x="1000" y="620" text-anchor="middle" font-size="12" fill="#3f1a78" font-weight="bold">Burndown</text>
+      <text x="1000" y="645" text-anchor="middle" font-size="24" fill="#6f42c1" font-weight="bold">On track</text>
+      <text x="1000" y="665" text-anchor="middle" font-size="10" fill="#6c757d">Day 8/14</text>
+
+      <!-- Code Reviews -->
+      <rect x="1090" y="600" width="140" height="80" fill="#e2d9f3" rx="8"/>
+      <text x="1160" y="620" text-anchor="middle" font-size="12" fill="#3f1a78" font-weight="bold">Code Reviews</text>
+      <text x="1160" y="645" text-anchor="middle" font-size="24" fill="#6f42c1" font-weight="bold">23</text>
+      <text x="1160" y="665" text-anchor="middle" font-size="10" fill="#6c757d">This week</text>
+
+      <!-- Bug Rate -->
+      <rect x="1250" y="600" width="140" height="80" fill="#d1ecf1" rx="8"/>
+      <text x="1320" y="620" text-anchor="middle" font-size="12" fill="#0c5460" font-weight="bold">Bug Rate</text>
+      <text x="1320" y="645" text-anchor="middle" font-size="24" fill="#17a2b8" font-weight="bold">1.2%</text>
+      <text x="1320" y="665" text-anchor="middle" font-size="10" fill="#6c757d">Per feature</text>
+    </g>
+
+    <!-- Team capacity -->
+    <g class="team-capacity">
+      <rect x="770" y="710" width="600" height="140" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1" rx="4"/>
+      <text x="1070" y="730" text-anchor="middle" font-size="16" fill="#495057" font-weight="bold">Team Capacity & Allocation</text>
+
+      <!-- Capacity bars -->
+      <text x="800" y="755" font-size="12" fill="#495057">Development</text>
+      <rect x="800" y="760" width="200" height="15" fill="#e9ecef" rx="7"/>
+      <rect x="800" y="760" width="160" height="15" fill="#6f42c1" rx="7"/>
+      <text x="1020" y="772" font-size="11" fill="#6c757d">80% (8/10 devs)</text>
+
+      <text x="800" y="790" font-size="12" fill="#495057">Testing</text>
+      <rect x="800" y="795" width="200" height="15" fill="#e9ecef" rx="7"/>
+      <rect x="800" y="795" width="140" height="15" fill="#17a2b8" rx="7"/>
+      <text x="1020" y="807" font-size="11" fill="#6c757d">70% (3/4 QA)</text>
+
+      <text x="800" y="825" font-size="12" fill="#495057">DevOps</text>
+      <rect x="800" y="830" width="200" height="15" fill="#e9ecef" rx="7"/>
+      <rect x="800" y="830" width="180" height="15" fill="#28a745" rx="7"/>
+      <text x="1020" y="842" font-size="11" fill="#6c757d">90% (2/2 ops)</text>
+
+      <!-- Sprint progress -->
+      <rect x="1100" y="750" width="250" height="80" fill="#fff3cd" stroke="#ffeaa7" stroke-width="1" rx="6"/>
+      <text x="1225" y="770" text-anchor="middle" font-size="14" fill="#856404" font-weight="bold">Sprint 23 Progress</text>
+      <text x="1120" y="790" font-size="12" fill="#856404">Completed: 23/35 tasks</text>
+      <text x="1120" y="805" font-size="12" fill="#856404">Remaining: 6 days</text>
+      <text x="1120" y="820" font-size="12" fill="#856404">Blocked: 2 tasks</text>
+    </g>
+  </g>
+</svg>

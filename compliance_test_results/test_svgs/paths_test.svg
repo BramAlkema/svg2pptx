@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 50 150 Q 100 50 150 150 T 250 150" stroke="blue" stroke-width="3" fill="none"/>
+    <path d="M 300 50 L 350 100 L 375 150 L 325 200 L 275 150 Z" fill="orange" stroke="red"/>
+    <path d="M 50 200 C 50 200 100 250 150 200 S 200 150 250 200" stroke="green" stroke-width="2" fill="none"/>
+    <text x="200" y="280" text-anchor="middle" font-family="Arial" font-size="16">Paths Test</text>
+</svg>

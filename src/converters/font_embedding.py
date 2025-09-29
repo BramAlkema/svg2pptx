@@ -8,6 +8,39 @@ This module implements a three-tier font strategy:
 
 The goal is to embed actual font bytes in PPTX to preserve editable text,
 only converting to paths when absolutely necessary.
+
+TODO: Issue 8 - Fix Font Embedding
+===================================
+PRIORITY: MEDIUM
+STATUS: Needs integration
+
+Problems:
+- Font embedding system exists but is not integrated with main conversion pipeline
+- Fonts are not being embedded into PPTX files properly
+- Font fallback chain is not working correctly
+- Custom @font-face fonts from SVG are not being processed
+
+Required Changes:
+1. Integrate FontEmbeddingEngine with ConversionServices
+2. Wire up font processing in text conversion pipeline
+3. Ensure font bytes are embedded into PPTX ZIP structure
+4. Fix font fallback chain (embedded -> system -> outline)
+5. Handle font licensing and subsetting properly
+6. Add proper error handling for missing fonts
+
+Files to modify:
+- src/converters/font_embedding.py (this file - fix integration)
+- src/services/conversion_services.py (add font_embedding_service)
+- src/converters/text.py (integrate font processing)
+- src/core/pptx_builder.py (add font embedding support)
+- src/services/font_service.py (update service)
+
+Test:
+- SVG with @font-face embedded fonts
+- SVG with custom font families
+- Verify fonts are embedded in PPTX
+- Test font fallback behavior
+- Verify text remains editable in PowerPoint
 """
 
 import re
@@ -148,25 +181,54 @@ class FontEmbeddingAnalyzer:
         return faces
     
     def load_system_font(self, family: str, weight: int = 400, italic: bool = False, fallback: Optional[List[str]] = None) -> Optional[bytes]:
-        """Load system font by family name with fallback chain"""
+        """Load system font by family name with enhanced fallback chain"""
         cache_key = f"{family}:{weight}:{italic}"
-        
+
         if cache_key in self._font_cache:
             return self._font_cache[cache_key]
-        
+
         # Try primary font first
         font_bytes = self._load_font_file(family, weight, italic)
-        
-        # Try fallback chain
+
+        # Try fallback chain if provided
         if not font_bytes and fallback:
             for fallback_family in fallback:
                 font_bytes = self._load_font_file(fallback_family, weight, italic)
                 if font_bytes:
                     break
-        
+
         # Cache result (even if None)
         self._font_cache[cache_key] = font_bytes
         return font_bytes
+
+    def is_font_available(self, family: str, weight: int = 400, italic: bool = False) -> bool:
+        """Check if a font is available without loading the font bytes"""
+        cache_key = f"{family}:{weight}:{italic}:available"
+
+        # Check if we already know availability
+        if hasattr(self, '_availability_cache'):
+            if cache_key in self._availability_cache:
+                return self._availability_cache[cache_key]
+        else:
+            self._availability_cache = {}
+
+        # Check if font file exists
+        font_paths = self._get_system_font_paths()
+        patterns = self._generate_font_patterns(family, weight, italic)
+
+        available = False
+        for font_path in font_paths:
+            for pattern in patterns:
+                file_path = font_path / pattern
+                if file_path.exists():
+                    available = True
+                    break
+            if available:
+                break
+
+        # Cache availability result
+        self._availability_cache[cache_key] = available
+        return available
     
     def _load_font_file(self, family: str, weight: int, italic: bool) -> Optional[bytes]:
         """Load font file from system font directories"""
@@ -215,51 +277,80 @@ class FontEmbeddingAnalyzer:
         return [p for p in paths if p.exists()]
     
     def _generate_font_patterns(self, family: str, weight: int, italic: bool) -> List[str]:
-        """Generate possible font file patterns for a family/weight/style"""
+        """Generate possible font file patterns for a family/weight/style with enhanced matching"""
         patterns = []
-        
-        # Normalize family name
+
+        # Normalize family name variations
         family_clean = family.lower().replace(' ', '').replace('-', '')
         family_dash = family.lower().replace(' ', '-')
         family_space = family.lower()
-        
-        # Weight/style suffixes
-        weight_suffix = ""
-        if weight >= 700:
-            weight_suffix = "bold"
-        elif weight <= 300:
-            weight_suffix = "light"
-        
-        style_suffix = "italic" if italic else ""
-        
-        # Combine suffixes
-        suffixes = []
-        if weight_suffix and style_suffix:
-            suffixes.extend([f"{weight_suffix}{style_suffix}", f"{weight_suffix}-{style_suffix}"])
-        elif weight_suffix:
-            suffixes.append(weight_suffix)
-        elif style_suffix:
-            suffixes.append(style_suffix)
+        family_original = family
+
+        # Enhanced weight/style suffix mapping
+        weight_suffixes = []
+        if weight >= 900:
+            weight_suffixes.extend(["black", "heavy", "ultra", "extra"])
+        elif weight >= 800:
+            weight_suffixes.extend(["extrabold", "extra-bold", "ultra"])
+        elif weight >= 700:
+            weight_suffixes.extend(["bold", "b"])
+        elif weight >= 600:
+            weight_suffixes.extend(["semibold", "semi-bold", "demi", "medium"])
+        elif weight >= 500:
+            weight_suffixes.extend(["medium", "normal"])
+        elif weight >= 400:
+            weight_suffixes.extend(["regular", "normal", ""])
+        elif weight >= 300:
+            weight_suffixes.extend(["light", "thin"])
+        elif weight >= 200:
+            weight_suffixes.extend(["extralight", "extra-light", "ultralight"])
         else:
-            suffixes.extend(["regular", ""])
-        
-        # Generate patterns with different extensions
-        extensions = [".ttf", ".otf", ".TTF", ".OTF"]
-        
-        for base_family in [family_clean, family_dash, family_space]:
-            for suffix in suffixes:
-                for ext in extensions:
-                    if suffix:
-                        patterns.extend([
-                            f"{base_family}{suffix}{ext}",
-                            f"{base_family}-{suffix}{ext}",
-                            f"{base_family}_{suffix}{ext}",
-                            f"{family}{suffix}{ext}".replace(' ', ''),
-                        ])
-                    else:
-                        patterns.append(f"{base_family}{ext}")
-        
-        return patterns
+            weight_suffixes.extend(["thin", "hairline"])
+
+        style_suffixes = ["italic", "oblique", "i"] if italic else ["", "regular"]
+
+        # Generate all combinations
+        base_families = [family_original, family_clean, family_dash, family_space]
+        extensions = [".ttf", ".otf", ".TTF", ".OTF", ".ttc", ".TTC"]
+
+        # Priority order: exact match first, then variations
+        for base_family in base_families:
+            # First try most specific patterns
+            for weight_suffix in weight_suffixes[:2]:  # Only first 2 weight variants
+                for style_suffix in style_suffixes[:1]:  # Only first style variant
+                    for ext in extensions:
+                        if weight_suffix and style_suffix:
+                            patterns.extend([
+                                f"{base_family}{weight_suffix}{style_suffix}{ext}",
+                                f"{base_family}-{weight_suffix}{style_suffix}{ext}",
+                                f"{base_family}_{weight_suffix}{style_suffix}{ext}",
+                                f"{base_family}{weight_suffix}-{style_suffix}{ext}",
+                                f"{base_family}-{weight_suffix}-{style_suffix}{ext}",
+                            ])
+                        elif weight_suffix:
+                            patterns.extend([
+                                f"{base_family}{weight_suffix}{ext}",
+                                f"{base_family}-{weight_suffix}{ext}",
+                                f"{base_family}_{weight_suffix}{ext}",
+                            ])
+                        elif style_suffix:
+                            patterns.extend([
+                                f"{base_family}{style_suffix}{ext}",
+                                f"{base_family}-{style_suffix}{ext}",
+                                f"{base_family}_{style_suffix}{ext}",
+                            ])
+                        else:
+                            patterns.append(f"{base_family}{ext}")
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_patterns = []
+        for pattern in patterns:
+            if pattern not in seen:
+                seen.add(pattern)
+                unique_patterns.append(pattern)
+
+        return unique_patterns
     
     @staticmethod
     def get_font_slot(weight: int, italic: bool) -> str:

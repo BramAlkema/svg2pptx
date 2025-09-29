@@ -15,6 +15,7 @@ import logging
 from lxml import etree
 
 from ..core.base import Filter, FilterContext, FilterResult, FilterException
+from ....units import unit
 
 logger = logging.getLogger(__name__)
 
@@ -63,13 +64,13 @@ class OffsetFilter(Filter):
 
     This filter implements SVG feOffset elements, providing native PowerPoint
     shadow effects when possible and appropriate transform-based fallbacks for
-    complex scenarios using existing UnitConverter and TransformParser.
+    complex scenarios using existing UnitConverter and TransformEngine.
 
     Supports:
     - X/Y displacement operations with proper unit conversion
     - Integration with existing shadow effects in PowerPoint
     - Proper bounds calculation using ViewBox utilities
-    - Transform-based positioning with TransformParser
+    - Transform-based positioning with TransformEngine
 
     Example:
         >>> offset_filter = OffsetFilter()
@@ -110,7 +111,7 @@ class OffsetFilter(Filter):
 
         Uses existing architecture components:
         - UnitConverter for proper EMU conversion
-        - TransformParser for coordinate transformations
+        - TransformEngine for coordinate transformations
         - ViewBox utilities for bounds calculation
 
         Args:
@@ -228,9 +229,9 @@ class OffsetFilter(Filter):
         Returns:
             Tuple of (dx_emu, dy_emu) displacement values
         """
-        # Use UnitConverter to convert px values to EMUs
-        dx_emu = context.unit_converter.to_emu(f"{params.dx}px")
-        dy_emu = context.unit_converter.to_emu(f"{params.dy}px")
+        # Use fluent API to convert px values to EMUs
+        dx_emu = unit(f"{params.dx}px").to_emu()
+        dy_emu = unit(f"{params.dy}px").to_emu()
 
         return (int(dx_emu), int(dy_emu))
 

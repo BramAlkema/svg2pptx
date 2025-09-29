@@ -1,0 +1,121 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>SVG2PPTX Conversion Result</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                    margin: 0; padding: 20px; background: #f5f5f5;
+                }
+                .header {
+                    text-align: center; background: white; padding: 30px;
+                    border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .comparison {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+                    max-width: 1200px; margin: 0 auto; margin-bottom: 30px;
+                }
+                .panel {
+                    background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .panel h3 {
+                    margin-top: 0; text-align: center; font-size: 1.4em;
+                    padding: 15px; border-radius: 8px; color: white;
+                }
+                .svg-panel h3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .pptx-panel h3 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+                .svg-container {
+                    display: flex; justify-content: center; align-items: center;
+                    border: 2px solid #ddd; border-radius: 8px; padding: 20px;
+                    background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    min-height: 200px;
+                }
+                .svg-container svg {
+                    max-width: 100%; height: auto;
+                }
+                img {
+                    max-width: 100%; height: auto; border: 2px solid #ddd; border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    object-fit: contain; background: white;
+                }
+                .download-section {
+                    background: white; padding: 30px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;
+                    max-width: 600px; margin: 0 auto;
+                }
+                .download-btn {
+                    display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 15px 30px; text-decoration: none;
+                    border-radius: 8px; font-weight: bold; font-size: 1.1em;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    transition: transform 0.2s ease;
+                }
+                .download-btn:hover { transform: translateY(-2px); }
+                .meta { color: #666; margin-top: 15px; font-size: 0.9em; }
+                .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎨 SVG2PPTX Conversion Result</h1>
+                <p><strong>Source:</strong> test_arcs_only.svg</p>
+                <div class="success">
+                    <strong>✅ Conversion Successful!</strong> Compare the original SVG with the PowerPoint rendering.
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="panel svg-panel">
+                    <h3>📄 Original SVG</h3>
+                    <div class="svg-container">
+                        <!-- Arc-only test for bezier conversion -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+
+  <!-- Simple arc - half circle -->
+  <path d="M50,100 A50,50 0 0,1 150,100"
+        fill="none" stroke="#e74c3c" stroke-width="3"/>
+
+  <!-- Crescent moon (two arcs) -->
+  <path d="M250,100 A30,30 0 1,0 250,150 A20,20 0 1,1 250,100 Z"
+        fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+
+  <!-- Quarter circle -->
+  <path d="M50,200 A50,50 0 0,1 100,150"
+        fill="none" stroke="#3498db" stroke-width="3"/>
+
+  <!-- Oval with cutout -->
+  <path d="M200,200 A40,20 0 1,1 200,220 A20,10 0 1,0 200,200 Z"
+        fill="#16a085" stroke="#138d75" stroke-width="2"/>
+
+</svg>
+                    </div>
+                    <div class="meta">
+                        Vector SVG: 400×300px<br>
+                        Source: test_arcs_only.svg
+                    </div>
+                </div>
+
+                <div class="panel pptx-panel">
+                    <h3>📊 PowerPoint Result</h3>
+                    <img src="test_arcs_only.png" alt="PowerPoint rendering">
+                    <div class="meta">
+                        LibreOffice rendering of converted PPTX file
+                    </div>
+                </div>
+            </div>
+
+            <div class="download-section">
+                <h3>📥 Download Your PowerPoint File</h3>
+                <a href="test_arcs_only.pptx" class="download-btn" download>
+                    ⬇️ Download test_arcs_only.pptx
+                </a>
+                <div class="meta">
+                    <p>File size: 5,491 bytes</p>
+                    <p>Open in Microsoft PowerPoint, LibreOffice Impress, or Google Slides</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        

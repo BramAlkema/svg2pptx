@@ -1,0 +1,89 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>SVG2PPTX Conversion Result</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                    margin: 0; padding: 20px; background: #f5f5f5;
+                }
+                .header {
+                    text-align: center; background: white; padding: 30px;
+                    border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .comparison {
+                    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+                    max-width: 1200px; margin: 0 auto; margin-bottom: 30px;
+                }
+                .panel {
+                    background: white; padding: 25px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                .panel h3 {
+                    margin-top: 0; text-align: center; font-size: 1.4em;
+                    padding: 15px; border-radius: 8px; color: white;
+                }
+                .svg-panel h3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .pptx-panel h3 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+                img {
+                    max-width: 100%; border: 2px solid #ddd; border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                }
+                .download-section {
+                    background: white; padding: 30px; border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;
+                    max-width: 600px; margin: 0 auto;
+                }
+                .download-btn {
+                    display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 15px 30px; text-decoration: none;
+                    border-radius: 8px; font-weight: bold; font-size: 1.1em;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    transition: transform 0.2s ease;
+                }
+                .download-btn:hover { transform: translateY(-2px); }
+                .meta { color: #666; margin-top: 15px; font-size: 0.9em; }
+                .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎨 SVG2PPTX Conversion Result</h1>
+                <p><strong>Source:</strong> test_complex_paths.svg</p>
+                <div class="success">
+                    <strong>✅ Conversion Successful!</strong> LibreOffice rendered vector graphics from your SVG.
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="panel svg-panel">
+                    <h3>📄 SVG Source</h3>
+                    <img src="test_complex_paths_svg.png" alt="SVG source">
+                    <div class="meta">
+                        Original vector graphics from test_complex_paths.svg
+                    </div>
+                </div>
+
+                <div class="panel pptx-panel">
+                    <h3>📊 PowerPoint Result</h3>
+                    <img src="test_complex_paths.png" alt="PowerPoint rendering">
+                    <div class="meta">
+                        LibreOffice rendering of converted PPTX file
+                    </div>
+                </div>
+            </div>
+
+            <div class="download-section">
+                <h3>📥 Download Your PowerPoint File</h3>
+                <a href="test_complex_paths.pptx" class="download-btn" download>
+                    ⬇️ Download test_complex_paths.pptx
+                </a>
+                <div class="meta">
+                    <p>File size: 5,214 bytes</p>
+                    <p>Open in Microsoft PowerPoint, LibreOffice Impress, or Google Slides</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        

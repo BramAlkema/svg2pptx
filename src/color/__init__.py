@@ -3,13 +3,13 @@
 Modern Color System for SVG2PPTX
 
 This package provides a fluent, chainable color API using NumPy and colorspacious
-for accurate color science operations while maintaining backwards compatibility.
+for accurate color science operations with modern dependency injection integration.
 
 Key Features:
 - Fluent API: Color('#ff0000').darken(0.2).saturate(1.5).hex()
 - Professional color science via colorspacious
 - 5-10x performance improvements through NumPy vectorization
-- Complete backwards compatibility with existing ColorParser/ColorInfo
+- Modern, dependency injection compatible API
 
 Example Usage:
     from svg2pptx.color import Color
@@ -37,9 +37,9 @@ from .harmony import ColorHarmony
 # Advanced features
 from .accessibility import ColorAccessibility, ContrastLevel, ColorBlindnessType
 from .manipulation import ColorManipulation, BlendMode
+from .color_spaces import ColorSpaceConverter
 
-# Legacy compatibility - maintain existing interfaces
-from ..colors import ColorParser, ColorInfo
+# Modern Color system only - no legacy compatibility needed
 
 # Export main public API
 __all__ = [
@@ -56,10 +56,7 @@ __all__ = [
     'ColorBlindnessType',
     'ColorManipulation',
     'BlendMode',
-
-    # Legacy compatibility
-    'ColorParser',
-    'ColorInfo',
+    'ColorSpaceConverter',
 ]
 
 # Version info

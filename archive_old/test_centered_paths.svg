@@ -1,0 +1,22 @@
+<!-- All paths centered to test viewport issue -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Path 1: Heart shape (moved to center) -->
+  <path d="M200,150 C200,150 175,125 160,110 C145,95 145,80 160,80 C170,80 180,85 200,105 C220,85 230,80 240,80 C255,80 255,95 240,110 C225,125 200,150 200,150 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- Path 2: Star shape (moved slightly right) -->
+  <path d="M150,80 L155,95 L170,95 L158,105 L163,120 L150,110 L137,120 L142,105 L130,95 L145,95 Z"
+        fill="#f1c40f" stroke="#f39c12" stroke-width="1.5"/>
+
+  <!-- Path 3: Curved line (centered) -->
+  <path d="M100,150 Q200,100 300,150 T350,180"
+        fill="none" stroke="#3498db" stroke-width="3"/>
+
+  <!-- Path 4: Polygon (centered) -->
+  <path d="M250,120 L270,100 L290,105 L305,125 L295,145 L275,155 L255,150 L240,130 Z"
+        fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+
+  <!-- Path 5: Bezier curves (centered) -->
+  <path d="M120,180 C120,160 140,160 160,180 S200,200 220,180"
+        fill="none" stroke="#e67e22" stroke-width="4"/>
+</svg>

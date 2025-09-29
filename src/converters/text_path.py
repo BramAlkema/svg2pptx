@@ -32,7 +32,6 @@ from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
 from ..paths import create_path_system  # For path processing
-from ..color import Color
 
 
 class TextPathMethod(Enum):

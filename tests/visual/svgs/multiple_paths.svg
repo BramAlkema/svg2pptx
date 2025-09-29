@@ -1,0 +1,22 @@
+<!-- Multi-path SVG test case -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Path 1: Heart shape -->
+  <path d="M200,220 C200,220 150,170 120,140 C90,110 90,70 120,70 C140,70 160,80 200,120 C240,80 260,70 280,70 C310,70 310,110 280,140 C250,170 200,220 200,220 Z"
+        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+  <!-- Path 2: Star shape -->
+  <path d="M100,50 L105,65 L120,65 L108,75 L113,90 L100,80 L87,90 L92,75 L80,65 L95,65 Z"
+        fill="#f1c40f" stroke="#f39c12" stroke-width="1.5"/>
+
+  <!-- Path 3: Curved line -->
+  <path d="M50,100 Q150,50 250,100 T350,150"
+        fill="none" stroke="#3498db" stroke-width="3"/>
+
+  <!-- Path 4: Complex polygon-like path -->
+  <path d="M300,200 L320,180 L340,185 L355,205 L345,225 L325,235 L305,230 L290,210 Z"
+        fill="#9b59b6" stroke="#8e44ad" stroke-width="2"/>
+
+  <!-- Path 5: Bezier curves -->
+  <path d="M60,200 C60,180 80,180 100,200 S140,220 160,200"
+        fill="none" stroke="#e67e22" stroke-width="4"/>
+</svg>

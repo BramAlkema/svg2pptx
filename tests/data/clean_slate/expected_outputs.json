@@ -1,0 +1,173 @@
+{
+  "description": "Expected outputs for clean slate test validation",
+  "version": "1.0.0",
+  "test_cases": {
+    "rectangle": {
+      "input_svg": "simple rectangle SVG",
+      "expected_ir": {
+        "scene_type": "Scene",
+        "elements_count": 1,
+        "first_element": {
+          "type": "Path",
+          "segments_count": 4,
+          "is_closed": true,
+          "has_fill": true,
+          "has_stroke": false,
+          "fill_color": "ff0000"
+        }
+      },
+      "expected_drawingml": {
+        "contains_elements": [
+          "<p:sp>",
+          "<p:spPr>",
+          "<a:xfrm>",
+          "<a:custGeom>",
+          "<a:solidFill>"
+        ],
+        "element_count": 1,
+        "estimated_size_bytes": 500
+      },
+      "performance_expectations": {
+        "max_processing_time_ms": 50,
+        "max_memory_mb": 5
+      }
+    },
+    "circle": {
+      "input_svg": "simple circle SVG",
+      "expected_ir": {
+        "scene_type": "Scene",
+        "elements_count": 1,
+        "first_element": {
+          "type": "Path",
+          "segments_count": 2,
+          "is_closed": true,
+          "has_fill": true,
+          "has_stroke": false,
+          "fill_color": "0000ff"
+        }
+      },
+      "expected_drawingml": {
+        "contains_elements": [
+          "<p:sp>",
+          "<a:custGeom>",
+          "<a:pathLst>"
+        ],
+        "estimated_size_bytes": 600
+      },
+      "performance_expectations": {
+        "max_processing_time_ms": 60,
+        "max_memory_mb": 5
+      }
+    },
+    "text_simple": {
+      "input_svg": "simple text SVG",
+      "expected_ir": {
+        "scene_type": "Scene",
+        "elements_count": 1,
+        "first_element": {
+          "type": "TextFrame",
+          "runs_count": 1,
+          "has_content": true,
+          "x": 10,
+          "y": 30
+        }
+      },
+      "expected_drawingml": {
+        "contains_elements": [
+          "<p:sp>",
+          "<p:txBody>",
+          "<a:p>",
+          "<a:r>",
+          "<a:t>"
+        ],
+        "text_content": "Hello World",
+        "estimated_size_bytes": 400
+      },
+      "performance_expectations": {
+        "max_processing_time_ms": 40,
+        "max_memory_mb": 4
+      }
+    },
+    "gradient_path": {
+      "input_svg": "complex path with gradient",
+      "expected_ir": {
+        "scene_type": "Scene",
+        "elements_count": 1,
+        "first_element": {
+          "type": "Path",
+          "has_fill": true,
+          "has_stroke": true,
+          "fill_type": "LinearGradientPaint",
+          "stroke_type": "SolidPaint"
+        }
+      },
+      "expected_drawingml": {
+        "contains_elements": [
+          "<p:sp>",
+          "<a:gradFill>",
+          "<a:gsLst>",
+          "<a:ln>"
+        ],
+        "estimated_size_bytes": 800
+      },
+      "performance_expectations": {
+        "max_processing_time_ms": 100,
+        "max_memory_mb": 8
+      }
+    },
+    "nested_groups": {
+      "input_svg": "nested group structure",
+      "expected_ir": {
+        "scene_type": "Scene",
+        "elements_count": 1,
+        "first_element": {
+          "type": "Group",
+          "has_children": true,
+          "has_transform": true,
+          "has_opacity": true
+        }
+      },
+      "expected_drawingml": {
+        "contains_elements": [
+          "<p:grpSp>",
+          "<p:grpSpPr>",
+          "<a:xfrm>"
+        ],
+        "estimated_size_bytes": 1200
+      },
+      "performance_expectations": {
+        "max_processing_time_ms": 150,
+        "max_memory_mb": 10
+      }
+    }
+  },
+  "validation_rules": {
+    "ir_validation": {
+      "required_scene_fields": ["elements", "viewbox", "width", "height"],
+      "required_path_fields": ["segments", "data"],
+      "required_text_fields": ["runs", "x", "y"],
+      "required_group_fields": ["children"]
+    },
+    "drawingml_validation": {
+      "xml_well_formed": true,
+      "required_namespaces": ["a:", "p:"],
+      "shape_structure": {
+        "shape": ["p:sp", "p:nvSpPr", "p:spPr"],
+        "picture": ["p:pic", "p:nvPicPr", "p:blipFill"],
+        "group": ["p:grpSp", "p:nvGrpSpPr", "p:grpSpPr"]
+      }
+    },
+    "performance_validation": {
+      "max_processing_time_per_element_ms": 100,
+      "max_memory_per_element_mb": 10,
+      "max_output_size_growth_factor": 50
+    }
+  },
+  "test_data_metadata": {
+    "simple_svgs_count": 5,
+    "complex_svgs_count": 5,
+    "edge_case_svgs_count": 5,
+    "performance_svgs_count": 2,
+    "total_test_cases": 17
+  }
+}

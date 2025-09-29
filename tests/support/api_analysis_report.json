@@ -1,0 +1,2626 @@
+{
+  "summary": {
+    "total_test_files": 145,
+    "affected_files": 39,
+    "total_mismatches": 188,
+    "confidence_distribution": {
+      "high": 41,
+      "medium": 35,
+      "low": 112
+    }
+  },
+  "modules_analyzed": 99,
+  "common_patterns": {
+    "load_svg": "convert_file",
+    "SVG2PPTX": "SVGToPowerPointConverter",
+    "ConverterRegistry": "Use services.converter_registry",
+    "FilterPipeline": "FilterRegistry",
+    "FilterIntegrator": "FilterChain",
+    "CompositingEngine": "Use FilterChain.apply()",
+    "manual_mock_setup": "ConversionServices.create_default()",
+    "ViewportContext": "ConversionContext",
+    "UnitConverter": "UnitEngine",
+    "PreprocessingPipeline": "Optimizer"
+  },
+  "mismatches_by_file": {
+    "tests/fixtures/test_data.py": [
+      {
+        "file_path": "tests/fixtures/test_data.py",
+        "line_number": 2,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Test data fixtures for SVGToPowerPointConverter testing.",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/filters/test_filter_effects_end_to_end.py": [
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 89,
+        "test_method": "unknown_test",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "# Create a mock FilterRegistry for testing",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 90,
+        "test_method": "unknown_test",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "class FilterRegistry:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 91,
+        "test_method": "unknown_test",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "\"\"\"Mock FilterRegistry for E2E testing.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 211,
+        "test_method": "unknown_test",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "pipeline = FilterRegistry(",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 346,
+        "test_method": "test_configuration_options",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "high_perf_pipeline = FilterRegistry(",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 364,
+        "test_method": "test_configuration_options",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "quality_pipeline = FilterRegistry(",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 379,
+        "test_method": "test_integration_with_dependencies",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "- UnitEngine for coordinate handling",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 511,
+        "test_method": "test_thread_safety",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "pipeline: FilterRegistry instance",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 608,
+        "test_method": "test_end_to_end_workflow",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "pipeline = FilterRegistry(",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+        "line_number": 673,
+        "test_method": "test_real_world_scenarios",
+        "expected_method": "FilterPipeline",
+        "actual_methods": [
+          "FilterRegistry"
+        ],
+        "suggested_fix": "pipeline = FilterRegistry(",
+        "confidence": "high"
+      }
+    ],
+    "tests/e2e/pipeline/test_preprocessing_pipeline_e2e.py": [
+      {
+        "file_path": "tests/e2e/pipeline/test_preprocessing_pipeline_e2e.py",
+        "line_number": 43,
+        "test_method": "unknown_test",
+        "expected_method": "PreprocessingPipeline",
+        "actual_methods": [
+          "Optimizer"
+        ],
+        "suggested_fix": "class TestOptimizerE2E:",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/library/test_svg_test_library_e2e.py": [
+      {
+        "file_path": "tests/e2e/library/test_svg_test_library_e2e.py",
+        "line_number": 236,
+        "test_method": "test_integration_with_converter_registry",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registryFactory",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/e2e/library/test_svg_test_library_e2e.py",
+        "line_number": 238,
+        "test_method": "test_integration_with_converter_registry",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registryFactory.get_registry()",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/library/test_svg_test_library_e2e.py",
+        "line_number": 264,
+        "test_method": "test_real_world_svg_processing",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registryFactory, ConversionContext, CoordinateSystem",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/e2e/library/test_svg_test_library_e2e.py",
+        "line_number": 276,
+        "test_method": "test_real_world_svg_processing",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registryFactory.get_registry()",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/visual/test_visual_regression_framework.py": [
+      {
+        "file_path": "tests/e2e/visual/test_visual_regression_framework.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Visual Regression Test Framework for SVGToPowerPointConverter Filter Effects",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/visual/test_visual_regression_framework.py",
+        "line_number": 34,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/e2e/visual/test_visual_regression_framework.py",
+        "line_number": 153,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      }
+    ],
+    "tests/e2e/visual/test_filter_effects_visual_regression.py": [
+      {
+        "file_path": "tests/e2e/visual/test_filter_effects_visual_regression.py",
+        "line_number": 233,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "svg_converter = SVGToPowerPointConverter()",
+        "confidence": "high"
+      }
+    ],
+    "tests/e2e/api/test_batch_multifile_drive_e2e.py": [
+      {
+        "file_path": "tests/e2e/api/test_batch_multifile_drive_e2e.py",
+        "line_number": 117,
+        "test_method": "test_drive_folder_pattern_variations_e2e",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "\"SVGToPowerPointConverter/{user_id}/{date}/batch-{job_id}/converted\",",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/core_systems/test_transforms_system_e2e.py": [
+      {
+        "file_path": "tests/e2e/core_systems/test_transforms_system_e2e.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "End-to-End Transform System Tests for SVGToPowerPointConverter.",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/core_systems/test_units_system_e2e.py": [
+      {
+        "file_path": "tests/e2e/core_systems/test_units_system_e2e.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "End-to-End Unit System Tests for SVGToPowerPointConverter.",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/core_systems/test_viewbox_system_e2e.py": [
+      {
+        "file_path": "tests/e2e/core_systems/test_viewbox_system_e2e.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "End-to-End ViewBox System Tests for SVGToPowerPointConverter.",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/core_systems/test_paths_system_e2e.py": [
+      {
+        "file_path": "tests/e2e/core_systems/test_paths_system_e2e.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "End-to-End Path System Tests for SVGToPowerPointConverter.",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/fonts/test_font_embedding_e2e.py": [
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "End-to-End (E2E) Test for Font Embedding in SVGToPowerPointConverter",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 31,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "from src.svg2pptx import SVGToPowerPointConverter",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 34,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "SVGToPowerPointConverter_AVAILABLE = True",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 36,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "SVGToPowerPointConverter_AVAILABLE = False",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 230,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "if not SVGToPowerPointConverter_AVAILABLE:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/e2e/fonts/test_font_embedding_e2e.py",
+        "line_number": 231,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "pytest.skip(\"SVGToPowerPointConverter not available for testing\")",
+        "confidence": "low"
+      }
+    ],
+    "tests/e2e/standards/test_w3c_compliance_e2e.py": [
+      {
+        "file_path": "tests/e2e/standards/test_w3c_compliance_e2e.py",
+        "line_number": 5,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "This module provides end-to-end tests for validating SVGToPowerPointConverter compliance",
+        "confidence": "low"
+      }
+    ],
+    "tests/integration/pipeline/test_modern_conversion_workflows.py": [
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 21,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine, ConversionContext",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 35,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 161,
+        "test_method": "test_units_conversion_integration",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 227,
+        "test_method": "test_complete_conversion_pipeline_integration",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 262,
+        "test_method": "test_error_handling_integration",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 290,
+        "test_method": "test_performance_integration",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+        "line_number": 311,
+        "test_method": "test_memory_efficiency_integration",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      }
+    ],
+    "tests/integration/converters/test_converter_registry_integration.py": [
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 5,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "Use services.converter_registry system to ensure E2E tests properly exercise converter modules.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 18,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registry, BaseConverter, ConversionContext, Use services.converter_registryFactory",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 47,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "class TestUse services.converter_registryIntegration:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 62,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 81,
+        "test_method": "test_registry_integration_basic",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch.object(Use services.converter_registryFactory, 'get_registry', return_value=registry):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 126,
+        "test_method": "test_registry_fallback_behavior",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch.object(Use services.converter_registryFactory, 'get_registry', return_value=registry):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 149,
+        "test_method": "test_registry_error_handling",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch.object(Use services.converter_registryFactory, 'get_registry', return_value=registry):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 165,
+        "test_method": "test_converter_context_passing",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch.object(Use services.converter_registryFactory, 'get_registry', return_value=registry):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+        "line_number": 199,
+        "test_method": "test_registry_performance_impact",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "class TestUse services.converter_registryFactory:",
+        "confidence": "low"
+      }
+    ],
+    "tests/integration/preprocessing/test_preprocessing_integration.py": [
+      {
+        "file_path": "tests/integration/preprocessing/test_preprocessing_integration.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Test script to verify SVGO optimization integration with the SVGToPowerPointConverter system.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/integration/preprocessing/test_preprocessing_integration.py",
+        "line_number": 10,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters import Use services.converter_registry",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/integration/preprocessing/test_preprocessing_integration.py",
+        "line_number": 87,
+        "test_method": "test_full_integration",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/integration/preprocessing/test_preprocessing_integration.py",
+        "line_number": 178,
+        "test_method": "test_api_configuration",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "print(\"\ud83d\ude80 SVGToPowerPointConverter Preprocessing Integration Test\")",
+        "confidence": "low"
+      }
+    ],
+    "tests/quality/architecture/test_codebase_consistency.py": [
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Comprehensive Codebase Consistency Test for SVGToPowerPointConverter Architecture",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 5,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "This test detects architectural inconsistencies across the SVGToPowerPointConverter codebase with focus on:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 40,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "2. Remove hardcoded EMU values (use UnitEngine.to_emu() instead)",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 64,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 307,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "required_tools = ['UnitEngine', 'ColorParser', 'TransformParser', 'ViewportResolver']",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 364,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "recommendation=\"Use UnitEngine.to_emu() method instead of hardcoded EMU values\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_codebase_consistency.py",
+        "line_number": 734,
+        "test_method": "test_generate_comprehensive_report",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"hardcoded_emu\": \"Replace hardcoded EMU values with UnitEngine.to_emu() calls\",",
+        "confidence": "low"
+      }
+    ],
+    "tests/quality/architecture/test_tool_consistency.py": [
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Comprehensive consistency test for standardized tool implementation across SVGToPowerPointConverter architecture.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 5,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "This test ensures that all 4 core tools (UnitEngine, ColorParser, TransformParser, ViewportResolver)",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 19,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 44,
+        "test_method": "test_base_converter_has_all_four_tools",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert isinstance(converter.unit_converter, UnitEngine), f\"unit_converter has wrong type: {type(converter.unit_converter)}\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 106,
+        "test_method": "test_tool_method_availability",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Test UnitEngine methods",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 108,
+        "test_method": "test_tool_method_availability",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert hasattr(unit_converter, 'to_emu'), \"UnitEngine missing to_emu method\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 109,
+        "test_method": "test_tool_method_availability",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert hasattr(unit_converter, 'format_emu'), \"UnitEngine missing format_emu method\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 141,
+        "test_method": "test_tool_functionality_consistency",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Test UnitEngine consistency",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 145,
+        "test_method": "test_tool_functionality_consistency",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert result1 == result2, f\"UnitEngine inconsistent: {result1} != {result2}\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 226,
+        "test_method": "test_tool_import_consistency",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/quality/architecture/test_tool_consistency.py",
+        "line_number": 232,
+        "test_method": "test_tool_import_consistency",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      }
+    ],
+    "tests/unit/converters/test_masking.py": [
+      {
+        "file_path": "tests/unit/converters/test_masking.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Unit Test Template for SVGToPowerPointConverter Components",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_masking.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "in the SVGToPowerPointConverter codebase. Copy this template and fill in the TODOs.",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/test_utilities.py": [
+      {
+        "file_path": "tests/unit/converters/test_utilities.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "testing of missing SVG elements in the SVGToPowerPointConverter converter.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_utilities.py",
+        "line_number": 229,
+        "test_method": "unknown_test",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def convert_file_sample(self, filename: str) -> str:",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/test_text.py": [
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 20,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 370,
+        "test_method": "test_convert_simple_text",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 371,
+        "test_method": "test_convert_simple_text",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 393,
+        "test_method": "test_convert_empty_text",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 394,
+        "test_method": "test_convert_empty_text",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 415,
+        "test_method": "test_convert_text_with_styling",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 416,
+        "test_method": "test_convert_text_with_styling",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 440,
+        "test_method": "test_convert_text_with_tspan",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 441,
+        "test_method": "test_convert_text_with_tspan",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 462,
+        "test_method": "test_text_anchor_positioning",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text.py",
+        "line_number": 463,
+        "test_method": "test_text_anchor_positioning",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      }
+    ],
+    "tests/unit/converters/test_shapes.py": [
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 66,
+        "test_method": "test_convert_basic_rectangle",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 147,
+        "test_method": "test_convert_rectangle_with_styles",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculation",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 187,
+        "test_method": "test_convert_rounded_rectangle",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 248,
+        "test_method": "test_convert_basic_circle",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 335,
+        "test_method": "test_convert_basic_ellipse",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 454,
+        "test_method": "test_convert_basic_polygon",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 492,
+        "test_method": "test_convert_basic_polyline",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 575,
+        "test_method": "test_convert_basic_line",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 620,
+        "test_method": "test_convert_vertical_line",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_shapes.py",
+        "line_number": 647,
+        "test_method": "test_convert_horizontal_line",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/test_paths.py": [
+      {
+        "file_path": "tests/unit/converters/test_paths.py",
+        "line_number": 233,
+        "test_method": "test_handle_move_absolute",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine for EMU calculations",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/test_transforms.py": [
+      {
+        "file_path": "tests/unit/converters/test_transforms.py",
+        "line_number": 21,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      }
+    ],
+    "tests/unit/converters/test_base.py": [
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "ConversionContext, BaseConverter abstract class, and Use services.converter_registry.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 24,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "Use services.converter_registry",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 405,
+        "test_method": "test_generate_stroke_basic",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to get the expected EMU value",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 413,
+        "test_method": "test_generate_stroke_basic",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "class TestUse services.converter_registry:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 414,
+        "test_method": "test_generate_stroke_basic",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "\"\"\"Test Use services.converter_registry functionality.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 431,
+        "test_method": "test_init",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 440,
+        "test_method": "test_register_converter_instance",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 456,
+        "test_method": "test_get_converter_by_element_map",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 467,
+        "test_method": "test_convert_element_success",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base.py",
+        "line_number": 480,
+        "test_method": "test_convert_element_no_converter",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry()",
+        "confidence": "high"
+      }
+    ],
+    "tests/unit/converters/test_text_to_path.py": [
+      {
+        "file_path": "tests/unit/converters/test_text_to_path.py",
+        "line_number": 14,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text_to_path.py",
+        "line_number": 42,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Use UnitEngine to calculate proper EMU values",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_text_to_path.py",
+        "line_number": 43,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      }
+    ],
+    "tests/unit/converters/test_groups.py": [
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 19,
+        "test_method": "unknown_test",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import BaseConverter, ConversionContext, Use services.converter_registry, CoordinateSystem",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 21,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 307,
+        "test_method": "test_process_nested_svg",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "converter_registry = Mock(spec=Use services.converter_registry)",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 316,
+        "test_method": "test_process_nested_svg",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "context.to_emu.side_effect = lambda val, axis: UnitEngine().to_emu(val)",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 342,
+        "test_method": "test_dimension_parsing_uses_tools",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"\"\"Test that dimension parsing should use UnitEngine instead of hardcoded values.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 345,
+        "test_method": "test_dimension_parsing_uses_tools",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# Test that points conversion should use UnitEngine for accuracy",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 349,
+        "test_method": "test_dimension_parsing_uses_tools",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "# UnitEngine would provide more accurate conversion",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_groups.py",
+        "line_number": 547,
+        "test_method": "test_group_with_single_child_no_transform",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "converter_registry = Mock(spec=Use services.converter_registry)",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/test_base_converter_dependency_injection.py": [
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 160,
+        "test_method": "test_base_converter_type_hints",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "class TestUse services.converter_registryDependencyInjection:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 161,
+        "test_method": "test_base_converter_type_hints",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "\"\"\"Test Use services.converter_registry with service injection support.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 164,
+        "test_method": "test_converter_registry_injects_services",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "\"\"\"Test Use services.converter_registry injects services during converter instantiation.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 165,
+        "test_method": "test_converter_registry_injects_services",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registry",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 176,
+        "test_method": "test_converter_registry_injects_services",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry(services=mock_conversion_services)",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 188,
+        "test_method": "test_converter_registry_backward_compatibility",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "\"\"\"Test Use services.converter_registry maintains backward compatibility.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 189,
+        "test_method": "test_converter_registry_backward_compatibility",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registry",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 192,
+        "test_method": "test_converter_registry_backward_compatibility",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry.create_with_default_services()",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 198,
+        "test_method": "test_converter_registry_service_propagation",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "\"\"\"Test Use services.converter_registry propagates services to all converters.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 199,
+        "test_method": "test_converter_registry_service_propagation",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "from src.converters.base import Use services.converter_registry",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+        "line_number": 219,
+        "test_method": "test_converter_registry_service_propagation",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "registry = Use services.converter_registry(services=mock_conversion_services)",
+        "confidence": "high"
+      }
+    ],
+    "tests/unit/converters/test_modern_systems.py": [
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 20,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 112,
+        "test_method": "test_color_parsing_named",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "Tests UnitEngine that we verified imports successfully.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 116,
+        "test_method": "test_unit_converter_creation",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"\"\"Test UnitEngine initialization.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 117,
+        "test_method": "test_unit_converter_creation",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 123,
+        "test_method": "test_px_to_emu_conversion",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 132,
+        "test_method": "test_pt_to_emu_conversion",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 226,
+        "test_method": "test_color_with_units_system",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "unit_converter = UnitEngine()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 242,
+        "test_method": "test_all_modern_systems_importable",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "from src.units import UnitEngine",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/converters/test_modern_systems.py",
+        "line_number": 249,
+        "test_method": "test_all_modern_systems_importable",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert UnitEngine is not None",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/svg2pptx/test_svg2pptx.py": [
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Unit Tests for SVGToPowerPointConverter Main Module",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 42,
+        "test_method": "test_load_svg_from_string",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def test_convert_file_from_string(self):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 48,
+        "test_method": "test_load_svg_from_string",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "result = self.converter.convert_file(svg_content)",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 52,
+        "test_method": "test_load_svg_from_file",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def test_convert_file_from_file(self):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 63,
+        "test_method": "test_load_svg_from_file",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "result = self.converter.convert_file(temp_path)",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 69,
+        "test_method": "test_load_svg_invalid_file",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def test_convert_file_invalid_file(self):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 72,
+        "test_method": "test_load_svg_invalid_file",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "self.converter.convert_file('nonexistent.svg')",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 74,
+        "test_method": "test_load_svg_invalid_xml",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def test_convert_file_invalid_xml(self):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 78,
+        "test_method": "test_load_svg_invalid_xml",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "self.converter.convert_file(invalid_svg)",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 80,
+        "test_method": "test_load_svg_empty_content",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "def test_convert_file_empty_content(self):",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 83,
+        "test_method": "test_load_svg_empty_content",
+        "expected_method": "load_svg",
+        "actual_methods": [
+          "convert_file"
+        ],
+        "suggested_fix": "self.converter.convert_file('')",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 86,
+        "test_method": "test_load_svg_empty_content",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "@patch('src.svg2pptx.Use services.converter_registry')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 104,
+        "test_method": "test_convert_svg_basic",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "@patch('src.svg2pptx.Use services.converter_registry')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 116,
+        "test_method": "test_convert_svg_no_elements",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "@patch('src.svg2pptx.Use services.converter_registry')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 141,
+        "test_method": "test_convert_svg_conversion_error",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.Use services.converter_registry') as mock_registry:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 241,
+        "test_method": "test_convert_function_with_file_paths",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.SVGToPowerPointConverter') as mock_class:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 266,
+        "test_method": "test_convert_function_with_string_content",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.SVGToPowerPointConverter') as mock_class:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 294,
+        "test_method": "test_convert_function_with_options",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.SVGToPowerPointConverter') as mock_class:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 374,
+        "test_method": "test_main_function_error_handling",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "class TestSVGToPowerPointConverterIntegration:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 391,
+        "test_method": "test_complete_conversion_workflow",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.Use services.converter_registry') as mock_registry:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 396,
+        "test_method": "test_complete_conversion_workflow",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "converter = SVGToPowerPointConverter()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 417,
+        "test_method": "test_complex_svg_conversion",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.Use services.converter_registry') as mock_registry:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 422,
+        "test_method": "test_complex_svg_conversion",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "converter = SVGToPowerPointConverter()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 431,
+        "test_method": "test_complex_svg_conversion",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "class TestSVGToPowerPointConverterPerformance:",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 432,
+        "test_method": "test_complex_svg_conversion",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "\"\"\"Performance tests for SVGToPowerPointConverter conversion.\"\"\"",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 436,
+        "test_method": "test_complex_svg_conversion",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "self.converter = SVGToPowerPointConverter()",
+        "confidence": "high"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 449,
+        "test_method": "test_small_svg_performance",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.Use services.converter_registry') as mock_registry:",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+        "line_number": 476,
+        "test_method": "test_large_svg_performance",
+        "expected_method": "ConverterRegistry",
+        "actual_methods": [
+          "Use services.converter_registry"
+        ],
+        "suggested_fix": "with patch('src.svg2pptx.Use services.converter_registry') as mock_registry:",
+        "confidence": "medium"
+      }
+    ],
+    "tests/unit/utils/test_geometry_simplification.py": [
+      {
+        "file_path": "tests/unit/utils/test_geometry_simplification.py",
+        "line_number": 245,
+        "test_method": "test_real_world_svg_scenarios",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "print(f\"   \u2022 Full integration with SVGToPowerPointConverter preprocessing pipeline\")",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/utils/test_colors.py": [
+      {
+        "file_path": "tests/unit/utils/test_colors.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "accurate color handling across the entire SVGToPowerPointConverter system.",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/utils/test_colors_comprehensive.py": [
+      {
+        "file_path": "tests/unit/utils/test_colors_comprehensive.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Unit Test Template for SVGToPowerPointConverter Components",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/utils/test_colors_comprehensive.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "in the SVGToPowerPointConverter codebase. Copy this template and fill in the TODOs.",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/batch/test_drive_models.py": [
+      {
+        "file_path": "tests/unit/batch/test_drive_models.py",
+        "line_number": 93,
+        "test_method": "test_batch_job_creation",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "drive_folder_pattern=\"SVGToPowerPointConverter-Batches/{date}/batch-{job_id}/\"",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/batch/test_batch_drive_controller.py": [
+      {
+        "file_path": "tests/unit/batch/test_batch_drive_controller.py",
+        "line_number": 109,
+        "test_method": "test_create_batch_folder_default_pattern",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "'folderName': 'SVGToPowerPointConverter-Batches'",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/batch/test_batch_drive_controller.py",
+        "line_number": 123,
+        "test_method": "test_create_batch_folder_default_pattern",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "assert calls[0][0][0] == 'SVGToPowerPointConverter-Batches'  # Root folder",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/batch/test_batch_drive_controller.py",
+        "line_number": 180,
+        "test_method": "test_create_batch_folder_hierarchy",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "{'success': True, 'folderId': '1ROOT_FOLDER', 'folderName': 'SVGToPowerPointConverter-Batches'},",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/batch/test_batch_drive_controller.py",
+        "line_number": 519,
+        "test_method": "test_network_timeout_recovery",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "'folderName': 'SVGToPowerPointConverter-Batches'",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/preprocessing/test_preprocessing_comprehensive.py": [
+      {
+        "file_path": "tests/unit/preprocessing/test_preprocessing_comprehensive.py",
+        "line_number": 3,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "Unit Test Template for SVGToPowerPointConverter Components",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/preprocessing/test_preprocessing_comprehensive.py",
+        "line_number": 6,
+        "test_method": "unknown_test",
+        "expected_method": "SVG2PPTX",
+        "actual_methods": [
+          "SVGToPowerPointConverter"
+        ],
+        "suggested_fix": "in the SVGToPowerPointConverter codebase. Copy this template and fill in the TODOs.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/preprocessing/test_preprocessing_comprehensive.py",
+        "line_number": 30,
+        "test_method": "unknown_test",
+        "expected_method": "PreprocessingPipeline",
+        "actual_methods": [
+          "Optimizer"
+        ],
+        "suggested_fix": "class TestOptimizer:",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/services/test_conversion_services.py": [
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 5,
+        "test_method": "unknown_test",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "injection for UnitEngine, ColorParser, TransformParser, and ViewportResolver.",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 148,
+        "test_method": "test_conversion_services_initialization",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "@patch('src.services.conversion_services.UnitEngine')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 173,
+        "test_method": "test_conversion_services_create_default",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "@patch('src.services.conversion_services.UnitEngine')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 189,
+        "test_method": "test_conversion_services_create_default_with_config",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "@patch('src.services.conversion_services.UnitEngine')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 192,
+        "test_method": "test_conversion_services_create_default_initialization_error",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "mock_unit.side_effect = Exception(\"UnitEngine initialization failed\")",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 197,
+        "test_method": "test_conversion_services_create_default_initialization_error",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "assert \"Failed to initialize UnitEngine\" in str(exc_info.value)",
+        "confidence": "low"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 199,
+        "test_method": "test_conversion_services_create_default_initialization_error",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "@patch('src.services.conversion_services.UnitEngine')",
+        "confidence": "medium"
+      },
+      {
+        "file_path": "tests/unit/services/test_conversion_services.py",
+        "line_number": 324,
+        "test_method": "test_isolated_services_fixture",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"\"\"Create mock UnitEngine for testing.\"\"\"",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/filters/geometric/test_composite.py": [
+      {
+        "file_path": "tests/unit/converters/filters/geometric/test_composite.py",
+        "line_number": 196,
+        "test_method": "test_integration_with_dependencies",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"\"\"Test integration with UnitEngine, TransformParser, etc.\"\"\"",
+        "confidence": "low"
+      }
+    ],
+    "tests/unit/converters/filters/geometric/test_transforms.py": [
+      {
+        "file_path": "tests/unit/converters/filters/geometric/test_transforms.py",
+        "line_number": 182,
+        "test_method": "test_integration_with_dependencies",
+        "expected_method": "UnitConverter",
+        "actual_methods": [
+          "UnitEngine"
+        ],
+        "suggested_fix": "\"\"\"Test integration with UnitEngine, TransformParser, etc.\"\"\"",
+        "confidence": "low"
+      }
+    ]
+  },
+  "high_priority_fixes": [
+    {
+      "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+      "line_number": 211,
+      "test_method": "unknown_test",
+      "expected_method": "FilterPipeline",
+      "actual_methods": [
+        "FilterRegistry"
+      ],
+      "suggested_fix": "pipeline = FilterRegistry(",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+      "line_number": 346,
+      "test_method": "test_configuration_options",
+      "expected_method": "FilterPipeline",
+      "actual_methods": [
+        "FilterRegistry"
+      ],
+      "suggested_fix": "high_perf_pipeline = FilterRegistry(",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+      "line_number": 364,
+      "test_method": "test_configuration_options",
+      "expected_method": "FilterPipeline",
+      "actual_methods": [
+        "FilterRegistry"
+      ],
+      "suggested_fix": "quality_pipeline = FilterRegistry(",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+      "line_number": 608,
+      "test_method": "test_end_to_end_workflow",
+      "expected_method": "FilterPipeline",
+      "actual_methods": [
+        "FilterRegistry"
+      ],
+      "suggested_fix": "pipeline = FilterRegistry(",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/filters/test_filter_effects_end_to_end.py",
+      "line_number": 673,
+      "test_method": "test_real_world_scenarios",
+      "expected_method": "FilterPipeline",
+      "actual_methods": [
+        "FilterRegistry"
+      ],
+      "suggested_fix": "pipeline = FilterRegistry(",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/visual/test_visual_regression_framework.py",
+      "line_number": 153,
+      "test_method": "unknown_test",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/e2e/visual/test_filter_effects_visual_regression.py",
+      "line_number": 233,
+      "test_method": "unknown_test",
+      "expected_method": "SVG2PPTX",
+      "actual_methods": [
+        "SVGToPowerPointConverter"
+      ],
+      "suggested_fix": "svg_converter = SVGToPowerPointConverter()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 35,
+      "test_method": "unknown_test",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 161,
+      "test_method": "test_units_conversion_integration",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 227,
+      "test_method": "test_complete_conversion_pipeline_integration",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 262,
+      "test_method": "test_error_handling_integration",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 290,
+      "test_method": "test_performance_integration",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/pipeline/test_modern_conversion_workflows.py",
+      "line_number": 311,
+      "test_method": "test_memory_efficiency_integration",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/converters/test_converter_registry_integration.py",
+      "line_number": 62,
+      "test_method": "unknown_test",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/integration/preprocessing/test_preprocessing_integration.py",
+      "line_number": 87,
+      "test_method": "test_full_integration",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/quality/architecture/test_tool_consistency.py",
+      "line_number": 232,
+      "test_method": "test_tool_import_consistency",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text.py",
+      "line_number": 371,
+      "test_method": "test_convert_simple_text",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text.py",
+      "line_number": 394,
+      "test_method": "test_convert_empty_text",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text.py",
+      "line_number": 416,
+      "test_method": "test_convert_text_with_styling",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text.py",
+      "line_number": 441,
+      "test_method": "test_convert_text_with_tspan",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text.py",
+      "line_number": 463,
+      "test_method": "test_text_anchor_positioning",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base.py",
+      "line_number": 431,
+      "test_method": "test_init",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base.py",
+      "line_number": 440,
+      "test_method": "test_register_converter_instance",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base.py",
+      "line_number": 456,
+      "test_method": "test_get_converter_by_element_map",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base.py",
+      "line_number": 467,
+      "test_method": "test_convert_element_success",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base.py",
+      "line_number": 480,
+      "test_method": "test_convert_element_no_converter",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_text_to_path.py",
+      "line_number": 43,
+      "test_method": "unknown_test",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+      "line_number": 176,
+      "test_method": "test_converter_registry_injects_services",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry(services=mock_conversion_services)",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_base_converter_dependency_injection.py",
+      "line_number": 219,
+      "test_method": "test_converter_registry_service_propagation",
+      "expected_method": "ConverterRegistry",
+      "actual_methods": [
+        "Use services.converter_registry"
+      ],
+      "suggested_fix": "registry = Use services.converter_registry(services=mock_conversion_services)",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_modern_systems.py",
+      "line_number": 117,
+      "test_method": "test_unit_converter_creation",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_modern_systems.py",
+      "line_number": 123,
+      "test_method": "test_px_to_emu_conversion",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_modern_systems.py",
+      "line_number": 132,
+      "test_method": "test_pt_to_emu_conversion",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/converters/test_modern_systems.py",
+      "line_number": 226,
+      "test_method": "test_color_with_units_system",
+      "expected_method": "UnitConverter",
+      "actual_methods": [
+        "UnitEngine"
+      ],
+      "suggested_fix": "unit_converter = UnitEngine()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 48,
+      "test_method": "test_load_svg_from_string",
+      "expected_method": "load_svg",
+      "actual_methods": [
+        "convert_file"
+      ],
+      "suggested_fix": "result = self.converter.convert_file(svg_content)",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 63,
+      "test_method": "test_load_svg_from_file",
+      "expected_method": "load_svg",
+      "actual_methods": [
+        "convert_file"
+      ],
+      "suggested_fix": "result = self.converter.convert_file(temp_path)",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 72,
+      "test_method": "test_load_svg_invalid_file",
+      "expected_method": "load_svg",
+      "actual_methods": [
+        "convert_file"
+      ],
+      "suggested_fix": "self.converter.convert_file('nonexistent.svg')",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 78,
+      "test_method": "test_load_svg_invalid_xml",
+      "expected_method": "load_svg",
+      "actual_methods": [
+        "convert_file"
+      ],
+      "suggested_fix": "self.converter.convert_file(invalid_svg)",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 83,
+      "test_method": "test_load_svg_empty_content",
+      "expected_method": "load_svg",
+      "actual_methods": [
+        "convert_file"
+      ],
+      "suggested_fix": "self.converter.convert_file('')",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 396,
+      "test_method": "test_complete_conversion_workflow",
+      "expected_method": "SVG2PPTX",
+      "actual_methods": [
+        "SVGToPowerPointConverter"
+      ],
+      "suggested_fix": "converter = SVGToPowerPointConverter()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 422,
+      "test_method": "test_complex_svg_conversion",
+      "expected_method": "SVG2PPTX",
+      "actual_methods": [
+        "SVGToPowerPointConverter"
+      ],
+      "suggested_fix": "converter = SVGToPowerPointConverter()",
+      "confidence": "high"
+    },
+    {
+      "file_path": "tests/unit/svg2pptx/test_svg2pptx.py",
+      "line_number": 436,
+      "test_method": "test_complex_svg_conversion",
+      "expected_method": "SVG2PPTX",
+      "actual_methods": [
+        "SVGToPowerPointConverter"
+      ],
+      "suggested_fix": "self.converter = SVGToPowerPointConverter()",
+      "confidence": "high"
+    }
+  ]
+}

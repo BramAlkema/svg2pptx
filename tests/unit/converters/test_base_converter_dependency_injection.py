@@ -32,8 +32,8 @@ class TestBaseConverterDependencyInjection:
         assert converter.services is mock_conversion_services
         assert hasattr(converter, 'services')
 
-    def test_base_converter_backward_compatibility_unit_converter(self, mock_conversion_services):
-        """Test BaseConverter provides backward compatible unit_converter property."""
+    def test_base_converter_service_access_unit_converter(self, mock_conversion_services):
+        """Test BaseConverter provides access to unit_converter via services."""
         class TestConverter(BaseConverter):
             def can_convert(self, element):
                 return True
@@ -43,12 +43,12 @@ class TestBaseConverterDependencyInjection:
 
         converter = TestConverter(services=mock_conversion_services)
 
-        # Test property accessor
-        unit_converter = converter.unit_converter
+        # Test service access (modern pattern)
+        unit_converter = converter.services.unit_converter
         assert unit_converter is mock_conversion_services.unit_converter
 
-    def test_base_converter_backward_compatibility_color_parser(self, mock_conversion_services):
-        """Test BaseConverter provides backward compatible color_parser property."""
+    def test_base_converter_service_access_color_parser(self, mock_conversion_services):
+        """Test BaseConverter provides access to color_parser via services."""
         class TestConverter(BaseConverter):
             def can_convert(self, element):
                 return True
@@ -58,12 +58,12 @@ class TestBaseConverterDependencyInjection:
 
         converter = TestConverter(services=mock_conversion_services)
 
-        # Test property accessor
-        color_parser = converter.color_parser
+        # Test service access (modern pattern)
+        color_parser = converter.services.color_parser
         assert color_parser is mock_conversion_services.color_parser
 
-    def test_base_converter_backward_compatibility_transform_parser(self, mock_conversion_services):
-        """Test BaseConverter provides backward compatible transform_parser property."""
+    def test_base_converter_service_access_transform_parser(self, mock_conversion_services):
+        """Test BaseConverter provides access to transform_parser via services."""
         class TestConverter(BaseConverter):
             def can_convert(self, element):
                 return True
@@ -73,12 +73,12 @@ class TestBaseConverterDependencyInjection:
 
         converter = TestConverter(services=mock_conversion_services)
 
-        # Test property accessor
-        transform_parser = converter.transform_parser
+        # Test service access (modern pattern)
+        transform_parser = converter.services.transform_parser
         assert transform_parser is mock_conversion_services.transform_parser
 
-    def test_base_converter_backward_compatibility_viewport_resolver(self, mock_conversion_services):
-        """Test BaseConverter provides backward compatible viewport_resolver property."""
+    def test_base_converter_service_access_viewport_resolver(self, mock_conversion_services):
+        """Test BaseConverter provides access to viewport_resolver via services."""
         class TestConverter(BaseConverter):
             def can_convert(self, element):
                 return True
@@ -88,8 +88,8 @@ class TestBaseConverterDependencyInjection:
 
         converter = TestConverter(services=mock_conversion_services)
 
-        # Test property accessor
-        viewport_resolver = converter.viewport_resolver
+        # Test service access (modern pattern)
+        viewport_resolver = converter.services.viewport_resolver
         assert viewport_resolver is mock_conversion_services.viewport_resolver
 
     def test_base_converter_services_required(self):
@@ -249,7 +249,7 @@ class TestMigrationUtilities:
         assert hasattr(converter, 'services')
         assert converter.services is not None
         assert hasattr(converter.services, 'unit_converter')
-        assert hasattr(converter.services, 'color_parser')
+        assert hasattr(converter.services, 'color_factory')
         assert hasattr(converter.services, 'transform_parser')
         assert hasattr(converter.services, 'viewport_resolver')
 
@@ -290,9 +290,9 @@ class TestMigrationUtilities:
                 return True
 
             def convert(self, element, context):
-                # Use both old and new patterns
-                dpi = self.unit_converter.default_dpi
-                color = self.color_parser.parse_color("#ff0000")
+                # Use modern dependency injection pattern
+                dpi = self.services.unit_converter.default_dpi
+                color = self.services.color_parser.parse_color("#ff0000")
                 return f"<test dpi='{dpi}' color='{color}'/>"
 
         converter = TestConverter(services=mock_conversion_services)
@@ -332,7 +332,7 @@ class TestBaseConverterIntegration:
                     return element.tag in ['rect', 'circle', 'ellipse']
 
                 def convert(self, element, context):
-                    width = self.unit_converter.to_emu("10px")
+                    width = self.services.unit_converter.to_emu("10px")
                     return f"<shape width='{width}'/>"
 
             converter = MockShapeConverter(services=mock_conversion_services)
@@ -351,7 +351,7 @@ class TestBaseConverterIntegration:
                 return element.tag == 'text'
 
             def convert(self, element, context):
-                color = self.color_parser.parse_color("#000000")
+                color = self.services.color_parser.parse_color("#000000")
                 return f"<text color='{color}'/>"
 
         converter = MockTextConverter(services=mock_conversion_services)
@@ -371,7 +371,7 @@ class TestBaseConverterIntegration:
                 return element.tag == 'path'
 
             def convert(self, element, context):
-                transform = self.transform_parser.parse_transform("translate(10,20)")
+                transform = self.services.transform_parser.parse_transform("translate(10,20)")
                 return f"<path transform='{transform}'/>"
 
         converter = MockPathConverter(services=mock_conversion_services)

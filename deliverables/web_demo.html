@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG2PPTX PathSystem Demonstration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .comparison-panel {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .panel-content {
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .svg-viewer {
+            width: 100%;
+            height: 350px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        .pptx-preview {
+            width: 100%;
+            height: 350px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        }
+
+        .log-panel {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .path-details {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .path-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            background: #fafafa;
+        }
+
+        .path-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .path-item:last-child {
+            border-bottom: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 SVG2PPTX PathSystem Demo</h1>
+            <p>High-fidelity SVG to PowerPoint conversion with advanced path processing</p>
+        </header>
+
+        <!-- Live Conversion Demo -->
+        <section class="demo-section">
+            <h2>🔄 Live Conversion Demo</h2>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="runConversion()">Convert SVG to PPTX</button>
+                <button class="btn btn-success" onclick="downloadPPTX()" id="download-btn" disabled>Download PPTX</button>
+                <button class="btn btn-primary" onclick="showPathDetails()">Show Path Analysis</button>
+                <button class="btn btn-primary" onclick="showDebugInfo()">Show E2E Debug</button>
+            </div>
+
+            <div class="comparison-container">
+                <div class="comparison-panel">
+                    <div class="panel-header">📄 Source SVG (Browser Rendered)</div>
+                    <div class="panel-content">
+                        <div class="svg-viewer" id="svg-viewer">
+                            <!-- SVG will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-panel">
+                    <div class="panel-header">📊 PowerPoint Output (LibreOffice Screenshot)</div>
+                    <div class="panel-content">
+                        <div class="pptx-preview" id="pptx-preview">
+                            Click "Convert SVG to PPTX" to generate preview
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conversion Statistics -->
+        <section class="demo-section">
+            <h2>📈 Conversion Statistics</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">13</div>
+                    <div class="stat-label">Path Elements</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1.45s</div>
+                    <div class="stat-label">Processing Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">9.0</div>
+                    <div class="stat-label">Paths/Second</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6.8KB</div>
+                    <div class="stat-label">Output Size</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Path Analysis -->
+        <section class="demo-section" id="path-analysis" style="display: none;">
+            <h2>🔍 Path Analysis</h2>
+            <div class="path-details">
+                <h3>Detected Path Types</h3>
+                <div class="path-list" id="path-list">
+                    <!-- Path details will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Console Log -->
+        <section class="demo-section">
+            <h2>📋 Conversion Log</h2>
+            <div class="log-panel" id="log-panel">
+                Ready to convert SVG to PowerPoint...
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Load SVG content on page load
+        async function loadSVG() {
+            try {
+                const response = await fetch('test_complex_paths.svg');
+                const svgText = await response.text();
+
+                // Remove XML declaration for proper browser rendering
+                const cleanSvg = svgText.replace(/<\?xml[^>]*\?>/, '').trim();
+                document.getElementById('svg-viewer').innerHTML = cleanSvg;
+
+                logMessage('✅ SVG loaded and rendered in browser');
+            } catch (error) {
+                logMessage(`❌ Error loading SVG: ${error.message}`);
+            }
+        }
+
+        // Live conversion using API
+        async function runConversion() {
+            logMessage('🔄 Starting SVG to PowerPoint conversion...');
+
+            try {
+                // Call the actual conversion API
+                const response = await fetch('/api/convert');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    logMessage(`✅ Conversion completed in ${result.conversion_time}s`);
+                    logMessage(`📊 Processed ${result.path_count} paths`);
+                    logMessage(`📁 Output size: ${(result.output_size / 1024).toFixed(1)}KB`);
+                    logMessage(`⚡ Processing rate: ${result.processing_rate} paths/second`);
+
+                    // Update stats
+                    updateStats(result);
+                    updatePPTXPreview(result);
+                    showSuccessMessage();
+                } else {
+                    throw new Error(result.error || 'Conversion failed');
+                }
+
+            } catch (error) {
+                logMessage(`❌ Conversion error: ${error.message}`);
+                showErrorMessage(error.message);
+            }
+        }
+
+        // Update PPTX preview with LibreOffice screenshot
+        function updatePPTXPreview(result = null) {
+            const preview = document.getElementById('pptx-preview');
+            const outputSize = result ? (result.output_size / 1024).toFixed(1) : '6.8';
+            const pathCount = result ? result.path_count : '13';
+
+            // Check if screenshot exists
+            const screenshotPath = 'test_complex_paths_output_screenshot.png';
+
+            preview.innerHTML = `
+                <div style="text-align: center; width: 100%;">
+                    <img src="${screenshotPath}" alt="PowerPoint Screenshot"
+                         style="max-width: 100%; max-height: 350px; border: 1px solid #ddd; border-radius: 4px;"
+                         onload="logMessage('✅ LibreOffice screenshot loaded')"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; padding: 40px; color: #666;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">PowerPoint Generated</div>
+                        <div style="color: #28a745;">${outputSize}KB • ${pathCount} shapes converted</div>
+                        <div style="margin-top: 15px;">
+                            <small>Screenshot not available - download PPTX to view</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Enable download button
+            const downloadBtn = document.getElementById('download-btn');
+            downloadBtn.disabled = false;
+        }
+
+        // Update statistics display
+        function updateStats(result) {
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${result.path_count}</div>
+                    <div class="stat-label">Path Elements</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.conversion_time}s</div>
+                    <div class="stat-label">Processing Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.processing_rate}</div>
+                    <div class="stat-label">Paths/Second</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(result.output_size / 1024).toFixed(1)}KB</div>
+                    <div class="stat-label">Output Size</div>
+                </div>
+            `;
+        }
+
+        // Show path analysis
+        function showPathDetails() {
+            const pathAnalysis = document.getElementById('path-analysis');
+            const pathList = document.getElementById('path-list');
+
+            const pathTypes = [
+                'M 50 100 C 50 50 150 50 150 100 - Smooth Cubic Curves',
+                'M 500 150 C 500 130 480 130 480 150 Z - Complex Heart Shape',
+                'M 100 300 L 110 330 L 140 330 Z - Multi-segment Star',
+                'M 250 300 A 50 30 0 0 1 350 300 - Elliptical Arcs',
+                'M 450 280 L 500 260 Q 540 280 520 320 - Mixed Commands',
+                'M 600 300 Q 650 250 700 300 T 750 320 - Quadratic Bezier',
+                'M 1e2 4.5e2 L 1.5e2 4.2e2 Z - Scientific Notation',
+                'M 300 450 l 50 0 l 0 30 z - Relative Coordinates',
+                'M 500 450 A 60 40 30 1 1 600 480 - Large Arc Sweep'
+            ];
+
+            pathList.innerHTML = pathTypes.map(path =>
+                `<div class="path-item">${path}</div>`
+            ).join('');
+
+            pathAnalysis.style.display = 'block';
+            logMessage('🔍 Path analysis displayed');
+        }
+
+        // Show success message
+        function showSuccessMessage() {
+            const logPanel = document.getElementById('log-panel');
+            logPanel.innerHTML += `
+                <div class="success-message">
+                    🎉 Conversion completed successfully! The PPTX file is ready for download.
+                </div>
+            `;
+        }
+
+        // Show error message
+        function showErrorMessage(error) {
+            const logPanel = document.getElementById('log-panel');
+            logPanel.innerHTML += `
+                <div class="error-message">
+                    ❌ Conversion failed: ${error}
+                </div>
+            `;
+        }
+
+        // Download PPTX file
+        function downloadPPTX() {
+            try {
+                const link = document.createElement('a');
+                link.href = 'demo_output.pptx';
+                link.download = 'svg2pptx_output.pptx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                logMessage('📁 PPTX download initiated');
+            } catch (error) {
+                logMessage(`❌ Download failed: ${error.message}`);
+            }
+        }
+
+        // Show E2E debug information
+        async function showDebugInfo() {
+            try {
+                const response = await fetch('e2e_debug_report.json');
+                if (!response.ok) {
+                    throw new Error('Debug report not found');
+                }
+
+                const debugData = await response.json();
+
+                // Create debug modal or section
+                const logPanel = document.getElementById('log-panel');
+                logPanel.innerHTML += `
+                    <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border: 1px solid #1976d2;">
+                        <h4 style="color: #1976d2; margin-bottom: 10px;">🔍 E2E Debug Summary</h4>
+                        <div><strong>Pipeline Steps:</strong> ${debugData.summary.successful_steps}/${debugData.summary.total_steps} successful</div>
+                        <div><strong>Fidelity Issues:</strong> ${debugData.summary.total_issues} total (${debugData.summary.high_priority_issues} high priority)</div>
+                        <div><strong>Conversion Stats:</strong> ${debugData.analysis_data?.conversion_stats?.conversion_time?.toFixed(3)}s for ${debugData.analysis_data?.conversion_stats?.path_count} paths</div>
+                        <div style="margin-top: 10px;"><small>See e2e_debug_report.json for full details</small></div>
+                    </div>
+                `;
+
+                logMessage('🔍 E2E debug information displayed');
+
+            } catch (error) {
+                logMessage(`❌ Debug info error: ${error.message}`);
+            }
+        }
+
+        // Log message to console
+        function logMessage(message) {
+            const logPanel = document.getElementById('log-panel');
+            const timestamp = new Date().toLocaleTimeString();
+            logPanel.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        // Load content when page loads
+        window.addEventListener('load', () => {
+            loadSVG();
+            logMessage('🚀 SVG2PPTX Demo initialized');
+            logMessage('📊 PathSystem v2.0.0 ready');
+        });
+    </script>
+</body>
+</html>

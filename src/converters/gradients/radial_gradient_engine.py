@@ -28,28 +28,36 @@ Example Usage:
 
 import numpy as np
 from typing import List, Dict, Any, Tuple, Optional, Union
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import re
 from dataclasses import dataclass
 import warnings
 
 try:
-    from .numpy_gradient_engine import NumPyColorProcessor, NumPyTransformProcessor
+    from .core import ColorProcessor, TransformProcessor
 except ImportError:
     # For direct testing, try absolute import
     try:
-        from numpy_gradient_engine import NumPyColorProcessor, NumPyTransformProcessor
+        from core import ColorProcessor, TransformProcessor
     except ImportError:
         # Create stub classes for testing
-        class NumPyColorProcessor:
+        class ColorProcessor:
             def parse_color_single(self, color_str):
-                return np.array([0.0, 0.0, 0.0])
+                """Parse color using canonical Color system."""
+                try:
+                    from ...color import Color
+                    color = Color(color_str)
+                    r, g, b = color.rgb()
+                    return np.array([r/255.0, g/255.0, b/255.0])
+                except (ValueError, TypeError):
+                    # Fallback to black for invalid colors
+                    return np.array([0.0, 0.0, 0.0])
             def rgb_to_lab_single(self, rgb):
                 return rgb
             def lab_to_rgb_batch(self, lab):
                 return lab
 
-        class NumPyTransformProcessor:
+        class TransformProcessor:
             def apply_transform_batch(self, points, transforms):
                 return points
 
@@ -77,8 +85,8 @@ class RadialGradientEngine:
 
     def __init__(self):
         """Initialize radial gradient engine with performance optimizations"""
-        self.color_processor = NumPyColorProcessor()
-        self.transform_processor = NumPyTransformProcessor()
+        self.color_processor = ColorProcessor()
+        self.transform_processor = TransformProcessor()
 
         # DrawingML scaling factors
         self.emu_scale = 914400  # EMU per inch

@@ -25,6 +25,9 @@ from .core.base import Filter, FilterContext, FilterResult
 from .core.registry import FilterRegistry
 from .core.chain import FilterChain
 
+# Main converter integration
+from .converter import FilterConverter
+
 # Backward compatibility - legacy import removed as part of modernization
 # Legacy compatibility module was removed to eliminate cruft
 
@@ -36,6 +39,9 @@ __all__ = [
     "FilterResult",
     "FilterRegistry",
     "FilterChain",
+
+    # Main converter
+    "FilterConverter",
 ]
 
 # Initialize default registry

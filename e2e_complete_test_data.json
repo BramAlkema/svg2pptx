@@ -1,0 +1,80 @@
+{
+  "timestamp": "2025-09-23T23:30:49.303682",
+  "test_suite": "Complete E2E PathSystem Validation",
+  "cli_tests": {
+    "direct_cli": {
+      "status": "failed",
+      "error": "usage: svg2pptx.py [-h] [-o OUTPUT] [--width WIDTH] [--height HEIGHT]\n                   [--batch] [--multislide]\n                   [--multislide-files MULTISLIDE_FILES [MULTISLIDE_FILES ...]]\n                   [--animation-threshold ANIMATION_THRESHOLD]\n                   input\nsvg2pptx.py: error: unrecognized arguments: /var/folders/3g/3rkl35yj77b70dwg3zf42zs40000gn/T/e2e_debug_bjt8opis/cli_output.pptx\n",
+      "stdout": ""
+    },
+    "duration": 0.5696899890899658
+  },
+  "api_tests": {
+    "convert_function": {
+      "status": "success",
+      "output_file": "/var/folders/3g/3rkl35yj77b70dwg3zf42zs40000gn/T/e2e_debug_bjt8opis/api_output.pptx",
+      "file_size": 6844
+    },
+    "duration": 1.5063178539276123
+  },
+  "web_tests": {
+    "health_endpoint": {
+      "status_code": 200,
+      "response": {
+        "status": "healthy",
+        "service": "svg2pptx-api",
+        "version": "1.0.0"
+      }
+    },
+    "convert_endpoint": {
+      "status_code": 403,
+      "error": "{\"error\":true,\"status_code\":403,\"message\":\"Not authenticated\",\"detail\":\"Not authenticated\",\"path\":\"/convert\",\"method\":\"POST\"}"
+    },
+    "duration": 5.147479057312012
+  },
+  "visual_tests": {
+    "screenshots_generated": 0,
+    "screenshot_paths": {},
+    "visual_comparison": {
+      "status": "insufficient_screenshots",
+      "count": 0
+    },
+    "duration": 0.007873058319091797
+  },
+  "performance_metrics": {
+    "total_test_duration": 7.232438087463379,
+    "phase_durations": {
+      "cli_tests": 0.5696899890899658,
+      "api_tests": 1.5063178539276123,
+      "web_tests": 5.147479057312012,
+      "visual_tests": 0.007873058319091797
+    },
+    "output_file_sizes": {
+      "api_conversion_analysis": 6844
+    },
+    "success_rate": 0.5,
+    "total_tests": 2,
+    "successful_tests": 1,
+    "analysis_duration": 3.981590270996094e-05
+  },
+  "proof_artifacts": [],
+  "api_conversion_analysis": {
+    "file_size": 6844,
+    "shapes": {
+      "total_count": 31,
+      "custom_geometry": 17,
+      "with_fill": 31,
+      "with_stroke": 22
+    },
+    "path_analysis": {
+      "total_commands": 221
+    },
+    "style_validation": {
+      "has_namespace_declaration": true,
+      "has_namespaced_fills": true,
+      "has_namespaced_strokes": true,
+      "namespace_fix_applied": true
+    },
+    "slide_xml_size": 39493
+  }
+}

@@ -179,18 +179,26 @@ class TestOffsetFilter:
             assert result.metadata['dy'] == dy
 
     def test_integration_with_dependencies(self, offset_instance, setup_test_data):
-        """Test integration with UnitConverter, TransformParser, etc."""
+        """Test integration with unit conversion and filter processing."""
+        from unittest.mock import patch
+
         filter_obj = offset_instance
-        setup_test_data['mock_context'].unit_converter.to_emu.return_value = 12700  # 5px in EMU
 
-        result = filter_obj.apply(
-            setup_test_data['mock_offset_element'],
-            setup_test_data['mock_context']
-        )
+        # Mock the fluent unit API that OffsetFilter actually uses
+        with patch('src.converters.filters.geometric.transforms.unit') as mock_unit:
+            mock_unit_instance = Mock()
+            mock_unit_instance.to_emu.return_value = 12700  # 5px in EMU
+            mock_unit.return_value = mock_unit_instance
 
-        # Verify the filter successfully integrates with existing architecture
-        assert result.success is True
-        assert setup_test_data['mock_context'].unit_converter.to_emu.called
+            result = filter_obj.apply(
+                setup_test_data['mock_offset_element'],
+                setup_test_data['mock_context']
+            )
+
+            # Verify the filter successfully integrates with unit conversion
+            assert result.success is True
+            assert mock_unit.called  # Verify unit() was called
+            assert mock_unit_instance.to_emu.called  # Verify conversion occurred
 
     @pytest.mark.parametrize("dx_value,dy_value,expected_valid", [
         ("0", "0", True),
@@ -552,6 +560,6 @@ class TestGeometricIntegration:
         offset_element.set("dx", "10")
         offset_element.set("dy", "5")
 
-        results = chain.apply_sequential([offset_element], integration_setup['mock_context'])
-        assert len(results) > 0
-        assert any(r.success for r in results)
+        result = chain.apply(offset_element, integration_setup['mock_context'])
+        assert result is not None
+        assert result.success

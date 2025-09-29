@@ -20,8 +20,11 @@ import logging
 
 from .font_metrics import GlyphOutline, FontMetrics
 
-
 logger = logging.getLogger(__name__)
+
+# TODO: CONSOLIDATION OPPORTUNITY - PathPoint and PathCommand classes here
+# duplicate functionality available in utils.path_processor.PathProcessor
+# Consider migrating to services.path_processor for unified path processing
 
 
 class PathPoint(NamedTuple):
@@ -35,7 +38,7 @@ class PathCommand:
     """Represents a path command with operation and coordinates"""
     command: str  # moveTo, lineTo, curveTo, closePath
     points: List[PathPoint]
-    
+
     def to_drawingml(self, scale: float = 1.0) -> str:
         """Convert to DrawingML path command format"""
         scaled_points = [PathPoint(p.x * scale, p.y * scale) for p in self.points]

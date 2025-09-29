@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Timeline Presentation - 5 Slides</title>
+
+  <!-- Timeline base -->
+  <line x1="100" y1="360" x2="1180" y2="360" stroke="#34495e" stroke-width="4"/>
+
+  <!-- Slide 1: 2020 -->
+  <g id="year_2020">
+    <circle cx="200" cy="360" r="20" fill="#e74c3c">
+      <animate attributeName="r" values="0;20;20;20;20;20" dur="10s" keyTimes="0;0.2;0.2;0.4;0.6;1"/>
+    </circle>
+    <text x="200" y="320" text-anchor="middle" font-size="24" fill="#2c3e50">
+      2020
+      <animate attributeName="opacity" values="0;1;1;1;1;1" dur="10s" keyTimes="0;0.2;0.2;0.4;0.6;1"/>
+    </text>
+    <text x="200" y="420" text-anchor="middle" font-size="16" fill="#7f8c8d">
+      Project Start
+      <animate attributeName="opacity" values="0;1;1;1;1;1" dur="10s" keyTimes="0;0.2;0.2;0.4;0.6;1"/>
+    </text>
+  </g>
+
+  <!-- Slide 2: 2021 -->
+  <g id="year_2021">
+    <circle cx="400" cy="360" r="20" fill="#f39c12">
+      <animate attributeName="r" values="0;0;20;20;20;20" dur="10s" keyTimes="0;0.2;0.4;0.4;0.6;1"/>
+    </circle>
+    <text x="400" y="320" text-anchor="middle" font-size="24" fill="#2c3e50">
+      2021
+      <animate attributeName="opacity" values="0;0;1;1;1;1" dur="10s" keyTimes="0;0.2;0.4;0.4;0.6;1"/>
+    </text>
+    <text x="400" y="420" text-anchor="middle" font-size="16" fill="#7f8c8d">
+      Development
+      <animate attributeName="opacity" values="0;0;1;1;1;1" dur="10s" keyTimes="0;0.2;0.4;0.4;0.6;1"/>
+    </text>
+  </g>
+
+  <!-- Slide 3: 2022 -->
+  <g id="year_2022">
+    <circle cx="600" cy="360" r="20" fill="#27ae60">
+      <animate attributeName="r" values="0;0;0;20;20;20" dur="10s" keyTimes="0;0.4;0.4;0.6;0.6;1"/>
+    </circle>
+    <text x="600" y="320" text-anchor="middle" font-size="24" fill="#2c3e50">
+      2022
+      <animate attributeName="opacity" values="0;0;0;1;1;1" dur="10s" keyTimes="0;0.4;0.4;0.6;0.6;1"/>
+    </text>
+    <text x="600" y="420" text-anchor="middle" font-size="16" fill="#7f8c8d">
+      Testing Phase
+      <animate attributeName="opacity" values="0;0;0;1;1;1" dur="10s" keyTimes="0;0.4;0.4;0.6;0.6;1"/>
+    </text>
+  </g>
+
+  <!-- Slide 4: 2023 -->
+  <g id="year_2023">
+    <circle cx="800" cy="360" r="20" fill="#3498db">
+      <animate attributeName="r" values="0;0;0;0;20;20" dur="10s" keyTimes="0;0.6;0.6;0.6;0.8;1"/>
+    </circle>
+    <text x="800" y="320" text-anchor="middle" font-size="24" fill="#2c3e50">
+      2023
+      <animate attributeName="opacity" values="0;0;0;0;1;1" dur="10s" keyTimes="0;0.6;0.6;0.6;0.8;1"/>
+    </text>
+    <text x="800" y="420" text-anchor="middle" font-size="16" fill="#7f8c8d">
+      Launch
+      <animate attributeName="opacity" values="0;0;0;0;1;1" dur="10s" keyTimes="0;0.6;0.6;0.6;0.8;1"/>
+    </text>
+  </g>
+
+  <!-- Slide 5: Future -->
+  <g id="future">
+    <circle cx="1000" cy="360" r="20" fill="#9b59b6">
+      <animate attributeName="r" values="0;0;0;0;0;20" dur="10s" keyTimes="0;0.8;0.8;0.8;0.8;1"/>
+    </circle>
+    <text x="1000" y="320" text-anchor="middle" font-size="24" fill="#2c3e50">
+      Future
+      <animate attributeName="opacity" values="0;0;0;0;0;1" dur="10s" keyTimes="0;0.8;0.8;0.8;0.8;1"/>
+    </text>
+    <text x="1000" y="420" text-anchor="middle" font-size="16" fill="#7f8c8d">
+      Growth
+      <animate attributeName="opacity" values="0;0;0;0;0;1" dur="10s" keyTimes="0;0.8;0.8;0.8;0.8;1"/>
+    </text>
+  </g>
+</svg>

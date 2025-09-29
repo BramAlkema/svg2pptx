@@ -1,0 +1,6 @@
+<!-- Star path isolation test -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Path 2: Star shape only -->
+  <path d="M100,50 L105,65 L120,65 L108,75 L113,90 L100,80 L87,90 L92,75 L80,65 L95,65 Z"
+        fill="#f1c40f" stroke="#f39c12" stroke-width="1.5"/>
+</svg>

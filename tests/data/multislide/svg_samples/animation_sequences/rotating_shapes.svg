@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Rotating circle -->
+  <circle cx="50" cy="50" r="20" fill="#3498db" stroke="#2980b9" stroke-width="2">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      values="0 50 50;360 50 50"
+      dur="3s"
+      repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Scaling rectangle -->
+  <rect x="120" y="30" width="40" height="40" fill="#e74c3c" stroke="#c0392b" stroke-width="2">
+    <animateTransform
+      attributeName="transform"
+      type="scale"
+      values="1;1.5;1"
+      dur="2s"
+      repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Moving and rotating triangle -->
+  <polygon points="100,120 120,160 80,160" fill="#2ecc71" stroke="#27ae60" stroke-width="2">
+    <animateTransform
+      attributeName="transform"
+      type="translate"
+      values="0,0;50,0;0,0"
+      dur="4s"
+      repeatCount="indefinite"/>
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      values="0 100 140;180 100 140;360 100 140"
+      dur="4s"
+      repeatCount="indefinite"
+      additive="sum"/>
+  </polygon>
+
+  <!-- Color changing circle -->
+  <circle cx="50" cy="150" r="15" stroke="#8e44ad" stroke-width="2">
+    <animate
+      attributeName="fill"
+      values="#f39c12;#e67e22;#d35400;#f39c12"
+      dur="2.5s"
+      repeatCount="indefinite"/>
+  </circle>
+</svg>

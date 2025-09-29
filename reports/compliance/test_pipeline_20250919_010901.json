@@ -1,0 +1,85 @@
+{
+  "category": "test_pipeline",
+  "timestamp": "2025-09-19T01:09:01.454493",
+  "summary": {
+    "total_tests": 3,
+    "passed": 2,
+    "failed": 1,
+    "pass_rate": 0.6666666666666666,
+    "average_score": 0.8833333333333333,
+    "median_score": 0.92,
+    "min_score": 0.78,
+    "max_score": 0.95,
+    "std_deviation": 0.09073771725877464
+  },
+  "details": [
+    {
+      "test_id": "test-001",
+      "score": 0.95,
+      "passed": true,
+      "category": "shapes",
+      "errors": []
+    },
+    {
+      "test_id": "test-002",
+      "score": 0.78,
+      "passed": false,
+      "category": "shapes",
+      "errors": [
+        "Minor visual differences"
+      ]
+    },
+    {
+      "test_id": "test-003",
+      "score": 0.92,
+      "passed": true,
+      "category": "paths",
+      "errors": []
+    }
+  ],
+  "visualizations": {
+    "by_category": {
+      "shapes": 0.865,
+      "paths": 0.92
+    },
+    "score_distribution": {
+      "0-20%": 0,
+      "20-40%": 0,
+      "40-60%": 0,
+      "60-80%": 1,
+      "80-100%": 2
+    },
+    "test_results": {
+      "test-001": {
+        "score": 0.95,
+        "passed": true,
+        "category": "shapes"
+      },
+      "test-002": {
+        "score": 0.78,
+        "passed": false,
+        "category": "shapes"
+      },
+      "test-003": {
+        "score": 0.92,
+        "passed": true,
+        "category": "paths"
+      }
+    },
+    "trends": {
+      "failing_categories": {
+        "shapes": 1
+      },
+      "high_performing_categories": {
+        "shapes": 1,
+        "paths": 1
+      },
+      "total_errors": 1
+    }
+  },
+  "recommendations": [
+    "Overall pass rate is below 70%. Consider reviewing core conversion algorithms.",
+    "Focus improvement efforts on 'shapes' category (1 failing tests).",
+    "High error rate detected. Review test infrastructure and conversion pipeline."
+  ]
+}

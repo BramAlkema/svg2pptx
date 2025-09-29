@@ -37,10 +37,22 @@ class SVGGeneratorConfig:
 
 class SVGGenerator:
     """Generates SVG test fixtures programmatically."""
-    
-    def __init__(self, config: SVGGeneratorConfig = None):
+
+    def __init__(self, config: SVGGeneratorConfig = None, use_template_patterns: bool = True):
         self.config = config or SVGGeneratorConfig()
         self.random = random.Random(42)  # Deterministic seed for reproducible tests
+        self.use_template_patterns = use_template_patterns
+
+        # Import template patterns if available
+        self._template_generator = None
+        if use_template_patterns:
+            try:
+                from ..generators.converter_patterns import ConverterType
+                # Note: Import will be handled by the calling context
+                self._converter_types = ConverterType
+                self.template_patterns_available = True
+            except ImportError:
+                self.template_patterns_available = False
     
     def generate_basic_shapes_svg(self) -> str:
         """Generate SVG with basic shapes (rect, circle, ellipse, line, polygon)."""
@@ -421,6 +433,69 @@ class SVGGenerator:
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
         
+        return generated_files
+
+    def generate_converter_specific_test_suite(self, output_dir: Path) -> Dict[str, str]:
+        """Generate test suite using converter-specific template patterns."""
+        if not self.template_patterns_available:
+            raise RuntimeError("Template patterns not available. Cannot generate converter-specific tests.")
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Import template pattern generator
+        try:
+            from ...support.template_patterns import TemplatePatternGenerator, TestGenerationConfig
+            from ..generators.converter_patterns import ConverterType
+        except ImportError as e:
+            raise RuntimeError(f"Failed to import template patterns: {e}")
+
+        # Create template pattern generator with our config
+        template_config = TestGenerationConfig(
+            width=self.config.width,
+            height=self.config.height,
+            seed=42,  # Keep deterministic
+            color_palette=self.config.color_palette,
+            include_edge_cases=True,
+            include_performance_variants=True
+        )
+
+        template_generator = TemplatePatternGenerator(template_config)
+
+        # Generate comprehensive test suite
+        comprehensive_suite = template_generator.generate_comprehensive_test_suite(output_dir)
+
+        # Flatten the results for compatibility with existing interface
+        generated_files = {}
+        for converter_type, test_suite in comprehensive_suite.items():
+            for test_name, svg_content in test_suite.items():
+                file_path = output_dir / converter_type / f"{test_name}.svg"
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+
+                with open(file_path, 'w') as f:
+                    f.write(svg_content)
+
+                generated_files[f"{converter_type}_{test_name}"] = str(file_path)
+
+        # Generate enhanced metadata
+        enhanced_metadata = {
+            'generation_method': 'converter_specific_templates',
+            'generated_files': generated_files,
+            'template_config': {
+                'width': template_config.width,
+                'height': template_config.height,
+                'seed': template_config.seed,
+                'include_edge_cases': template_config.include_edge_cases,
+                'include_performance_variants': template_config.include_performance_variants
+            },
+            'converter_types': list(comprehensive_suite.keys()),
+            'total_tests': len(generated_files)
+        }
+
+        metadata_path = output_dir / "converter_specific_metadata.json"
+        with open(metadata_path, 'w') as f:
+            json.dump(enhanced_metadata, f, indent=2)
+
         return generated_files
 
 

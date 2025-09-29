@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="50" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold">Bold Text</text>
+    <text x="200" y="80" text-anchor="middle" font-family="Times" font-size="16" font-style="italic">Italic Text</text>
+    <text x="200" y="110" text-anchor="middle" font-family="Arial" font-size="14" fill="red">Colored Text</text>
+    <text x="200" y="150" text-anchor="middle" font-family="Arial" font-size="18">
+        <tspan fill="blue">Multi</tspan>
+        <tspan fill="green">-color</tspan>
+        <tspan fill="red"> Text</tspan>
+    </text>
+    <text x="50" y="200" font-family="Arial" font-size="12" transform="rotate(-45 50 200)">Rotated Text</text>
+    <text x="200" y="250" text-anchor="middle" font-family="Arial" font-size="16">Text Rendering Test</text>
+</svg>
