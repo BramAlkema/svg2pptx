@@ -362,6 +362,149 @@ class SVGParser:
 
         return elements
 
+    def _convert_hyperlink_to_ir(self, hyperlink_element: ET.Element, ir_elements: list) -> None:
+        """
+        Convert SVG <a> element to IR elements with navigation metadata.
+
+        Args:
+            hyperlink_element: SVG <a> element
+            ir_elements: List to append converted IR elements to
+
+        Process:
+        1. Extract href attribute (including xlink:href)
+        2. Extract data-* attributes for PowerPoint-specific navigation
+        3. Extract tooltip from nested <title> elements
+        4. Convert child elements to IR with navigation metadata attached
+        5. Store NavigationSpec in element metadata for later processing
+
+        Supports:
+        - data-slide="N" for slide jumps
+        - data-jump="next|previous|first|last|endshow" for presentation actions
+        - data-bookmark="name" for same-slide anchors
+        - data-custom-show="name" for custom show navigation
+        - href fallback for external links and legacy slide references
+        """
+        # Extract href attribute - check both href and xlink:href
+        href = (
+            hyperlink_element.get('href') or
+            hyperlink_element.get('{http://www.w3.org/1999/xlink}href')
+        )
+
+        # Extract navigation data attributes
+        element_attrs = self._extract_navigation_attributes(hyperlink_element)
+
+        # Extract tooltip from nested <title> element
+        tooltip = self._extract_hyperlink_tooltip(hyperlink_element)
+
+        # Parse navigation using enhanced NavigationSpec system
+        navigation_spec = self._parse_navigation_attributes(href, element_attrs, tooltip)
+
+        if not navigation_spec:
+            # No valid navigation found, just process children without navigation metadata
+            if href or any(element_attrs.values()):
+                self.logger.warning(f"Invalid navigation attributes: href={href}, attrs={element_attrs}")
+            for child in children(hyperlink_element):
+                self._extract_recursive_to_ir(child, ir_elements)
+            return
+
+        # Store navigation context for child elements (maintaining backward compatibility)
+        old_navigation = getattr(self, '_current_navigation', None)
+        old_hyperlink = getattr(self, '_current_hyperlink', None)
+
+        self._current_navigation = navigation_spec
+        # Backward compatibility: also set as hyperlink for existing code
+        if navigation_spec.kind.value in ('external', 'slide'):
+            # Convert to legacy HyperlinkSpec for backward compatibility
+            from ..pipeline.hyperlinks import HyperlinkSpec
+            if navigation_spec.kind.value == 'external':
+                self._current_hyperlink = HyperlinkSpec(
+                    href=navigation_spec.href,
+                    tooltip=navigation_spec.tooltip,
+                    visited=navigation_spec.visited
+                )
+            elif navigation_spec.kind.value == 'slide':
+                self._current_hyperlink = HyperlinkSpec(
+                    href=f"slide:{navigation_spec.slide.index}",
+                    tooltip=navigation_spec.tooltip,
+                    visited=navigation_spec.visited
+                )
+
+        # Convert child elements to IR - they will inherit the navigation
+        for child in children(hyperlink_element):
+            self._extract_recursive_to_ir(child, ir_elements)
+
+        # Restore previous navigation context
+        self._current_navigation = old_navigation
+        self._current_hyperlink = old_hyperlink
+
+        self.logger.debug(f"Processed navigation {navigation_spec.get_target_description()} with {len(ir_elements)} child elements")
+
+    def _extract_hyperlink_tooltip(self, hyperlink_element: ET.Element) -> str:
+        """
+        Extract tooltip text from nested <title> element in SVG <a>.
+
+        Args:
+            hyperlink_element: SVG <a> element to search
+
+        Returns:
+            Tooltip text or None if no <title> element found
+        """
+        # Look for <title> element as direct child
+        for child in children(hyperlink_element):
+            if self._get_local_tag(child.tag) == 'title':
+                title_text = self._extract_text_content(child)
+                if title_text and title_text.strip():
+                    return title_text.strip()
+
+        return None
+
+    def _extract_navigation_attributes(self, hyperlink_element: ET.Element) -> dict:
+        """
+        Extract navigation data attributes from SVG <a> element.
+
+        Args:
+            hyperlink_element: SVG <a> element to extract attributes from
+
+        Returns:
+            Dictionary of navigation attributes (data-slide, data-jump, etc.)
+        """
+        navigation_attrs = {}
+
+        # Extract PowerPoint-specific navigation attributes
+        data_attributes = [
+            'data-slide',
+            'data-jump',
+            'data-bookmark',
+            'data-custom-show'
+        ]
+
+        for attr_name in data_attributes:
+            attr_value = hyperlink_element.get(attr_name)
+            if attr_value is not None:
+                navigation_attrs[attr_name] = attr_value
+
+        return navigation_attrs
+
+    def _parse_navigation_attributes(self, href: str, element_attrs: dict, tooltip: str) -> 'NavigationSpec':
+        """
+        Parse SVG navigation attributes to create NavigationSpec.
+
+        Args:
+            href: Value of href or xlink:href attribute
+            element_attrs: Dictionary of data-* navigation attributes
+            tooltip: Tooltip text from <title> element
+
+        Returns:
+            NavigationSpec if valid navigation found, None otherwise
+        """
+        from ..pipeline.navigation import parse_svg_navigation
+
+        try:
+            return parse_svg_navigation(href, element_attrs, tooltip)
+        except Exception as e:
+            self.logger.warning(f"Failed to parse navigation attributes: {e}")
+            return None
+
     def _extract_recursive_to_ir(self, element: ET.Element, ir_elements: list) -> None:
         """Recursively extract SVG elements and convert to IR, adapting from svg2drawingml.py"""
         from ..ir import SceneGraph, Path, TextFrame, Group, Image, Point, Rect
@@ -422,6 +565,17 @@ class SVGParser:
             ir_element = self._convert_group_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+
+        elif tag == 'a':
+            # Handle SVG hyperlink elements
+            self._convert_hyperlink_to_ir(element, ir_elements)
+
+        elif tag == 'foreignObject':
+            # Handle SVG foreignObject elements
+            ir_element = self._convert_foreignobject_to_ir(element)
+            if ir_element:
+                ir_elements.append(ir_element)
+
         else:
             # For other elements, recurse into children
             for child in children(element):
@@ -451,11 +605,15 @@ class SVGParser:
         # Extract styling
         fill, stroke, opacity = self._extract_styling(element)
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
-            opacity=opacity
+            opacity=opacity,
+            hyperlink=hyperlink
         )
 
     def _convert_circle_to_ir(self, element: ET.Element):
@@ -509,11 +667,15 @@ class SVGParser:
         # Extract styling
         fill, stroke, opacity = self._extract_styling(element)
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
-            opacity=opacity
+            opacity=opacity,
+            hyperlink=hyperlink
         )
 
     def _convert_ellipse_to_ir(self, element: ET.Element):
@@ -563,11 +725,15 @@ class SVGParser:
         # Extract styling
         fill, stroke, opacity = self._extract_styling(element)
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
-            opacity=opacity
+            opacity=opacity,
+            hyperlink=hyperlink
         )
 
     def _convert_line_to_ir(self, element: ET.Element):
@@ -610,11 +776,15 @@ class SVGParser:
         # Extract styling
         fill, stroke, opacity = self._extract_styling(element)
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
-            opacity=opacity
+            opacity=opacity,
+            hyperlink=hyperlink
         )
 
     def _convert_polygon_to_ir(self, element: ET.Element, closed: bool = True):
@@ -706,11 +876,15 @@ class SVGParser:
             estimated_width = sum(len(run.text) * run.font_size_pt * 0.6 for run in line.runs)
             estimated_height = line.primary_font_size * 1.2
 
+            # Get hyperlink from current context if any
+            hyperlink = getattr(self, '_current_hyperlink', None)
+
             return TextFrame(
                 origin=position,
                 runs=line.runs,
                 bbox=Rect(x, y, estimated_width, estimated_height),
-                anchor=line.anchor
+                anchor=line.anchor,
+                hyperlink=hyperlink
             )
 
     def _convert_image_to_ir(self, element: ET.Element):
@@ -744,13 +918,17 @@ class SVGParser:
         elif href.endswith('.svg'):
             format = 'svg'
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Image(
             origin=Point(x, y),
             size=Rect(0, 0, width, height),
             data=data,
             format=format,
             href=href,
-            opacity=float(element.get('opacity', 1.0))
+            opacity=float(element.get('opacity', 1.0)),
+            hyperlink=hyperlink
         )
 
     def _convert_group_to_ir(self, element: ET.Element):
@@ -765,9 +943,13 @@ class SVGParser:
         if not child_nodes:
             return None
 
+        # Get hyperlink from current context if any
+        hyperlink = getattr(self, '_current_hyperlink', None)
+
         return Group(
             children=child_nodes,
-            opacity=float(element.get('opacity', 1.0))
+            opacity=float(element.get('opacity', 1.0)),
+            hyperlink=hyperlink
         )
 
     def _extract_styling(self, element: ET.Element):
@@ -1158,6 +1340,7 @@ class SVGParser:
         commands = re.findall(r'[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*', d)
 
         current_point = Point(0, 0)
+        last_control = None  # Track last control point for T command
 
         for command in commands:
             cmd = command[0]
@@ -1170,6 +1353,7 @@ class SVGParser:
                         current_point = Point(coords[0], coords[1])
                     else:
                         current_point = Point(current_point.x + coords[0], current_point.y + coords[1])
+                last_control = None
 
             elif cmd.upper() == 'L':  # Line to
                 if len(coords) >= 2:
@@ -1179,6 +1363,27 @@ class SVGParser:
                         end_point = Point(current_point.x + coords[0], current_point.y + coords[1])
                     segments.append(LineSegment(start=current_point, end=end_point))
                     current_point = end_point
+                last_control = None
+
+            elif cmd.upper() == 'H':  # Horizontal line
+                if len(coords) >= 1:
+                    if cmd.isupper():
+                        end_point = Point(coords[0], current_point.y)
+                    else:
+                        end_point = Point(current_point.x + coords[0], current_point.y)
+                    segments.append(LineSegment(start=current_point, end=end_point))
+                    current_point = end_point
+                last_control = None
+
+            elif cmd.upper() == 'V':  # Vertical line
+                if len(coords) >= 1:
+                    if cmd.isupper():
+                        end_point = Point(current_point.x, coords[0])
+                    else:
+                        end_point = Point(current_point.x, current_point.y + coords[0])
+                    segments.append(LineSegment(start=current_point, end=end_point))
+                    current_point = end_point
+                last_control = None
 
             elif cmd.upper() == 'C':  # Cubic Bezier
                 if len(coords) >= 6:
@@ -1191,9 +1396,449 @@ class SVGParser:
                         control2 = Point(current_point.x + coords[2], current_point.y + coords[3])
                         end_point = Point(current_point.x + coords[4], current_point.y + coords[5])
                     segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
+                    last_control = control2
+                    current_point = end_point
+
+            elif cmd.upper() == 'Q':  # Quadratic Bezier - convert to cubic
+                if len(coords) >= 4:
+                    # Get quadratic control point and end point
+                    if cmd.isupper():
+                        qcp = Point(coords[0], coords[1])
+                        end_point = Point(coords[2], coords[3])
+                    else:
+                        qcp = Point(current_point.x + coords[0], current_point.y + coords[1])
+                        end_point = Point(current_point.x + coords[2], current_point.y + coords[3])
+
+                    # Convert Q to C using formula: CP1 = P0 + 2/3*(QCP - P0), CP2 = P2 + 2/3*(QCP - P2)
+                    control1 = Point(
+                        current_point.x + 2/3 * (qcp.x - current_point.x),
+                        current_point.y + 2/3 * (qcp.y - current_point.y)
+                    )
+                    control2 = Point(
+                        end_point.x + 2/3 * (qcp.x - end_point.x),
+                        end_point.y + 2/3 * (qcp.y - end_point.y)
+                    )
+
+                    segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
+                    last_control = qcp  # Store quadratic control for T command
+                    current_point = end_point
+
+            elif cmd.upper() == 'T':  # Smooth quadratic - convert to cubic
+                if len(coords) >= 2:
+                    # Calculate reflected control point
+                    if last_control:
+                        qcp = Point(
+                            2 * current_point.x - last_control.x,
+                            2 * current_point.y - last_control.y
+                        )
+                    else:
+                        qcp = current_point
+
+                    # Get end point
+                    if cmd.isupper():
+                        end_point = Point(coords[0], coords[1])
+                    else:
+                        end_point = Point(current_point.x + coords[0], current_point.y + coords[1])
+
+                    # Convert to cubic
+                    control1 = Point(
+                        current_point.x + 2/3 * (qcp.x - current_point.x),
+                        current_point.y + 2/3 * (qcp.y - current_point.y)
+                    )
+                    control2 = Point(
+                        end_point.x + 2/3 * (qcp.x - end_point.x),
+                        end_point.y + 2/3 * (qcp.y - end_point.y)
+                    )
+
+                    segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
+                    last_control = qcp
                     current_point = end_point
 
         return segments
+
+    def _convert_foreignobject_to_ir(self, element: ET.Element):
+        """
+        Convert SVG foreignObject to appropriate IR element.
+
+        This method implements the ForeignObject conversion strategy:
+        1. Parse geometry (x, y, width, height) and transforms
+        2. Detect payload content type (nested SVG, image, XHTML, etc.)
+        3. Convert to appropriate IR element type based on content
+        4. Apply bbox clipping for content that exceeds boundaries
+
+        Returns:
+            IR element (Group for nested SVG, Image for embedded content,
+            Path for complex fallback content) or None if conversion fails
+        """
+        from ..ir import Group, Image, Path, Point, Rect, SolidPaint
+        from ..xml.safe_iter import children
+
+        try:
+            # Extract geometry attributes (using same pattern as existing converters)
+            x = float(element.get('x', 0))
+            y = float(element.get('y', 0))
+            width = float(element.get('width', 0))
+            height = float(element.get('height', 0))
+
+            # Validate dimensions
+            if width <= 0 or height <= 0:
+                self.logger.warning(f"ForeignObject has invalid dimensions: {width}x{height}")
+                return None
+
+            # Extract transform information (store as string like other converters)
+            transform_attr = element.get('transform')
+
+            # Create bounding rectangle for clipping
+            bbox = Rect(x, y, width, height)
+
+            # Detect payload content type
+            payload_element = self._get_first_payload_child(element)
+            if payload_element is None:
+                self.logger.warning("ForeignObject has no content")
+                return None
+
+            payload_type = self._classify_payload_type(payload_element)
+
+            # Calculate complexity score for routing decisions
+            complexity_score = self._calculate_payload_complexity(payload_element, payload_type)
+            self.logger.debug(f"ForeignObject payload type: {payload_type}, complexity: {complexity_score}")
+
+            # Convert based on payload type
+            if payload_type == "nested_svg":
+                return self._convert_nested_svg_to_ir(payload_element, bbox, transform_attr)
+            elif payload_type == "image":
+                return self._convert_image_payload_to_ir(payload_element, bbox, transform_attr)
+            elif payload_type == "xhtml":
+                return self._convert_xhtml_to_ir(payload_element, bbox, transform_attr)
+            else:
+                # Fallback: create placeholder group for unknown content
+                return self._create_foreignobject_placeholder(bbox, transform_attr, payload_type)
+
+        except Exception as e:
+            self.logger.error(f"Failed to convert foreignObject to IR: {e}")
+            return None
+
+    def _get_first_payload_child(self, foreignobject_element: ET.Element):
+        """Get the first significant child element from foreignObject"""
+        for child in children(foreignobject_element):
+            if child.tag and not child.tag.startswith("{"):
+                return child
+            # Handle namespaced elements
+            tag = child.tag.split('}')[-1] if '}' in str(child.tag) else str(child.tag)
+            if tag and tag not in ['defs', 'metadata', 'title', 'desc']:
+                return child
+        return None
+
+    def _classify_payload_type(self, payload_element: ET.Element) -> str:
+        """
+        Classify the payload content type for routing to appropriate converter.
+
+        Analyzes the payload element and its namespace to determine the best
+        conversion strategy. Supports nested SVG, images, XHTML, MathML, and
+        provides fallback for unknown content.
+        """
+        if not payload_element.tag:
+            return "unknown"
+
+        # Extract tag and namespace
+        tag_str = str(payload_element.tag)
+        if '}' in tag_str:
+            namespace, tag = tag_str.split('}', 1)
+            namespace = namespace[1:]  # Remove leading {
+        else:
+            namespace = ""
+            tag = tag_str
+
+        # Priority 1: Nested SVG (highest fidelity)
+        if tag == 'svg' and 'svg' in namespace.lower():
+            return "nested_svg"
+
+        # Priority 2: Image content (direct mapping)
+        image_tags = ['img', 'image', 'object', 'picture']
+        if tag in image_tags:
+            # Verify it has image source
+            if (payload_element.get('src') or
+                payload_element.get('href') or
+                payload_element.get('xlink:href') or
+                payload_element.get('{http://www.w3.org/1999/xlink}href')):
+                return "image"
+
+        # Priority 3: XHTML content (moderate complexity)
+        xhtml_tags = [
+            'p', 'div', 'span', 'table', 'tbody', 'tr', 'td', 'th',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+            'a', 'em', 'strong', 'b', 'i', 'u',
+            'br', 'hr', 'pre', 'code', 'blockquote'
+        ]
+        if tag in xhtml_tags or "xhtml" in namespace.lower() or "html" in namespace.lower():
+            return "xhtml"
+
+        # Priority 4: MathML content (high complexity)
+        mathml_tags = ['math', 'mi', 'mo', 'mn', 'mrow', 'mfrac', 'msup', 'msub']
+        if tag in mathml_tags or "mathml" in namespace.lower():
+            return "mathml"
+
+        # Priority 5: Check for container elements that might contain supported content
+        container_tags = ['body', 'article', 'section', 'main', 'aside', 'header', 'footer']
+        if tag in container_tags:
+            # Look for supported content inside
+            child_type = self._analyze_container_content(payload_element)
+            if child_type != "unknown":
+                return child_type
+
+        # Fallback: unknown content (will use placeholder)
+        return "unknown"
+
+    def _analyze_container_content(self, container_element: ET.Element) -> str:
+        """Analyze container element to detect primary content type"""
+        from ..xml.safe_iter import children
+
+        content_types = {"nested_svg": 0, "image": 0, "xhtml": 0, "mathml": 0}
+
+        for child in children(container_element):
+            child_type = self._classify_payload_type(child)
+            if child_type in content_types:
+                content_types[child_type] += 1
+
+        # Return the most common type, or unknown if no clear winner
+        max_count = max(content_types.values())
+        if max_count > 0:
+            for content_type, count in content_types.items():
+                if count == max_count:
+                    return content_type
+
+        return "unknown"
+
+    def _convert_nested_svg_to_ir(self, svg_element: ET.Element, bbox, transform_attr):
+        """Convert nested SVG to IR Group with proper viewport handling"""
+        from ..ir import Group
+
+        # Create child IR elements by recursively parsing the nested SVG
+        child_elements = []
+        self._extract_recursive_to_ir(svg_element, child_elements)
+
+        # Parse transform matrix if present
+        transform_matrix = None
+        if transform_attr:
+            try:
+                from ..transforms.parser import TransformParser
+                parser = TransformParser()
+                transform_matrix = parser.parse_to_matrix(transform_attr)
+                if hasattr(transform_matrix, 'to_numpy'):
+                    transform_matrix = transform_matrix.to_numpy()
+            except Exception as e:
+                self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
+
+        # Create group with transform
+        return Group(
+            children=child_elements,
+            clip=None,  # TODO: Implement bbox clipping in future enhancement
+            transform=transform_matrix
+        )
+
+    def _convert_image_payload_to_ir(self, img_element: ET.Element, bbox, transform_attr):
+        """Convert image payload to IR Image"""
+        from ..ir import Image, Point
+
+        # Extract image source
+        href = (img_element.get('src') or
+                img_element.get('href') or
+                img_element.get('xlink:href') or
+                img_element.get('{http://www.w3.org/1999/xlink}href'))
+
+        if not href:
+            self.logger.warning("Image element in foreignObject has no source")
+            return None
+
+        # Parse transform matrix if present
+        transform_matrix = None
+        if transform_attr:
+            try:
+                from ..transforms.parser import TransformParser
+                parser = TransformParser()
+                transform_matrix = parser.parse_to_matrix(transform_attr)
+                if hasattr(transform_matrix, 'to_numpy'):
+                    transform_matrix = transform_matrix.to_numpy()
+            except Exception as e:
+                self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
+
+        # Create image with transform (actual data loading would happen in processing pipeline)
+        return Image(
+            origin=Point(bbox.x, bbox.y),
+            size=bbox,
+            data=b'',  # Placeholder - actual loading happens later
+            format="png",  # Default format
+            href=href,
+            clip=None,  # TODO: Implement bbox clipping if image exceeds dimensions
+            opacity=1.0,
+            transform=transform_matrix
+        )
+
+    def _convert_xhtml_to_ir(self, xhtml_element: ET.Element, bbox, transform_attr):
+        """Convert XHTML content to IR TextFrame (simplified implementation)"""
+        from ..ir import TextFrame, Run, Point, TextAnchor
+
+        # Extract text content (very basic implementation)
+        text_content = self._extract_text_content(xhtml_element)
+        if not text_content.strip():
+            return None
+
+        # Create basic text run
+        run = Run(
+            text=text_content,
+            font_family="Arial",  # Default font
+            font_size_pt=12.0,
+            bold=False,
+            italic=False
+        )
+
+        return TextFrame(
+            origin=Point(bbox.x, bbox.y),
+            bbox=bbox,
+            runs=[run],
+            anchor=TextAnchor.START
+        )
+
+    def _extract_text_content(self, element: ET.Element) -> str:
+        """Extract all text content from an XHTML element tree"""
+        text_parts = []
+
+        # Add element's direct text
+        if element.text:
+            text_parts.append(element.text.strip())
+
+        # Recursively extract from children
+        for child in children(element):
+            child_text = self._extract_text_content(child)
+            if child_text:
+                text_parts.append(child_text)
+
+            # Add tail text after child element
+            if child.tail:
+                text_parts.append(child.tail.strip())
+
+        return ' '.join(text_parts)
+
+    def _create_foreignobject_placeholder(self, bbox, transform_attr, payload_type: str):
+        """Create placeholder group for unsupported foreignObject content"""
+        from ..ir import Group, Path, Point, LineSegment, SolidPaint, Stroke
+
+        # Create a simple rectangle as placeholder
+        x, y, w, h = bbox.x, bbox.y, bbox.width, bbox.height
+
+        # Rectangle path segments
+        segments = [
+            LineSegment(Point(x, y), Point(x + w, y)),         # Top
+            LineSegment(Point(x + w, y), Point(x + w, y + h)), # Right
+            LineSegment(Point(x + w, y + h), Point(x, y + h)), # Bottom
+            LineSegment(Point(x, y + h), Point(x, y))          # Left
+        ]
+
+        placeholder_path = Path(
+            segments=segments,
+            fill=SolidPaint(color="#f0f0f0"),  # Light gray fill
+            stroke=Stroke(color="#999999", width=1.0),  # Gray border
+            opacity=0.5
+        )
+
+        # Parse transform matrix if present
+        transform_matrix = None
+        if transform_attr:
+            try:
+                from ..transforms.parser import TransformParser
+                parser = TransformParser()
+                transform_matrix = parser.parse_to_matrix(transform_attr)
+                if hasattr(transform_matrix, 'to_numpy'):
+                    transform_matrix = transform_matrix.to_numpy()
+            except Exception as e:
+                self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
+
+        return Group(
+            children=[placeholder_path],
+            clip=None,
+            transform=transform_matrix
+        )
+
+    def _calculate_payload_complexity(self, payload_element: ET.Element, payload_type: str) -> int:
+        """
+        Calculate complexity score for payload content to aid routing decisions.
+
+        Higher scores indicate more complex content that may require fallback strategies.
+
+        Returns:
+            Complexity score (0-100, where 0 = simple, 100 = extremely complex)
+        """
+        from ..xml.safe_iter import walk
+
+        complexity = 0
+
+        # Base complexity by type
+        type_complexity = {
+            "nested_svg": 20,    # SVG can be complex but we handle it well
+            "image": 10,         # Images are straightforward
+            "xhtml": 30,         # XHTML can be moderately complex
+            "mathml": 50,        # MathML is complex
+            "unknown": 60        # Unknown content is risky
+        }
+        complexity += type_complexity.get(payload_type, 40)
+
+        # Count descendant elements (DOM complexity)
+        element_count = 0
+        for element in walk(payload_element):
+            element_count += 1
+
+        # Penalize deep nesting
+        if element_count > 10:
+            complexity += min(20, element_count - 10)  # Cap at +20
+
+        # Check for complex features
+        complex_features = []
+
+        for element in walk(payload_element):
+            if not hasattr(element, 'tag'):
+                continue
+
+            tag = str(element.tag).split('}')[-1] if '}' in str(element.tag) else str(element.tag)
+
+            # CSS and styling complexity
+            if element.get('style'):
+                complexity += 5
+                complex_features.append("inline_css")
+
+            # JavaScript or scripts (should be blocked for security)
+            if tag in ['script', 'object', 'embed', 'iframe']:
+                complexity += 25
+                complex_features.append("active_content")
+
+            # Complex layout elements
+            if tag in ['table', 'form', 'canvas', 'video', 'audio']:
+                complexity += 10
+                complex_features.append("complex_layout")
+
+            # Media elements
+            if tag in ['img', 'image', 'picture', 'source']:
+                complexity += 3
+                complex_features.append("media")
+
+        # Namespace complexity
+        namespaces = set()
+        for element in walk(payload_element):
+            if hasattr(element, 'tag') and '}' in str(element.tag):
+                namespace = str(element.tag).split('}')[0][1:]
+                namespaces.add(namespace)
+
+        if len(namespaces) > 2:
+            complexity += 10
+            complex_features.append("multi_namespace")
+
+        # Cap complexity at 100
+        complexity = min(100, complexity)
+
+        if complex_features:
+            self.logger.debug(f"Complex features detected: {complex_features}")
+
+        return complexity
 
     def set_normalization_enabled(self, enabled: bool) -> None:
         """Enable or disable normalization during parsing"""

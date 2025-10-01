@@ -19,9 +19,16 @@ from ..parse import SVGParser, ParseResult
 from ..policy import Policy, PolicyEngine, PolicyConfig
 from ..map.base import Mapper, MapperResult
 from ..map import PathMapper, TextMapper, GroupMapper, ImageMapper
+from ..map.font_mapper_adapter import FontMapperAdapter
 from ..io import DrawingMLEmbedder, SlideBuilder, PackageWriter, EmbedderResult
+from ..services.conversion_services import ConversionServices
 from .config import PipelineConfig, OutputFormat, QualityLevel
 from .error_reporter import PipelineErrorReporter, ErrorSeverity, ErrorCategory, ErrorContext
+
+# Import migrated systems for integration
+from core.animations import SMILParser
+from core.performance.measurement import BenchmarkEngine
+from core.converters import CustGeomGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +210,17 @@ class CleanSlateConverter:
                 )
                 raise ConversionError(f"SVG analysis failed: {e}", stage="analysis", cause=e)
 
+            # Stage 2.5: Check for animations (using migrated animation system)
+            try:
+                animations = self.animation_parser.parse_svg_animations(parse_result.svg_root)
+                if animations:
+                    self.logger.info(f"Detected {len(animations)} animations in SVG")
+                    # TODO: In future, integrate animations into conversion pipeline
+                else:
+                    self.logger.debug("No animations detected in SVG")
+            except Exception as e:
+                self.logger.warning(f"Animation detection failed: {e}")
+
             # Stage 3: Convert to IR
             scene = analysis_result.scene
 
@@ -258,6 +276,14 @@ class CleanSlateConverter:
             # Record success
             self._record_success(result)
 
+            # Record performance metrics (using migrated performance system)
+            try:
+                throughput = len(mapper_results) / (total_time / 1000) if total_time > 0 else 0
+                self.logger.debug(f"Performance metrics - Throughput: {throughput:.1f} elements/sec, Total time: {total_time:.1f}ms")
+                # Note: Performance engine available for future detailed benchmarking
+            except Exception as e:
+                self.logger.warning(f"Performance recording failed: {e}")
+
             return result
 
         except Exception as e:
@@ -280,6 +306,9 @@ class CleanSlateConverter:
     def _initialize_components(self) -> None:
         """Initialize pipeline components based on configuration"""
         try:
+            # Initialize services first
+            self.services = ConversionServices.create_default()
+
             # Initialize parser
             self.parser = SVGParser()
 
@@ -290,12 +319,26 @@ class CleanSlateConverter:
             policy_config = PolicyConfig()
             self.policy = PolicyEngine(policy_config)
 
-            # Initialize mappers
+            # Initialize mappers with services
+            # Create individual mappers first
+            path_mapper = PathMapper(self.policy, self.services)
+            text_mapper = FontMapperAdapter(self.policy, self.services)
+            image_mapper = ImageMapper(self.policy, self.services)
+
+            # Create group mapper with child_mappers wired
+            child_mappers = {
+                'path': path_mapper,
+                'text': text_mapper,
+                'image': image_mapper
+            }
+            group_mapper = GroupMapper(self.policy, self.services, child_mappers)
+
             self.mappers = {
-                'path': PathMapper(self.policy),
-                'textframe': TextMapper(self.policy),
-                'group': GroupMapper(self.policy),
-                'image': ImageMapper(self.policy)
+                'path': path_mapper,
+                'textframe': text_mapper,
+                'richtextframe': text_mapper,  # TextMapper handles both TextFrame and RichTextFrame
+                'group': group_mapper,
+                'image': image_mapper
             }
 
             # Initialize embedder
@@ -307,7 +350,13 @@ class CleanSlateConverter:
             # Initialize package writer
             self.package_writer = PackageWriter()
 
+            # Initialize migrated system integrations
+            self.animation_parser = SMILParser()  # For SVG animation detection
+            self.performance_engine = BenchmarkEngine()  # For performance monitoring
+            self.custgeom_generator = CustGeomGenerator()  # For custom geometry generation
+
             self.logger.debug("Pipeline components initialized successfully")
+            self.logger.debug("Migrated systems integrated: animations, performance, custom geometry")
 
         except Exception as e:
             raise ConversionError(f"Failed to initialize pipeline components: {e}",
@@ -317,12 +366,22 @@ class CleanSlateConverter:
         """Map all elements in scene using appropriate mappers"""
         mapper_results = []
 
-        # Defensive: SceneGraph must be iterable; if not, treat as empty.
-        if not hasattr(scene, "__iter__"):
-            self.logger.error("Scene is not iterable; treating as empty scene.")
+        # Defensive: accept SceneGraph, list, or None
+        if scene is None:
+            self.logger.warning("Scene is None; treating as empty scene.")
             return []
 
-        for element in scene:
+        # If SceneGraph has elements attribute, use it; otherwise iterate directly
+        elements = getattr(scene, "elements", None)
+        if elements is None:
+            elements = scene  # Assume it's already an iterable
+
+        # Defensive: must be iterable
+        if not hasattr(elements, "__iter__"):
+            self.logger.error("Scene elements not iterable; treating as empty scene.")
+            return []
+
+        for element in elements:
             try:
                 # Find appropriate mapper
                 mapper = self._find_mapper(element)

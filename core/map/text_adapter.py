@@ -29,7 +29,7 @@ except ImportError:
     LEGACY_SYSTEM_AVAILABLE = False
     logging.warning("Legacy text system not available")
 
-from ..ir import TextFrame, Run, TextAnchor, EnhancedRun
+from ..ir import TextFrame, RichTextFrame, Run, TextAnchor, EnhancedRun
 
 
 @dataclass
@@ -107,6 +107,12 @@ class TextProcessingAdapter:
             text_frame.runs
         )
 
+    def _get_runs(self, text_frame):
+        """Get runs from either TextFrame or RichTextFrame"""
+        if isinstance(text_frame, RichTextFrame):
+            return text_frame.all_runs
+        return text_frame.runs if hasattr(text_frame, 'runs') else []
+
     def enhance_text_layout(self, text_frame: TextFrame, base_xml: str = None) -> TextProcessingResult:
         """
         Enhance text layout using Clean Slate or legacy text services.
@@ -145,9 +151,10 @@ class TextProcessingAdapter:
         enhanced_font_analysis = {}
         font_analysis_used = False
 
-        if self.font_system and text_frame.runs:
+        runs = self._get_runs(text_frame)
+        if self.font_system and runs:
             try:
-                for i, run in enumerate(text_frame.runs):
+                for i, run in enumerate(runs):
                     # Create font metadata for analysis
                     font_metadata = create_font_metadata(
                         run.font_family,
@@ -178,7 +185,7 @@ class TextProcessingAdapter:
 
         if self.text_layout_engine and hasattr(text_frame, 'bbox'):
             try:
-                for i, run in enumerate(text_frame.runs):
+                for i, run in enumerate(runs):
                     # Create font metadata for layout
                     font_metadata = create_font_metadata(
                         run.font_family,
@@ -228,7 +235,7 @@ class TextProcessingAdapter:
             metadata={
                 'enhanced_font_analysis': enhanced_font_analysis,
                 'enhanced_positioning': enhanced_positioning,
-                'run_count': len(text_frame.runs),
+                'run_count': len(runs),
                 'processing_method': 'clean_slate',
                 'font_system_used': font_analysis_used,
                 'text_layout_engine_used': text_layout_applied
@@ -242,9 +249,10 @@ class TextProcessingAdapter:
         enhanced_metrics = {}
         font_metrics_used = False
 
-        if self.font_service and text_frame.runs:
+        runs = self._get_runs(text_frame)
+        if self.font_service and runs:
             try:
-                for run in text_frame.runs:
+                for run in runs:
                     metrics = self.font_service.get_metrics(run.font_family)
                     enhanced_metrics[run.font_family] = {
                         'ascent': metrics.ascent,
@@ -274,7 +282,7 @@ class TextProcessingAdapter:
         if self._has_text_layout and self.services and hasattr(text_frame, 'bbox'):
             try:
                 # Use svg_text_to_ppt_box for enhanced coordinate conversion
-                for i, run in enumerate(text_frame.runs):
+                for i, run in enumerate(runs):
                     if hasattr(text_frame, 'anchor'):
                         anchor_str = text_frame.anchor.value if hasattr(text_frame.anchor, 'value') else str(text_frame.anchor)
 
@@ -328,7 +336,7 @@ class TextProcessingAdapter:
             metadata={
                 'enhanced_metrics': enhanced_metrics,
                 'enhanced_positioning': enhanced_positioning,
-                'run_count': len(text_frame.runs),
+                'run_count': len(runs),
                 'processing_method': 'existing_system',
                 'font_service_used': font_metrics_used,
                 'text_layout_used': text_layout_applied
@@ -407,7 +415,8 @@ class TextProcessingAdapter:
 
         # Generate enhanced runs
         runs_xml = []
-        for run in text_frame.runs:
+        runs = self._get_runs(text_frame)
+        for run in runs:
             # Use enhanced metrics if available
             font_size_hundredths = int(run.font_size_pt * 100)
 
@@ -514,7 +523,8 @@ class TextProcessingAdapter:
 
         # Generate enhanced runs with font strategy information
         runs_xml = []
-        for i, run in enumerate(text_frame.runs):
+        runs = self._get_runs(text_frame)
+        for i, run in enumerate(runs):
             # Use font analysis if available
             font_size_hundredths = int(run.font_size_pt * 100)
 
@@ -615,7 +625,7 @@ class TextProcessingAdapter:
             metadata={
                 'processing_method': 'fallback_placeholder',
                 'reason': 'text_system_unavailable',
-                'run_count': len(text_frame.runs) if text_frame.runs else 0
+                'run_count': len(self._get_runs(text_frame))
             }
         )
 

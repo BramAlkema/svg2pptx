@@ -13,7 +13,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from .huey_app import huey
-from ..utils.powerpoint_merger import PPTXMerger, PPTXMergeError
+from core.utils.powerpoint_merger import PPTXMerger, PPTXMergeError
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +65,9 @@ def convert_single_svg(file_data: Dict[str, Any], conversion_options: Dict[str, 
         
         try:
             start_time = time.time()
-            
-            # Actual SVG to PowerPoint conversion using queue processing
-            from ..svg2pptx import svg_to_pptx
+
+            # Actual SVG to PowerPoint conversion using Clean Slate pipeline
+            from ..pipeline.converter import CleanSlateConverter
 
             # Create output file path
             output_filename = filename.replace('.svg', '.pptx')
@@ -79,20 +79,16 @@ def convert_single_svg(file_data: Dict[str, Any], conversion_options: Dict[str, 
             try:
                 logger.debug(f"Queue processing: Converting {filename}")
 
-                # Extract conversion options for SVG processing
-                conversion_params = {
-                    'slide_width_inches': options.get('slide_width', 10.0),
-                    'slide_height_inches': options.get('slide_height', 7.5),
-                    'quality': options.get('quality', 'high'),
-                    'output_path': str(output_path)
-                }
+                # Create Clean Slate converter
+                converter = CleanSlateConverter()
 
-                # Execute the conversion
-                conversion_result = svg_to_pptx(
-                    content,
-                    output_path=str(output_path),
-                    **conversion_params
-                )
+                # Execute the conversion (convert bytes to string)
+                svg_string = content.decode('utf-8')
+                conversion_result = converter.convert_string(svg_string)
+
+                # Write output to file
+                with open(output_path, 'wb') as f:
+                    f.write(conversion_result.output_data)
 
                 if not output_path.exists():
                     raise Exception(f"Conversion failed - output file not created")
