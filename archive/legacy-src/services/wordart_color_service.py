@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from lxml import etree as ET
 import math
 
-from ..color import Color
-from ..utils.xml_builder import XMLBuilder
+from core.color import Color
+from core.utils.xml_builder import XMLBuilder
 
 
 @dataclass

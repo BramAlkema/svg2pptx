@@ -18,7 +18,7 @@ from pathlib import Path
 from lxml import etree as ET
 
 try:
-    from src.emf_blob import EMFBlob
+    from core.emf_blob import EMFBlob
 except ImportError:
     # Handle import for testing
     import sys

@@ -14,9 +14,9 @@ import os
 import zipfile
 from unittest.mock import patch, mock_open
 
-from src.svg2pptx import convert_svg_to_pptx
+from core.pipeline.converter import CleanSlateConverter
 from core.services.image_service import ImageService
-from src.converters.base import BaseConverter
+from core.converters.base import BaseConverter
 from core.services.conversion_services import ConversionServices
 
 

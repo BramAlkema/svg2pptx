@@ -9,7 +9,7 @@ import pytest
 import numpy as np
 from lxml import etree as ET
 
-from src.converters.wordart_builder import (
+from core.converters.wordart_builder import (
     WordArtTransformBuilder, WordArtShapeConfig, create_wordart_builder
 )
 from core.utils.ooxml_transform_utils import OOXMLTransformUtils, OOXMLTransform

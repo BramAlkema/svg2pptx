@@ -13,16 +13,16 @@ import zipfile
 from pathlib import Path
 from lxml import etree as ET
 
-from src.svg2pptx import convert_svg_to_pptx, SVGToPowerPointConverter
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.pipeline.converter import CleanSlateConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConverterRegistry, ConversionContext
-from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
-from src.converters.paths import PathConverter
-from src.converters.text import TextConverter
-from src.converters.image import ImageConverter
-from src.converters.symbols import SymbolConverter
-from src.converters.gradients import GradientConverter
+from core.converters.base import ConverterRegistry, ConversionContext
+from core.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
+from core.converters.paths import PathConverter
+from core.converters.text import TextConverter
+from core.converters.image import ImageConverter
+from core.converters.symbols import SymbolConverter
+from core.converters.gradients import GradientConverter
 
 
 class TestEndToEndConversionPipeline:
@@ -40,12 +40,16 @@ class TestEndToEndConversionPipeline:
         for svg_content, shape_type in test_svgs:
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    result = convert_svg_to_pptx(svg_content, tmp.name)
-                    assert os.path.exists(result), f"{shape_type} conversion should create file"
-                    assert os.path.getsize(result) > 1000, f"{shape_type} file should be non-trivial size"
+                    converter = CleanSlateConverter()
+                    result = converter.convert_string(svg_content)
+                    # result.output_data contains the PPTX bytes
+                    tmp.write(result.output_data)
+                    tmp.flush()
+                    assert os.path.exists(tmp.name), f"{shape_type} conversion should create file"
+                    assert os.path.getsize(tmp.name) > 1000, f"{shape_type} file should be non-trivial size"
 
                     # Verify it's a valid ZIP (PPTX format)
-                    with zipfile.ZipFile(result, 'r') as zf:
+                    with zipfile.ZipFile(tmp.name, 'r') as zf:
                         files = zf.namelist()
                         assert '[Content_Types].xml' in files, f"{shape_type} PPTX missing content types"
                         assert 'ppt/presentation.xml' in files, f"{shape_type} PPTX missing presentation"
@@ -65,18 +69,26 @@ class TestEndToEndConversionPipeline:
         ]
 
         for svg_content, description in complex_svgs:
+            temp_path = None
             try:
-                result = convert_svg_to_pptx(svg_content)
-                assert os.path.exists(result), f"{description} conversion should create file"
+                converter = CleanSlateConverter()
+                result = converter.convert_string(svg_content)
+                # result.output_data contains the PPTX bytes
+                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
+                    tmp.write(result.output_data)
+                    temp_path = tmp.name
+                assert os.path.exists(temp_path), f"{description} conversion should create file"
 
                 # Basic validation
-                with zipfile.ZipFile(result, 'r') as zf:
+                with zipfile.ZipFile(temp_path, 'r') as zf:
                     assert '[Content_Types].xml' in zf.namelist()
 
                 # Clean up
-                os.unlink(result)
+                os.unlink(temp_path)
 
             except Exception as e:
+                if temp_path and os.path.exists(temp_path):
+                    os.unlink(temp_path)
                 pytest.fail(f"{description} conversion failed: {e}")
 
     def test_conversion_with_edge_case_units(self):
@@ -88,14 +100,22 @@ class TestEndToEndConversionPipeline:
         ]
 
         for svg_content, description in unit_svgs:
+            temp_path = None
             try:
-                result = convert_svg_to_pptx(svg_content)
-                assert os.path.exists(result), f"{description} should convert successfully"
-                assert os.path.getsize(result) > 1000, f"{description} should produce non-trivial file"
-                os.unlink(result)
+                converter = CleanSlateConverter()
+                result = converter.convert_string(svg_content)
+                # result.output_data contains the PPTX bytes
+                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
+                    tmp.write(result.output_data)
+                    temp_path = tmp.name
+                assert os.path.exists(temp_path), f"{description} should convert successfully"
+                assert os.path.getsize(temp_path) > 1000, f"{description} should produce non-trivial file"
+                os.unlink(temp_path)
 
             except Exception as e:
                 # Unit conversion failures are acceptable for complex cases
+                if temp_path and os.path.exists(temp_path):
+                    os.unlink(temp_path)
                 print(f"Note: {description} failed (may be expected): {e}")
 
     def test_svg_to_drawingml_converter_direct(self):
@@ -127,19 +147,26 @@ class TestEndToEndConversionPipeline:
         ]
 
         for svg_content, description in malformed_svgs:
+            temp_path = None
             try:
-                result = convert_svg_to_pptx(svg_content)
+                converter = CleanSlateConverter()
+                result = converter.convert_string(svg_content)
 
                 # If conversion succeeds, result should be valid
-                if result and os.path.exists(result):
-                    assert result.endswith('.pptx')
-                    with zipfile.ZipFile(result, 'r') as zf:
+                if result and result.output_data:
+                    with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
+                        tmp.write(result.output_data)
+                        temp_path = tmp.name
+                    assert temp_path.endswith('.pptx')
+                    with zipfile.ZipFile(temp_path, 'r') as zf:
                         assert '[Content_Types].xml' in zf.namelist()
-                    os.unlink(result)
+                    os.unlink(temp_path)
 
             except Exception:
                 # Graceful failure is acceptable for malformed input
                 # The key is that it shouldn't crash the entire system
+                if temp_path and os.path.exists(temp_path):
+                    os.unlink(temp_path)
                 pass
 
 

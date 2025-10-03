@@ -11,7 +11,7 @@ from unittest.mock import Mock, MagicMock
 from lxml import etree as ET
 
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 
 
 class TestConverterDependencyInjection:
@@ -48,7 +48,7 @@ class TestConverterDependencyInjection:
 
     def test_shape_converters_accept_services(self, mock_services):
         """Test that shape converters accept services parameter."""
-        from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
+        from core.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
 
         # Test each shape converter accepts services
         rect_converter = RectangleConverter(services=mock_services)
@@ -62,7 +62,7 @@ class TestConverterDependencyInjection:
 
     def test_text_converter_accepts_services(self, mock_services):
         """Test TextConverter with dependency injection."""
-        from src.converters.text import TextConverter
+        from core.converters.text import TextConverter
 
         converter = TextConverter(services=mock_services)
         assert converter.services is mock_services
@@ -70,7 +70,7 @@ class TestConverterDependencyInjection:
 
     def test_path_converter_accepts_services(self, mock_services):
         """Test PathConverter with dependency injection."""
-        from src.converters.paths import PathConverter
+        from core.converters.paths import PathConverter
 
         converter = PathConverter(services=mock_services)
         assert converter.services is mock_services
@@ -78,7 +78,7 @@ class TestConverterDependencyInjection:
 
     def test_gradient_converter_accepts_services(self, mock_services):
         """Test GradientConverter with dependency injection."""
-        from src.converters.gradients import GradientConverter
+        from core.converters.gradients import GradientConverter
 
         converter = GradientConverter(services=mock_services)
         assert converter.services is mock_services
@@ -86,14 +86,14 @@ class TestConverterDependencyInjection:
 
     def test_animation_converter_accepts_services(self, mock_services):
         """Test AnimationConverter with dependency injection."""
-        from src.converters.animations import AnimationConverter
+        from core.converters.animations import AnimationConverter
 
         converter = AnimationConverter(services=mock_services)
         assert converter.services is mock_services
 
     def test_service_property_access(self, mock_services):
         """Test that converters provide service property access."""
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         converter = RectangleConverter(services=mock_services)
 
@@ -105,7 +105,7 @@ class TestConverterDependencyInjection:
 
     def test_converter_can_convert_basic_elements(self, mock_services):
         """Test that converters can identify their supported elements."""
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         converter = RectangleConverter(services=mock_services)
 
@@ -118,7 +118,7 @@ class TestConverterDependencyInjection:
 
     def test_converter_has_convert_method(self, mock_services):
         """Test that converters have convert method available."""
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         converter = RectangleConverter(services=mock_services)
         rect_element = ET.Element("rect")
@@ -129,7 +129,7 @@ class TestConverterDependencyInjection:
 
     def test_multiple_converter_service_isolation(self, mock_services):
         """Test that multiple converters don't interfere with services."""
-        from src.converters.shapes import RectangleConverter, CircleConverter
+        from core.converters.shapes import RectangleConverter, CircleConverter
 
         rect_converter = RectangleConverter(services=mock_services)
         circle_converter = CircleConverter(services=mock_services)
@@ -152,7 +152,7 @@ class TestConversionServicesIntegration:
 
     def test_converter_with_real_services(self):
         """Test converter works with real ConversionServices."""
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         services = ConversionServices.create_default()
         converter = RectangleConverter(services=services)
@@ -186,7 +186,7 @@ class TestServiceValidation:
 
     def test_converter_validates_services(self, mock_services):
         """Test converters can validate their services."""
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         converter = RectangleConverter(services=mock_services)
         if hasattr(converter, 'validate_services'):

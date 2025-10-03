@@ -6,8 +6,8 @@ Test script to verify SVGO optimization integration with the SVG2PPTX system.
 import pytest
 import tempfile
 import os
-from src.preprocessing import create_optimizer
-from src.converters import ConverterRegistry
+from core.preprocessing import create_optimizer
+from core.converters import ConverterRegistry
 
 # Import centralized fixtures
 from tests.fixtures.common import *
@@ -82,7 +82,7 @@ def test_full_integration():
     # Step 2: Test modular converter integration
     print(f"\n2. Testing Modular Converter Integration...")
     
-    from src.converters import RectangleConverter, CircleConverter
+    from core.converters import RectangleConverter, CircleConverter
     
     registry = ConverterRegistry()
     # Only register working converters for testing
@@ -90,7 +90,7 @@ def test_full_integration():
     registry.register(CircleConverter())
     
     from lxml import etree as ET
-    from src.converters import CoordinateSystem, ConversionContext
+    from core.converters import CoordinateSystem, ConversionContext
     
     root = ET.fromstring(optimized_svg)
     

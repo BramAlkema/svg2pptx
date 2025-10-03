@@ -20,8 +20,8 @@ from .result_types import (
     ConversionResult, TextConversionConfig, ConversionError,
     create_text_shape_fallback
 )
-from ..services.conversion_services import ConversionServices
-from ..utils.input_validator import InputValidator
+from core.services.conversion_services import ConversionServices
+from core.utils.input_validator import InputValidator
 
 
 class TextPathEngine:

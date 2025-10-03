@@ -15,15 +15,15 @@ from lxml import etree as ET
 
 # Batch processing components
 try:
-    from src.batch.tasks import process_batch_job
-    from src.batch.models import BatchJob, JobStatus, ConversionJob
+    from core.batch.tasks import process_batch_job
+    from core.batch.models import BatchJob, JobStatus, ConversionJob
     BATCH_AVAILABLE = True
 except ImportError:
     BATCH_AVAILABLE = False
 
 # Core conversion systems
 from core.services.conversion_services import ConversionServices
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 
 
 class TestBatchProcessingCore:

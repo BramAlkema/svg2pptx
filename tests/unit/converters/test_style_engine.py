@@ -11,9 +11,9 @@ Tests the new StyleEngine implementation with focus on:
 import pytest
 from lxml import etree as ET
 from unittest.mock import Mock, MagicMock
-from src.converters.style_engine import StyleEngine
-from src.converters.result_types import ConversionStatus
-from src.converters.base import ConversionContext
+from core.converters.style_engine import StyleEngine
+from core.converters.result_types import ConversionStatus
+from core.converters.base import ConversionContext
 
 
 class TestStyleEngine:

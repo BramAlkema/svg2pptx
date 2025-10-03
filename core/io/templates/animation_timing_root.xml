@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:timing xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:tnLst>
+    <a:par>
+      <a:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot">
+        <a:childTnLst>
+          <a:seq concurrent="1" nextAc="seek">
+            <a:cTn id="2" dur="indefinite" nodeType="mainSeq">
+              <a:childTnLst>
+                <a:par>
+                  <a:cTn id="3" fill="hold">
+                    <a:stCondLst>
+                      <a:cond delay="0"/>
+                    </a:stCondLst>
+                    <a:childTnLst>
+                      <!-- ANIMATIONS WILL BE INSERTED HERE -->
+                    </a:childTnLst>
+                  </a:cTn>
+                </a:par>
+              </a:childTnLst>
+            </a:cTn>
+          </a:seq>
+        </a:childTnLst>
+      </a:cTn>
+    </a:par>
+  </a:tnLst>
+</a:timing>

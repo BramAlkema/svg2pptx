@@ -20,7 +20,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.batch.huey_app import huey
+from .huey_app import huey
 
 # Configure logging
 logging.basicConfig(

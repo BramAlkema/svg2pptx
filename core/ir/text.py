@@ -7,13 +7,18 @@ Implements the documented text fixes for proper alignment and positioning.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any, TYPE_CHECKING
 from enum import Enum
 # Use shared numpy compatibility
 from .numpy_compat import np, NUMPY_AVAILABLE
 
 from .geometry import Point, Rect
 from .paint import Paint
+
+# Import navigation types for type annotation only
+if TYPE_CHECKING:
+    from ..pipeline.hyperlinks import HyperlinkSpec
+    from ..pipeline.navigation import NavigationSpec
 
 
 class TextAnchor(Enum):
@@ -168,6 +173,7 @@ class TextFrame:
     - Coordinates from ConversionContext (not manual viewport math)
     - Conservative baseline handling
     - Per-run styling preserved
+    Supports SVG filter effects for text styling.
     """
     origin: Point                    # Already transformed coordinates (EMU)
     runs: List[Run]                  # Per-tspan runs with inherited styling
@@ -175,6 +181,10 @@ class TextFrame:
     bbox: Rect                       # Calculated text bounding box
     line_height: Optional[float] = None  # Line height multiplier
     baseline_shift: float = 0.0      # Conservative baseline adjustment
+    hyperlink: Optional['HyperlinkSpec'] = None  # Legacy hyperlink support (deprecated)
+    navigation: Optional['NavigationSpec'] = None  # Enhanced navigation support
+    id: Optional[str] = None  # Original SVG element ID for tracing
+    filter: Optional[str] = None     # SVG filter reference for text effects
 
     def __post_init__(self):
         if not self.runs:

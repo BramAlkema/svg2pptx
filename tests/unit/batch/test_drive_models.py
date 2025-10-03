@@ -17,7 +17,7 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.batch.models import (
+from core.batch.models import (
     DatabaseManager, BatchDriveMetadata, BatchFileDriveMetadata, BatchJob,
     init_database, create_tables
 )

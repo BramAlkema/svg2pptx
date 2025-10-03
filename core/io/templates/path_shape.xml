@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="1" name="Path"/>
+    <p:cNvSpPr/>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm>
+      <a:off x="0" y="0"/>
+      <a:ext cx="1" cy="1"/>
+    </a:xfrm>
+    <a:custGeom>
+      <a:avLst/>
+      <a:gdLst/>
+      <a:ahLst/>
+      <a:cxnLst/>
+      <a:rect l="0" t="0" r="21600" b="21600"/>
+      <a:pathLst>
+        <a:path w="21600" h="21600">
+          <!-- PATH DATA WILL BE INSERTED HERE -->
+        </a:path>
+      </a:pathLst>
+    </a:custGeom>
+    <!-- FILL WILL BE INSERTED HERE -->
+    <!-- STROKE WILL BE INSERTED HERE -->
+    <!-- CLIPPING WILL BE INSERTED HERE -->
+  </p:spPr>
+</p:sp>

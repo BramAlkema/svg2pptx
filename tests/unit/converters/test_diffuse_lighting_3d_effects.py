@@ -21,8 +21,8 @@ from lxml import etree as ET
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.converters.filters.geometric.diffuse_lighting import DiffuseLightingFilter, DiffuseLightingParameters
-from src.converters.filters.core.base import FilterContext, FilterResult
+from core.converters.filters.geometric.diffuse_lighting import DiffuseLightingFilter, DiffuseLightingParameters
+from core.converters.filters.core.base import FilterContext, FilterResult
 
 
 class TestSp3dConfiguration:

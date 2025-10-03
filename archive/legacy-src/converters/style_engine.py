@@ -19,7 +19,7 @@ from .result_types import (
     StyleResult, FillResult, ConversionError, ConversionStatus,
     create_gradient_fallback_fill
 )
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class StyleEngine:

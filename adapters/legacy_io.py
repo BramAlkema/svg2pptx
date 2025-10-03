@@ -48,7 +48,7 @@ class PPTXBuilderAdapter:
             width_emu, height_emu = slide_dimensions
 
             # This would wrap the proven PPTX builder logic
-            # In production: from src.pptx.package_builder import PPTXBuilder
+            # In production: from core.pptx.package_builder import PPTXBuilder
             # return PPTXBuilder.create_presentation(width_emu, height_emu)
 
             # Create temporary workspace
@@ -143,7 +143,7 @@ class PPTXBuilderAdapter:
         """
         try:
             # This would wrap the proven PPTX packaging logic
-            # In production: from src.pptx.package_builder import package_pptx
+            # In production: from core.pptx.package_builder import package_pptx
             # return package_pptx(slides, presentation_ctx.slide_width, presentation_ctx.slide_height)
 
             # Simplified PPTX structure for adapter

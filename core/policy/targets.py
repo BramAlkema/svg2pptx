@@ -6,9 +6,12 @@ Defines the output types and decision structures used by the policy engine.
 Provides clear reasoning for all policy decisions.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional, Union, Dict, Any
 from enum import Enum
+
+# Import font strategy types for integration
+from ..ir.font_metadata import FontStrategy
 
 
 class DecisionReason(Enum):
@@ -39,6 +42,40 @@ class DecisionReason(Enum):
     CONSERVATIVE_MODE = "conservative_mode"
     COMPATIBILITY_MODE = "compatibility_mode"
     USER_PREFERENCE = "user_preference"
+
+    # Filter-specific reasons
+    SIMPLE_CONTENT = "simple_content"
+    COMPLEX_CONTENT = "complex_content"
+    QUALITY_PRIORITY = "quality_priority"
+    PERFORMANCE_PRIORITY = "performance_priority"
+
+    # Font embedding reasons
+    CUSTOM_FONT_REQUIRED = "custom_font_required"
+    FONT_ALREADY_EMBEDDED = "font_already_embedded"
+    FONT_SIZE_LIMIT_EXCEEDED = "font_size_limit_exceeded"
+    EMBEDDING_DISABLED = "embedding_disabled"
+    LICENSE_RESTRICTION = "license_restriction"  # Font license prohibits embedding
+    BALANCED_MODE = "balanced_mode"
+
+    # Font strategy reasons
+    SYSTEM_FONT_AVAILABLE = "system_font_available"
+    SYSTEM_FONT_OPTIMAL = "system_font_optimal"
+    FONT_EMBEDDING_PREFERRED = "font_embedding_preferred"
+    FONT_EMBEDDING_REQUIRED = "font_embedding_required"
+    PATH_CONVERSION_REQUIRED = "path_conversion_required"
+    PATH_CONVERSION_OPTIMAL = "path_conversion_optimal"
+    FALLBACK_STRATEGY_REQUIRED = "fallback_strategy_required"
+    ALL_STRATEGIES_FAILED = "all_strategies_failed"
+    COMPLEX_TEXT_TRANSFORMS = "complex_text_transforms"
+    HIGH_FIDELITY_REQUIRED = "high_fidelity_required"
+
+    # Image reasons
+    IMAGE_FORMAT_SUPPORTED = "image_format_supported"
+    IMAGE_SIZE_OK = "image_size_ok"
+    IMAGE_SIZE_TOO_LARGE = "image_size_too_large"
+    IMAGE_EXTERNAL_URL = "image_external_url"
+    IMAGE_CONVERSION_NEEDED = "image_conversion_needed"
+    IMAGE_ALREADY_EMBEDDED = "image_already_embedded"
 
 
 @dataclass(frozen=True)
@@ -119,6 +156,13 @@ class TextDecision(PolicyDecision):
     wordart_confidence: float = 0.0
     transform_complexity: Optional[Dict[str, Any]] = None
 
+    # Font strategy integration fields
+    font_strategy: Optional[FontStrategy] = None
+    font_availability: Dict[str, bool] = field(default_factory=dict)
+    requires_path_conversion: bool = False
+    requires_embedding: bool = False
+    fallback_reason: Optional[str] = None
+
     @classmethod
     def native(cls, reasons: List[DecisionReason], **kwargs) -> 'TextDecision':
         """Create decision for native DrawingML"""
@@ -145,16 +189,94 @@ class TextDecision(PolicyDecision):
             **kwargs
         )
 
+    @classmethod
+    def system_font(cls, reasons: List[DecisionReason], font_availability: Dict[str, bool] = None,
+                   **kwargs) -> 'TextDecision':
+        """Create decision for system font strategy"""
+        return cls(
+            use_native=True,
+            font_strategy=FontStrategy.SYSTEM,
+            font_availability=font_availability or {},
+            reasons=reasons,
+            **kwargs
+        )
+
+    @classmethod
+    def embedded_font(cls, reasons: List[DecisionReason], font_availability: Dict[str, bool] = None,
+                     **kwargs) -> 'TextDecision':
+        """Create decision for embedded font strategy"""
+        return cls(
+            use_native=True,
+            font_strategy=FontStrategy.EMBEDDED,
+            font_availability=font_availability or {},
+            requires_embedding=True,
+            reasons=reasons,
+            **kwargs
+        )
+
+    @classmethod
+    def text_to_path(cls, reasons: List[DecisionReason], font_availability: Dict[str, bool] = None,
+                    **kwargs) -> 'TextDecision':
+        """Create decision for text-to-path strategy"""
+        return cls(
+            use_native=True,
+            font_strategy=FontStrategy.PATH,
+            font_availability=font_availability or {},
+            requires_path_conversion=True,
+            reasons=reasons,
+            **kwargs
+        )
+
+    @classmethod
+    def fallback(cls, reasons: List[DecisionReason], fallback_reason: str = None,
+                font_availability: Dict[str, bool] = None, **kwargs) -> 'TextDecision':
+        """Create decision for fallback strategy"""
+        return cls(
+            use_native=True,
+            font_strategy=FontStrategy.FALLBACK,
+            font_availability=font_availability or {},
+            fallback_reason=fallback_reason,
+            reasons=reasons,
+            **kwargs
+        )
+
     @property
     def is_wordart(self) -> bool:
         """Check if this is a WordArt decision"""
         return self.wordart_preset is not None
 
     @property
+    def has_font_strategy(self) -> bool:
+        """Check if this decision has a font strategy"""
+        return self.font_strategy is not None
+
+    @property
+    def is_system_font(self) -> bool:
+        """Check if this is a system font strategy decision"""
+        return self.font_strategy == FontStrategy.SYSTEM
+
+    @property
+    def is_embedded_font(self) -> bool:
+        """Check if this is an embedded font strategy decision"""
+        return self.font_strategy == FontStrategy.EMBEDDED
+
+    @property
+    def is_text_to_path(self) -> bool:
+        """Check if this is a text-to-path strategy decision"""
+        return self.font_strategy == FontStrategy.PATH
+
+    @property
+    def is_fallback(self) -> bool:
+        """Check if this is a fallback strategy decision"""
+        return self.font_strategy == FontStrategy.FALLBACK
+
+    @property
     def output_format(self) -> str:
         """Get target output format"""
         if self.is_wordart:
             return f"WordArt({self.wordart_preset})"
+        elif self.has_font_strategy:
+            return f"Font({self.font_strategy.value})"
         return "DrawingML" if self.use_native else "EMF"
 
 
@@ -180,19 +302,54 @@ class GroupDecision(PolicyDecision):
 @dataclass(frozen=True)
 class ImageDecision(PolicyDecision):
     """Policy decision for Image elements"""
-    format: str = ""
+    # Image metadata
+    format: str = ""                    # png, jpg, gif, etc.
     size_bytes: int = 0
+    dimensions: tuple = (0, 0)          # (width, height)
     has_transparency: bool = False
+
+    # Embedding strategy
+    embed_inline: bool = True           # Embed in PPTX vs external reference
+    convert_format: bool = False        # Convert to different format
+    target_format: Optional[str] = None # If converting: "png", "jpg"
+
+    # Optimization
+    compress: bool = False
+    max_dimension: Optional[int] = None # Resize if larger
 
     @classmethod
     def native(cls, reasons: List[DecisionReason], **kwargs) -> 'ImageDecision':
-        """Create decision for native DrawingML"""
-        return cls(use_native=True, reasons=reasons, **kwargs)
+        """Create decision to embed image in PPTX"""
+        return cls(use_native=True, embed_inline=True, reasons=reasons, **kwargs)
+
+    @classmethod
+    def external(cls, reasons: List[DecisionReason], **kwargs) -> 'ImageDecision':
+        """Create decision to keep as external reference (http URLs)"""
+        return cls(use_native=True, embed_inline=False, reasons=reasons, **kwargs)
 
     @classmethod
     def emf(cls, reasons: List[DecisionReason], **kwargs) -> 'ImageDecision':
         """Create decision for EMF fallback"""
         return cls(use_native=False, reasons=reasons, **kwargs)
+
+
+@dataclass(frozen=True)
+class FontEmbeddingDecision(PolicyDecision):
+    """Policy decision for font embedding"""
+    font_family: str = ""
+    font_size_bytes: int = 0
+    sha1_checksum: str = ""
+    should_embed: bool = True
+
+    @classmethod
+    def embed(cls, reasons: List[DecisionReason], **kwargs) -> 'FontEmbeddingDecision':
+        """Create decision to embed font"""
+        return cls(use_native=True, should_embed=True, reasons=reasons, **kwargs)
+
+    @classmethod
+    def skip(cls, reasons: List[DecisionReason], **kwargs) -> 'FontEmbeddingDecision':
+        """Create decision to skip font (already embedded or disabled)"""
+        return cls(use_native=True, should_embed=False, reasons=reasons, **kwargs)
 
 
 # Type alias for all decision types

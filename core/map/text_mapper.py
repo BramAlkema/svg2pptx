@@ -13,6 +13,7 @@ from typing import Dict, Any, Optional, List
 from ..ir import IRElement, TextFrame, RichTextFrame, TextLine, Run, Point, Rect, TextAnchor
 from ..policy import Policy, PolicyDecision, TextDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
+from ..utils.enhanced_xml_builder import EnhancedXMLBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class TextMapper(Mapper):
         super().__init__(policy)
         self.logger = logging.getLogger(__name__)
         self.services = services
+
+        # Enhanced XML builder for template-based generation
+        self.xml_builder = EnhancedXMLBuilder()
 
         # Initialize text processing adapter
         try:
@@ -81,6 +85,17 @@ class TextMapper(Mapper):
         start_time = time.perf_counter()
 
         try:
+            # Tracer hook: trace element entering map stage
+            from ..debug import get_tracer
+            tracer = get_tracer()
+            element_id = getattr(element, 'id', 'text_unknown')
+            tracer.trace_map(
+                element_id=element_id,
+                mapper_type='TextMapper',
+                decision={'stage': 'entering'},
+                location="text_mapper.py:map"
+            )
+
             # Convert RichTextFrame to TextFrame if needed for policy decisions
             if isinstance(element, RichTextFrame):
                 text_frame = element.to_text_frame()
@@ -101,6 +116,13 @@ class TextMapper(Mapper):
 
             # Record statistics
             self._record_mapping(result)
+
+            # Tracer hook: trace element exiting map stage
+            tracer.trace_map_exit(
+                element_id=element_id,
+                output_format=result.output_format.value if hasattr(result.output_format, 'value') else str(result.output_format),
+                output_size=result.output_size_bytes
+            )
 
             return result
 
@@ -146,6 +168,18 @@ class TextMapper(Mapper):
                 text_adapter_used = False
                 processing_metadata = {'processing_method': 'standard'}
 
+            # Apply filter effects if present
+            filter_applied = False
+            if hasattr(text, 'filter') and text.filter:
+                enhanced_xml = self._apply_filter_effects(xml_content, text.filter)
+                if enhanced_xml:
+                    xml_content = enhanced_xml
+                    filter_applied = True
+                    self.logger.debug(f"Filter {text.filter} applied to text")
+
+            # Extract hyperlink information
+            hyperlink_info = self._extract_hyperlink_info(text)
+
             return MapperResult(
                 element=text,
                 output_format=OutputFormat.NATIVE_DML,
@@ -159,11 +193,14 @@ class TextMapper(Mapper):
                     'baseline_adjusted': True,
                     'fixes_applied': ['raw_anchor', 'per_tspan_styling', 'conservative_baseline', 'proper_alignment'],
                     'text_adapter_used': text_adapter_used,
-                    'processing_metadata': processing_metadata
+                    'processing_metadata': processing_metadata,
+                    'filter_applied': filter_applied,
+                    'filter': text.filter if hasattr(text, 'filter') and text.filter else None
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.95,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
+                **hyperlink_info
             )
 
         except Exception as e:
@@ -212,32 +249,18 @@ class TextMapper(Mapper):
             # Generate paragraph XML with proper alignment separation
             paragraphs_xml = self._generate_paragraphs_xml(element)
 
-        # Generate complete text shape XML
-        xml_content = f"""<p:sp>
-    <p:nvSpPr>
-        <p:cNvPr id="1" name="TextFrame"/>
-        <p:cNvSpPr txBox="1"/>
-        <p:nvPr/>
-    </p:nvSpPr>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-        <a:noFill/>
-    </p:spPr>
-    <p:txBody>
-        <a:bodyPr wrap="none" rtlCol="0">
-            <a:spAutoFit/>
-        </a:bodyPr>
-        <a:lstStyle/>
-        {paragraphs_xml}
-    </p:txBody>
-</p:sp>"""
+        # Generate complete text shape XML using enhanced XML builder
+        text_element = self.xml_builder.generate_text_shape(
+            text_id=1,  # TODO: Use proper ID from context
+            x_emu=x_emu,
+            y_emu=y_emu,
+            width_emu=width_emu,
+            height_emu=height_emu,
+            paragraphs_xml=paragraphs_xml
+        )
 
+        # Convert Element back to XML string
+        xml_content = self.xml_builder.element_to_string(text_element)
         return xml_content
 
     def _map_to_emf(self, text: TextFrame, decision: TextDecision) -> MapperResult:
@@ -251,34 +274,21 @@ class TextMapper(Mapper):
             width_emu = int(bbox.width)
             height_emu = int(bbox.height)
 
-            xml_content = f"""<p:pic>
-    <p:nvPicPr>
-        <p:cNvPr id="1" name="EMF_Text"/>
-        <p:cNvPicPr/>
-        <p:nvPr/>
-    </p:nvPicPr>
-    <p:blipFill>
-        <a:blip r:embed="rId1">
-            <a:extLst>
-                <a:ext uri="{{A7D7AC89-857B-4B46-9C2E-2B86D7B4E2B4}}">
-                    <emf:emfBlip xmlns:emf="http://schemas.microsoft.com/office/drawing/2010/emf"/>
-                </a:ext>
-            </a:extLst>
-        </a:blip>
-        <a:stretch>
-            <a:fillRect/>
-        </a:stretch>
-    </p:blipFill>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-    </p:spPr>
-</p:pic>"""
+            # Generate EMF picture element using enhanced XML builder
+            picture_element = self.xml_builder.generate_text_emf_picture(
+                text_id=1,  # TODO: Use proper ID from context
+                x_emu=x_emu,
+                y_emu=y_emu,
+                width_emu=width_emu,
+                height_emu=height_emu,
+                embed_id="rId1"
+            )
+
+            # Convert Element back to XML string
+            xml_content = self.xml_builder.element_to_string(picture_element)
+
+            # Extract hyperlink information
+            hyperlink_info = self._extract_hyperlink_info(text)
 
             return MapperResult(
                 element=text,
@@ -294,7 +304,8 @@ class TextMapper(Mapper):
                 },
                 estimated_quality=0.98,  # EMF preserves full fidelity
                 estimated_performance=0.85,  # Slightly slower than native
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
+                **hyperlink_info
             )
 
         except Exception as e:
@@ -440,6 +451,54 @@ class TextMapper(Mapper):
             'conservative_baseline_calc',    # Fix #3: 5% baseline adjustment
             'proper_alignment_separation'    # Fix #4: Paragraph vs run alignment
         ]
+
+    def _apply_filter_effects(self, xml_content: str, filter_ref: str) -> Optional[str]:
+        """
+        Apply filter effects to text shape XML by injecting filter DrawingML.
+
+        Args:
+            xml_content: Base text shape XML to enhance
+            filter_ref: Filter reference like "url(#blur)" or "#blur"
+
+        Returns:
+            Enhanced XML with filter effects, or None if filter not found/failed
+        """
+        if not self.services or not hasattr(self.services, 'filter_service'):
+            self.logger.warning("Filter service not available")
+            return None
+
+        try:
+            # Get filter DrawingML from service
+            filter_xml = self.services.filter_service.get_filter_content(
+                filter_ref, context=None
+            )
+
+            if not filter_xml:
+                self.logger.warning(f"Filter not found: {filter_ref}")
+                return None
+
+            # Strategy: Insert filter XML before closing </p:spPr>
+            insertion_point = xml_content.rfind('</p:spPr>')
+
+            if insertion_point == -1:
+                self.logger.warning("Could not find </p:spPr> tag for filter insertion")
+                return None
+
+            # Inject filter effects
+            enhanced_xml = (
+                xml_content[:insertion_point] +
+                '\n' +
+                filter_xml +
+                '\n' +
+                xml_content[insertion_point:]
+            )
+
+            self.logger.debug(f"Applied filter {filter_ref} to text shape")
+            return enhanced_xml
+
+        except Exception as e:
+            self.logger.error(f"Filter application failed for {filter_ref}: {e}")
+            return None
 
 
 def create_text_mapper(policy: Policy, services=None) -> TextMapper:

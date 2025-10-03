@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:effectLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:sp3d>
+    <a:bevelT w="50800" h="25400">
+      <a:noFill/>
+    </a:bevelT>
+    <a:lightRig rig="tl" dir="t">
+      <a:rot lat="0" lon="0" rev="0"/>
+    </a:lightRig>
+  </a:sp3d>
+</a:effectLst>

@@ -40,7 +40,7 @@ from typing import Dict, Any, Optional, List
 from lxml import etree
 
 from ..base import BaseConverter, ConversionContext
-from ...services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 from .core.base import FilterContext, FilterResult
 from .core.registry import FilterRegistry

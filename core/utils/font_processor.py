@@ -362,10 +362,9 @@ class FontProcessor:
         properties = self.extract_font_properties(element)
         return {
             'family': properties.family,
-            'size': properties.size_px,
+            'size': properties.size,
             'weight': properties.weight,
             'style': properties.style,
-            'variant': properties.variant,
             'decoration': properties.decoration
         }
 

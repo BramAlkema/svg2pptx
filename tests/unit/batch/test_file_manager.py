@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
 
-from src.batch.file_manager import (
+from core.batch.file_manager import (
     BatchFileManager, ConvertedFile, get_default_file_manager
 )
 

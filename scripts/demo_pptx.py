@@ -9,7 +9,7 @@ from pathlib import Path
 # Add project root to path for proper imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.pptx_minimal import svg_to_pptx
+from core.pptx_minimal import svg_to_pptx
 
 # Sample SVG content
 sample_svg = '''<?xml version="1.0" encoding="UTF-8"?>

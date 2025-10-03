@@ -13,14 +13,14 @@ import threading
 import time
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
     FilterException,
     FilterValidationError
 )
-from src.converters.filters.core.registry import (
+from core.converters.filters.core.registry import (
     FilterRegistry,
     FilterRegistrationError,
     FilterNotFoundError

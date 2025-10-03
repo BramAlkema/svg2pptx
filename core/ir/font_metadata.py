@@ -12,10 +12,11 @@ from enum import Enum
 
 
 class FontStrategy(Enum):
-    """Font handling strategy for 3-tier system."""
+    """Font handling strategy for 4-tier system."""
     EMBEDDED = "embedded"     # Tier 1: Embed font in PPTX package
     SYSTEM = "system"         # Tier 2: Use system-available fonts
-    PATH = "path"             # Tier 3: Convert text to vector paths
+    WORDART = "wordart"       # Tier 3a: Use PowerPoint WordArt for styled text
+    PATH = "path"             # Tier 3b: Convert text to vector paths
     FALLBACK = "fallback"     # Tier 4: Basic text with generic font
 
 

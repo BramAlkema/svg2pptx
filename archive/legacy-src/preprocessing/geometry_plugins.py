@@ -77,7 +77,7 @@ class SimplifyPolygonPlugin(PreprocessingPlugin):
         """Parse points string using consolidated PreprocessorUtilities - MIGRATION COMPLETE."""
         try:
             # ✅ MIGRATION COMPLETE: Use PreprocessorUtilities for consistent points parsing
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             result = preprocessor_utilities.parse_points_string(points_str)
             return result.value if result.success else []
         except ImportError:
@@ -86,7 +86,7 @@ class SimplifyPolygonPlugin(PreprocessingPlugin):
 
         try:
             # Fallback to coordinate transformer
-            from ..utils.coordinate_transformer import coordinate_transformer
+            from core.utils.coordinate_transformer import coordinate_transformer
             result = coordinate_transformer.parse_coordinate_string(points_str)
             return result.coordinates
         except ImportError:
@@ -207,7 +207,7 @@ class SimplifyPolygonPlugin(PreprocessingPlugin):
         """Format number using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number formatting
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             return preprocessor_utilities.format_number(num, precision)
         except ImportError:
             # Fallback to legacy implementation
@@ -243,12 +243,12 @@ class OptimizeViewBoxPlugin(PreprocessingPlugin):
                 import numpy as np
 
                 try:
-                    from ..services.conversion_services import ConversionServices
+                    from core.services.conversion_services import ConversionServices
                     services = ConversionServices.create_default()
                     resolver = services.viewport_resolver
                 except ImportError:
                     # Fallback to direct import
-                    from ..viewbox import ViewportEngine
+                    from core.viewbox import ViewportEngine
                     resolver = ViewportEngine()
 
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox_str]))
@@ -350,7 +350,7 @@ class SimplifyTransformMatrixPlugin(PreprocessingPlugin):
         """Simplify matrix transforms using consolidated TransformEngine."""
         try:
             # Use the canonical TransformEngine for matrix processing
-            from ..transforms import TransformEngine
+            from core.transforms import TransformEngine
 
             engine = services.transform_parser
             matrix = engine.parse_to_matrix(transform_str)
@@ -430,7 +430,7 @@ class SimplifyTransformMatrixPlugin(PreprocessingPlugin):
         """Format number using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number formatting
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             return preprocessor_utilities.format_number(num, precision)
         except ImportError:
             # Fallback to legacy implementation
@@ -529,7 +529,7 @@ class ConvertStyleToAttrsPlugin(PreprocessingPlugin):
         """Parse CSS style string using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent style parsing
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             result = preprocessor_utilities.parse_style_attribute(style_str)
             return result.value if result.success else {}
         except ImportError:
@@ -538,7 +538,7 @@ class ConvertStyleToAttrsPlugin(PreprocessingPlugin):
 
         # Fallback to StyleParser usage
         try:
-            from ..utils.style_parser import style_parser
+            from core.utils.style_parser import style_parser
             return style_parser.parse_style_to_dict(style_str)
         except ImportError:
             # Manual parsing fallback

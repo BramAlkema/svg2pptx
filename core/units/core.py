@@ -16,8 +16,10 @@ import re
 import math
 from typing import Union, List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import IntEnum, Enum
 import functools
+from decimal import Decimal, ROUND_HALF_UP
+import logging
 
 # Optional numba import for performance
 try:
@@ -65,6 +67,29 @@ class UnitType(IntEnum):
     VIEWPORT_HEIGHT = 10
 
 
+class PrecisionMode(Enum):
+    """Mathematical precision modes for coordinate conversion."""
+    STANDARD = "standard"           # Regular EMU precision (1x)
+    SUBPIXEL = "subpixel"          # Sub-EMU fractional precision (100x)
+    HIGH_PRECISION = "high"         # Maximum precision mode (1000x)
+    ULTRA_PRECISION = "ultra"       # Ultra precision mode (10000x)
+
+
+class CoordinateValidationError(ValueError):
+    """Exception raised when coordinate validation fails."""
+    pass
+
+
+class PrecisionOverflowError(ValueError):
+    """Exception raised when precision calculations cause overflow."""
+    pass
+
+
+class EMUBoundaryError(ValueError):
+    """Exception raised when EMU values exceed PowerPoint boundaries."""
+    pass
+
+
 @dataclass
 class ConversionContext:
     """Context for unit conversions with NumPy compatibility."""
@@ -82,6 +107,18 @@ class ConversionContext:
             self.parent_height = self.height
 
 
+@dataclass
+class FractionalCoordinateContext:
+    """Extended context for sub-EMU precision calculations."""
+    base_dpi: float = DEFAULT_DPI
+    fractional_scale: float = 1.0
+    rounding_mode: str = 'round_half_up'
+    precision_threshold: float = 0.001
+    max_decimal_places: int = 3  # PowerPoint compatibility
+    adaptive_precision: bool = True
+    performance_mode: bool = False
+
+
 class UnitConverter:
     """
     Unified unit converter combining best features from all implementations.
@@ -94,9 +131,40 @@ class UnitConverter:
     - Advanced caching and optimization
     """
 
-    def __init__(self, context: Optional[ConversionContext] = None):
-        """Initialize converter with optional default context."""
+    def __init__(self,
+                 context: Optional[ConversionContext] = None,
+                 precision_mode: Union[str, PrecisionMode] = PrecisionMode.STANDARD,
+                 fractional_context: Optional[FractionalCoordinateContext] = None):
+        """Initialize converter with optional default context and precision settings."""
         self.default_context = context or ConversionContext()
+
+        # Set up precision configuration
+        if isinstance(precision_mode, str):
+            precision_mode = PrecisionMode(precision_mode)
+
+        self.precision_mode = precision_mode
+        self.fractional_context = fractional_context or FractionalCoordinateContext()
+
+        # Configure precision factors
+        self.precision_factors = {
+            PrecisionMode.STANDARD: 1.0,
+            PrecisionMode.SUBPIXEL: 100.0,
+            PrecisionMode.HIGH_PRECISION: 1000.0,
+            PrecisionMode.ULTRA_PRECISION: 10000.0
+        }
+
+        self.precision_factor = self.precision_factors[precision_mode]
+
+        # PowerPoint compatibility validation
+        self.powerpoint_max_emu = EMU_PER_INCH * 1000  # 1000 inches max
+        self.powerpoint_min_emu = 0.001  # Minimum meaningful EMU value
+
+        # Performance optimization caches
+        self.fractional_cache = {}  # Cache for repeated calculations
+
+        # Error logging
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+
         self._init_optimization_structures()
 
     def _init_optimization_structures(self):
@@ -742,6 +810,128 @@ def units(values: Union[List[Union[str, float, int]], Dict[str, Union[str, float
     return UnitBatch(values, converter)
 
 
+class FractionalEMUConverter(UnitConverter):
+    """
+    Extended UnitConverter with fractional coordinate precision.
+
+    Enables subpixel-accurate coordinate conversion for advanced SVG features
+    while maintaining backward compatibility with existing UnitConverter API.
+    """
+
+    def to_fractional_emu(self,
+                         value: Union[str, float, int],
+                         context: Optional[ConversionContext] = None,
+                         axis: str = 'x',
+                         preserve_precision: bool = True) -> float:
+        """
+        Convert SVG length to fractional EMUs with subpixel precision.
+
+        Args:
+            value: SVG length value
+            context: Viewport context for relative units
+            axis: 'x' or 'y' for directional calculations
+            preserve_precision: Whether to maintain fractional precision
+
+        Returns:
+            Length in fractional EMUs (float)
+
+        Raises:
+            CoordinateValidationError: If input value is invalid
+            PrecisionOverflowError: If precision calculation causes overflow
+            EMUBoundaryError: If resulting EMU value exceeds PowerPoint limits
+        """
+        try:
+            # Input validation
+            if value is None:
+                raise CoordinateValidationError("Value cannot be None")
+
+            # Use cache for repeated values if performance mode enabled
+            cache_key = (value, str(context), axis, preserve_precision) if self.fractional_context.performance_mode else None
+            if cache_key and cache_key in self.fractional_cache:
+                return self.fractional_cache[cache_key]
+
+            # Convert to base EMU first using existing method
+            base_emu = self.to_emu(value, context, axis)
+
+            # Apply fractional precision if requested
+            if preserve_precision and self.precision_mode != PrecisionMode.STANDARD:
+                fractional_emu = self._apply_fractional_precision(base_emu)
+            else:
+                fractional_emu = float(base_emu)
+
+            # Validate bounds
+            self._validate_emu_bounds(fractional_emu)
+
+            # Cache result if in performance mode
+            if cache_key:
+                self.fractional_cache[cache_key] = fractional_emu
+
+            return fractional_emu
+
+        except Exception as e:
+            self.logger.error(f"Error converting {value} to fractional EMU: {e}")
+            raise
+
+    def _apply_fractional_precision(self, base_emu: Union[int, float]) -> float:
+        """Apply fractional precision scaling to EMU value."""
+        try:
+            # Convert to float for fractional precision
+            fractional_value = float(base_emu) * self.fractional_context.fractional_scale
+
+            # Check for precision overflow
+            if abs(fractional_value) > 1e15:  # Precision overflow threshold
+                raise PrecisionOverflowError(f"Precision calculation overflow: {fractional_value}")
+
+            # Apply adaptive precision if enabled
+            if self.fractional_context.adaptive_precision:
+                fractional_value = self._apply_adaptive_precision(fractional_value)
+
+            return fractional_value
+
+        except Exception as e:
+            raise PrecisionOverflowError(f"Fractional precision calculation failed: {e}")
+
+    def _apply_adaptive_precision(self, value: float) -> float:
+        """Apply adaptive precision based on value magnitude."""
+        # For very small values, use higher precision
+        if abs(value) < 100:
+            return value * self.precision_factors[PrecisionMode.HIGH_PRECISION]
+        # For normal values, use standard precision
+        elif abs(value) < 10000:
+            return value * self.precision_factors[PrecisionMode.SUBPIXEL]
+        # For large values, use standard precision to avoid overflow
+        else:
+            return value
+
+    def _validate_emu_bounds(self, emu_value: float):
+        """Validate EMU value is within PowerPoint boundaries."""
+        if abs(emu_value) > self.powerpoint_max_emu:
+            raise EMUBoundaryError(f"EMU value {emu_value} exceeds PowerPoint limit {self.powerpoint_max_emu}")
+
+        if 0 < abs(emu_value) < self.powerpoint_min_emu:
+            import warnings
+            warnings.warn(f"EMU value {emu_value} is below meaningful threshold {self.powerpoint_min_emu}")
+
+    def to_powerpoint_compatible_emu(self, value: Union[str, float, int],
+                                   context: Optional[ConversionContext] = None,
+                                   axis: str = 'x') -> int:
+        """
+        Convert to PowerPoint-compatible integer EMU with proper rounding.
+
+        This method ensures compatibility with PowerPoint's integer coordinate system
+        while preserving as much precision as possible.
+        """
+        fractional_emu = self.to_fractional_emu(value, context, axis)
+
+        # Apply PowerPoint-compatible rounding
+        if self.fractional_context.rounding_mode == 'round_half_up':
+            decimal_value = Decimal(str(fractional_emu))
+            rounded_value = decimal_value.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+            return int(rounded_value)
+        else:
+            return round(fractional_emu)
+
+
 # Convenience functions for backward compatibility
 def to_emu(value: Union[str, float, int], **context_kwargs) -> int:
     """Convert value to EMU using default converter."""
@@ -764,3 +954,23 @@ def to_pixels(value: Union[str, float, int], **context_kwargs) -> float:
 def create_context(**kwargs) -> ConversionContext:
     """Create conversion context."""
     return ConversionContext(**kwargs)
+
+
+# Convenience functions for fractional EMU conversion
+def create_subpixel_converter(**kwargs) -> FractionalEMUConverter:
+    """Create a converter optimized for subpixel precision."""
+    return FractionalEMUConverter(precision_mode=PrecisionMode.SUBPIXEL, **kwargs)
+
+
+def create_high_precision_converter(**kwargs) -> FractionalEMUConverter:
+    """Create a converter for maximum precision calculations."""
+    return FractionalEMUConverter(precision_mode=PrecisionMode.HIGH_PRECISION, **kwargs)
+
+
+def to_fractional_emu(value: Union[str, float, int], precision_mode: PrecisionMode = PrecisionMode.SUBPIXEL, **context_kwargs) -> float:
+    """Convert value to fractional EMU using specified precision."""
+    converter = FractionalEMUConverter(precision_mode=precision_mode)
+    if context_kwargs:
+        context = converter.create_context(**context_kwargs)
+        return converter.to_fractional_emu(value, context)
+    return converter.to_fractional_emu(value)

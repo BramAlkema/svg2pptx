@@ -11,11 +11,11 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, Optional, List
 from lxml import etree
 
-from src.converters.filters.core.base import Filter, FilterContext, FilterResult
-from src.converters.filters.core.registry import FilterRegistry
-from src.converters.filters.core.chain import FilterChain, ChainExecutionMode
-from src.converters.filters.image.blur import GaussianBlurFilter, MotionBlurFilter
-from src.converters.filters.image.color import ColorMatrixFilter, FloodFilter, LightingFilter
+from core.converters.filters.core.base import Filter, FilterContext, FilterResult
+from core.converters.filters.core.registry import FilterRegistry
+from core.converters.filters.core.chain import FilterChain, ChainExecutionMode
+from core.converters.filters.image.blur import GaussianBlurFilter, MotionBlurFilter
+from core.converters.filters.image.color import ColorMatrixFilter, FloodFilter, LightingFilter
 
 
 class TestImageFiltersRegistration:
@@ -525,9 +525,9 @@ class TestBackwardCompatibility:
     def test_filter_package_imports(self):
         """Test that all filters can be imported from main package."""
         # Test individual imports
-        from src.converters.filters.image import GaussianBlurFilter
-        from src.converters.filters.image import ColorMatrixFilter
-        from src.converters.filters.image import FloodFilter
+        from core.converters.filters.image import GaussianBlurFilter
+        from core.converters.filters.image import ColorMatrixFilter
+        from core.converters.filters.image import FloodFilter
 
         # Verify filter types
         gaussian_blur = GaussianBlurFilter()
@@ -541,7 +541,7 @@ class TestBackwardCompatibility:
 
     def test_main_package_imports(self):
         """Test imports from main filters package."""
-        from src.converters.filters import FilterRegistry, FilterChain
+        from core.converters.filters import FilterRegistry, FilterChain
 
         # Test that core classes are available
         registry = FilterRegistry()
@@ -552,7 +552,7 @@ class TestBackwardCompatibility:
 
     def test_default_registry_functionality(self):
         """Test default registry functionality."""
-        from src.converters.filters import get_default_registry
+        from core.converters.filters import get_default_registry
 
         # Get default registry
         default_registry = get_default_registry()

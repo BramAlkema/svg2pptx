@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List
 import xml.etree.ElementTree as ET
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,

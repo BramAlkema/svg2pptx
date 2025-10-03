@@ -19,10 +19,10 @@ from lxml import etree as ET
 import logging
 
 from .base import BaseConverter, ConversionContext
-from ..paths import PathSystem, PathProcessingResult, create_path_system
+from core.paths import PathSystem, PathProcessingResult, create_path_system
 
 if TYPE_CHECKING:
-    from ..services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
 
 logger = logging.getLogger(__name__)
 

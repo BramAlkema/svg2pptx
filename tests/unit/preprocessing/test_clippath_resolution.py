@@ -12,14 +12,14 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch
 from lxml import etree as ET
 
-from src.preprocessing.geometry import (
+from core.preprocessing.geometry import (
     PathBooleanEngine, PathSpec, FillRule, normalize_fill_rule,
     validate_path_spec, create_path_spec, get_available_backends,
     PATHOPS_AVAILABLE, PYCLIPPER_AVAILABLE
 )
-from src.preprocessing.geometry.path_adapters import BooleanEngineFactory, create_boolean_engine
-from src.preprocessing.resolve_clippath_plugin import ResolveClipPathsPlugin
-from src.preprocessing.base import PreprocessingContext
+from core.preprocessing.geometry.path_adapters import BooleanEngineFactory, create_boolean_engine
+from core.preprocessing.resolve_clippath_plugin import ResolveClipPathsPlugin
+from core.preprocessing.base import PreprocessingContext
 
 
 class TestBooleanEngineInterface:
@@ -339,7 +339,7 @@ class TestResolveClipPathsPlugin:
 
     def test_create_factory_function(self):
         """Test the factory function for creating clipPath resolver."""
-        from src.preprocessing.resolve_clippath_plugin import create_clippath_resolver
+        from core.preprocessing.resolve_clippath_plugin import create_clippath_resolver
 
         plugin = create_clippath_resolver(
             enable_nested_clips=False,

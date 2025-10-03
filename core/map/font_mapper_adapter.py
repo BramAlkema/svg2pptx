@@ -62,7 +62,7 @@ class FontMapperAdapter(Mapper):
                     xml_content=result.drawingml_xml,
                     policy_decision=PolicyDecision(
                         use_native=True,
-                        reasons=[DecisionReason.SIMPLE_SHAPE],  # Using simple shape as default
+                        reasons=[DecisionReason.FONT_AVAILABLE],  # Font rendered successfully
                         confidence=result.confidence
                     ),
                     metadata={

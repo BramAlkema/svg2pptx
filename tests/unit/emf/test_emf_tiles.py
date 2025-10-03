@@ -6,13 +6,13 @@ Tests tile library, pattern generation, and PowerPoint XML generation.
 import pytest
 from unittest.mock import patch, Mock
 
-from src.emf_tiles import (
+from core.emf_tiles import (
     EMFTileLibrary, get_tile_library, get_pattern_tile,
     list_available_patterns, get_patterns_by_category,
     create_powerpoint_xml_for_pattern, create_colored_pattern,
     PATTERN_COLOR_SCHEMES
 )
-from src.emf_blob import EMFBlob
+from core.emf_blob import EMFBlob
 
 
 class TestEMFTileLibrary:

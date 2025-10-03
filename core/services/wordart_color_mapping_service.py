@@ -10,10 +10,9 @@ from typing import Dict, Any, Optional
 from lxml import etree as ET
 
 from ..color import Color
-from ..converters.gradients.converter import GradientConverter
-from ..converters.gradients.core import GradientEngine
+from ..services.gradient_service import GradientService
 from ..services.conversion_services import ConversionServices
-from ..converters.base import ConversionContext
+from ..units.core import ConversionContext
 
 
 class WordArtColorMappingService:
@@ -32,8 +31,7 @@ class WordArtColorMappingService:
             services: ConversionServices container
         """
         self.services = services
-        self.gradient_converter = GradientConverter(services)
-        self.gradient_engine = GradientEngine(optimization_level=2)
+        self.gradient_service = GradientService()
 
     def map_solid_fill(self, color: str, opacity: float = 1.0) -> ET.Element:
         """
@@ -83,14 +81,19 @@ class WordArtColorMappingService:
             DrawingML gradient element or None if conversion fails
         """
         try:
-            # Use existing gradient converter
-            if self.gradient_converter.can_convert(gradient_element, context):
-                # Convert using existing infrastructure
-                gradient_xml = self.gradient_converter.convert(gradient_element, context)
+            # Use gradient service to convert gradient
+            gradient_type = gradient_element.tag.split('}')[-1] if '}' in gradient_element.tag else gradient_element.tag
 
-                # Parse the XML string back to element
-                if gradient_xml and gradient_xml.strip():
-                    return ET.fromstring(gradient_xml)
+            # Register the gradient with the service
+            gradient_id = gradient_element.get('id', 'temp_gradient')
+            self.gradient_service.register_gradient(gradient_id, gradient_element)
+
+            # Get the gradient content
+            gradient_content = self.gradient_service.get_gradient_content(gradient_id, context)
+
+            # Parse the XML string back to element
+            if gradient_content and gradient_content.strip():
+                return ET.fromstring(gradient_content)
 
         except Exception as e:
             # Log error and return None for fallback

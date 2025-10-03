@@ -16,7 +16,7 @@ class TestSVG2PPTXSmoke:
     def test_import_svg2pptx(self):
         """Test that svg2pptx module can be imported."""
         try:
-            import src.svg2pptx
+            import core.svg2pptx
             assert True
         except ImportError:
             pytest.skip("svg2pptx module not available")
@@ -32,7 +32,7 @@ class TestSVG2PPTXSmoke:
     def test_import_multislide(self):
         """Test that multislide modules can be imported."""
         try:
-            import src.multislide
+            import core.multislide
             assert True
         except ImportError:
             pytest.skip("multislide module not available")

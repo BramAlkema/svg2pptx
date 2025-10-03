@@ -24,7 +24,7 @@ from .svg_pptx_comparator import SVGPPTXComparator, ComparisonResult, Compliance
 
 # SVG2PPTX import
 try:
-    from src.svg2pptx import convert_svg_to_pptx
+    from core.pipeline.converter import CleanSlateConverter
     SVG2PPTX_AVAILABLE = True
 except ImportError:
     SVG2PPTX_AVAILABLE = False
@@ -343,12 +343,17 @@ class W3CComplianceTestRunner:
         return pptx_files
 
     async def _convert_single_svg(self, test_case: W3CTestCase) -> Path:
-        """Convert single SVG file to PPTX."""
+        """Convert single SVG file to PPTX using CleanSlateConverter."""
         output_path = self.config.output_dir / "pptx" / f"{test_case.name}.pptx"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Use SVG2PPTX conversion
-        convert_svg_to_pptx(str(test_case.svg_path), str(output_path))
+        # Use CleanSlateConverter
+        converter = CleanSlateConverter()
+        result = converter.convert_file(Path(test_case.svg_path), output_path)
+
+        if result and result.output_data:
+            with open(output_path, 'wb') as f:
+                f.write(result.output_data)
 
         if not output_path.exists():
             raise RuntimeError(f"PPTX conversion failed for {test_case.name}")

@@ -51,7 +51,7 @@ class OptimizedSVGConverter:
         self.profiler = get_profiler()
 
         # Import here to avoid circular imports
-        from ..services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
 
         # Create default services if none provided (for migration compatibility)
         if services is None:

@@ -15,12 +15,12 @@ from typing import List, Dict, Set
 from collections import defaultdict
 
 from core.services.conversion_services import ConversionServices
-from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
-from src.converters.paths import PathConverter
-from src.converters.text import TextConverter
-from src.converters.image import ImageConverter
-from src.converters.symbols import SymbolConverter
-from src.converters.gradients import GradientConverter
+from core.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
+from core.converters.paths import PathConverter
+from core.converters.text import TextConverter
+from core.converters.image import ImageConverter
+from core.converters.symbols import SymbolConverter
+from core.converters.gradients import GradientConverter
 
 
 class TestMutableDefaults:

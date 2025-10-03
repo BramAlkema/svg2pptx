@@ -68,6 +68,10 @@ class TestConversionServices:
         mock_pptx_builder = Mock()
         mock_style_service = Mock()
 
+        mock_font_service = Mock()
+        mock_marker_processor = Mock()
+        mock_visual_report_service = Mock()
+
         services = ConversionServices(
             unit_converter=mock_unit_converter,
             color_factory=mock_color_factory,
@@ -79,12 +83,15 @@ class TestConversionServices:
             style_service=mock_style_service,
             coordinate_transformer=mock_coordinate_transformer,
             font_processor=mock_font_processor,
+            font_service=mock_font_service,
             path_processor=mock_path_processor,
             pptx_builder=mock_pptx_builder,
             gradient_service=mock_gradient_service,
             pattern_service=mock_pattern_service,
             filter_service=mock_filter_service,
-            image_service=mock_image_service
+            image_service=mock_image_service,
+            marker_processor=mock_marker_processor,
+            visual_report_service=mock_visual_report_service
         )
 
         assert services.unit_converter is mock_unit_converter
@@ -97,6 +104,7 @@ class TestConversionServices:
         assert services.style_service is mock_style_service
         assert services.coordinate_transformer is mock_coordinate_transformer
         assert services.font_processor is mock_font_processor
+        assert services.font_service is mock_font_service
         assert services.path_processor is mock_path_processor
         assert services.pptx_builder is mock_pptx_builder
         assert services.gradient_service is mock_gradient_service

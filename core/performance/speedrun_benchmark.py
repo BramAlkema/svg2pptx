@@ -19,7 +19,7 @@ import json
 import random
 
 try:
-    from ..services import SecureFileService, default_secure_file_service
+    from core.services import SecureFileService, default_secure_file_service
 except ImportError:
     # Handle direct execution
     import sys

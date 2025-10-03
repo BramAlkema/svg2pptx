@@ -15,7 +15,7 @@ from ..ir import LinearGradientPaint, RadialGradientPaint, SolidPaint
 from .config import PolicyConfig, OutputTarget
 from .targets import (
     PolicyDecision, PathDecision, TextDecision, GroupDecision, ImageDecision,
-    DecisionReason, PolicyMetrics
+    FontEmbeddingDecision, DecisionReason, PolicyMetrics
 )
 
 
@@ -101,12 +101,13 @@ class Policy:
             if hasattr(self, '_current_decision'):
                 self.metrics.record_decision(self._current_decision, elapsed_ms)
 
-    def decide_image(self, image: Image) -> ImageDecision:
+    def decide_image(self, image: Image, already_embedded: set = None) -> ImageDecision:
         """
         Decide output format for Image element.
 
         Args:
             image: Image IR element
+            already_embedded: Set of SHA-256 checksums already embedded
 
         Returns:
             ImageDecision with reasoning
@@ -114,7 +115,7 @@ class Policy:
         start_time = time.perf_counter()
 
         try:
-            decision = self._analyze_image(image)
+            decision = self._analyze_image(image, already_embedded)
             return decision
         finally:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
@@ -219,17 +220,21 @@ class Policy:
         return decision
 
     def _analyze_text(self, text: TextFrame) -> TextDecision:
-        """Analyze text and make policy decision"""
+        """Analyze text and make font strategy decision"""
         reasons = []
         run_count = len(text.runs)
         complexity_score = text.complexity_score
         has_effects = any(run.has_decoration for run in text.runs)
         has_multiline = text.is_multiline
 
-        # Check for missing fonts (simplified - would integrate with font service)
-        has_missing_fonts = self._check_missing_fonts(text)
+        # Analyze font availability for all runs
+        font_availability = self._analyze_font_availability(text)
+        has_missing_fonts = not any(font_availability.values())
 
-        # Conservative mode overrides
+        # Analyze text complexity for strategy selection
+        complexity_analysis = self._analyze_text_complexity_for_strategy(text)
+
+        # Conservative mode overrides - use EMF fallback
         if self.config.conservative_text and has_effects:
             reasons.append(DecisionReason.CONSERVATIVE_MODE)
             reasons.append(DecisionReason.TEXT_EFFECTS_COMPLEX)
@@ -240,81 +245,39 @@ class Policy:
                 has_missing_fonts=has_missing_fonts,
                 has_effects=has_effects,
                 has_multiline=has_multiline,
+                font_availability=font_availability,
                 confidence=0.9
             )
             self._current_decision = decision
             return decision
 
-        # Check run count threshold
-        if run_count > self.config.thresholds.max_text_runs:
-            reasons.append(DecisionReason.ABOVE_THRESHOLDS)
-            reasons.append(DecisionReason.COMPLEX_GEOMETRY)
-            decision = TextDecision.emf(
-                reasons=reasons,
-                run_count=run_count,
-                complexity_score=complexity_score,
-                has_missing_fonts=has_missing_fonts,
-                has_effects=has_effects,
-                has_multiline=has_multiline,
-                confidence=0.85
-            )
-            self._current_decision = decision
-            return decision
+        # Check for extremely complex text - requires path conversion
+        if complexity_analysis['requires_path_conversion']:
+            reasons.append(DecisionReason.PATH_CONVERSION_REQUIRED)
+            reasons.append(DecisionReason.HIGH_FIDELITY_REQUIRED)
+            if complexity_analysis['complex_transforms']:
+                reasons.append(DecisionReason.COMPLEX_TEXT_TRANSFORMS)
 
-        # Check complexity score
-        if complexity_score > self.config.thresholds.max_text_complexity_score:
-            reasons.append(DecisionReason.ABOVE_THRESHOLDS)
-            if has_effects:
-                reasons.append(DecisionReason.TEXT_EFFECTS_COMPLEX)
-            decision = TextDecision.emf(
+            decision = TextDecision.text_to_path(
                 reasons=reasons,
                 run_count=run_count,
                 complexity_score=complexity_score,
                 has_missing_fonts=has_missing_fonts,
                 has_effects=has_effects,
                 has_multiline=has_multiline,
+                font_availability=font_availability,
+                requires_path_conversion=True,
                 confidence=0.8
             )
             self._current_decision = decision
             return decision
 
-        # Check for missing fonts
-        if has_missing_fonts:
-            reasons.append(DecisionReason.FONT_UNAVAILABLE)
-            decision = TextDecision.emf(
-                reasons=reasons,
-                run_count=run_count,
-                complexity_score=complexity_score,
-                has_missing_fonts=has_missing_fonts,
-                has_effects=has_effects,
-                has_multiline=has_multiline,
-                confidence=0.95
-            )
-            self._current_decision = decision
-            return decision
-
-        # Check transform complexity for WordArt compatibility
-        transform_analysis = self._analyze_transform_complexity(text)
-        if transform_analysis and not transform_analysis['can_wordart_native']:
-            reasons.append(DecisionReason.COMPLEX_TRANSFORM)
-            if transform_analysis['max_skew_exceeded']:
-                reasons.append(DecisionReason.ABOVE_THRESHOLDS)
-            decision = TextDecision.emf(
-                reasons=reasons,
-                run_count=run_count,
-                complexity_score=complexity_score,
-                has_missing_fonts=has_missing_fonts,
-                has_effects=has_effects,
-                has_multiline=has_multiline,
-                transform_complexity=transform_analysis,
-                confidence=0.9
-            )
-            self._current_decision = decision
-            return decision
-
-        # Check for WordArt pattern if text has a path
+        # Check for WordArt opportunities
         wordart_result = self._check_wordart_opportunity(text)
-        if wordart_result and wordart_result['confidence'] >= self.config.wordart_confidence_threshold:
+        if (wordart_result and
+            wordart_result['confidence'] >= self.config.wordart_confidence_threshold and
+            not complexity_analysis['too_complex_for_wordart']):
+
             reasons.append(DecisionReason.WORDART_PATTERN_DETECTED)
             reasons.append(DecisionReason.NATIVE_PRESET_AVAILABLE)
 
@@ -328,26 +291,71 @@ class Policy:
                 has_missing_fonts=has_missing_fonts,
                 has_effects=has_effects,
                 has_multiline=has_multiline,
-                estimated_quality=0.95,  # WordArt maintains high quality
-                estimated_performance=0.98  # WordArt is very fast
+                font_availability=font_availability,
+                estimated_quality=0.95,
+                estimated_performance=0.98
             )
             self._current_decision = decision
             return decision
 
-        # Use native DrawingML
-        reasons.append(DecisionReason.BELOW_THRESHOLDS)
-        reasons.append(DecisionReason.FONT_AVAILABLE)
-        reasons.append(DecisionReason.SUPPORTED_FEATURES)
+        # Check if fonts need embedding
+        if complexity_analysis['should_embed_fonts']:
+            reasons.append(DecisionReason.FONT_EMBEDDING_PREFERRED)
+            if complexity_analysis['requires_embedding']:
+                reasons.append(DecisionReason.FONT_EMBEDDING_REQUIRED)
 
-        decision = TextDecision.native(
+            decision = TextDecision.embedded_font(
+                reasons=reasons,
+                run_count=run_count,
+                complexity_score=complexity_score,
+                has_missing_fonts=has_missing_fonts,
+                has_effects=has_effects,
+                has_multiline=has_multiline,
+                font_availability=font_availability,
+                requires_embedding=True,
+                confidence=0.85
+            )
+            self._current_decision = decision
+            return decision
+
+        # Check for system font suitability
+        if complexity_analysis['system_font_suitable']:
+            reasons.append(DecisionReason.SYSTEM_FONT_AVAILABLE)
+            reasons.append(DecisionReason.SYSTEM_FONT_OPTIMAL)
+
+            decision = TextDecision.system_font(
+                reasons=reasons,
+                run_count=run_count,
+                complexity_score=complexity_score,
+                has_missing_fonts=has_missing_fonts,
+                has_effects=has_effects,
+                has_multiline=has_multiline,
+                font_availability=font_availability,
+                confidence=0.9,
+                estimated_quality=0.98,
+                estimated_performance=0.95
+            )
+            self._current_decision = decision
+            return decision
+
+        # Ultimate fallback strategy - always succeeds
+        reasons.append(DecisionReason.FALLBACK_STRATEGY_REQUIRED)
+        if has_missing_fonts:
+            reasons.append(DecisionReason.FONT_UNAVAILABLE)
+        if complexity_analysis.get('all_strategies_failed', False):
+            reasons.append(DecisionReason.ALL_STRATEGIES_FAILED)
+
+        decision = TextDecision.fallback(
             reasons=reasons,
             run_count=run_count,
             complexity_score=complexity_score,
             has_missing_fonts=has_missing_fonts,
             has_effects=has_effects,
             has_multiline=has_multiline,
-            confidence=0.95,
-            estimated_quality=0.98,
+            font_availability=font_availability,
+            fallback_reason="No other strategy suitable",
+            confidence=0.5,
+            estimated_quality=0.7,
             estimated_performance=0.95
         )
         self._current_decision = decision
@@ -408,22 +416,102 @@ class Policy:
         self._current_decision = decision
         return decision
 
-    def _analyze_image(self, image: Image) -> ImageDecision:
-        """Analyze image and make policy decision"""
-        reasons = []
-        size_bytes = len(image.data)
-        has_transparency = image.format in ["png", "gif"]
+    def _analyze_image(self, image: Image, already_embedded: set = None) -> ImageDecision:
+        """
+        Analyze image and make policy decision.
 
-        # Images typically go to EMF for best fidelity
-        reasons.append(DecisionReason.PERFORMANCE_OK)
-        decision = ImageDecision.emf(
+        Args:
+            image: Image IR element
+            already_embedded: Set of SHA-256 checksums already embedded
+
+        Returns:
+            ImageDecision with embedding strategy
+        """
+        reasons = []
+        already_embedded = already_embedded or set()
+
+        # Get image data and calculate size
+        image_data = image.image_data or image.data  # Support both new and legacy fields
+        size_bytes = len(image_data) if image_data else 0
+        format_ext = image.format_ext or image.format  # Support both new and legacy fields
+
+        # Check deduplication
+        if image.sha256 and image.sha256 in already_embedded:
+            reasons.append(DecisionReason.IMAGE_ALREADY_EMBEDDED)
+            return ImageDecision.native(
+                reasons=reasons,
+                format=format_ext,
+                size_bytes=size_bytes,
+                confidence=1.0,
+                estimated_quality=1.0,
+                estimated_performance=1.0
+            )
+
+        # Check format support
+        supported_formats = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tif', 'tiff', 'webp'}
+        if format_ext and format_ext.lower() not in supported_formats:
+            reasons.append(DecisionReason.UNSUPPORTED_FEATURES)
+            decision = ImageDecision.emf(
+                reasons=reasons,
+                format=format_ext,
+                size_bytes=size_bytes,
+                confidence=0.9,
+                estimated_quality=0.95,
+                estimated_performance=0.8
+            )
+            self._current_decision = decision
+            return decision
+
+        # Check external URLs
+        if hasattr(image, 'source_type') and image.source_type in ('http', 'https'):
+            if hasattr(self.config, 'allow_external_images') and self.config.allow_external_images:
+                reasons.append(DecisionReason.IMAGE_EXTERNAL_URL)
+                decision = ImageDecision.external(
+                    reasons=reasons,
+                    format=format_ext,
+                    size_bytes=size_bytes,
+                    confidence=0.8,
+                    estimated_quality=0.7,  # External may not load
+                    estimated_performance=0.5  # Network dependency
+                )
+                self._current_decision = decision
+                return decision
+            else:
+                # Fetch and embed
+                reasons.append(DecisionReason.IMAGE_FORMAT_SUPPORTED)
+
+        # Check size limits
+        if image_data:
+            size_mb = size_bytes / (1024 * 1024)
+            max_size = getattr(self.config, 'max_image_size_mb', 10.0)
+            max_dim = getattr(self.config, 'max_image_dimension', 4096)
+
+            if size_mb > max_size:
+                reasons.append(DecisionReason.IMAGE_SIZE_TOO_LARGE)
+                decision = ImageDecision.native(
+                    reasons=reasons,
+                    format=format_ext,
+                    size_bytes=size_bytes,
+                    compress=True,
+                    max_dimension=max_dim,
+                    confidence=0.85,
+                    estimated_quality=0.9,  # Compression may reduce quality
+                    estimated_performance=0.7  # Compression takes time
+                )
+                self._current_decision = decision
+                return decision
+
+        # Default: embed inline
+        reasons.append(DecisionReason.IMAGE_FORMAT_SUPPORTED)
+        reasons.append(DecisionReason.IMAGE_SIZE_OK)
+
+        decision = ImageDecision.native(
             reasons=reasons,
-            format=image.format,
+            format=format_ext,
             size_bytes=size_bytes,
-            has_transparency=has_transparency,
             confidence=0.95,
-            estimated_quality=0.98,
-            estimated_performance=0.9
+            estimated_quality=1.0,
+            estimated_performance=0.95
         )
         self._current_decision = decision
         return decision
@@ -653,6 +741,372 @@ class Policy:
     def reset_metrics(self):
         """Reset policy metrics"""
         self.metrics = PolicyMetrics()
+
+    def decide_svg_switch_conditions(self, required_features: Optional[str] = None,
+                                   system_language: Optional[str] = None,
+                                   required_extensions: Optional[str] = None) -> PolicyDecision:
+        """
+        Decide if SVG switch conditions can be satisfied in PowerPoint conversion.
+
+        Args:
+            required_features: Space-separated list of required SVG features
+            system_language: Comma-separated list of language preferences
+            required_extensions: Space-separated list of required extensions
+
+        Returns:
+            PolicyDecision indicating if conditions can be met
+        """
+        reasons = []
+        can_satisfy = True
+        confidence = 1.0
+
+        # Evaluate required features
+        if required_features:
+            supported_features = {
+                # Core SVG features we support well
+                'http://www.w3.org/TR/SVG11/feature#BasicStructure',
+                'http://www.w3.org/TR/SVG11/feature#Shape',
+                'http://www.w3.org/TR/SVG11/feature#BasicPaintAttribute',
+                'http://www.w3.org/TR/SVG11/feature#BasicGraphicsAttribute',
+                'http://www.w3.org/TR/SVG11/feature#Marker',
+                'http://www.w3.org/TR/SVG11/feature#BasicText',
+                'http://www.w3.org/TR/SVG11/feature#Text',
+
+                # Simplified feature names
+                'BasicStructure', 'Shape', 'BasicPaintAttribute',
+                'BasicGraphicsAttribute', 'Marker', 'Transform',
+                'BasicText', 'Text'
+            }
+
+            feature_list = required_features.strip().split()
+            unsupported_features = [f for f in feature_list if f not in supported_features]
+
+            if unsupported_features:
+                can_satisfy = False
+                reasons.append(DecisionReason.UNSUPPORTED_FEATURES)
+                confidence *= 0.1  # Very low confidence
+                self.logger.debug(f"Unsupported SVG features: {unsupported_features}")
+            else:
+                reasons.append(DecisionReason.SUPPORTED_FEATURES)
+                self.logger.debug(f"All SVG features supported: {feature_list}")
+
+        # Evaluate system language (PowerPoint supports international content)
+        if system_language:
+            reasons.append(DecisionReason.SUPPORTED_FEATURES)
+            self.logger.debug(f"System language accepted: {system_language}")
+
+        # Evaluate required extensions with mimicking capability
+        if required_extensions:
+            mimickable_extensions = {
+                # Animation extensions - PowerPoint has animation capabilities
+                'http://www.w3.org/2001/svg-animation', 'svg-animation', 'animation',
+                # Interactivity extensions - PowerPoint has hyperlinks/actions
+                'http://www.w3.org/2001/svg-interactivity', 'svg-interactivity', 'interactivity',
+                # Font extensions - PowerPoint has font embedding
+                'http://www.w3.org/2001/svg-fonts', 'svg-fonts', 'fonts',
+                # Filter extensions - We have filter system
+                'http://www.w3.org/2001/svg-filter-effects', 'svg-filter-effects', 'filter-effects',
+                # Transform extensions - PowerPoint has transform capabilities
+                'http://www.w3.org/2001/svg-transform', 'svg-transform', 'transform',
+                # 3D extensions - PowerPoint has 3D effects
+                'http://www.w3.org/2001/svg-3d', 'svg-3d', '3d',
+                # Multimedia extensions - PowerPoint supports multimedia
+                'http://www.w3.org/2001/svg-multimedia', 'svg-multimedia', 'multimedia',
+            }
+
+            extension_list = required_extensions.strip().split()
+            mimickable = [e for e in extension_list if e in mimickable_extensions]
+            non_mimickable = [e for e in extension_list if e not in mimickable_extensions]
+
+            # Use policy-based decision for extensions
+            if self.config.target == OutputTarget.QUALITY:
+                # Quality mode: accept if we can mimic all extensions
+                if non_mimickable:
+                    can_satisfy = False
+                    reasons.append(DecisionReason.UNSUPPORTED_FEATURES)
+                    confidence *= 0.3
+                else:
+                    reasons.append(DecisionReason.SUPPORTED_FEATURES)
+            elif self.config.target == OutputTarget.BALANCED:
+                # Balanced mode: accept if we can mimic majority
+                if len(mimickable) > len(non_mimickable):
+                    reasons.append(DecisionReason.SUPPORTED_FEATURES)
+                    confidence *= 0.8  # Some uncertainty due to partial support
+                else:
+                    can_satisfy = False
+                    reasons.append(DecisionReason.UNSUPPORTED_FEATURES)
+                    confidence *= 0.4
+            elif self.config.target == OutputTarget.SPEED:
+                # Speed mode: more permissive, accept if any can be mimicked
+                if mimickable:
+                    reasons.append(DecisionReason.SUPPORTED_FEATURES)
+                    confidence *= 0.7
+                else:
+                    can_satisfy = False
+                    reasons.append(DecisionReason.UNSUPPORTED_FEATURES)
+                    confidence *= 0.2
+            else:  # COMPATIBILITY mode
+                # Compatibility mode: conservative, need strong support
+                if len(mimickable) >= len(non_mimickable) and len(mimickable) > 0:
+                    reasons.append(DecisionReason.SUPPORTED_FEATURES)
+                    confidence *= 0.9
+                else:
+                    can_satisfy = False
+                    reasons.append(DecisionReason.COMPATIBILITY_MODE)
+                    confidence *= 0.1
+
+            self.logger.debug(f"Extensions - mimickable: {mimickable}, non-mimickable: {non_mimickable}")
+
+        # Default case - no conditions specified means always supported
+        if not any([required_features, system_language, required_extensions]):
+            reasons.append(DecisionReason.SUPPORTED_FEATURES)
+
+        return PolicyDecision(
+            use_native=can_satisfy,
+            reasons=reasons,
+            confidence=confidence,
+            fallback_available=True,
+            estimated_quality=0.95 if can_satisfy else 0.3,
+            estimated_performance=0.9
+        )
+
+    def decide_filter_strategy(self, filter_type: str, complexity: float = 0.0,
+                              input_count: int = 1, has_blending: bool = False) -> PolicyDecision:
+        """
+        Decide rendering strategy for SVG filter effects.
+
+        Args:
+            filter_type: Type of filter (e.g., 'merge', 'blend', 'composite')
+            complexity: Complexity score (0.0 to 1.0)
+            input_count: Number of input buffers
+            has_blending: Whether filter uses advanced blending modes
+
+        Returns:
+            PolicyDecision with recommended strategy
+        """
+        reasons = []
+        use_native = True
+        confidence = 0.8
+
+        # Simple filters always use native
+        simple_filters = {'blur', 'shadow', 'glow', 'reflection'}
+        if filter_type.lower() in simple_filters:
+            reasons.append(DecisionReason.SIMPLE_CONTENT)
+            return PolicyDecision(
+                use_native=True,
+                reasons=reasons,
+                confidence=0.95,
+                estimated_quality=0.95,
+                estimated_performance=0.9
+            )
+
+        # Complex decision based on output target
+        if self.config.output_target == OutputTarget.QUALITY:
+            # Quality mode: prefer native unless impossible
+            if has_blending and complexity > 0.8:
+                use_native = False
+                reasons.append(DecisionReason.COMPLEX_CONTENT)
+                confidence = 0.6
+            else:
+                reasons.append(DecisionReason.QUALITY_PRIORITY)
+                confidence = 0.9
+
+        elif self.config.output_target == OutputTarget.SPEED:
+            # Speed mode: flatten complex filters
+            if input_count > 3 or complexity > 0.5:
+                use_native = True  # But simplified
+                reasons.append(DecisionReason.PERFORMANCE_PRIORITY)
+                confidence = 0.7
+            else:
+                reasons.append(DecisionReason.SIMPLE_CONTENT)
+
+        elif self.config.output_target == OutputTarget.COMPATIBILITY:
+            # Compatibility mode: EMF for complex filters
+            if complexity > 0.6 or has_blending:
+                use_native = False
+                reasons.append(DecisionReason.COMPATIBILITY_MODE)
+                confidence = 0.5
+            else:
+                reasons.append(DecisionReason.SUPPORTED_FEATURES)
+
+        else:  # BALANCED
+            # Smart decision based on complexity
+            if complexity < 0.4 and input_count <= 3:
+                reasons.append(DecisionReason.SIMPLE_CONTENT)
+            elif complexity > 0.7 or (has_blending and input_count > 2):
+                use_native = False
+                reasons.append(DecisionReason.COMPLEX_CONTENT)
+                confidence = 0.6
+            else:
+                reasons.append(DecisionReason.BALANCED_MODE)
+                confidence = 0.75
+
+        # Log decision if configured
+        if self.config.log_decisions:
+            self.logger.debug(
+                f"Filter strategy for {filter_type}: native={use_native} "
+                f"(complexity={complexity:.2f}, inputs={input_count}, blending={has_blending})"
+            )
+
+        return PolicyDecision(
+            use_native=use_native,
+            reasons=reasons,
+            confidence=confidence,
+            fallback_available=True,
+            estimated_quality=0.9 if use_native else 0.7,
+            estimated_performance=0.8 if input_count <= 3 else 0.5
+        )
+
+    def decide_font_embedding(self, font_family: str, font_size_bytes: int,
+                             sha1_checksum: str, already_embedded: set) -> FontEmbeddingDecision:
+        """
+        Decide whether to embed a custom font.
+
+        Args:
+            font_family: Font family name
+            font_size_bytes: Font file size in bytes
+            sha1_checksum: SHA-1 checksum for deduplication
+            already_embedded: Set of SHA-1 checksums already embedded
+
+        Returns:
+            FontEmbeddingDecision with reasoning
+        """
+        reasons = []
+
+        # Check if already embedded (deduplication)
+        if sha1_checksum in already_embedded:
+            reasons.append(DecisionReason.FONT_ALREADY_EMBEDDED)
+            return FontEmbeddingDecision.skip(
+                reasons=reasons,
+                font_family=font_family,
+                font_size_bytes=font_size_bytes,
+                sha1_checksum=sha1_checksum
+            )
+
+        # Check embedding configuration
+        if not self.config.enable_font_embedding:
+            reasons.append(DecisionReason.EMBEDDING_DISABLED)
+            return FontEmbeddingDecision.skip(
+                reasons=reasons,
+                font_family=font_family,
+                font_size_bytes=font_size_bytes,
+                sha1_checksum=sha1_checksum
+            )
+
+        # Check size limit (10MB default)
+        max_size_bytes = getattr(self.config, 'max_font_size_mb', 10.0) * 1024 * 1024
+        if font_size_bytes > max_size_bytes:
+            reasons.append(DecisionReason.FONT_SIZE_LIMIT_EXCEEDED)
+            return FontEmbeddingDecision.skip(
+                reasons=reasons,
+                font_family=font_family,
+                font_size_bytes=font_size_bytes,
+                sha1_checksum=sha1_checksum
+            )
+
+        # Embed custom font
+        reasons.append(DecisionReason.CUSTOM_FONT_REQUIRED)
+        return FontEmbeddingDecision.embed(
+            reasons=reasons,
+            font_family=font_family,
+            font_size_bytes=font_size_bytes,
+            sha1_checksum=sha1_checksum
+        )
+
+    def _analyze_font_availability(self, text: TextFrame) -> Dict[str, bool]:
+        """
+        Analyze font availability for all runs in text frame.
+
+        Args:
+            text: TextFrame to analyze
+
+        Returns:
+            Dictionary mapping font families to availability status
+        """
+        font_availability = {}
+
+        for run in text.runs:
+            font_family = getattr(run, 'font_family', 'Arial')
+            if font_family not in font_availability:
+                # TODO: Integrate with font service for real availability check
+                # For now, assume common fonts are available
+                common_fonts = {'Arial', 'Times New Roman', 'Calibri', 'Helvetica', 'Times'}
+                font_availability[font_family] = font_family in common_fonts
+
+        return font_availability
+
+    def _analyze_text_complexity_for_strategy(self, text: TextFrame) -> Dict[str, Any]:
+        """
+        Analyze text complexity to determine optimal font strategy.
+
+        Args:
+            text: TextFrame to analyze
+
+        Returns:
+            Dictionary with complexity analysis results
+        """
+        analysis = {
+            'requires_path_conversion': False,
+            'system_font_suitable': True,
+            'should_embed_fonts': False,
+            'requires_embedding': False,
+            'too_complex_for_wordart': False,
+            'complex_transforms': False,
+            'all_strategies_failed': False
+        }
+
+        # Check transforms
+        if hasattr(text, 'transform') and text.transform is not None:
+            transform_analysis = self._analyze_transform_complexity(text)
+            if transform_analysis:
+                # Very complex transforms require path conversion
+                if (transform_analysis.get('max_skew_exceeded', False) or
+                    transform_analysis.get('scale_ratio_exceeded', False)):
+                    analysis['requires_path_conversion'] = True
+                    analysis['complex_transforms'] = True
+                    analysis['too_complex_for_wordart'] = True
+                    analysis['system_font_suitable'] = False
+
+        # Check text effects complexity
+        has_complex_effects = False
+        for run in text.runs:
+            if hasattr(run, 'has_decoration') and run.has_decoration:
+                # Check for complex decorations
+                if hasattr(run, 'text_shadow') and run.text_shadow:
+                    has_complex_effects = True
+                if hasattr(run, 'text_outline') and run.text_outline:
+                    has_complex_effects = True
+
+        if has_complex_effects:
+            analysis['requires_path_conversion'] = True
+            analysis['system_font_suitable'] = False
+
+        # Check font availability and embedding needs
+        font_availability = self._analyze_font_availability(text)
+        missing_fonts = [font for font, available in font_availability.items() if not available]
+
+        if missing_fonts:
+            # Missing fonts - need embedding or fallback
+            analysis['should_embed_fonts'] = True
+            if len(missing_fonts) == len(font_availability):
+                # All fonts missing - might need path conversion or fallback
+                analysis['requires_embedding'] = True
+                analysis['system_font_suitable'] = False
+
+        # Check text complexity score
+        if hasattr(text, 'complexity_score'):
+            if text.complexity_score > self.config.thresholds.max_text_complexity_score:
+                analysis['too_complex_for_wordart'] = True
+                if text.complexity_score > self.config.thresholds.max_text_complexity_score * 1.5:
+                    analysis['requires_path_conversion'] = True
+                    analysis['system_font_suitable'] = False
+
+        # Check run count
+        if len(text.runs) > self.config.thresholds.max_text_runs:
+            analysis['too_complex_for_wordart'] = True
+            analysis['system_font_suitable'] = False
+
+        return analysis
 
 
 def create_policy(target: Union[str, OutputTarget] = OutputTarget.BALANCED, **kwargs) -> Policy:

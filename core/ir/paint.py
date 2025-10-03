@@ -64,8 +64,18 @@ class PatternPaint:
     transform: Optional[np.ndarray] = None
 
 
+@dataclass(frozen=True)
+class GradientReferencePaint:
+    """
+    Reference to a gradient defined in <defs>.
+    Parser creates this for fill="url(#gradientId)".
+    Mapper resolves it using gradient_service.
+    """
+    gradient_id: str  # ID without url(#) wrapper
+
+
 # Union type for all paint types
-Paint = Union[SolidPaint, LinearGradientPaint, RadialGradientPaint, PatternPaint, None]
+Paint = Union[SolidPaint, LinearGradientPaint, RadialGradientPaint, PatternPaint, GradientReferencePaint, None]
 
 
 class StrokeJoin(Enum):

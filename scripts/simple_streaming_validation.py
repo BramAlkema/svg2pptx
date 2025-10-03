@@ -30,7 +30,7 @@ except ImportError:
         print("❌ Unable to install psutil - memory measurement unavailable")
         PSUTIL_AVAILABLE = False
 
-from src.multislide.streaming import (
+from core.multislide.streaming import (
     StreamingSVGParser,
     StreamingConfig,
     ProgressiveSlideDetector,

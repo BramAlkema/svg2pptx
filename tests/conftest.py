@@ -98,7 +98,7 @@ def cleanup_globals():
     
     # Reset any global caches or singletons
     try:
-        from src.performance.cache import _global_cache
+        from core.performance.cache import _global_cache
         if _global_cache:
             _global_cache.clear_all()
     except ImportError:

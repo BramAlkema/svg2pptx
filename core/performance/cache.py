@@ -123,7 +123,7 @@ class PathCache(BaseCache):
         try:
             # Use PathSystem for modern path processing
             if not hasattr(self, '_path_system') or self._path_system is None:
-                from ..paths import create_path_system
+                from core.paths import create_path_system
                 self._path_system = create_path_system(800, 600, (0, 0, 800, 600))
 
             result = self._path_system.process_path(path_data)
@@ -152,7 +152,7 @@ class PathCache(BaseCache):
             # PathSystem has optimized processing, so explicit caching is less needed
             # Just validate that PathSystem can parse this data
             if not hasattr(self, '_path_system') or self._path_system is None:
-                from ..paths import create_path_system
+                from core.paths import create_path_system
                 self._path_system = create_path_system(800, 600, (0, 0, 800, 600))
 
             self._path_system.process_path(path_data)  # This validates the path
@@ -244,7 +244,7 @@ class TransformCache(BaseCache):
         """Get parsed transform matrix using canonical TransformEngine cache."""
         try:
             # Delegate to TransformEngine which has superior built-in caching
-            from ..transforms import TransformEngine
+            from core.transforms import TransformEngine
 
             engine = services.transform_parser
             matrix = engine.parse_to_matrix(transform_str)
@@ -276,7 +276,7 @@ class TransformCache(BaseCache):
         try:
             # TransformEngine has built-in caching, so we don't need to cache here
             # Just validate that TransformEngine can parse this data
-            from ..transforms import TransformEngine
+            from core.transforms import TransformEngine
 
             engine = services.transform_parser
             engine.parse_to_matrix(transform_str)  # This will cache internally

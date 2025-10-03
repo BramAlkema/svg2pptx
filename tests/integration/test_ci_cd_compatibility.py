@@ -16,8 +16,35 @@ import concurrent.futures
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from src.svg2pptx import convert_svg_to_pptx, SVGToPowerPointConverter
+from core.pipeline.converter import CleanSlateConverter
 from core.services.conversion_services import ConversionServices
+
+
+def convert_svg_string_to_pptx(svg_content: str, output_path: str = None) -> str:
+    """
+    Helper function for legacy test patterns.
+    Converts SVG string to PPTX using CleanSlateConverter.
+
+    Args:
+        svg_content: SVG string content
+        output_path: Optional output path for PPTX file
+
+    Returns:
+        Path to created PPTX file
+    """
+    converter = CleanSlateConverter()
+    result = converter.convert_string(svg_content)
+
+    if output_path:
+        with open(output_path, 'wb') as f:
+            f.write(result.output_data)
+        return output_path
+    else:
+        import tempfile
+        temp = tempfile.mktemp(suffix='.pptx')
+        with open(temp, 'wb') as f:
+            f.write(result.output_data)
+        return temp
 
 
 class TestHeadlessEnvironment:
@@ -33,7 +60,7 @@ class TestHeadlessEnvironment:
             svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="50" height="50" fill="red"/></svg>'
 
             try:
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 assert os.path.exists(result), "Conversion should work without display"
                 assert os.path.getsize(result) > 1000, "Should produce valid PPTX"
                 os.unlink(result)
@@ -54,7 +81,7 @@ class TestHeadlessEnvironment:
             with patch.dict(os.environ, minimal_env, clear=True):
                 svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="50" fill="blue"/></svg>'
 
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 assert os.path.exists(result)
                 os.unlink(result)
 
@@ -72,7 +99,7 @@ class TestHeadlessEnvironment:
             with patch('os.getuid', return_value=1000):  # Non-root user
                 with patch('os.access', return_value=True):  # Basic file access
                     try:
-                        result = convert_svg_to_pptx(svg_content)
+                        result = convert_svg_string_to_pptx(svg_content)
                         assert os.path.exists(result)
                         os.unlink(result)
                     except Exception as e:
@@ -94,7 +121,7 @@ class TestConcurrencyAndThreadSafety:
         results = []
 
         def convert_svg(svg_content):
-            return convert_svg_to_pptx(svg_content)
+            return convert_svg_string_to_pptx(svg_content)
 
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -146,7 +173,7 @@ class TestConcurrencyAndThreadSafety:
 
         def stress_conversion(iteration):
             try:
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 return result
             except Exception as e:
                 return f"Error_{iteration}: {e}"
@@ -191,7 +218,7 @@ class TestSystemResourceUsage:
         try:
             # Create multiple conversions
             for i in range(5):
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 results.append(result)
                 assert os.path.exists(result)
 
@@ -224,7 +251,7 @@ class TestSystemResourceUsage:
 
         start_time = time.time()
         try:
-            result = convert_svg_to_pptx(large_svg)
+            result = convert_svg_string_to_pptx(large_svg)
             processing_time = time.time() - start_time
 
             assert os.path.exists(result), "Large SVG conversion should succeed"
@@ -250,7 +277,7 @@ class TestSystemResourceUsage:
         try:
             # Perform many conversions
             for i in range(15):
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 results.append(result)
 
                 # Clean up immediately to test for leaks
@@ -292,7 +319,7 @@ class TestCIEnvironmentCompatibility:
             svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="50" height="50" fill="red"/></svg>'
 
             try:
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 assert os.path.exists(result), "Should work in GitHub Actions environment"
                 assert os.path.getsize(result) > 1000
                 os.unlink(result)
@@ -314,7 +341,7 @@ class TestCIEnvironmentCompatibility:
             svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><circle cx="75" cy="75" r="50" fill="blue"/></svg>'
 
             try:
-                result = convert_svg_to_pptx(svg_content)
+                result = convert_svg_string_to_pptx(svg_content)
                 assert os.path.exists(result), "Should work in Jenkins environment"
                 os.unlink(result)
 
@@ -331,7 +358,7 @@ class TestCIEnvironmentCompatibility:
                 # Use restricted temp directory
                 with patch('tempfile.gettempdir', return_value=temp_dir):
                     try:
-                        result = convert_svg_to_pptx(svg_content)
+                        result = convert_svg_string_to_pptx(svg_content)
                         assert os.path.exists(result), "Should work under container limits"
                         assert temp_dir in result, "Should use restricted temp directory"
 
@@ -347,7 +374,7 @@ class TestCIEnvironmentCompatibility:
             # Override temp directory to our writable location
             with patch('tempfile.gettempdir', return_value=writable_temp):
                 try:
-                    result = convert_svg_to_pptx(svg_content)
+                    result = convert_svg_string_to_pptx(svg_content)
                     assert os.path.exists(result), "Should work with temp directory override"
                     assert writable_temp in result, "Should use overridden temp directory"
 
@@ -362,9 +389,9 @@ class TestBuildSystemIntegration:
         """Test that the package works after pip install simulation."""
         # Simulate package installation by ensuring imports work
         try:
-            from src.svg2pptx import convert_svg_to_pptx
+            from core.pipeline.converter import CleanSlateConverter
             from core.services.conversion_services import ConversionServices
-            from src.converters.base import BaseConverter
+            from core.converters.base import BaseConverter
 
             # Test that services can be created
             services = ConversionServices.create_default()
@@ -372,7 +399,7 @@ class TestBuildSystemIntegration:
 
             # Test basic conversion
             svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="50" height="50" fill="red"/></svg>'
-            result = convert_svg_to_pptx(svg_content)
+            result = convert_svg_string_to_pptx(svg_content)
             assert os.path.exists(result)
             os.unlink(result)
 
@@ -381,11 +408,12 @@ class TestBuildSystemIntegration:
 
     def test_setuptools_entry_point_simulation(self):
         """Test that entry points would work correctly."""
-        # Test that main functions are callable
-        from src.svg2pptx import convert_svg_to_pptx, SVGToPowerPointConverter
+        # Test that main converter classes are importable and callable
+        from core.pipeline.converter import CleanSlateConverter
 
-        assert callable(convert_svg_to_pptx), "Main conversion function should be callable"
-        assert SVGToPowerPointConverter is not None, "Main converter class should be importable"
+        assert CleanSlateConverter is not None, "Main converter class should be importable"
+        converter = CleanSlateConverter()
+        assert callable(converter.convert_string), "Converter methods should be callable"
 
     def test_requirements_compatibility(self):
         """Test compatibility with common dependency versions."""
@@ -420,7 +448,7 @@ class TestPerformanceInCICD:
         svg_content = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="100" height="100" fill="red"/></svg>'
 
         start_time = time.time()
-        result = convert_svg_to_pptx(svg_content)
+        result = convert_svg_string_to_pptx(svg_content)
         conversion_time = time.time() - start_time
 
         try:
@@ -445,7 +473,7 @@ class TestPerformanceInCICD:
 
         try:
             for svg in svg_templates:
-                result = convert_svg_to_pptx(svg)
+                result = convert_svg_string_to_pptx(svg)
                 results.append(result)
                 assert os.path.exists(result)
 

@@ -14,8 +14,8 @@ from lxml import etree as ET
 
 # Core conversion systems
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext, ConverterRegistry
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.converters.base import ConversionContext, ConverterRegistry
+from core.svg2drawingml import SVGToDrawingMLConverter
 
 
 class TestComprehensiveConverterValidation:
@@ -29,9 +29,9 @@ class TestComprehensiveConverterValidation:
     @pytest.fixture
     def converter_registry(self, services):
         """Create converter registry with all converters."""
-        from src.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
-        from src.converters.paths import PathConverter
-        from src.converters.text import TextConverter
+        from core.converters.shapes import RectangleConverter, CircleConverter, EllipseConverter
+        from core.converters.paths import PathConverter
+        from core.converters.text import TextConverter
 
         registry = ConverterRegistry()
 
@@ -140,8 +140,8 @@ class TestComprehensiveConverterValidation:
     def test_filter_system_availability(self):
         """Test that filter system is available and functional."""
         try:
-            from src.converters.filters.image.blur import GaussianBlurFilter
-            from src.converters.filters.image.color import ColorMatrixFilter
+            from core.converters.filters.image.blur import GaussianBlurFilter
+            from core.converters.filters.image.color import ColorMatrixFilter
 
             # Test filter instantiation
             blur_filter = GaussianBlurFilter()
@@ -167,8 +167,8 @@ class TestComprehensiveConverterValidation:
     def test_batch_processing_availability(self):
         """Test that batch processing system is available."""
         try:
-            from src.batch.tasks import process_batch_job
-            from src.batch.models import BatchJob
+            from core.batch.tasks import process_batch_job
+            from core.batch.models import BatchJob
 
             assert process_batch_job is not None, "Batch processing should be available"
             assert BatchJob is not None, "Batch job model should be available"

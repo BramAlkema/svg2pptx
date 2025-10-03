@@ -6,7 +6,7 @@ Tests for combined transform animations in the new AnimationConverter v2.
 import pytest
 from lxml import etree as ET
 
-from src.converters.animation_converter import AnimationConverter
+from core.converters.animation_converter import AnimationConverter
 from core.services.conversion_services import ConversionServices
 
 

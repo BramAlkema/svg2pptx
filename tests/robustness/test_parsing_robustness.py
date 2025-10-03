@@ -19,10 +19,10 @@ try:
 except ImportError:
     HYPOTHESIS_AVAILABLE = False
 
-from src.svg2pptx import convert_svg_to_pptx
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.pipeline.converter import CleanSlateConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 from core.services.conversion_services import ConversionServices
-from src.converters.base import BaseConverter
+from core.converters.base import BaseConverter
 
 
 # Skip all tests if hypothesis is not available

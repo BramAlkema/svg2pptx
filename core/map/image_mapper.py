@@ -1,382 +1,228 @@
 #!/usr/bin/env python3
 """
-Image Mapper
+Image Mapper - MediaRequest Pattern
 
-Maps IR.Image elements to DrawingML with optimized format conversion
-and embedding strategies.
+Maps IR.Image elements to DrawingML <p:pic> using the MediaRequest pattern
+for proper OPC relationship management.
 """
 
-import time
 import logging
-import base64
-from typing import Dict, Any, Optional
+import hashlib
+from typing import Optional
+from lxml import etree as ET
+from lxml.etree import Element, QName
 
-from ..ir import IRElement, Image, Point, Rect
-from ..policy import Policy, PolicyDecision, ImageDecision
-from .base import Mapper, MapperResult, OutputFormat, MappingError
+from .base import Mapper, MapperResult, OutputFormat, MediaRequest
+from ..ir import IRElement, Image
+from ..policy import ImageDecision
 
 logger = logging.getLogger(__name__)
 
+# Namespace URIs
+P_URI = "http://schemas.openxmlformats.org/presentationml/2006/main"
+A_URI = "http://schemas.openxmlformats.org/drawingml/2006/main"
+R_URI = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+NSMAP = {'p': P_URI, 'a': A_URI, 'r': R_URI}
+
 
 class ImageMapper(Mapper):
-    """
-    Maps IR.Image elements to DrawingML output.
+    """Maps Image IR elements to DrawingML <p:pic>"""
 
-    Handles format conversion, embedding optimization, and relationship
-    management for raster and vector images.
-    """
+    def __init__(self, policy, services=None):
+        super().__init__(policy, services)
+        self._counter = 1
+        self._embedded_sha256 = set()
 
-    def __init__(self, policy: Policy, services=None):
-        """
-        Initialize image mapper.
+    def can_map(self, ir_element: IRElement) -> bool:
+        return isinstance(ir_element, Image)
 
-        Args:
-            policy: Policy engine for decision making
-            services: Optional services for image processing integration
-        """
-        super().__init__(policy)
-        self.logger = logging.getLogger(__name__)
-        self.services = services
+    def map(self, ir_element: IRElement) -> MapperResult:
+        if not isinstance(ir_element, Image):
+            raise ValueError(f"Expected Image, got {type(ir_element)}")
 
-        # Initialize image processing adapter
-        try:
-            from .image_adapter import create_image_adapter
-            self.image_adapter = create_image_adapter(services)
-            self._has_image_adapter = True
-        except ImportError:
-            self.image_adapter = None
-            self._has_image_adapter = False
-            self.logger.warning("Image adapter not available - using fallback processing")
+        image: Image = ir_element
 
-        # Image format compatibility
-        self._powerpoint_formats = {'png', 'jpg', 'gif', 'bmp', 'tiff'}
-        self._vector_formats = {'svg'}
+        # Get policy decision
+        decision = self.policy.decide_image(image, self._embedded_sha256)
 
-        # Relationship counter for unique IDs
-        self._rel_id_counter = 1
+        # Handle based on decision
+        if not decision.embed_inline:
+            # External reference (not implemented yet)
+            return self._create_external_reference(image, decision)
 
-    def can_map(self, element: IRElement) -> bool:
-        """Check if element is an Image"""
-        return isinstance(element, Image)
+        # Embed inline
+        if image.sha256 and image.sha256 in self._embedded_sha256:
+            # Already embedded - reuse (TODO: track rId mapping)
+            logger.debug(f"Image already embedded: {image.sha256[:8]}...")
 
-    def map(self, image: Image) -> MapperResult:
-        """
-        Map Image element to appropriate output format.
+        # Load image data if not already loaded
+        image_data = image.image_data or image.data  # Support legacy field
+        if not image_data:
+            image_data = self._load_image_data(image)
 
-        Args:
-            image: Image IR element
+        # Calculate SHA-256 if not present
+        sha256 = image.sha256
+        if not sha256 and image_data:
+            sha256 = hashlib.sha256(image_data).hexdigest()
 
-        Returns:
-            MapperResult with DrawingML content
+        # Track as embedded
+        if sha256:
+            self._embedded_sha256.add(sha256)
 
-        Raises:
-            MappingError: If mapping fails
-        """
-        start_time = time.perf_counter()
+        # Build <p:pic> XML element
+        pic_elem = self._build_picture_xml(image)
 
-        try:
-            # Get policy decision (images typically go to EMF for best fidelity)
-            decision = self.policy.decide_image(image)
+        # Convert to XML string
+        pic_xml = ET.tostring(pic_elem, encoding='unicode')
 
-            # Always map images as embedded pictures for best compatibility
-            result = self._map_to_picture(image, decision)
+        # Create media request
+        format_ext = image.format_ext or image.format or "png"  # Support legacy
+        filename = f"image{self._counter}.{format_ext}"
+        self._counter += 1
 
-            # Record timing
-            result.processing_time_ms = (time.perf_counter() - start_time) * 1000
+        media_req = MediaRequest(
+            filename=filename,
+            mime_type=image.mime_type or self._get_mime_type(format_ext),
+            bytes_data=image_data,
+            content_type_ext=format_ext,
+            bind_xpath=".//a:blip",
+            bind_attr=f"{{{R_URI}}}embed",
+            sha256=sha256
+        )
 
-            # Record statistics
-            self._record_mapping(result)
+        return MapperResult(
+            element=ir_element,
+            output_format=OutputFormat.NATIVE_DML,
+            xml_content=pic_xml,
+            policy_decision=decision,
+            media_requests=[media_req],
+            metadata={
+                'format': format_ext,
+                'size_bytes': len(image_data) if image_data else 0,
+                'sha256': sha256[:8] if sha256 else None,
+                'dimensions': (image.width, image.height),
+            }
+        )
 
-            return result
+    def _load_image_data(self, image: Image) -> bytes:
+        """Load image bytes from source"""
+        # Check if data already populated
+        if image.image_data:
+            return image.image_data
+        if image.data:  # Legacy field
+            return image.data
 
-        except Exception as e:
-            self._record_error(e)
-            raise MappingError(f"Failed to map image: {e}", element=image, cause=e)
+        # Determine source type
+        source_type = getattr(image, 'source_type', None)
 
-    def _map_to_picture(self, image: Image, decision: ImageDecision) -> MapperResult:
-        """Map image to PowerPoint picture shape"""
-        try:
-            # Process image using image adapter if available
-            if self._has_image_adapter and self.image_adapter.can_process_image(image):
-                try:
-                    processing_result = self.image_adapter.process_image(image)
+        if source_type == "data_url":
+            # Already decoded during parse
+            raise ValueError("data_url should have image_data populated")
 
-                    # Use processed image data and metadata
-                    processed_data = processing_result.image_data
-                    processed_format = processing_result.format
-                    processed_width = processing_result.width
-                    processed_height = processing_result.height
-                    rel_id = processing_result.relationship_id
-                    embed_id = processing_result.embed_id
+        elif source_type == "file" or not source_type:
+            # Load from file
+            href = image.href
+            if href.startswith("file://"):
+                href = href[7:]  # Remove file:// prefix
 
-                    # Calculate positioning - use processed dimensions if available
-                    if processed_width > 0 and processed_height > 0:
-                        # Apply scaling calculation if needed
-                        target_size = (int(image.size.width), int(image.size.height))
-                        if target_size != (processed_width, processed_height):
-                            scaled_width, scaled_height = self.image_adapter.calculate_scaling(
-                                (processed_width, processed_height), target_size, preserve_aspect=True
-                            )
-                        else:
-                            scaled_width, scaled_height = processed_width, processed_height
-                    else:
-                        scaled_width, scaled_height = int(image.size.width), int(image.size.height)
+            try:
+                with open(href, 'rb') as f:
+                    return f.read()
+            except FileNotFoundError:
+                logger.error(f"Image file not found: {href}")
+                raise
 
-                    x_emu = int(image.origin.x * 12700)  # Convert to EMU
-                    y_emu = int(image.origin.y * 12700)
-                    width_emu = int(scaled_width * 12700)
-                    height_emu = int(scaled_height * 12700)
+        elif source_type in ("http", "https"):
+            # Fetch from URL
+            try:
+                import requests
+                resp = requests.get(image.href, timeout=10)
+                resp.raise_for_status()
+                return resp.content
+            except ImportError:
+                raise ValueError("HTTP image source requires 'requests' library")
+            except Exception as e:
+                logger.error(f"Failed to fetch image from {image.href}: {e}")
+                raise
 
-                    image_adapter_used = True
-                    processing_metadata = processing_result.metadata
+        else:
+            raise ValueError(f"Unsupported source type: {source_type}")
 
-                except Exception as e:
-                    self.logger.warning(f"Image adapter processing failed: {e}")
-                    # Fall back to basic processing
-                    processed_data = image.data
-                    processed_format = image.format
-                    rel_id = f"rId{self._rel_id_counter}"
-                    self._rel_id_counter += 1
+    def _build_picture_xml(self, image: Image) -> Element:
+        """Build DrawingML <p:pic> element WITHOUT r:embed (filled later)"""
+        # Convert SVG units to EMUs (1px ≈ 9525 EMU)
+        # Use new fields with fallback to legacy
+        x = image.x if hasattr(image, 'x') else (image.origin.x if hasattr(image, 'origin') else 0)
+        y = image.y if hasattr(image, 'y') else (image.origin.y if hasattr(image, 'origin') else 0)
+        width = image.width if hasattr(image, 'width') else (image.size.width if hasattr(image, 'size') else 0)
+        height = image.height if hasattr(image, 'height') else (image.size.height if hasattr(image, 'size') else 0)
 
-                    x_emu = int(image.origin.x * 12700)
-                    y_emu = int(image.origin.y * 12700)
-                    width_emu = int(image.size.width * 12700)
-                    height_emu = int(image.size.height * 12700)
+        x_emu = str(int(x * 9525))
+        y_emu = str(int(y * 9525))
+        cx_emu = str(int(width * 9525))
+        cy_emu = str(int(height * 9525))
 
-                    image_adapter_used = False
-                    processing_metadata = {'processing_method': 'fallback'}
-            else:
-                # Basic processing without image adapter
-                processed_data = image.data
-                processed_format = image.format
-                rel_id = f"rId{self._rel_id_counter}"
-                self._rel_id_counter += 1
+        pic = Element(QName(P_URI, "pic"), nsmap=NSMAP)
 
-                x_emu = int(image.origin.x * 12700)
-                y_emu = int(image.origin.y * 12700)
-                width_emu = int(image.size.width * 12700)
-                height_emu = int(image.size.height * 12700)
+        # Non-visual properties
+        nvPicPr = Element(QName(P_URI, "nvPicPr"))
+        cNvPr = Element(QName(P_URI, "cNvPr"))
+        cNvPr.set("id", str(self._counter))
+        cNvPr.set("name", getattr(image, 'title', None) or f"Picture {self._counter}")
+        if hasattr(image, 'desc') and image.desc:
+            cNvPr.set("descr", image.desc)
+        nvPicPr.append(cNvPr)
+        nvPicPr.append(Element(QName(P_URI, "cNvPicPr")))
+        nvPicPr.append(Element(QName(P_URI, "nvPr")))
+        pic.append(nvPicPr)
 
-                image_adapter_used = False
-                processing_metadata = {'processing_method': 'basic'}
+        # Blip fill (r:embed will be set by embedder)
+        blipFill = Element(QName(P_URI, "blipFill"))
+        blip = Element(QName(A_URI, "blip"))
+        # Note: r:embed NOT set here - embedder will patch it
+        blipFill.append(blip)
 
-            # Generate clipping XML if needed
-            clip_xml = self._generate_image_clip_xml(image.clip) if image.clip else ""
+        stretch = Element(QName(A_URI, "stretch"))
+        stretch.append(Element(QName(A_URI, "fillRect")))
+        blipFill.append(stretch)
+        pic.append(blipFill)
 
-            # Generate opacity if needed
-            opacity_xml = ""
-            if image.opacity < 1.0:
-                opacity_val = int(image.opacity * 100000)
-                opacity_xml = f'<a:effectLst><a:alpha val="{opacity_val}"/></a:effectLst>'
+        # Shape properties
+        spPr = Element(QName(P_URI, "spPr"))
+        xfrm = Element(QName(A_URI, "xfrm"))
+        xfrm.append(Element(QName(A_URI, "off"), x=x_emu, y=y_emu))
+        xfrm.append(Element(QName(A_URI, "ext"), cx=cx_emu, cy=cy_emu))
+        spPr.append(xfrm)
 
-            # Handle different image formats
-            if processed_format in self._vector_formats:
-                # Vector images (SVG) - typically need conversion or EMF
-                xml_content = self._generate_vector_image_xml(
-                    image, rel_id, x_emu, y_emu, width_emu, height_emu,
-                    clip_xml, opacity_xml
-                )
-                output_format = OutputFormat.EMF_VECTOR
-            else:
-                # Raster images - direct embedding
-                xml_content = self._generate_raster_image_xml(
-                    image, rel_id, x_emu, y_emu, width_emu, height_emu,
-                    clip_xml, opacity_xml
-                )
-                output_format = OutputFormat.EMF_RASTER
+        prstGeom = Element(QName(A_URI, "prstGeom"), prst="rect")
+        prstGeom.append(Element(QName(A_URI, "avLst")))
+        spPr.append(prstGeom)
+        pic.append(spPr)
 
-            # Prepare media files for embedding
-            media_files = [{
-                'relationship_id': rel_id,
-                'data': processed_data,
-                'format': processed_format,
-                'content_type': self._get_content_type(processed_format)
-            }] if processed_data else None
+        return pic
 
-            return MapperResult(
-                element=image,
-                output_format=output_format,
-                xml_content=xml_content,
-                policy_decision=decision,
-                media_files=media_files,
-                metadata={
-                    'format': processed_format,
-                    'size_bytes': len(processed_data) if processed_data else 0,
-                    'dimensions': (image.size.width, image.size.height),
-                    'has_transparency': processed_format in ['png', 'gif'],
-                    'relationship_id': rel_id,
-                    'requires_conversion': processed_format in self._vector_formats,
-                    'has_clipping': image.clip is not None,
-                    'has_opacity': image.opacity < 1.0,
-                    'image_adapter_used': image_adapter_used,
-                    'processing_metadata': processing_metadata
-                },
-                estimated_quality=decision.estimated_quality or 0.98,
-                estimated_performance=decision.estimated_performance or 0.9,
-                output_size_bytes=len(xml_content.encode('utf-8'))
-            )
-
-        except Exception as e:
-            raise MappingError(f"Failed to generate picture for image: {e}", image, e)
-
-    def _generate_raster_image_xml(self, image: Image, rel_id: str,
-                                 x_emu: int, y_emu: int, width_emu: int, height_emu: int,
-                                 clip_xml: str, opacity_xml: str) -> str:
-        """Generate XML for raster image (PNG, JPG, etc.)"""
-
-        # Generate image effects if needed
-        effects_xml = ""
-        if opacity_xml or clip_xml:
-            effects_xml = f"<a:effectLst>{opacity_xml}{clip_xml}</a:effectLst>"
-
-        xml_content = f"""<p:pic>
-    <p:nvPicPr>
-        <p:cNvPr id="1" name="Image"/>
-        <p:cNvPicPr>
-            <a:picLocks noChangeAspect="1"/>
-        </p:cNvPicPr>
-        <p:nvPr/>
-    </p:nvPicPr>
-    <p:blipFill>
-        <a:blip r:embed="{rel_id}">
-            <a:extLst>
-                <a:ext uri="{{28A0092B-C50C-407E-A947-70E740481C1C}}">
-                    <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
-                </a:ext>
-            </a:extLst>
-        </a:blip>
-        <a:stretch>
-            <a:fillRect/>
-        </a:stretch>
-    </p:blipFill>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-        {effects_xml}
-    </p:spPr>
-</p:pic>"""
-
-        return xml_content
-
-    def _generate_vector_image_xml(self, image: Image, rel_id: str,
-                                 x_emu: int, y_emu: int, width_emu: int, height_emu: int,
-                                 clip_xml: str, opacity_xml: str) -> str:
-        """Generate XML for vector image (SVG) - typically requires EMF conversion"""
-
-        # Generate image effects if needed
-        effects_xml = ""
-        if opacity_xml or clip_xml:
-            effects_xml = f"<a:effectLst>{opacity_xml}{clip_xml}</a:effectLst>"
-
-        # Vector images are rendered as EMF for best fidelity
-        xml_content = f"""<p:pic>
-    <p:nvPicPr>
-        <p:cNvPr id="1" name="VectorImage"/>
-        <p:cNvPicPr>
-            <a:picLocks noChangeAspect="1"/>
-        </p:cNvPicPr>
-        <p:nvPr/>
-    </p:nvPicPr>
-    <p:blipFill>
-        <a:blip r:embed="{rel_id}">
-            <a:extLst>
-                <a:ext uri="{{A7D7AC89-857B-4B46-9C2E-2B86D7B4E2B4}}">
-                    <emf:emfBlip xmlns:emf="http://schemas.microsoft.com/office/drawing/2010/emf"/>
-                </a:ext>
-            </a:extLst>
-        </a:blip>
-        <a:stretch>
-            <a:fillRect/>
-        </a:stretch>
-    </p:blipFill>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-        {effects_xml}
-    </p:spPr>
-</p:pic>"""
-
-        return xml_content
-
-    def _generate_image_clip_xml(self, clip_ref: Any) -> str:
-        """Generate image clipping XML"""
-        if not clip_ref:
-            return ""
-
-        # Image clipping can be handled through crop settings
-        return f'<a:crop/>'  # Simplified - real implementation would calculate crop values
-
-    def _get_content_type(self, format: str) -> str:
-        """Get MIME content type for image format"""
-        content_type_map = {
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'gif': 'image/gif',
-            'bmp': 'image/bmp',
-            'tiff': 'image/tiff',
-            'svg': 'application/emf'  # SVG converted to EMF
+    def _get_mime_type(self, format_ext: str) -> str:
+        """Get MIME type from file extension"""
+        mime_map = {
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "gif": "image/gif",
+            "bmp": "image/bmp",
+            "tif": "image/tiff",
+            "tiff": "image/tiff",
+            "webp": "image/webp",
         }
-        return content_type_map.get(format.lower(), 'application/octet-stream')
+        return mime_map.get(format_ext.lower(), "image/png")
 
-    def get_relationship_data(self, image: Image) -> Dict[str, Any]:
-        """
-        Get relationship data for embedding image in PPTX.
-
-        Args:
-            image: Image IR element
-
-        Returns:
-            Relationship data for PPTX package
-        """
-        # Determine content type
-        content_type_map = {
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'gif': 'image/gif',
-            'bmp': 'image/bmp',
-            'tiff': 'image/tiff',
-            'svg': 'application/emf'  # SVG converted to EMF
-        }
-
-        content_type = content_type_map.get(image.format, 'application/octet-stream')
-
-        return {
-            'target': f"../media/image{self._rel_id_counter}.{image.format}",
-            'type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
-            'content_type': content_type,
-            'data': image.data,
-            'format': image.format
-        }
-
-    def supports_format(self, format: str) -> bool:
-        """Check if image format is supported"""
-        return format.lower() in (self._powerpoint_formats | self._vector_formats)
-
-    def get_format_statistics(self) -> Dict[str, int]:
-        """Get image format processing statistics"""
-        # This would be enhanced to track format-specific stats
-        stats = self.get_statistics()
-        return {
-            'total_images': stats['total_mapped'],
-            'raster_images': stats.get('raster_count', 0),
-            'vector_images': stats.get('vector_count', 0),
-            'conversion_required': stats.get('conversion_count', 0)
-        }
+    def _create_external_reference(self, image: Image, decision: ImageDecision) -> MapperResult:
+        """Create external image reference (for http:// URLs)"""
+        # Not implemented yet - would use TargetMode="External"
+        raise NotImplementedError("External image references not yet implemented")
 
 
-def create_image_mapper(policy: Policy, services=None) -> ImageMapper:
+def create_image_mapper(policy, services=None) -> ImageMapper:
     """
     Create ImageMapper with policy engine.
 

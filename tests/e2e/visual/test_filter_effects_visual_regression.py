@@ -37,8 +37,8 @@ from tests.support.visual_regression_tester import (
 )
 
 # Import SVG to PPTX conversion components
-from src.svg2pptx import SVGToPowerPointConverter
-from src.converters.filters import FilterRegistry
+from core.pipeline.converter import CleanSlateConverter
+from core.converters.filters import FilterRegistry
 
 
 class TestFilterEffectsVisualRegression:

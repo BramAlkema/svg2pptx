@@ -15,12 +15,12 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from lxml import etree as ET
 
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from ..converters.base import ConversionContext
-from ..services.wordart_transform_service import (
+from core.services.wordart_transform_service import (
     create_transform_decomposer, TransformComponents
 )
-from ..services.wordart_color_mapping_service import (
+from core.services.wordart_color_mapping_service import (
     create_wordart_color_mapping_service
 )
 from ..converters.wordart_builder import (

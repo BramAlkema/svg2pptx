@@ -16,14 +16,14 @@ import math
 
 # Import services for dependency injection
 try:
-    from ..services.conversion_services import ConversionServices, ConversionConfig
+    from core.services.conversion_services import ConversionServices, ConversionConfig
 except ImportError:
     # Fallback for test environments
     from core.services.conversion_services import ConversionServices, ConversionConfig
 
 # Import fluent API for unit conversions
 try:
-    from ..units import unit, units
+    from core.units import unit, units
 except ImportError:
     # Fallback for test environments
     from core.units import unit, units
@@ -31,10 +31,10 @@ except ImportError:
 # Import types for type hints only
 if TYPE_CHECKING:
     try:
-        from ..units import UnitConverter
-        from ..color import Color
-        from ..transforms import Transform
-        from ..viewbox import ViewportEngine
+        from core.units import UnitConverter
+        from core.color import Color
+        from core.transforms import Transform
+        from core.viewbox import ViewportEngine
     except ImportError:
         from core.units import UnitConverter
         from core.color import Color
@@ -67,7 +67,7 @@ class CoordinateSystem:
         """
         # Import slide constants from units module
         try:
-            from ..units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
+            from core.units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
         except ImportError:
             # Fallback for test environments
             from core.units.core import SLIDE_WIDTH_EMU, SLIDE_HEIGHT_EMU
@@ -177,7 +177,7 @@ class ConversionContext:
         """
         # Backward compatibility: auto-create services if not provided
         if services is None:
-            from ..services.conversion_services import ConversionServices
+            from core.services.conversion_services import ConversionServices
             services = ConversionServices.create_default(svg_root=svg_root)
             # Issue deprecation warning
             import warnings
@@ -225,7 +225,7 @@ class ConversionContext:
         # Calculate element CTM if we have the necessary components
         if svg_root is not None and viewport_matrix is not None:
             try:
-                from ..transforms.matrix_composer import element_ctm
+                from core.transforms.matrix_composer import element_ctm
                 self.element_ctm = element_ctm(svg_root, parent_ctm, viewport_matrix)
             except ImportError:
                 # Transforms module not available, use fallback
@@ -494,7 +494,7 @@ class ConversionContext:
                     resolver = self.services.viewport_resolver
                 else:
                     # Fallback to ConversionServices
-                    from ..services.conversion_services import ConversionServices
+                    from core.services.conversion_services import ConversionServices
                     services = ConversionServices.create_default()
                     resolver = services.viewport_resolver
 
@@ -637,7 +637,7 @@ class ConversionContext:
                 return parser.compose(reversed(transforms), viewport_context)
 
             # Fallback: incremental multiplication using @ operator
-            from ..transforms.core import Matrix
+            from core.transforms.core import Matrix
             result = Matrix.identity()
             for transform_str in reversed(transforms):
                 try:
@@ -668,7 +668,7 @@ class ConversionContext:
             Transformed coordinates (x, y) in EMU
         """
         if self.element_ctm is not None:
-            from ..viewbox.ctm_utils import transform_point_with_ctm
+            from core.viewbox.ctm_utils import transform_point_with_ctm
             return transform_point_with_ctm(self.element_ctm, x, y)
         elif self.coordinate_system:
             return self.coordinate_system.svg_to_emu(x, y)
@@ -687,7 +687,7 @@ class ConversionContext:
             Transformed length in EMU
         """
         if self.element_ctm is not None:
-            from ..viewbox.ctm_utils import extract_scale_from_ctm
+            from core.viewbox.ctm_utils import extract_scale_from_ctm
             scale = extract_scale_from_ctm(self.element_ctm, direction)
             return length * scale
         elif self.coordinate_system:
@@ -705,7 +705,7 @@ class ConversionContext:
         Returns:
             New ConversionContext with proper CTM chain and inherited styles
         """
-        from ..viewbox.ctm_utils import create_child_context_with_ctm
+        from core.viewbox.ctm_utils import create_child_context_with_ctm
 
         # Create child context with CTM propagation
         child_context = create_child_context_with_ctm(self, child_element)

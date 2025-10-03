@@ -10,7 +10,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from lxml import etree as ET
 import math
 
-from ..services.wordart_color_service import (
+from core.services.wordart_color_service import (
     WordArtColorMappingService,
     LinearGradientInfo,
     RadialGradientInfo,

@@ -1383,17 +1383,17 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
         Dictionary with pipeline coordination results
     """
     try:
-        from src.batch.job_manager import BatchJobManager
-        
+        from core.api import convert_svg_to_pptx
+
         logger.info(f"Starting coordinated conversion and upload pipeline for job {job_id}")
-        
+
         # Initialize conversion options
         conversion_options = conversion_options or {}
         upload_options = upload_options or {
             'folder_pattern': None,
             'generate_previews': True
         }
-        
+
         # Verify job exists
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
@@ -1402,7 +1402,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 'error_message': f'Batch job {job_id} not found',
                 'error_type': 'job_not_found'
             }
-        
+
         # Check rate limits before starting
         rate_check = check_rate_limit(job_id, 'upload')
         if not rate_check.get('can_proceed', True):
@@ -1418,38 +1418,47 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 'status': 'scheduled_for_later',
                 'reason': rate_check.get('reason', 'rate_limit')
             }
-        
+
         # Update job status
         batch_job.status = "processing"
         batch_job.drive_upload_status = "waiting_for_conversion"
         batch_job.save(DEFAULT_DB_PATH)
         
-        # Initialize job manager for conversion
-        job_manager = BatchJobManager()
-        
-        # Process conversions first
+        # Process conversions first using Clean Slate
         conversion_results = []
         converted_files = []
-        
+
         for file_info in files:
             try:
                 # Check if file already exists
                 input_path = file_info.get('input_path', '')
                 output_path = file_info.get('output_path', '')
-                
+
                 if not input_path or not output_path:
                     logger.error(f"Missing paths for file: {file_info}")
                     continue
-                
-                # Perform conversion using existing job manager
-                # Note: This assumes the BatchJobManager has conversion capabilities
-                # In a real implementation, this might call a separate conversion service
-                convert_result = job_manager.process_single_file(
-                    job_id, input_path, output_path, conversion_options
+
+                # Perform conversion using Clean Slate API
+                start_time = time.time()
+                result = convert_svg_to_pptx(
+                    svg_input=input_path,
+                    output_path=output_path,
+                    preprocessing_config=conversion_options.get('preprocessing_config')
                 )
-                
+                processing_time = time.time() - start_time
+
+                convert_result = {
+                    'success': result.success,
+                    'input_path': input_path,
+                    'output_path': str(result.output_path) if result.success else output_path,
+                    'processing_time': processing_time,
+                    'file_size': len(result.output_data) if result.success and result.output_data else 0,
+                    'elements_processed': result.elements_processed if result.success else 0,
+                    'error_message': result.error_message if not result.success else None
+                }
+
                 conversion_results.append(convert_result)
-                
+
                 # If conversion successful, prepare for upload
                 if convert_result.get('success', False):
                     converted_files.append({
@@ -1458,7 +1467,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                         'file_size': convert_result.get('file_size', 0),
                         'conversion_time': convert_result.get('processing_time', 0)
                     })
-                
+
             except Exception as e:
                 logger.error(f"Error converting file {file_info}: {e}")
                 conversion_results.append({
@@ -1573,7 +1582,7 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
         # Get Drive metadata if available
         drive_metadata = None
         try:
-            from src.batch.models import BatchDriveMetadata
+            from .models import BatchDriveMetadata
             drive_metadata = BatchDriveMetadata.get_by_job_id(job_id, DEFAULT_DB_PATH)
         except Exception:
             pass

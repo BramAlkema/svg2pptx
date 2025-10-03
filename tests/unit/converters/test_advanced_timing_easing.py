@@ -6,9 +6,9 @@ Tests for advanced animation timing, easing, and calc modes in the new Animation
 import pytest
 from lxml import etree as ET
 
-from src.converters.animation_converter import AnimationConverter
+from core.converters.animation_converter import AnimationConverter
 from core.services.conversion_services import ConversionServices
-from src.animations.core import AnimationDefinition, AnimationTiming, CalcMode, FillMode, AnimationType
+from core.animations.core import AnimationDefinition, AnimationTiming, CalcMode, FillMode, AnimationType
 
 
 def make_svg(svg_inner: str) -> ET.Element:

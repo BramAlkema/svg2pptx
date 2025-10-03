@@ -165,9 +165,13 @@ class PackageWriter:
                 for i, result in enumerate(embedder_results, 1):
                     zip_file.writestr(f'ppt/slides/slide{i}.xml', result.slide_xml)
 
-                    # Write slide relationships
-                    slide_rels = self._generate_slide_relationships(result.relationship_data)
-                    zip_file.writestr(f'ppt/slides/_rels/slide{i}.xml.rels', slide_rels)
+                    # Write slide relationships (use embedder's relationships_xml if available)
+                    if result.relationships_xml:
+                        zip_file.writestr(f'ppt/slides/_rels/slide{i}.xml.rels', result.relationships_xml)
+                    else:
+                        # Fallback to legacy method
+                        slide_rels = self._generate_slide_relationships(result.relationship_data)
+                        zip_file.writestr(f'ppt/slides/_rels/slide{i}.xml.rels', slide_rels)
 
                 # Write media files
                 self._write_media_files(zip_file, manifest.media_files)

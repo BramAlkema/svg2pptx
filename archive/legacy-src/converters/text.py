@@ -15,11 +15,11 @@ from typing import List, Dict, Any, Optional, Tuple
 from lxml import etree as ET
 import logging
 from .base import BaseConverter, ConversionContext
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 # Import fluent API for more readable unit conversions
 try:
-    from ..units import unit, units
+    from core.units import unit, units
 except ImportError:
     from core.units import unit, units
 

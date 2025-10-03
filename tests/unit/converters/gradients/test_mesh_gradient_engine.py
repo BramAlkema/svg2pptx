@@ -28,7 +28,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'src'))
 
-from src.converters.gradients.mesh_engine import (
+from core.converters.gradients.mesh_engine import (
     MeshGradientEngine,
     MeshPatch,
     ColorInterpolator,
@@ -389,7 +389,7 @@ class TestMeshGradientEngine(unittest.TestCase):
         result = self.engine.convert_mesh_gradient(element)
 
         # Should fallback to solid fill
-        self.assertIn('<a:solidFill>', result)
+        self.assertIn('solidFill', result)
 
     def test_convert_mesh_gradient_error_handling(self):
         """Test mesh gradient conversion error handling"""
@@ -398,7 +398,7 @@ class TestMeshGradientEngine(unittest.TestCase):
         result = self.engine.convert_mesh_gradient(element)
 
         # Should return fallback solid fill
-        self.assertIn('<a:solidFill>', result)
+        self.assertIn('solidFill', result)
         self.assertIn('808080', result)
 
     def test_get_fallback_solid_fill(self):

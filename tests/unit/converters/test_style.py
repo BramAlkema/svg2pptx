@@ -7,8 +7,8 @@ import pytest
 from unittest.mock import Mock
 from lxml import etree as ET
 
-from src.converters.style import StyleConverter
-from src.converters.base import ConversionContext
+from core.converters.style import StyleConverter
+from core.converters.base import ConversionContext
 
 
 class TestStyleConverter:

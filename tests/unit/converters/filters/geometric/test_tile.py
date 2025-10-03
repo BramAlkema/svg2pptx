@@ -11,8 +11,8 @@ from unittest.mock import Mock, patch, MagicMock
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
-from src.converters.filters.core.base import Filter, FilterResult, FilterContext
-from src.converters.filters.geometric.tile import (
+from core.converters.filters.core.base import Filter, FilterResult, FilterContext
+from core.converters.filters.geometric.tile import (
     TileFilter,
     TileParameters,
     TileResult,

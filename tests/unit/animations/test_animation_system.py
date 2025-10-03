@@ -10,13 +10,13 @@ import pytest
 from lxml import etree as ET
 from unittest.mock import MagicMock, patch, Mock
 
-from src.animations import (
+from core.animations import (
     AnimationBuilder, AnimationComposer,
     AnimationType, FillMode, TransformType, CalcMode,
     AnimationTiming, AnimationDefinition, AnimationScene,
     create_animation_converter, parse_svg_animations
 )
-from src.converters.animation_converter import AnimationConverter
+from core.converters.animation_converter import AnimationConverter
 from core.services.conversion_services import ConversionServices
 
 

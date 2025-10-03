@@ -36,36 +36,36 @@ class TestModuleImports:
         
     def test_animations_converter_import(self):
         """Test animations converter imports."""
-        from src.converters import animation_converter
+        from core.converters import animation_converter
         assert hasattr(animation_converter, 'AnimationConverter')
         
     def test_masking_converter_import(self):
         """Test masking converter imports."""
-        from src.converters import masking
+        from core.converters import masking
         assert hasattr(masking, 'MaskingConverter')
         
     # Removed obsolete test_markers_converter_import - MarkersConverter class doesn't exist
         
     def test_text_path_converter_import(self):
         """Test text_path converter imports."""
-        from src.converters import text_path
+        from core.converters import text_path
         assert hasattr(text_path, 'TextPathConverter')
         
     def test_symbols_converter_import(self):
         """Test symbols converter imports."""
-        from src.converters import symbols
+        from core.converters import symbols
         assert hasattr(symbols, 'SymbolConverter')
         
     @pytest.mark.skipif(not FASTAPI_AVAILABLE, reason="FastAPI not available")
     def test_batch_api_import(self):
         """Test batch API imports."""
-        from src.batch import api
+        from core.batch import api
         assert api is not None  # Module exists but may not have BatchProcessor
         
     @pytest.mark.skipif(not FASTAPI_AVAILABLE, reason="FastAPI not available")
     def test_batch_tasks_import(self):
         """Test batch tasks imports."""
-        from src.batch import tasks
+        from core.batch import tasks
         assert tasks is not None  # Module exists but may not have convert_svg_task
         
     # Removed obsolete test_performance_modules_import - requires psutil and other optional dependencies
@@ -78,7 +78,7 @@ class TestBasicFunctionality:
             
     def test_animation_converter_initialization(self):
         """Test animation converter can be initialized."""
-        from src.converters.animation_converter import AnimationConverter
+        from core.converters.animation_converter import AnimationConverter
         
         try:
             converter = AnimationConverter()
@@ -89,7 +89,7 @@ class TestBasicFunctionality:
             
     def test_masking_converter_initialization(self):
         """Test masking converter can be initialized."""
-        from src.converters.masking import MaskingConverter
+        from core.converters.masking import MaskingConverter
         
         try:
             converter = MaskingConverter()

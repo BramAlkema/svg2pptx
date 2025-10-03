@@ -101,7 +101,7 @@ class EMFRelationshipManager:
         # MIGRATE: Replace with self.services.xml_builder.create_relationships()
         # PRIORITY: MEDIUM - Phase 2 XML generation consolidation
         # EFFORT: 2h - Relationships XML template standardization
-        from ..utils.migration_tracker import DuplicateWarning
+        from core.utils.migration_tracker import DuplicateWarning
         DuplicateWarning.warn_duplicate('src/utils/xml_builder.py', 'XMLBuilder.create_relationships()', 'xml_generation', 'MEDIUM')
 
         relationships = []
@@ -207,7 +207,7 @@ class PPTXEMFIntegrator:
         # MIGRATE: Replace with self.services.xml_builder.create_blip_fill()
         # PRIORITY: MEDIUM - Phase 2 XML generation consolidation
         # EFFORT: 3h - XML template consolidation and PowerPoint validation
-        from ..utils.migration_tracker import DuplicateWarning
+        from core.utils.migration_tracker import DuplicateWarning
         DuplicateWarning.warn_duplicate('src/utils/xml_builder.py', 'XMLBuilder.create_blip_fill()', 'xml_generation', 'MEDIUM')
 
         return f'''
@@ -236,7 +236,7 @@ class PPTXEMFIntegrator:
         # MIGRATE: Replace with self.services.xml_builder.create_blip_fill()
         # PRIORITY: MEDIUM - Phase 2 XML generation consolidation
         # EFFORT: 3h - XML template consolidation with stretch mode support
-        from ..utils.migration_tracker import DuplicateWarning
+        from core.utils.migration_tracker import DuplicateWarning
         DuplicateWarning.warn_duplicate('src/utils/xml_builder.py', 'XMLBuilder.create_blip_fill()', 'xml_generation', 'MEDIUM')
 
         return f'''

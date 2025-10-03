@@ -29,10 +29,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import the modules under test
 try:
-    from src.converters.filters import (
+    from core.converters.filters import (
         Filter, FilterContext, FilterResult, FilterRegistry, FilterChain
     )
-    from src.converters.filters.core.base import Filter as BaseFilter
+    from core.converters.filters.core.base import Filter as BaseFilter
     FILTERS_AVAILABLE = True
 except ImportError as e:
     print(f"Filter imports not available: {e}")

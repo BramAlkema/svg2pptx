@@ -9,14 +9,14 @@ import pytest
 from lxml import etree as ET
 from unittest.mock import Mock, patch
 
-from src.converters.comprehensive_wordart_builder import (
+from core.converters.comprehensive_wordart_builder import (
     ComprehensiveWordArtBuilder,
     WordArtGenerationConfig,
     ComprehensiveWordArtResult,
     create_comprehensive_wordart_builder
 )
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 from core.policy.targets import TextDecision
 
 

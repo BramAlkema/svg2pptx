@@ -9,12 +9,12 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import patch, Mock, MagicMock
 
-from src.emf_packaging import (
+from core.emf_packaging import (
     EMFRelationshipManager, PPTXEMFIntegrator, EMFShapeGenerator,
     EMFPackagingError, create_emf_integrator, create_shape_generator,
     create_pattern_rectangle_xml, validate_emf_packaging
 )
-from src.emf_blob import EMFBlob, create_pattern_tile
+from core.emf_blob import EMFBlob, create_pattern_tile
 
 
 class TestEMFRelationshipManager:

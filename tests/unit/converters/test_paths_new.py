@@ -11,8 +11,8 @@ from lxml import etree as ET
 from unittest.mock import Mock, MagicMock
 from lxml import etree
 
-from src.converters.paths import PathConverter
-from src.converters.base import ConversionContext
+from core.converters.paths import PathConverter
+from core.converters.base import ConversionContext
 
 
 class TestPathConverterNew:

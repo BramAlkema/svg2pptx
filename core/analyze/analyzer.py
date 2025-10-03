@@ -130,9 +130,23 @@ class SVGAnalyzer:
         start_time = time.perf_counter()
 
         try:
+            # Tracer hook: trace all elements with filters entering analysis
+            from ..debug import get_tracer
+            tracer = get_tracer()
+
             # Basic element counting
             elements = list(walk(svg_root))
             element_count = len(elements) - 1  # Exclude root SVG element
+
+            # Trace elements with filters
+            for element in elements:
+                if element.get('filter'):
+                    element_id = tracer._get_element_id(element)
+                    tracer.trace_analyze(
+                        element_id=element_id,
+                        complexity=0.0,  # Will be calculated shortly
+                        location="analyzer.py:analyze"
+                    )
 
             # Count specific element types
             element_counts = self._count_elements_by_type(svg_root)
@@ -168,6 +182,16 @@ class SVGAnalyzer:
             if scene and len(scene) > 0:
                 ir_complexity_adjustment = self._calculate_ir_complexity_adjustment(scene)
                 complexity_score = min(complexity_score * ir_complexity_adjustment, 1.0)
+
+            # Tracer hook: trace analysis exit for filtered elements
+            for element in elements:
+                if element.get('filter'):
+                    element_id = tracer._get_element_id(element)
+                    tracer.trace_analyze_exit(
+                        element_id=element_id,
+                        complexity=complexity_score,
+                        recommendations=strategies
+                    )
 
             result = AnalysisResult(
                 complexity_score=complexity_score,
@@ -364,7 +388,8 @@ class SVGAnalyzer:
         """Calculate maximum group nesting depth"""
         max_depth = current_depth
 
-        for child in svg_root:
+        # Use safe iteration to avoid cython comment/PI issues
+        for child in children(svg_root):
             if self._get_local_tag(child.tag) == 'g':
                 child_depth = self._calculate_group_nesting_depth(child, current_depth + 1)
                 max_depth = max(max_depth, child_depth)

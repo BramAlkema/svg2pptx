@@ -41,7 +41,7 @@ def run_cli_demo():
     try:
         # Import PathSystem components
         from core.paths import create_path_system
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
 
         # Test PathSystem
         print("🔧 Testing PathSystem components...")

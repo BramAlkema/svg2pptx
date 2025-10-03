@@ -20,11 +20,11 @@ from fontTools import subset
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from core.services.font_embedding_engine import FontEmbeddingEngine
-from src.data.embedded_font import (
+from core.data.embedded_font import (
     EmbeddedFont, FontSubsetRequest, FontEmbeddingStats, EmbeddingPermission
 )
 from core.services.font_service import FontService
-from src.converters.result_types import ConversionError
+from core.converters.result_types import ConversionError
 
 
 class TestFontEmbeddingEngine:

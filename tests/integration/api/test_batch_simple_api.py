@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
 from fastapi import UploadFile
 
-from src.batch.simple_api import (
+from core.batch.simple_api import (
     SimpleJobResponse, SimpleStatusResponse, ConversionError,
     convert_single_svg_sync, merge_presentations_sync, create_simple_router
 )

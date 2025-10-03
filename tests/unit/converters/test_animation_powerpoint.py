@@ -11,15 +11,15 @@ from unittest.mock import Mock
 from lxml import etree
 
 # Import from new animation system
-from src.animations import (
+from core.animations import (
     AnimationType, AnimationDefinition,
     AnimationTiming, FillMode, TransformType
 )
-from src.converters.animation_converter import AnimationConverter
-from src.converters.animation_templates import (
+from core.converters.animation_converter import AnimationConverter
+from core.converters.animation_templates import (
     PowerPointAnimationGenerator, PowerPointAnimationConfig, PowerPointEffectType
 )
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 
 

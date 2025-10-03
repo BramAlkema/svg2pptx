@@ -14,7 +14,7 @@ from core.services.wordart_color_mapping_service import (
     create_wordart_color_mapping_service
 )
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 
 
 class TestWordArtColorMappingService:

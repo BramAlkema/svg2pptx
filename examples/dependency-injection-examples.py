@@ -8,9 +8,9 @@ system in SVG2PPTX converter.
 
 from core.services.conversion_services import ConversionServices, ConversionConfig
 from core.services.migration_utils import MigrationHelper
-from src.converters.shapes import RectangleConverter
-from src.converters.text import TextConverter
-from src.converters.base import ConversionContext
+from core.converters.shapes import RectangleConverter
+from core.converters.text import TextConverter
+from core.converters.base import ConversionContext
 from unittest.mock import Mock
 import json
 

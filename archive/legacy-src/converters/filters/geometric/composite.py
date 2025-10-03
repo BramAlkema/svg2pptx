@@ -12,7 +12,7 @@ from enum import Enum
 import logging
 from lxml import etree
 
-from ..core.base import Filter, FilterContext, FilterResult, FilterException
+from core.legacy.base import Filter, FilterContext, FilterResult, FilterException
 
 logger = logging.getLogger(__name__)
 

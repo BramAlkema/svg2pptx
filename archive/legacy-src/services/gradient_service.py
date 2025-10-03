@@ -129,7 +129,7 @@ class GradientService:
         """Convert color value to 6-digit hex format for DrawingML using unified Color API."""
         try:
             # Use unified Color API for consistent color parsing
-            from ..color import Color
+            from core.color import Color
             color_obj = Color(color.strip())
             hex_result = color_obj.hex()
             # Color API returns hex without # prefix, so use directly

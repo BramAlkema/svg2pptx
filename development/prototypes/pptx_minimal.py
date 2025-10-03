@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Union, Tuple
 from lxml import etree as ET
 
-from src.ooxml_templates import (
+from core.ooxml_templates import (
     get_pptx_file_structure,
     create_slide_xml,
     CONTENT_TYPES_XML,
@@ -26,7 +26,7 @@ from src.ooxml_templates import (
     SLIDE_LAYOUT_RELS_XML,
     SLIDE_RELS_XML
 )
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 from core.services.conversion_services import ConversionServices
 
 

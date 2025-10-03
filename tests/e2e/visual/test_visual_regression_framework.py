@@ -29,8 +29,8 @@ from typing import Dict, List, Tuple, Optional, Any
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.converters.filters import FilterRegistry, FilterChain, Filter
-from src.converters.base import BaseConverter
+from core.converters.filters import FilterRegistry, FilterChain, Filter
+from core.converters.base import BaseConverter
 from core.units import UnitConverter
 from core.color import Color
 from core.transforms import TransformParser

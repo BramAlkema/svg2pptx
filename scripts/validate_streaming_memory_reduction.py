@@ -23,10 +23,10 @@ except ImportError:
     PSUTIL_AVAILABLE = False
     print("Warning: psutil not available, memory measurement will be limited")
 
-from src.multislide.detection import SlideDetector
-from src.multislide.config import DetectionConfig
-from src.multislide.document import MultiSlideDocument, DocumentConfig
-from src.multislide.streaming import (
+from core.multislide.detection import SlideDetector
+from core.multislide.config import DetectionConfig
+from core.multislide.document import MultiSlideDocument, DocumentConfig
+from core.multislide.streaming import (
     StreamingMultislideProcessor,
     StreamingConfig,
     memory_monitoring

@@ -4,7 +4,7 @@ Test the advanced geometry simplification system with real-world scenarios.
 """
 
 import pytest
-from src.preprocessing.geometry_simplify import simplify_polyline, simplify_to_cubics
+from core.preprocessing.geometry_simplify import simplify_polyline, simplify_to_cubics
 
 # Import centralized fixtures
 from tests.fixtures.common import *

@@ -45,7 +45,7 @@ except ImportError:
             def parse_color_single(self, color_str):
                 """Parse color using canonical Color system."""
                 try:
-                    from ...color import Color
+                    from core.color import Color
                     color = Color(color_str)
                     r, g, b = color.rgb()
                     return np.array([r/255.0, g/255.0, b/255.0])

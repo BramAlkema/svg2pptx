@@ -510,6 +510,11 @@ class SVGParser:
         from ..ir import SceneGraph, Path, TextFrame, Group, Image, Point, Rect
         from ..ir import SolidPaint, LineSegment, BezierSegment, Run, TextAnchor
 
+        # Tracer hook: trace element entering parse stage
+        from ..debug import get_tracer
+        tracer = get_tracer()
+        tracer.trace_parse(element, location="parser.py:_extract_recursive_to_ir")
+
         # Handle namespace-aware tag extraction (from existing code)
         try:
             tag_str = str(element.tag) if hasattr(element.tag, 'split') else element.tag
@@ -521,50 +526,71 @@ class SVGParser:
             tag = tag.split('}')[-1] if '}' in str(tag) else str(tag)
 
         # Convert specific element types to IR
+        ir_element = None
+        element_id = tracer._get_element_id(element)
+
         if tag == 'rect':
             ir_element = self._convert_rect_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:rect")
 
         elif tag == 'circle':
             ir_element = self._convert_circle_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:circle")
 
         elif tag == 'ellipse':
             ir_element = self._convert_ellipse_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:ellipse")
 
         elif tag == 'line':
             ir_element = self._convert_line_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:line")
 
         elif tag == 'path':
             ir_element = self._convert_path_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:path")
 
         elif tag == 'polygon' or tag == 'polyline':
             ir_element = self._convert_polygon_to_ir(element, closed=(tag == 'polygon'))
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:polygon")
 
         elif tag == 'text':
             ir_element = self._convert_text_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:text")
 
         elif tag == 'image':
             ir_element = self._convert_image_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:image")
 
         elif tag == 'g':
             ir_element = self._convert_group_to_ir(element)
             if ir_element:
                 ir_elements.append(ir_element)
+                tracer.trace_parse_exit(element_id, ir_element)
+                tracer.trace_ir(element_id, ir_element, location="parser.py:group")
 
         elif tag == 'a':
             # Handle SVG hyperlink elements
@@ -608,12 +634,20 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _convert_circle_to_ir(self, element: ET.Element):
@@ -670,12 +704,20 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _convert_ellipse_to_ir(self, element: ET.Element):
@@ -728,12 +770,20 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _convert_line_to_ir(self, element: ET.Element):
@@ -751,11 +801,19 @@ class SVGParser:
         # Extract styling (lines typically only have stroke)
         fill, stroke, opacity = self._extract_styling(element)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Path(
             segments=segments,
             fill=None,  # Lines don't have fill
             stroke=stroke,
-            opacity=opacity
+            opacity=opacity,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _convert_path_to_ir(self, element: ET.Element):
@@ -779,12 +837,20 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _convert_polygon_to_ir(self, element: ET.Element, closed: bool = True):
@@ -822,11 +888,19 @@ class SVGParser:
             # Extract styling
             fill, stroke, opacity = self._extract_styling(element)
 
+            # Get element ID for tracing
+            element_id = element.get('id')
+
+            # Get filter reference
+            filter_ref = element.get('filter')
+
             return Path(
                 segments=segments,
                 fill=fill if closed else None,  # Only polygons have fill
                 stroke=stroke,
-                opacity=opacity
+                opacity=opacity,
+                id=element_id,
+                filter=filter_ref
             )
         except (ValueError, IndexError) as e:
             # If parsing fails, return None
@@ -879,17 +953,28 @@ class SVGParser:
             # Get hyperlink from current context if any
             hyperlink = getattr(self, '_current_hyperlink', None)
 
+            # Get element ID for tracing
+            element_id = element.get('id')
+
+            # Get filter reference
+            filter_ref = element.get('filter')
+
             return TextFrame(
                 origin=position,
                 runs=line.runs,
                 bbox=Rect(x, y, estimated_width, estimated_height),
                 anchor=line.anchor,
-                hyperlink=hyperlink
+                hyperlink=hyperlink,
+                id=element_id,
+                filter=filter_ref
             )
 
     def _convert_image_to_ir(self, element: ET.Element):
-        """Convert SVG image to IR Image"""
-        from ..ir import Image, Point, Rect
+        """Convert SVG image to IR Image with new MediaRequest-compatible fields"""
+        import re
+        import base64
+        import hashlib
+        from ..ir import Image
 
         # Extract image attributes
         x = float(element.get('x', 0))
@@ -900,36 +985,145 @@ class SVGParser:
         if width <= 0 or height <= 0:
             return None
 
-        # Extract href
+        # Extract href (SVG 1.1 xlink:href or SVG 2.0 href)
         href = element.get('href') or element.get('{http://www.w3.org/1999/xlink}href')
         if not href:
             return None
 
-        # For now, create placeholder with empty data
-        # In a full implementation, we'd fetch and decode the image data
-        data = b''
-        format = 'png'  # Default format
+        # Strip whitespace from href (common in hand-edited SVG)
+        href = href.strip()
 
-        # Try to determine format from href
-        if href.endswith('.jpg') or href.endswith('.jpeg'):
-            format = 'jpg'
-        elif href.endswith('.gif'):
-            format = 'gif'
-        elif href.endswith('.svg'):
-            format = 'svg'
+        # Determine source type and extract data
+        source_type = None
+        image_data = None
+        mime_type = None
+        format_ext = None
+        sha256 = None
+
+        # Data URL pattern: data:image/png;base64,iVBORw0KG...
+        DATA_URI_PATTERN = re.compile(r'^data:([^;,]+)(?:;base64)?,(.+)$')
+        match = DATA_URI_PATTERN.match(href)
+
+        if match:
+            # Data URL
+            source_type = "data_url"
+            mime_type = match.group(1)
+            data_str = match.group(2)
+
+            # Decode base64 if present
+            if ';base64' in href:
+                try:
+                    image_data = base64.b64decode(data_str)
+                except Exception as e:
+                    logger.warning(f"Failed to decode base64 image data: {e}")
+                    return None
+            else:
+                # URL-encoded data (rare)
+                image_data = data_str.encode('utf-8')
+
+            # Map MIME type to extension
+            mime_to_ext = {
+                'image/png': 'png',
+                'image/jpeg': 'jpg',
+                'image/jpg': 'jpg',
+                'image/gif': 'gif',
+                'image/bmp': 'bmp',
+                'image/webp': 'webp',
+                'image/svg+xml': 'svg',
+            }
+            format_ext = mime_to_ext.get(mime_type, 'png')
+
+            # Calculate SHA-256
+            if image_data:
+                sha256 = hashlib.sha256(image_data).hexdigest()
+
+        elif href.startswith('http://') or href.startswith('https://'):
+            # HTTP/HTTPS URL
+            source_type = "http" if href.startswith('http://') else "https"
+            mime_type = self._guess_mime_from_url(href)
+            format_ext = self._guess_format_from_url(href)
+            # image_data will be loaded by ImageMapper when needed
+
+        elif href.startswith('file://') or not ('://' in href):
+            # File path
+            source_type = "file"
+            format_ext = self._guess_format_from_url(href)
+            mime_type = f"image/{format_ext}"
+            # image_data will be loaded by ImageMapper when needed
+
+        else:
+            # Unknown scheme
+            logger.warning(f"Unknown image href scheme: {href}")
+            return None
+
+        # Get optional metadata
+        title = element.get('title')
+        desc_elem = element.find('.//{http://www.w3.org/2000/svg}desc')
+        desc = desc_elem.text if desc_elem is not None else None
 
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get filter reference
+        filter_ref = element.get('filter')
+
+        # Create Image IR with new fields
         return Image(
-            origin=Point(x, y),
-            size=Rect(0, 0, width, height),
-            data=data,
-            format=format,
+            # New MediaRequest-compatible fields
             href=href,
+            source_type=source_type,
+            mime_type=mime_type,
+            format_ext=format_ext,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            image_data=image_data,
+            sha256=sha256,
+            title=title,
+            desc=desc,
+            # Legacy fields for backward compatibility
+            origin=None,  # Deprecated
+            size=None,    # Deprecated
+            data=image_data,  # Legacy fallback
+            format=format_ext,  # Legacy fallback
+            # Other attributes
             opacity=float(element.get('opacity', 1.0)),
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            filter=filter_ref
         )
+
+    def _guess_mime_from_url(self, url: str) -> str:
+        """Guess MIME type from URL"""
+        ext = self._guess_format_from_url(url)
+        mime_map = {
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml',
+        }
+        return mime_map.get(ext, 'image/png')
+
+    def _guess_format_from_url(self, url: str) -> str:
+        """Guess format extension from URL"""
+        url_lower = url.lower()
+        if '.jpg' in url_lower or '.jpeg' in url_lower:
+            return 'jpg'
+        elif '.png' in url_lower:
+            return 'png'
+        elif '.gif' in url_lower:
+            return 'gif'
+        elif '.bmp' in url_lower:
+            return 'bmp'
+        elif '.webp' in url_lower:
+            return 'webp'
+        elif '.svg' in url_lower:
+            return 'svg'
+        else:
+            return 'png'  # Default
 
     def _convert_group_to_ir(self, element: ET.Element):
         """Convert SVG group to IR Group"""
@@ -946,10 +1140,18 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Get element ID for tracing
+        element_id = element.get('id')
+
+        # Get filter reference
+        filter_ref = element.get('filter')
+
         return Group(
             children=child_nodes,
             opacity=float(element.get('opacity', 1.0)),
-            hyperlink=hyperlink
+            hyperlink=hyperlink,
+            id=element_id,
+            filter=filter_ref
         )
 
     def _extract_styling(self, element: ET.Element):
@@ -960,7 +1162,12 @@ class SVGParser:
         fill = None
         fill_attr = element.get('fill', '#000000')
         if fill_attr and fill_attr != 'none':
-            if fill_attr.startswith('#'):
+            if fill_attr.startswith('url(#'):
+                # Gradient or pattern reference - extract ID
+                gradient_id = fill_attr[5:-1]  # Remove 'url(#' and ')'
+                from ..ir import GradientReferencePaint
+                fill = GradientReferencePaint(gradient_id=gradient_id)
+            elif fill_attr.startswith('#'):
                 fill = SolidPaint(rgb=fill_attr[1:])
             elif fill_attr.startswith('rgb('):
                 # Parse rgb(r,g,b) format - simplified
@@ -972,8 +1179,15 @@ class SVGParser:
                     rgb_hex = f"{r:02x}{g:02x}{b:02x}"
                     fill = SolidPaint(rgb=rgb_hex)
             else:
-                # Named colors or other formats - use default
-                fill = SolidPaint(rgb="000000")
+                # Try CSS named colors
+                from ..color.css_colors import get_css_color
+                rgb_tuple = get_css_color(fill_attr)
+                if rgb_tuple:
+                    rgb_hex = f"{rgb_tuple[0]:02x}{rgb_tuple[1]:02x}{rgb_tuple[2]:02x}"
+                    fill = SolidPaint(rgb=rgb_hex)
+                else:
+                    # Unknown color - use default black
+                    fill = SolidPaint(rgb="000000")
 
         # Extract stroke
         stroke = None
@@ -991,7 +1205,13 @@ class SVGParser:
                     b = int(rgb_values[2].strip())
                     stroke_color = f"{r:02x}{g:02x}{b:02x}"
             else:
-                stroke_color = "000000"
+                # Try CSS named colors
+                from ..color.css_colors import get_css_color
+                rgb_tuple = get_css_color(stroke_color)
+                if rgb_tuple:
+                    stroke_color = f"{rgb_tuple[0]:02x}{rgb_tuple[1]:02x}{rgb_tuple[2]:02x}"
+                else:
+                    stroke_color = "000000"
 
             stroke_width = float(element.get('stroke-width', 1.0))
 
@@ -1630,11 +1850,15 @@ class SVGParser:
             except Exception as e:
                 self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
 
+        # Get filter reference
+        filter_ref = svg_element.get('filter')
+
         # Create group with transform
         return Group(
             children=child_elements,
             clip=None,  # TODO: Implement bbox clipping in future enhancement
-            transform=transform_matrix
+            transform=transform_matrix,
+            filter=filter_ref
         )
 
     def _convert_image_payload_to_ir(self, img_element: ET.Element, bbox, transform_attr):
@@ -1663,6 +1887,9 @@ class SVGParser:
             except Exception as e:
                 self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
 
+        # Get filter reference
+        filter_ref = img_element.get('filter')
+
         # Create image with transform (actual data loading would happen in processing pipeline)
         return Image(
             origin=Point(bbox.x, bbox.y),
@@ -1672,7 +1899,8 @@ class SVGParser:
             href=href,
             clip=None,  # TODO: Implement bbox clipping if image exceeds dimensions
             opacity=1.0,
-            transform=transform_matrix
+            transform=transform_matrix,
+            filter=filter_ref
         )
 
     def _convert_xhtml_to_ir(self, xhtml_element: ET.Element, bbox, transform_attr):
@@ -1693,11 +1921,15 @@ class SVGParser:
             italic=False
         )
 
+        # Get filter reference
+        filter_ref = xhtml_element.get('filter')
+
         return TextFrame(
             origin=Point(bbox.x, bbox.y),
             bbox=bbox,
             runs=[run],
-            anchor=TextAnchor.START
+            anchor=TextAnchor.START,
+            filter=filter_ref
         )
 
     def _extract_text_content(self, element: ET.Element) -> str:

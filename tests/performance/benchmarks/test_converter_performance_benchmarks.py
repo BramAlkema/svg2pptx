@@ -21,10 +21,10 @@ from tests.fixtures.svg_content import *
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.converters.shapes import RectangleConverter, CircleConverter, PolygonConverter
-from src.converters.text import TextConverter
-from src.converters.paths import PathConverter
-from src.converters.base import ConversionContext
+from core.converters.shapes import RectangleConverter, CircleConverter, PolygonConverter
+from core.converters.text import TextConverter
+from core.converters.paths import PathConverter
+from core.converters.base import ConversionContext
 
 
 @pytest.mark.benchmark
@@ -248,7 +248,7 @@ class TestPathConverterPerformance:
     def test_simple_path_performance(self, benchmark):
         """Benchmark simple path conversion."""
         try:
-            from src.converters.paths import PathConverter
+            from core.converters.paths import PathConverter
         except ImportError:
             pytest.skip("PathConverter not available")
 
@@ -279,7 +279,7 @@ class TestPathConverterPerformance:
     def test_complex_path_performance(self, benchmark):
         """Benchmark complex path with curves."""
         try:
-            from src.converters.paths import PathConverter
+            from core.converters.paths import PathConverter
         except ImportError:
             pytest.skip("PathConverter not available")
 

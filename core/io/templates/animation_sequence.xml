@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:par xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:cTn id="1" fill="hold">
+    <a:stCondLst>
+      <a:cond delay="0"/>
+    </a:stCondLst>
+    <a:childTnLst>
+      <!-- ANIMATIONS WILL BE INSERTED HERE -->
+    </a:childTnLst>
+  </a:cTn>
+</a:par>

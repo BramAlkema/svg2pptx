@@ -28,7 +28,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
 from ..auth import get_current_user
-from src.svg2pptx import SVGToPowerPointConverter
+from core.api import SVGToPowerPointConverter
 
 logger = logging.getLogger(__name__)
 

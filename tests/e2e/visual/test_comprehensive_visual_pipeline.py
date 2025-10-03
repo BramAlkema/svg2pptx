@@ -24,8 +24,8 @@ from PIL import Image
 from lxml import etree as ET
 
 # Import our systems
-from src.svg2pptx import SVGToPowerPointConverter
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.pipeline.converter import CleanSlateConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 from core.services.conversion_services import ConversionServices
 from api.routes.batch import BatchJobCreate
 

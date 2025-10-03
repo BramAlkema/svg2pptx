@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, Optional, List
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
@@ -19,7 +19,7 @@ from src.converters.filters.core.base import (
     FilterValidationError
 )
 
-from src.converters.filters.geometric.transforms import (
+from core.converters.filters.geometric.transforms import (
     OffsetFilter,
     TurbulenceFilter,
     OffsetFilterException,
@@ -527,7 +527,7 @@ class TestGeometricIntegration:
 
     def test_integration_with_filter_registry(self, integration_setup):
         """Test geometric filters integration with FilterRegistry."""
-        from src.converters.filters.core.registry import FilterRegistry
+        from core.converters.filters.core.registry import FilterRegistry
 
         registry = FilterRegistry()
 
@@ -548,7 +548,7 @@ class TestGeometricIntegration:
 
     def test_integration_with_filter_chain(self, integration_setup):
         """Test geometric filters integration with FilterChain."""
-        from src.converters.filters.core.chain import FilterChain
+        from core.converters.filters.core.chain import FilterChain
 
         # Create filter chain with geometric transforms
         chain = FilterChain()

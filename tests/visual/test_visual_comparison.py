@@ -43,14 +43,29 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 try:
-    from src.converters.base import ConversionContext
+    from core.converters.base import ConversionContext
     from core.services.conversion_services import ConversionServices
-    from src.preprocessing.optimizer import SVGOptimizer
+    from core.preprocessing.optimizer import SVGOptimizer
     CONVERTERS_AVAILABLE = True
 except ImportError:
     CONVERTERS_AVAILABLE = False
     logger.warning("SVG2PPTX converters not available - will use mock conversion")
 
+
+
+
+def convert_svg_for_test(svg_path, output_path):
+    """Helper for test file conversion."""
+    from core.pipeline.converter import CleanSlateConverter
+    from pathlib import Path
+    
+    converter = CleanSlateConverter()
+    result = converter.convert_file(Path(svg_path), Path(output_path))
+    if result and result.output_data:
+        with open(output_path, 'wb') as f:
+            f.write(result.output_data)
+        return output_path
+    return None
 
 class VisualTestCase:
     """Represents a single visual test case with SVG and expected results."""
@@ -210,15 +225,12 @@ class VisualComparisonTester:
 
         try:
             # Use the existing SVG2PPTX conversion system
-            from src.svg2pptx import convert_svg_to_pptx
+            from core.pipeline.converter import CleanSlateConverter
 
             # Convert SVG to PPTX using the main conversion pipeline
-            svg_content = svg_path.read_text()
-            temp_pptx_path = convert_svg_to_pptx(
-                svg_input=svg_content,
-                output_path=str(pptx_path),
-                slide_width=10.0,  # Standard slide dimensions
-                slide_height=7.5
+            temp_pptx_path = convert_svg_for_test(
+                svg_path=str(svg_path),
+                output_path=str(pptx_path)
             )
 
             logger.info(f"Successfully converted SVG to PPTX using main pipeline: {pptx_path}")

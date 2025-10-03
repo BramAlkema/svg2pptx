@@ -8,9 +8,9 @@ import pytest
 from lxml import etree as ET
 from unittest.mock import Mock, patch, MagicMock
 
-from src.converters.text_to_path import TextToPathConverter
-from src.converters.base import ConversionContext, CoordinateSystem
-from src.converters.font_metrics import FontMetrics, GlyphOutline
+from core.converters.text_to_path import TextToPathConverter
+from core.converters.base import ConversionContext, CoordinateSystem
+from core.converters.font_metrics import FontMetrics, GlyphOutline
 from core.units import UnitConverter
 from core.color import Color
 

@@ -9,10 +9,10 @@ to map SVG fills/strokes to PowerPoint DrawingML for WordArt.
 from typing import Dict, Any, Optional
 from lxml import etree as ET
 
-from ..color import Color
+from core.color import Color
 from ..converters.gradients.converter import GradientConverter
 from ..converters.gradients.core import GradientEngine
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from ..converters.base import ConversionContext
 
 

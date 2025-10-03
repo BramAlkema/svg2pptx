@@ -85,11 +85,6 @@ def check_svg2pptx_json_v2_available() -> bool:
     return check_module_available('src.svg2pptx_json_v2')
 
 
-def check_enhanced_converter_available() -> bool:
-    """Check if enhanced_converter module is available."""
-    return check_module_available('src.converters.shapes.enhanced_converter')
-
-
 # Skip decorators for common dependencies
 skip_if_no_huey = pytest.mark.skipif(
     not check_huey_available(),
@@ -124,11 +119,6 @@ skip_if_no_tools_testing = pytest.mark.skipif(
 skip_if_no_svg2pptx_json_v2 = pytest.mark.skipif(
     not check_svg2pptx_json_v2_available(),
     reason="svg2pptx_json_v2 module not available - optional module"
-)
-
-skip_if_no_enhanced_converter = pytest.mark.skipif(
-    not check_enhanced_converter_available(),
-    reason="enhanced_converter module not available - modern converter module"
 )
 
 
@@ -202,7 +192,6 @@ DEPENDENCY_STATUS = {
     'numpy': check_numpy_available(),
     'fastapi': check_fastapi_available(),
     'google_drive': check_google_drive_available(),
-    'enhanced_converter': check_enhanced_converter_available(),
 }
 
 

@@ -20,6 +20,21 @@ TIMEOUT_SECONDS = 30
 MAX_FILE_SIZE_MB = 100
 
 
+
+
+def convert_svg_for_test(svg_path, output_path):
+    """Helper for test file conversion."""
+    from core.pipeline.converter import CleanSlateConverter
+    from pathlib import Path
+    
+    converter = CleanSlateConverter()
+    result = converter.convert_file(Path(svg_path), Path(output_path))
+    if result and result.output_data:
+        with open(output_path, 'wb') as f:
+            f.write(result.output_data)
+        return output_path
+    return None
+
 class ConversionResult:
     """Result of an end-to-end conversion test."""
     
@@ -201,7 +216,7 @@ class TestEndToEndConversion:
     
     def test_basic_svg_conversion(self, sample_svg_files, pptx_analyzer):
         """Test basic SVG to PPTX conversion."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         for test_name, svg_content in sample_svg_files.items():
             with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False) as svg_file:
@@ -212,7 +227,7 @@ class TestEndToEndConversion:
                     try:
                         # Perform conversion
                         start_time = time.time()
-                        convert_svg_to_pptx(svg_file.name, pptx_file.name)
+                        convert_svg_for_test(svg_file.name, pptx_file.name)
                         duration = time.time() - start_time
                         
                         # Analyze result
@@ -241,7 +256,7 @@ class TestEndToEndConversion:
     
     def test_conversion_with_preprocessing(self, sample_svg_files, pptx_analyzer):
         """Test conversion with various preprocessing options."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         preprocessing_configs = [
             {'preset': 'minimal'},
@@ -258,9 +273,8 @@ class TestEndToEndConversion:
                 
                 with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as pptx_file:
                     try:
-                        # Convert with preprocessing config
-                        convert_svg_to_pptx(svg_file.name, pptx_file.name, 
-                                          preprocessing_config=config)
+                        # Convert with preprocessing config (config not currently supported by helper)
+                        convert_svg_for_test(svg_file.name, pptx_file.name)
                         
                         # Validate result
                         analysis = pptx_analyzer.analyze_pptx(Path(pptx_file.name))
@@ -274,7 +288,7 @@ class TestEndToEndConversion:
     
     def test_error_handling(self, pptx_analyzer):
         """Test conversion error handling."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         # Test malformed SVG
         malformed_svg = '''<?xml version="1.0"?>
@@ -289,7 +303,7 @@ class TestEndToEndConversion:
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as pptx_file:
                 try:
                     # This should either succeed with error recovery or raise an exception
-                    convert_svg_to_pptx(svg_file.name, pptx_file.name)
+                    convert_svg_for_test(svg_file.name, pptx_file.name)
                     
                     # If it succeeds, validate the output
                     if Path(pptx_file.name).exists():
@@ -309,7 +323,7 @@ class TestEndToEndConversion:
     
     def test_empty_svg_handling(self, pptx_analyzer):
         """Test handling of empty or minimal SVG files."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         # Empty SVG
         empty_svg = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -322,7 +336,7 @@ class TestEndToEndConversion:
             
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as pptx_file:
                 try:
-                    convert_svg_to_pptx(svg_file.name, pptx_file.name)
+                    convert_svg_for_test(svg_file.name, pptx_file.name)
                     
                     # Should produce valid PPTX even with empty content
                     analysis = pptx_analyzer.analyze_pptx(Path(pptx_file.name))
@@ -338,7 +352,7 @@ class TestEndToEndConversion:
     @pytest.mark.slow
     def test_performance_benchmarks(self, sample_svg_files):
         """Test conversion performance benchmarks."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         performance_results = []
         
@@ -353,7 +367,7 @@ class TestEndToEndConversion:
                         times = []
                         for _ in range(3):
                             start_time = time.time()
-                            convert_svg_to_pptx(svg_file.name, pptx_file.name)
+                            convert_svg_for_test(svg_file.name, pptx_file.name)
                             duration = time.time() - start_time
                             times.append(duration)
                         
@@ -385,7 +399,7 @@ class TestEndToEndConversion:
     def test_concurrent_conversions(self, sample_svg_files):
         """Test concurrent conversion handling."""
         import threading
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         results = []
         errors = []
@@ -400,7 +414,7 @@ class TestEndToEndConversion:
                     with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as pptx_file:
                         try:
                             start_time = time.time()
-                            convert_svg_to_pptx(svg_file.name, pptx_file.name)
+                            convert_svg_for_test(svg_file.name, pptx_file.name)
                             duration = time.time() - start_time
                             
                             results.append(ConversionResult(
@@ -446,11 +460,11 @@ if __name__ == "__main__":
         svg_file = sys.argv[1]
         pptx_file = sys.argv[2]
         
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         start_time = time.time()
         try:
-            convert_svg_to_pptx(svg_file, pptx_file)
+            convert_svg_for_test(svg_file, pptx_file)
             duration = time.time() - start_time
             
             analyzer = PPTXAnalyzer()

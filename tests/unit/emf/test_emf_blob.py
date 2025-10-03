@@ -7,7 +7,7 @@ import pytest
 import struct
 from unittest.mock import patch, Mock
 
-from src.emf_blob import (
+from core.emf_blob import (
     EMFBlob, EMFRecordType, EMFBrushStyle, EMFHatchStyle,
     create_pattern_tile, get_starter_pack
 )

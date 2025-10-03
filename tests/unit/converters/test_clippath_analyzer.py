@@ -13,8 +13,8 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from lxml import etree as ET
 
-from src.converters.clippath_analyzer import ClipPathAnalyzer, ClipPathComplexity
-from src.converters.clippath_types import ClipPathDefinition, ClipPathAnalysis, ClippingType
+from core.converters.clippath_analyzer import ClipPathAnalyzer, ClipPathComplexity
+from core.converters.clippath_types import ClipPathDefinition, ClipPathAnalysis, ClippingType
 from tests.fixtures.clippath_fixtures import (
     create_svg_element, create_simple_rect_clippath, create_simple_path_clippath,
     create_complex_path_clippath, create_text_clippath, create_filter_clippath,

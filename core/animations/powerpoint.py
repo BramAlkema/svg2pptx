@@ -18,18 +18,22 @@ Key Features:
 from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
 import math
+import logging
+from lxml import etree as ET
+from lxml.etree import Element
 
 from .core import (
     AnimationDefinition, AnimationScene, AnimationType,
     TransformType, CalcMode, FillMode
 )
+from .enhanced_animation_builder import EnhancedAnimationBuilder
 
 
 @dataclass
 class PowerPointAnimationSequence:
     """PowerPoint animation sequence containing timing and animations."""
     sequence_id: int
-    animations: List[str]
+    animations: List[Element]
     total_duration_ms: int
     timing_root: str
 
@@ -46,6 +50,8 @@ class PowerPointAnimationGenerator:
         """Initialize PowerPoint animation generator."""
         self.animation_id_counter = 1
         self.sequence_id_counter = 1
+        self.animation_builder = EnhancedAnimationBuilder()
+        self.logger = logging.getLogger(__name__)
 
     def generate_animation_sequence(
         self,
@@ -68,9 +74,9 @@ class PowerPointAnimationGenerator:
         # Convert each animation to PowerPoint format
         pptx_animations = []
         for animation in animations:
-            pptx_xml = self._convert_animation_to_powerpoint(animation)
-            if pptx_xml:
-                pptx_animations.append(pptx_xml)
+            pptx_element = self._convert_animation_to_powerpoint(animation)
+            if pptx_element is not None:
+                pptx_animations.append(pptx_element)
 
         if not pptx_animations:
             return ""
@@ -79,7 +85,7 @@ class PowerPointAnimationGenerator:
         sequence = self._create_animation_sequence(pptx_animations, timeline_scenes)
         return self._generate_timing_root(sequence)
 
-    def _convert_animation_to_powerpoint(self, animation: AnimationDefinition) -> Optional[str]:
+    def _convert_animation_to_powerpoint(self, animation: AnimationDefinition) -> Optional[Element]:
         """Convert single animation definition to PowerPoint XML."""
         # Map SMIL animation types to PowerPoint equivalents
         if animation.animation_type == AnimationType.ANIMATE:
@@ -95,7 +101,7 @@ class PowerPointAnimationGenerator:
         else:
             return None
 
-    def _generate_property_animation(self, animation: AnimationDefinition) -> str:
+    def _generate_property_animation(self, animation: AnimationDefinition) -> Element:
         """Generate animation for general property changes."""
         anim_id = self._get_next_animation_id()
         duration_ms = int(animation.timing.duration * 1000)
@@ -113,36 +119,11 @@ class PowerPointAnimationGenerator:
         else:
             return self._generate_generic_property_animation(animation, anim_id, duration_ms, delay_ms)
 
-    def _generate_opacity_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> str:
-        """Generate opacity animation (fade effect)."""
-        # Determine fade direction
-        if len(animation.values) >= 2:
-            start_opacity = float(animation.values[0])
-            end_opacity = float(animation.values[-1])
-            is_fade_in = end_opacity > start_opacity
-        else:
-            is_fade_in = True  # Default to fade in
+    def _generate_opacity_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate opacity animation (fade effect) using enhanced animation builder."""
+        return self.animation_builder.generate_opacity_animation(animation, anim_id, duration_ms, delay_ms)
 
-        effect_type = "fadeIn" if is_fade_in else "fadeOut"
-
-        # Generate easing attributes
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
-
-        return f'''<a:animEffect>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-  </a:cBhvr>
-  <a:transition in="1" out="0"/>
-  <a:filter>
-    <a:fade opacity="{animation.values[0] if animation.values else '0'}"/>
-  </a:filter>
-</a:animEffect>'''
-
-    def _generate_transform_animation(self, animation: AnimationDefinition) -> str:
+    def _generate_transform_animation(self, animation: AnimationDefinition) -> Element:
         """Generate transform animation (scale, rotate, translate)."""
         anim_id = self._get_next_animation_id()
         duration_ms = int(animation.timing.duration * 1000)
@@ -157,170 +138,56 @@ class PowerPointAnimationGenerator:
         else:
             return self._generate_generic_transform_animation(animation, anim_id, duration_ms, delay_ms)
 
-    def _generate_scale_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> str:
-        """Generate scale/grow/shrink animation."""
-        # Parse scale values
-        if len(animation.values) >= 2:
-            start_scale = self._parse_scale_value(animation.values[0])
-            end_scale = self._parse_scale_value(animation.values[-1])
-        else:
-            start_scale, end_scale = 1.0, 1.0
+    def _generate_scale_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate scale/grow/shrink animation using enhanced animation builder."""
+        return self.animation_builder.generate_scale_animation(animation, anim_id, duration_ms, delay_ms)
 
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
+    def _generate_rotation_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate rotation/spin animation using enhanced animation builder."""
+        return self.animation_builder.generate_rotation_animation(animation, anim_id, duration_ms, delay_ms)
 
-        return f'''<a:animScale>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-  </a:cBhvr>
-  <a:from>
-    <a:pt x="{start_scale}" y="{start_scale}"/>
-  </a:from>
-  <a:to>
-    <a:pt x="{end_scale}" y="{end_scale}"/>
-  </a:to>
-</a:animScale>'''
-
-    def _generate_rotation_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> str:
-        """Generate rotation/spin animation."""
-        # Parse rotation values (convert degrees to PowerPoint's 60000ths of a degree)
-        if len(animation.values) >= 2:
-            start_rotation = self._parse_rotation_value(animation.values[0])
-            end_rotation = self._parse_rotation_value(animation.values[-1])
-        else:
-            start_rotation, end_rotation = 0, 360
-
-        # Convert to PowerPoint units (60000ths of a degree)
-        rotation_delta = int((end_rotation - start_rotation) * 60000)
-
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
-
-        return f'''<a:animRot>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-  </a:cBhvr>
-  <a:by val="{rotation_delta}"/>
-</a:animRot>'''
-
-    def _generate_color_animation(self, animation: AnimationDefinition) -> str:
-        """Generate color change animation."""
+    def _generate_color_animation(self, animation: AnimationDefinition) -> Element:
+        """Generate color change animation using enhanced animation builder."""
         anim_id = self._get_next_animation_id()
         duration_ms = int(animation.timing.duration * 1000)
         delay_ms = int(animation.timing.begin * 1000)
 
-        # Parse color values
-        if len(animation.values) >= 2:
-            from_color = self._parse_color_value(animation.values[0])
-            to_color = self._parse_color_value(animation.values[-1])
-        else:
-            from_color = to_color = "000000"
+        return self.animation_builder.generate_color_animation(animation, anim_id, duration_ms, delay_ms)
 
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
-
-        # Determine attribute name for PowerPoint
-        ppt_attr = "fillColor" if animation.target_attribute == "fill" else "lineColor"
-
-        return f'''<a:animClr>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-    <a:attrNameLst>
-      <a:attrName>{ppt_attr}</a:attrName>
-    </a:attrNameLst>
-  </a:cBhvr>
-  <a:from>
-    <a:srgbClr val="{from_color}"/>
-  </a:from>
-  <a:to>
-    <a:srgbClr val="{to_color}"/>
-  </a:to>
-</a:animClr>'''
-
-    def _generate_motion_animation(self, animation: AnimationDefinition) -> str:
-        """Generate motion path animation."""
+    def _generate_motion_animation(self, animation: AnimationDefinition) -> Element:
+        """Generate motion path animation using enhanced animation builder."""
         anim_id = self._get_next_animation_id()
         duration_ms = int(animation.timing.duration * 1000)
         delay_ms = int(animation.timing.begin * 1000)
 
-        # Use the actual path from the animation values
-        path_data = animation.values[0] if animation.values else "M 0,0 L 100,100"
+        return self.animation_builder.generate_motion_animation(animation, anim_id, duration_ms, delay_ms)
 
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
-
-        return f'''<a:animMotion>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-  </a:cBhvr>
-  <a:path path="{path_data}"/>
-</a:animMotion>'''
-
-    def _generate_set_animation(self, animation: AnimationDefinition) -> str:
-        """Generate set animation (instant property change)."""
+    def _generate_set_animation(self, animation: AnimationDefinition) -> Element:
+        """Generate set animation (instant property change) using enhanced animation builder."""
         anim_id = self._get_next_animation_id()
         delay_ms = int(animation.timing.begin * 1000)
 
-        value = animation.values[0] if animation.values else ""
+        return self.animation_builder.generate_set_animation(animation, anim_id, delay_ms)
 
-        return f'''<a:set>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="1" delay="{delay_ms}"/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-    <a:attrNameLst>
-      <a:attrName>{animation.target_attribute}</a:attrName>
-    </a:attrNameLst>
-  </a:cBhvr>
-  <a:to>
-    <a:strVal val="{value}"/>
-  </a:to>
-</a:set>'''
+    def _generate_generic_property_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate generic property animation using enhanced animation builder."""
+        return self.animation_builder.generate_generic_animation(animation, anim_id, duration_ms, delay_ms)
 
-    def _generate_generic_property_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> str:
-        """Generate generic property animation."""
-        easing_attrs = self._generate_easing_attributes(animation)
-        repeat_attr = self._generate_repeat_attribute(animation)
+    def _generate_size_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate size animation (width, height, radius) using enhanced animation builder."""
+        return self.animation_builder.generate_generic_animation(animation, anim_id, duration_ms, delay_ms)
 
-        from_value = animation.values[0] if animation.values else ""
-        to_value = animation.values[-1] if len(animation.values) > 1 else from_value
+    def _generate_position_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate position animation (x, y, cx, cy) using enhanced animation builder."""
+        return self.animation_builder.generate_generic_animation(animation, anim_id, duration_ms, delay_ms)
 
-        return f'''<a:anim>
-  <a:cBhvr>
-    <a:cTn id="{anim_id}" dur="{duration_ms}" delay="{delay_ms}"{repeat_attr}{easing_attrs}/>
-    <a:tgtEl>
-      <a:spTgt spid="{animation.element_id}"/>
-    </a:tgtEl>
-    <a:attrNameLst>
-      <a:attrName>{animation.target_attribute}</a:attrName>
-    </a:attrNameLst>
-  </a:cBhvr>
-  <a:tavLst>
-    <a:tav tm="0">
-      <a:val>
-        <a:strVal val="{from_value}"/>
-      </a:val>
-    </a:tav>
-    <a:tav tm="{duration_ms}">
-      <a:val>
-        <a:strVal val="{to_value}"/>
-      </a:val>
-    </a:tav>
-  </a:tavLst>
-</a:anim>'''
+    def _generate_translation_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate translation animation using enhanced animation builder."""
+        return self.animation_builder.generate_generic_animation(animation, anim_id, duration_ms, delay_ms)
+
+    def _generate_generic_transform_animation(self, animation: AnimationDefinition, anim_id: int, duration_ms: int, delay_ms: int) -> Element:
+        """Generate generic transform animation using enhanced animation builder."""
+        return self.animation_builder.generate_generic_animation(animation, anim_id, duration_ms, delay_ms)
 
     def _generate_easing_attributes(self, animation: AnimationDefinition) -> str:
         """Generate easing attributes from keySplines."""
@@ -374,7 +241,7 @@ class PowerPointAnimationGenerator:
 
     def _create_animation_sequence(
         self,
-        animations: List[str],
+        animations: List[Element],
         timeline_scenes: List[AnimationScene]
     ) -> PowerPointAnimationSequence:
         """Create PowerPoint animation sequence from individual animations."""
@@ -393,35 +260,10 @@ class PowerPointAnimationGenerator:
         )
 
     def _generate_timing_root(self, sequence: PowerPointAnimationSequence) -> str:
-        """Generate complete timing root with animation sequence."""
-        animations_xml = "\n      ".join(sequence.animations)
-
-        return f'''<a:timing>
-  <a:tnLst>
-    <a:par>
-      <a:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot">
-        <a:childTnLst>
-          <a:seq concurrent="1" nextAc="seek">
-            <a:cTn id="{sequence.sequence_id}" dur="indefinite" nodeType="mainSeq">
-              <a:childTnLst>
-                <a:par>
-                  <a:cTn id="{sequence.sequence_id + 1}" fill="hold">
-                    <a:stCondLst>
-                      <a:cond delay="0"/>
-                    </a:stCondLst>
-                    <a:childTnLst>
-                      {animations_xml}
-                    </a:childTnLst>
-                  </a:cTn>
-                </a:par>
-              </a:childTnLst>
-            </a:cTn>
-          </a:seq>
-        </a:childTnLst>
-      </a:cTn>
-    </a:par>
-  </a:tnLst>
-</a:timing>'''
+        """Generate complete timing root with animation sequence using enhanced animation builder."""
+        # Generate timing root using enhanced builder - no XML parsing needed!
+        timing_root = self.animation_builder.generate_timing_root(sequence.sequence_id, sequence.animations)
+        return self.animation_builder.element_to_string(timing_root)
 
     def _parse_scale_value(self, value: str) -> float:
         """Parse scale value from transform string."""
@@ -460,7 +302,7 @@ class PowerPointAnimationGenerator:
 
         try:
             # Use canonical Color class for parsing
-            from ..color import Color
+            from core.color import Color
             color = Color(value.strip())
             # Get hex without '#' prefix for PowerPoint compatibility
             hex_color = color.hex()

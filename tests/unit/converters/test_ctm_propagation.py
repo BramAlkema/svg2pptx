@@ -8,7 +8,7 @@ import numpy as np
 from lxml import etree as ET
 from unittest.mock import Mock
 
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 from core.viewbox.ctm_utils import (
     create_root_context_with_viewport, walk_tree_with_ctm,
     apply_ctm_to_coordinates

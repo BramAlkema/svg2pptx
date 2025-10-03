@@ -11,9 +11,9 @@ import pytest
 from unittest.mock import Mock, patch
 from lxml import etree as ET
 
-from src.converters.filters.image.blur import GaussianBlurFilter, BlurParameters
-from src.converters.filters.core.base import FilterContext, FilterResult
-from src.converters.filters.core.registry import FilterRegistry
+from core.converters.filters.image.blur import GaussianBlurFilter, BlurParameters
+from core.converters.filters.core.base import FilterContext, FilterResult
+from core.converters.filters.core.registry import FilterRegistry
 from core.services.conversion_services import ConversionServices
 
 
@@ -113,23 +113,23 @@ class TestFilterEffectsDiscovery:
     def test_available_filter_modules(self):
         """Test that all expected filter modules are importable."""
         # Test blur filters
-        from src.converters.filters.image.blur import GaussianBlurFilter
+        from core.converters.filters.image.blur import GaussianBlurFilter
         assert GaussianBlurFilter is not None
 
         # Test color filters
-        from src.converters.filters.image.color import ColorMatrixFilter
+        from core.converters.filters.image.color import ColorMatrixFilter
         assert ColorMatrixFilter is not None
 
         # Test geometric filters
         try:
-            from src.converters.filters.geometric.morphology import MorphologyFilter
+            from core.converters.filters.geometric.morphology import MorphologyFilter
             assert MorphologyFilter is not None
         except ImportError:
             pytest.skip("Morphology filter not available")
 
     def test_filter_base_class_interface(self):
         """Test that filter base class defines expected interface."""
-        from src.converters.filters.core.base import Filter
+        from core.converters.filters.core.base import Filter
 
         # Check required methods exist
         assert hasattr(Filter, 'apply')
@@ -214,7 +214,7 @@ class TestFilterSystemEdgeCases:
 
     def test_filter_context_validation(self):
         """Test FilterContext validates input parameters."""
-        from src.converters.filters.core.base import FilterContext
+        from core.converters.filters.core.base import FilterContext
 
         # Test with minimal valid parameters
         element = ET.fromstring('<rect/>')
@@ -240,18 +240,18 @@ def test_filter_system_audit_validation():
     This test confirms that the filter system exists and has the expected architecture.
     """
     # Test 1: Core filter classes exist
-    from src.converters.filters.core.base import Filter, FilterContext, FilterResult
+    from core.converters.filters.core.base import Filter, FilterContext, FilterResult
     assert Filter is not None
     assert FilterContext is not None
     assert FilterResult is not None
 
     # Test 2: Registry system exists
-    from src.converters.filters.core.registry import FilterRegistry
+    from core.converters.filters.core.registry import FilterRegistry
     registry = FilterRegistry()
     assert registry is not None
 
     # Test 3: Specific filter implementations exist
-    from src.converters.filters.image.blur import GaussianBlurFilter
+    from core.converters.filters.image.blur import GaussianBlurFilter
     blur_filter = GaussianBlurFilter()
     assert blur_filter is not None
 

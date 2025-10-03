@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple shapes for testing Clean Slate conversion -->
+  <rect x="10" y="10" width="80" height="60" fill="blue" stroke="black" stroke-width="2"/>
+  <circle cx="150" cy="50" r="30" fill="red" stroke="green" stroke-width="1"/>
+  <path d="M 50 150 L 100 120 L 150 150 Z" fill="yellow" stroke="purple" stroke-width="2"/>
+  <text x="100" y="180" font-family="Arial" font-size="16" fill="black">Clean Slate Test</text>
+</svg>

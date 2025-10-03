@@ -39,7 +39,7 @@ except ImportError:
     PSUTIL_AVAILABLE = False
     print("Warning: psutil not available - memory measurements will be limited")
 
-from src.fractional_emu import (
+from core.fractional_emu import (
     FractionalEMUConverter,
     PrecisionMode,
     VectorizedPrecisionEngine,

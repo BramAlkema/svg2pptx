@@ -8,7 +8,7 @@ including matrix composition, decomposition, and interpolation.
 
 import pytest
 import math
-from src.converters.animation_transform_matrix import (
+from core.converters.animation_transform_matrix import (
     TransformMatrix, MatrixOperation, AnimationTransformProcessor,
     PowerPointTransformAnimationGenerator
 )

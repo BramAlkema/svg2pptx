@@ -16,7 +16,7 @@ from .base import BaseConverter, ConversionContext, ConverterRegistry
 # TransformConverter replaced with direct transform engine usage
 
 if TYPE_CHECKING:
-    from ..services.conversion_services import ConversionServices
+    from core.services.conversion_services import ConversionServices
 
 
 class GroupHandler(BaseConverter):
@@ -193,7 +193,7 @@ class GroupHandler(BaseConverter):
         
         # Create translation for x,y offset
         if use_x != 0 or use_y != 0:
-            from ..transforms.core import Matrix
+            from core.transforms.core import Matrix
             translation = Matrix.translate(use_x, use_y)
             if use_transform:
                 use_transform = use_transform.multiply(translation)

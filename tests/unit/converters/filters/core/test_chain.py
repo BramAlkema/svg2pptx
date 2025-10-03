@@ -13,14 +13,14 @@ import threading
 import time
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
     FilterException,
     FilterValidationError
 )
-from src.converters.filters.core.chain import (
+from core.converters.filters.core.chain import (
     FilterChain,
     FilterChainError,
     FilterChainNode,
@@ -648,7 +648,7 @@ class TestFilterChainIntegration:
     def test_integration_with_registry(self):
         """Test FilterChain integration with FilterRegistry."""
         # This test demonstrates integration with the registry system
-        from src.converters.filters.core.registry import FilterRegistry
+        from core.converters.filters.core.registry import FilterRegistry
 
         registry = FilterRegistry()
         registry.register(MockProcessingFilter('blur'))

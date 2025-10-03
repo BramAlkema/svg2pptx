@@ -17,8 +17,8 @@ from pptx import Presentation
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
 try:
-    from ..services import SecureFileService, default_secure_file_service
-    from ..utils.input_validator import InputValidator
+    from core.services import SecureFileService, default_secure_file_service
+    from core.utils.input_validator import InputValidator
 except ImportError:
     # Handle direct execution
     import sys

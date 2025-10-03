@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Import base classes that definitely exist
-from src.converters.base import BaseConverter, ConversionContext
+from core.converters.base import BaseConverter, ConversionContext
 from core.services.conversion_services import ConversionServices
 
 
@@ -34,7 +34,7 @@ class TestSymbolsBasic:
     def test_symbols_module_imports(self, mock_services):
         """Test that symbols module can be imported."""
         try:
-            from src.converters import symbols
+            from core.converters import symbols
             assert symbols is not None
         except ImportError as e:
             pytest.skip(f"Symbols module import failed: {e}")
@@ -42,7 +42,7 @@ class TestSymbolsBasic:
     def test_symbols_converter_class_exists(self, mock_services):
         """Test that SymbolConverter class exists."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
             assert isinstance(converter, BaseConverter)
         except ImportError:
@@ -51,7 +51,7 @@ class TestSymbolsBasic:
     def test_symbols_converter_supported_elements(self, mock_services):
         """Test supported elements."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
             
             # Should support symbol and use elements
@@ -64,7 +64,7 @@ class TestSymbolsBasic:
     def test_symbols_can_convert_method(self, mock_services):
         """Test can_convert method."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
             
             # Create test elements
@@ -86,7 +86,7 @@ class TestSymbolsBasic:
     def test_symbols_convert_basic(self, mock_services):
         """Test basic convert method."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
             
             # Create mock context
@@ -108,7 +108,7 @@ class TestSymbolsBasic:
     def test_symbol_library_basic(self, mock_services):
         """Test basic symbol library functionality."""
         try:
-            from src.converters.symbols import SymbolLibrary
+            from core.converters.symbols import SymbolLibrary
             library = SymbolLibrary()
             
             assert hasattr(library, 'symbols')
@@ -140,7 +140,7 @@ class TestSymbolsIntegrationBasic:
     def test_symbols_in_converter_registry(self, mock_services):
         """Test that symbols converter is registered."""
         try:
-            from src.converters import get_converter_for_element
+            from core.converters import get_converter_for_element
             
             # Create symbol element
             symbol_elem = ET.fromstring('<symbol id="test"/>')
@@ -155,7 +155,7 @@ class TestSymbolsIntegrationBasic:
     def test_symbols_with_mock_context(self, mock_services):
         """Test symbols converter basic functionality."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
 
             # Test basic initialization and interface
@@ -179,7 +179,7 @@ class TestSymbolsIntegrationBasic:
     def test_use_element_basic(self, mock_services):
         """Test use element recognition."""
         try:
-            from src.converters.symbols import SymbolConverter
+            from core.converters.symbols import SymbolConverter
             converter = SymbolConverter(services=mock_services)
 
             # Test use element recognition

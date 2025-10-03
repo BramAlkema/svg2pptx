@@ -18,7 +18,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from core.services.font_service import FontService
-from src.converters.result_types import ConversionError
+from core.converters.result_types import ConversionError
 
 
 class TestFontServiceSystemIntegration:

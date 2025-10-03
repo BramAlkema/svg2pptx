@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:anim xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:cBhvr>
+    <a:cTn id="1" dur="1000" delay="0"/>
+    <a:tgtEl>
+      <a:spTgt spid="1"/>
+    </a:tgtEl>
+    <a:attrNameLst>
+      <a:attrName>attr</a:attrName>
+    </a:attrNameLst>
+  </a:cBhvr>
+  <a:tavLst>
+    <a:tav tm="0">
+      <a:val>
+        <a:strVal val="from"/>
+      </a:val>
+    </a:tav>
+    <a:tav tm="100000">
+      <a:val>
+        <a:strVal val="to"/>
+      </a:val>
+    </a:tav>
+  </a:tavLst>
+</a:anim>

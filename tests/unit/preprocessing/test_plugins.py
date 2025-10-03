@@ -18,11 +18,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 # Import preprocessing modules under test
 PREPROCESSING_AVAILABLE = True
 try:
-    from src.preprocessing.plugins import (
+    from core.preprocessing.plugins import (
         CleanupAttrsPlugin, CleanupNumericValuesPlugin,
         RemoveEmptyAttrsPlugin, RemoveCommentsPlugin
     )
-    from src.preprocessing.base import PreprocessingContext
+    from core.preprocessing.base import PreprocessingContext
 except ImportError:
     PREPROCESSING_AVAILABLE = False
 

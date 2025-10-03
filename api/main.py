@@ -16,7 +16,7 @@ from .auth import validate_api_key, extract_bearer_token, get_current_user
 from .services.conversion_service import ConversionService, ConversionError
 from .routes.previews import router as previews_router
 from .routes.batch import router as batch_router
-from src.svg2pptx import convert_svg_to_pptx
+from core.api import convert_svg_to_pptx
 
 # Configure logging
 logger = logging.getLogger(__name__)

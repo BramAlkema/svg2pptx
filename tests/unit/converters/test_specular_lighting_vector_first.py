@@ -25,8 +25,8 @@ from lxml import etree as ET
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.converters.filters.geometric.specular_lighting import SpecularLightingFilter, SpecularLightingParameters
-from src.converters.filters.core.base import FilterContext
+from core.converters.filters.geometric.specular_lighting import SpecularLightingFilter, SpecularLightingParameters
+from core.converters.filters.core.base import FilterContext
 
 
 class TestSpecularLightingFilterBasics:

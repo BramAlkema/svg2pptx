@@ -139,7 +139,7 @@ class ConversionServices:
 
         try:
             # Initialize services with proper order and configuration
-            from ..units import ConversionContext
+            from core.units import ConversionContext
             context = ConversionContext(dpi=config.default_dpi)
             unit_converter = UnitConverter(context=context)
 
@@ -241,7 +241,7 @@ class ConversionServices:
             config = ConversionConfig.from_dict(config_data)
 
             # Initialize services with custom configurations
-            from ..units import ConversionContext
+            from core.units import ConversionContext
             context = ConversionContext(dpi=config.default_dpi)
             unit_converter = UnitConverter(context=context, **unit_config)
             color_factory = Color
@@ -251,10 +251,10 @@ class ConversionServices:
 
             # Initialize remaining services
             # PathSystem will be created per-conversion with viewport configuration
-            from ..utils.style_parser import StyleParser
-            from ..utils.coordinate_transformer import CoordinateTransformer
-            from ..utils.font_processor import FontProcessor
-            from ..utils.path_processor import PathProcessor
+            from core.utils.style_parser import StyleParser
+            from core.utils.coordinate_transformer import CoordinateTransformer
+            from core.utils.font_processor import FontProcessor
+            from core.utils.path_processor import PathProcessor
             from .gradient_service import GradientService
             from .pattern_service import PatternService
             from .filter_service import FilterService

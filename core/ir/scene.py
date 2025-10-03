@@ -7,7 +7,7 @@ All SVG complexity is preprocessed before reaching this layer.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Union, Literal
+from typing import List, Optional, Union, Literal, TYPE_CHECKING
 from enum import Enum
 
 # Use shared numpy compatibility
@@ -16,6 +16,11 @@ from .numpy_compat import np, NUMPY_AVAILABLE
 from .geometry import Point, Rect, SegmentType
 from .paint import Paint, Stroke
 from .text import TextFrame
+
+# Import navigation types for type annotation only
+if TYPE_CHECKING:
+    from ..pipeline.hyperlinks import HyperlinkSpec
+    from ..pipeline.navigation import NavigationSpec
 
 
 class ClipStrategy(Enum):
@@ -53,6 +58,7 @@ class Path:
     All arcs converted to Bezier curves by preprocessors.
     Transforms already applied to coordinates.
     Ready for direct mapping to DrawingML or EMF.
+    Supports SVG filter effects via filter reference.
     """
     segments: List[SegmentType]
     fill: Paint = None
@@ -60,6 +66,10 @@ class Path:
     clip: Optional[ClipRef] = None
     opacity: float = 1.0
     transform: Optional[np.ndarray] = None  # Identity if None
+    hyperlink: Optional['HyperlinkSpec'] = None  # Legacy hyperlink support (deprecated)
+    navigation: Optional['NavigationSpec'] = None  # Enhanced navigation support
+    id: Optional[str] = None  # Original SVG element ID for tracing
+    filter: Optional[str] = None  # SVG filter reference, e.g., "url(#blur)" or "#blur"
 
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
@@ -146,11 +156,16 @@ class Group:
 
     Represents SVG groups with applied transforms and clipping.
     Children are flattened when possible for optimization.
+    Supports SVG filter effects applied to entire group.
     """
     children: List[Union['Path', 'TextFrame', 'Group', 'Image']]
     clip: Optional[ClipRef] = None
     opacity: float = 1.0
     transform: Optional[np.ndarray] = None
+    hyperlink: Optional['HyperlinkSpec'] = None  # Legacy hyperlink support (deprecated)
+    navigation: Optional['NavigationSpec'] = None  # Enhanced navigation support
+    id: Optional[str] = None  # Original SVG element ID for tracing
+    filter: Optional[str] = None  # SVG filter reference, applies to all children
 
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
@@ -197,29 +212,158 @@ class Image:
     """Raster image element
 
     Represents embedded or referenced images.
-    Typically mapped to EMF for best fidelity.
+    Typically mapped to DrawingML <p:pic> with media embedding.
+    Supports SVG filter effects applied to image.
     """
-    origin: Point
-    size: Rect
-    data: bytes                      # Embedded image data
-    format: Literal["png", "jpg", "gif", "svg"]
-    href: Optional[str] = None       # Image source reference (data URL, file path, or URL)
+    # Source information
+    href: str                           # Original href (data:, file:, http://)
+    source_type: str                    # "data_url" | "file" | "http" | "https"
+
+    # Format information
+    mime_type: str                      # "image/png", "image/jpeg", etc.
+    format_ext: str                     # "png", "jpg", etc. (for file naming)
+
+    # Dimensions (SVG units)
+    x: float = 0.0
+    y: float = 0.0
+    width: float = 0.0
+    height: float = 0.0
+
+    # Optional data (populated for data URLs or after loading)
+    image_data: Optional[bytes] = None  # Raw image bytes
+
+    # Metadata
+    title: Optional[str] = None
+    desc: Optional[str] = None
+    sha256: Optional[str] = None        # For deduplication
+
+    # Styling
     clip: Optional[ClipRef] = None
     opacity: float = 1.0
     transform: Optional[np.ndarray] = None
 
+    # Navigation
+    hyperlink: Optional['HyperlinkSpec'] = None  # Legacy hyperlink support (deprecated)
+    navigation: Optional['NavigationSpec'] = None  # Enhanced navigation support
+
+    # Filter effects
+    filter: Optional[str] = None        # SVG filter reference
+
+    # Legacy fields for backward compatibility
+    origin: Optional[Point] = None      # Deprecated: use x, y instead
+    size: Optional[Rect] = None         # Deprecated: use width, height instead
+    data: Optional[bytes] = None        # Deprecated: use image_data instead
+    format: Optional[Literal["png", "jpg", "gif", "svg"]] = None  # Deprecated: use format_ext
+
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
             raise ValueError(f"Image opacity must be 0.0-1.0, got {self.opacity}")
-        if not self.data and not self.href:
-            raise ValueError("Image must have either data or href")
+        if not self.href:
+            raise ValueError("Image must have href")
 
     @property
     def bbox(self) -> Rect:
         """Get image bounding box"""
-        return Rect(self.origin.x, self.origin.y, self.size.width, self.size.height)
+        return Rect(self.x, self.y, self.width, self.height)
 
 
 # Type aliases for convenience
 IRElement = Union[Path, TextFrame, Group, Image]
 SceneGraph = List[IRElement]
+
+
+# Navigation conversion utilities for backward compatibility
+
+def get_effective_navigation(element: IRElement) -> Optional['NavigationSpec']:
+    """
+    Get the effective navigation for an IR element.
+
+    Prefers NavigationSpec over HyperlinkSpec for enhanced features,
+    but converts HyperlinkSpec to NavigationSpec if only legacy format is available.
+
+    Args:
+        element: IR element to extract navigation from
+
+    Returns:
+        NavigationSpec if navigation is available, None otherwise
+    """
+    # Check if element has navigation field
+    if hasattr(element, 'navigation') and element.navigation is not None:
+        return element.navigation
+
+    # Fall back to converting hyperlink to navigation
+    if hasattr(element, 'hyperlink') and element.hyperlink is not None:
+        from ..pipeline.navigation import navigation_from_hyperlink_spec
+        return navigation_from_hyperlink_spec(element.hyperlink)
+
+    return None
+
+
+def has_navigation(element: IRElement) -> bool:
+    """
+    Check if an IR element has any navigation (new or legacy format).
+
+    Args:
+        element: IR element to check
+
+    Returns:
+        True if element has navigation, False otherwise
+    """
+    return get_effective_navigation(element) is not None
+
+
+def update_element_navigation(element: IRElement, navigation_spec: 'NavigationSpec') -> IRElement:
+    """
+    Create a new IR element with updated navigation.
+
+    Sets the NavigationSpec and clears the legacy HyperlinkSpec to avoid conflicts.
+
+    Args:
+        element: Original IR element
+        navigation_spec: New NavigationSpec to apply
+
+    Returns:
+        New IR element with updated navigation
+
+    Raises:
+        ValueError: If element type is not supported
+    """
+    if isinstance(element, Path):
+        return element.__class__(
+            segments=element.segments,
+            fill=element.fill,
+            stroke=element.stroke,
+            clip=element.clip,
+            opacity=element.opacity,
+            transform=element.transform,
+            hyperlink=None,  # Clear legacy field
+            navigation=navigation_spec
+        )
+    elif isinstance(element, Group):
+        return element.__class__(
+            children=element.children,
+            clip=element.clip,
+            opacity=element.opacity,
+            transform=element.transform,
+            hyperlink=None,  # Clear legacy field
+            navigation=navigation_spec
+        )
+    elif isinstance(element, Image):
+        return element.__class__(
+            origin=element.origin,
+            size=element.size,
+            data=element.data,
+            format=element.format,
+            href=element.href,
+            clip=element.clip,
+            opacity=element.opacity,
+            transform=element.transform,
+            hyperlink=None,  # Clear legacy field
+            navigation=navigation_spec
+        )
+    elif hasattr(element, 'navigation'):  # TextFrame or other types
+        # Use dataclasses.replace for generic dataclass update
+        from dataclasses import replace
+        return replace(element, hyperlink=None, navigation=navigation_spec)
+    else:
+        raise ValueError(f"Unsupported element type for navigation update: {type(element)}")

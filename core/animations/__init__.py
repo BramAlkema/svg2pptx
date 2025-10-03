@@ -14,12 +14,12 @@ This module provides:
 
 Example usage:
     # Direct conversion
-    from src.animations import AnimationConverter
+    from core.animations import AnimationConverter
     converter = AnimationConverter()
     result = converter.convert_svg_animations(svg_element)
 
     # Fluent API
-    from src.animations import AnimationBuilder
+    from core.animations import AnimationBuilder
     animation = (AnimationBuilder()
         .target("rect1")
         .animate("opacity")
@@ -95,7 +95,7 @@ def create_animation_converter(services=None):
     """
     from ..converters.animation_converter import AnimationConverter
     if services is None:
-        from ..services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         services = ConversionServices.create_default()
     return AnimationConverter(services=services)
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:animEffect xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:cBhvr>
+    <a:cTn id="1" dur="1000" delay="0"/>
+    <a:tgtEl>
+      <a:spTgt spid="1"/>
+    </a:tgtEl>
+  </a:cBhvr>
+  <a:filter filter="fadeIn"/>
+</a:animEffect>

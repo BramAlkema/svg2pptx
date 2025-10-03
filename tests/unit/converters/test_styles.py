@@ -14,8 +14,8 @@ Tests comprehensive style processing functionality including:
 import pytest
 from lxml import etree as ET
 from unittest.mock import Mock, patch
-from src.converters.style_engine import StyleEngine
-from src.converters.base import ConversionContext
+from core.converters.style_engine import StyleEngine
+from core.converters.base import ConversionContext
 
 
 class TestStyleEngine:

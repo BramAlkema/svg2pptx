@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:nvSpPr>
+    <p:cNvPr id="1" name="TextFrame"/>
+    <p:cNvSpPr txBox="1"/>
+    <p:nvPr/>
+  </p:nvSpPr>
+  <p:spPr>
+    <a:xfrm>
+      <a:off x="0" y="0"/>
+      <a:ext cx="1" cy="1"/>
+    </a:xfrm>
+    <a:prstGeom prst="rect">
+      <a:avLst/>
+    </a:prstGeom>
+    <a:noFill/>
+    <!-- EFFECTS WILL BE INSERTED HERE -->
+  </p:spPr>
+  <p:txBody>
+    <a:bodyPr wrap="none" rtlCol="0">
+      <a:spAutoFit/>
+    </a:bodyPr>
+    <a:lstStyle/>
+    <!-- PARAGRAPHS WILL BE INSERTED HERE -->
+  </p:txBody>
+</p:sp>

@@ -40,10 +40,34 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import components being tested together
 try:
-    from src.converters.base import CoordinateSystem, ConversionContext
+    from core.converters.base import CoordinateSystem, ConversionContext
     BASE_AVAILABLE = True
 except ImportError:
     BASE_AVAILABLE = False
+
+
+def convert_svg_file_to_pptx(svg_path: str, output_path: str) -> str:
+    """
+    Helper function for file-to-file conversion tests.
+    Converts SVG file to PPTX using CleanSlateConverter.
+
+    Args:
+        svg_path: Path to input SVG file
+        output_path: Path to output PPTX file
+
+    Returns:
+        Path to created PPTX file
+    """
+    from core.pipeline.converter import CleanSlateConverter
+
+    converter = CleanSlateConverter()
+    result = converter.convert_file(Path(svg_path), Path(output_path))
+
+    if result and result.output_data:
+        with open(output_path, 'wb') as f:
+            f.write(result.output_data)
+        return output_path
+    return None
 
 try:
     from core.transforms import Matrix
@@ -58,7 +82,7 @@ except ImportError:
     COLOR_AVAILABLE = False
 
 try:
-    from src.converters.shapes import RectangleConverter
+    from core.converters.shapes import RectangleConverter
     SHAPE_CONVERTERS_AVAILABLE = True
 except ImportError:
     SHAPE_CONVERTERS_AVAILABLE = False
@@ -320,8 +344,8 @@ class TestRealConversionPipelineIntegration:
 
             # Simulate conversion process that should clean up resources
             try:
-                from src.svg2pptx import convert_svg_to_pptx
-                result_path = convert_svg_to_pptx(str(temp_svg), str(temp_pptx))
+                from core.pipeline.converter import CleanSlateConverter
+                result_path = convert_svg_file_to_pptx(str(temp_svg), str(temp_pptx))
                 assert Path(result_path).exists()
 
                 # Clean up created files
@@ -374,8 +398,8 @@ class TestRealConversionPipelineIntegration:
                 temp_svg.write_text(svg_content)
 
                 # Import and perform conversion
-                from src.svg2pptx import convert_svg_to_pptx
-                result_path = convert_svg_to_pptx(str(temp_svg), str(temp_pptx))
+                from core.pipeline.converter import CleanSlateConverter
+                result_path = convert_svg_file_to_pptx(str(temp_svg), str(temp_pptx))
 
                 # Validate result
                 success = Path(result_path).exists()
@@ -485,8 +509,8 @@ class TestRealConversionPipelineIntegration:
             temp_svg.write_text(svg_content)
 
             # Attempt conversion
-            from src.svg2pptx import convert_svg_to_pptx
-            result_path = convert_svg_to_pptx(str(temp_svg), str(temp_pptx))
+            from core.pipeline.converter import CleanSlateConverter
+            result_path = convert_svg_file_to_pptx(str(temp_svg), str(temp_pptx))
 
             if expected_outcome == "success":
                 # Should succeed and create valid output
@@ -556,8 +580,8 @@ class TestRealConversionPipelineIntegration:
             # Measure conversion time
             start_time = time.time()
 
-            from src.svg2pptx import convert_svg_to_pptx
-            result_path = convert_svg_to_pptx(str(temp_svg), str(temp_pptx))
+            from core.pipeline.converter import CleanSlateConverter
+            result_path = convert_svg_file_to_pptx(str(temp_svg), str(temp_pptx))
 
             end_time = time.time()
             conversion_time = end_time - start_time
@@ -695,11 +719,11 @@ class TestConversionPipelineEdgeCases:
 
             for test_file, description in test_cases:
                 try:
-                    from src.svg2pptx import convert_svg_to_pptx
+                    from core.pipeline.converter import CleanSlateConverter
                     temp_pptx = temp_directory / f"output_{description.replace(' ', '_')}.pptx"
 
                     # Should either succeed gracefully or fail with clear error
-                    result = convert_svg_to_pptx(str(test_file), str(temp_pptx))
+                    result = convert_svg_file_to_pptx(str(test_file), str(temp_pptx))
 
                     # If it succeeds, result should be a valid path
                     if result:
@@ -735,12 +759,12 @@ class TestConversionPipelineEdgeCases:
             large_svg.write_text(large_svg_content)
 
             try:
-                from src.svg2pptx import convert_svg_to_pptx
+                from core.pipeline.converter import CleanSlateConverter
                 temp_pptx = temp_directory / "large_output.pptx"
 
                 import time
                 start_time = time.time()
-                result = convert_svg_to_pptx(str(large_svg), str(temp_pptx))
+                result = convert_svg_file_to_pptx(str(large_svg), str(temp_pptx))
                 end_time = time.time()
 
                 processing_time = end_time - start_time
@@ -786,11 +810,11 @@ class TestConversionPipelineEdgeCases:
                 malformed_svg.write_text(svg_content)
 
                 try:
-                    from src.svg2pptx import convert_svg_to_pptx
+                    from core.pipeline.converter import CleanSlateConverter
                     temp_pptx = temp_directory / f"malformed_output_{case_name}.pptx"
 
                     # Should handle malformed input gracefully
-                    result = convert_svg_to_pptx(str(malformed_svg), str(temp_pptx))
+                    result = convert_svg_file_to_pptx(str(malformed_svg), str(temp_pptx))
 
                     print(f"Malformed input {case_name} handled gracefully")
 
@@ -837,8 +861,8 @@ class TestConversionPipelineLongRunning:
                     stress_svg.write_text(stress_svg_content)
 
                     start_time = time.time()
-                    from src.svg2pptx import convert_svg_to_pptx
-                    result = convert_svg_to_pptx(str(stress_svg), str(stress_pptx))
+                    from core.pipeline.converter import CleanSlateConverter
+                    result = convert_svg_file_to_pptx(str(stress_svg), str(stress_pptx))
                     end_time = time.time()
 
                     iteration_time = end_time - start_time
@@ -908,8 +932,8 @@ class TestConversionPipelineLongRunning:
                     try:
                         endurance_svg.write_text(endurance_svg_content)
 
-                        from src.svg2pptx import convert_svg_to_pptx
-                        result = convert_svg_to_pptx(str(endurance_svg), str(endurance_pptx))
+                        from core.pipeline.converter import CleanSlateConverter
+                        result = convert_svg_file_to_pptx(str(endurance_svg), str(endurance_pptx))
 
                         # Clean up immediately
                         if endurance_svg.exists():

@@ -13,9 +13,9 @@ import logging
 from unittest.mock import Mock, patch
 from lxml import etree as ET
 
-from src.svg2pptx import convert_svg_to_pptx
-from src.svg2drawingml import SVGToDrawingMLConverter
-from src.converters.base import ConverterRegistry, BaseConverter, ConversionContext, ConverterRegistryFactory
+from core.pipeline.converter import CleanSlateConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
+from core.converters.base import ConverterRegistry, BaseConverter, ConversionContext, ConverterRegistryFactory
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class TestConverterModulesExercised:
     
     def test_shapes_converter_exercised(self):
         """Test that shapes converter is called during E2E conversion."""
-        from src.converters import shapes
+        from core.converters import shapes
         
         svg_with_shapes = '''<?xml version="1.0"?>
 <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">

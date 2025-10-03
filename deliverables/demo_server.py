@@ -19,7 +19,7 @@ import webbrowser
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.svg2pptx import convert_svg_to_pptx
+from core.svg2pptx import convert_svg_to_pptx
 from core.paths import create_path_system
 
 

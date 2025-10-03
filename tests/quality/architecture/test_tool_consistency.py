@@ -15,7 +15,7 @@ import importlib
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.converters.base import BaseConverter
+from core.converters.base import BaseConverter
 from core.units import UnitConverter
 from core.color import Color
 from core.transforms import TransformEngine
@@ -233,8 +233,8 @@ class TestToolChainConsistency:
         """Test that converters use tools correctly in their implementations."""
         # Import specific converters to test their tool usage
         try:
-            from src.converters.text import TextConverter
-            from src.converters.shapes import RectangleConverter
+            from core.converters.text import TextConverter
+            from core.converters.shapes import RectangleConverter
 
             services = create_mock_services()
 

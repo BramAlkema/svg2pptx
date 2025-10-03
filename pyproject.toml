@@ -115,6 +115,7 @@ Repository = "https://github.com/svg2pptx/svg2pptx"
 "Bug Tracker" = "https://github.com/svg2pptx/svg2pptx/issues"
 
 [project.scripts]
+svg2pptx = "core.api:main"
 svg2pptx-server = "api.main:run_server"
 
 [tool.hatch.build]

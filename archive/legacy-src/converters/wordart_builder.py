@@ -10,13 +10,13 @@ from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass
 from lxml import etree as ET
 
-from ..services.wordart_transform_service import (
+from core.services.wordart_transform_service import (
     SVGTransformDecomposer, TransformComponents, create_transform_decomposer
 )
-from ..utils.ooxml_transform_utils import (
+from core.utils.ooxml_transform_utils import (
     OOXMLTransformUtils, OOXMLTransform, create_ooxml_transform_utils
 )
-from ..utils.xml_builder import XMLBuilder
+from core.utils.xml_builder import XMLBuilder
 
 
 @dataclass

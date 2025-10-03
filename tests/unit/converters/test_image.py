@@ -10,8 +10,8 @@ import base64
 import tempfile
 import os
 
-from src.converters.image import ImageConverter
-from src.converters.base import ConversionContext
+from core.converters.image import ImageConverter
+from core.converters.base import ConversionContext
 
 
 class TestImageConverter:

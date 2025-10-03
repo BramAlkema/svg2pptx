@@ -15,8 +15,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.converters.groups import GroupHandler
-from src.converters.base import BaseConverter, ConversionContext, ConverterRegistry, CoordinateSystem
+from core.converters.groups import GroupHandler
+from core.converters.base import BaseConverter, ConversionContext, ConverterRegistry, CoordinateSystem
 from core.transforms import Matrix
 from core.units import UnitConverter
 from core.services.conversion_services import ConversionServices

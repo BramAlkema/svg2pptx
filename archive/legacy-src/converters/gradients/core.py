@@ -31,7 +31,7 @@ import re
 from lxml import etree as ET
 
 # Import modern color system for consistency
-from ...color import Color
+from core.color import Color
 
 
 class GradientType(Enum):
@@ -638,7 +638,7 @@ class GradientEngine:
         """Fallback color parsing when color processor fails"""
         try:
             # Try using unified Color API
-            from ...color import Color
+            from core.color import Color
             color_obj = Color(color_str)
             hex_color = color_obj.hex()[1:]  # Remove # prefix
 

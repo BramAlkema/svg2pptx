@@ -70,6 +70,10 @@ class PolicyConfig:
     enable_gradient_simplification: bool = True
     enable_clip_boolean_ops: bool = True
     enable_wordart_classification: bool = True
+    enable_font_embedding: bool = True
+
+    # Font embedding configuration
+    max_font_size_mb: float = 10.0  # Maximum font file size for embedding
 
     # Fallback behavior
     conservative_clipping: bool = False    # Use EMF for any clipping

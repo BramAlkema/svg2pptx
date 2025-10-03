@@ -16,9 +16,9 @@ from lxml import etree as ET
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from src.converters.gradients.converter import GradientConverter
-    from src.converters.gradients.mesh_engine import MeshGradientEngine
-    from src.converters.base import ConversionContext
+    from core.converters.gradients.converter import GradientConverter
+    from core.converters.gradients.mesh_engine import MeshGradientEngine
+    from core.converters.base import ConversionContext
     from core.services.conversion_services import ConversionServices
     GRADIENT_IMPORTS_AVAILABLE = True
 except ImportError:

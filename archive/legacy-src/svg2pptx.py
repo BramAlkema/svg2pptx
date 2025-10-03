@@ -40,8 +40,8 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
 from .svg2drawingml import SVGToDrawingMLConverter
-from .services.conversion_services import ConversionServices
-from .core.pptx_builder import PPTXBuilder
+from core.services.conversion_services import ConversionServices
+from core.legacy.pptx_builder import PPTXBuilder
 # Old multislide import removed - replaced with Clean Slate multipage system
 import tempfile
 import zipfile

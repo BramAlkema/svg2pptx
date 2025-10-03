@@ -26,6 +26,71 @@ class GradientService:
         """Register a gradient definition for later resolution."""
         self._gradient_cache[gradient_id] = gradient_element
 
+    def extract_from_svg(self, svg_root: ET.Element) -> int:
+        """
+        Extract all gradient definitions from SVG <defs> and register them.
+        This should be called once after parsing, before mapping.
+
+        Args:
+            svg_root: Parsed SVG root element
+
+        Returns:
+            Number of gradients registered
+        """
+        # Find all <defs> elements
+        defs_elements = svg_root.findall('.//{http://www.w3.org/2000/svg}defs')
+        if not defs_elements:
+            defs_elements = svg_root.findall('.//defs')
+
+        gradient_count = 0
+
+        for defs in defs_elements:
+            # Extract linear gradients
+            for grad in defs.findall('.//{http://www.w3.org/2000/svg}linearGradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    gradient_count += 1
+
+            for grad in defs.findall('.//linearGradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    gradient_count += 1
+
+            # Extract radial gradients
+            for grad in defs.findall('.//{http://www.w3.org/2000/svg}radialGradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    gradient_count += 1
+
+            for grad in defs.findall('.//radialGradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    gradient_count += 1
+
+            # Extract mesh gradients
+            for grad in defs.findall('.//{http://www.w3.org/2000/svg}meshgradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    logger.info(f"Registered meshgradient: {grad_id}")
+                    gradient_count += 1
+
+            for grad in defs.findall('.//meshgradient'):
+                grad_id = grad.get('id')
+                if grad_id and grad_id not in self._gradient_cache:
+                    self.register_gradient(grad_id, grad)
+                    logger.info(f"Registered meshgradient: {grad_id}")
+                    gradient_count += 1
+
+        if gradient_count > 0:
+            logger.debug(f"Extracted {gradient_count} gradients from SVG <defs>")
+
+        return gradient_count
+
     def get_gradient_content(self, gradient_id: str, context: Any = None) -> Optional[str]:
         """
         Get gradient content by ID.

@@ -44,7 +44,7 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
         """Optimize path data using consolidated PathProcessor service."""
         try:
             # Use PathProcessor for comprehensive path optimization
-            from ..utils.path_processor import path_processor
+            from core.utils.path_processor import path_processor
             return path_processor.optimize_path_data(path_data, precision)
 
         except ImportError:
@@ -96,7 +96,7 @@ class ConvertPathDataPlugin(PreprocessingPlugin):
         """Optimize coordinate precision throughout the path using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number formatting
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
 
             def replace_number(match):
                 num_str = match.group(0)
@@ -250,7 +250,7 @@ class ConvertTransformPlugin(PreprocessingPlugin):
         """Parse transform string into individual transform functions using canonical TransformEngine."""
         try:
             # Use the canonical high-performance TransformEngine for parsing
-            from ..transforms import TransformEngine
+            from core.transforms import TransformEngine
 
             engine = services.transform_parser
             transforms = engine.parse(transform_str)
@@ -518,7 +518,7 @@ class MinifyStylesPlugin(PreprocessingPlugin):
     def _minify_style_attribute(self, style_attr: str) -> str:
         """Minify inline style attribute."""
         # Use canonical StyleParser with custom minification logic
-        from ..utils.style_parser import style_parser
+        from core.utils.style_parser import style_parser
         style_dict = style_parser.parse_style_to_dict(style_attr)
 
         # Apply minification logic - skip redundant properties

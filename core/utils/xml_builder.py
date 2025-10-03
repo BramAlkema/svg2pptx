@@ -2,16 +2,32 @@
 """
 Centralized XML Builder Utilities for SVG2PPTX.
 
+DEPRECATED: This module provides backward compatibility for existing code.
+New code should use enhanced_xml_builder.py for proper lxml.etree DOM manipulation.
+
 Consolidates XML generation functionality from across the codebase to eliminate
 duplication and provide consistent, reusable XML building patterns.
 """
 
 import logging
+import warnings
 from typing import Dict, List, Optional, Any, Union
 from xml.sax.saxutils import escape
 from lxml import etree as ET
 
+# Import enhanced builder for delegation
+from .enhanced_xml_builder import (
+    EnhancedXMLBuilder, enhanced_xml_builder as _enhanced_builder
+)
+
 logger = logging.getLogger(__name__)
+
+# Issue deprecation warning
+warnings.warn(
+    "xml_builder.py is deprecated. Use enhanced_xml_builder.py for new code.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class XMLBuilder:
@@ -37,6 +53,14 @@ class XMLBuilder:
     def __init__(self):
         """Initialize XML builder with common settings."""
         self._id_counter = 1
+        self._enhanced_builder = EnhancedXMLBuilder()
+
+        # Issue deprecation warning for XMLBuilder usage
+        warnings.warn(
+            "XMLBuilder is deprecated. Use EnhancedXMLBuilder for new code.",
+            DeprecationWarning,
+            stacklevel=3
+        )
 
     def get_next_id(self) -> int:
         """Get next unique ID for XML elements."""

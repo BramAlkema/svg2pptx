@@ -20,9 +20,9 @@ from tests.fixtures.svg_content import *
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from src.converters.shapes import RectangleConverter, CircleConverter, PolygonConverter, LineConverter
-from src.converters.text import TextConverter
-from src.converters.base import ConversionContext
+from core.converters.shapes import RectangleConverter, CircleConverter, PolygonConverter, LineConverter
+from core.converters.text import TextConverter
+from core.converters.base import ConversionContext
 
 
 @pytest.mark.unit

@@ -60,7 +60,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
-from src.converters.base import BaseConverter, ConversionContext
+from core.converters.base import BaseConverter, ConversionContext
 from core.units import UnitConverter
 from core.color import Color
 from core.transforms import TransformEngine

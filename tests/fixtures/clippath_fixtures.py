@@ -7,7 +7,7 @@ This module provides test data and utilities for clipPath analysis and conversio
 
 from lxml import etree as ET
 from typing import Dict, List
-from src.converters.clippath_types import ClipPathDefinition, ClippingType
+from core.converters.clippath_types import ClipPathDefinition, ClippingType
 
 
 def create_svg_element(tag_name: str, **attrs) -> ET.Element:

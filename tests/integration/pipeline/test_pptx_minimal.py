@@ -19,7 +19,7 @@ from unittest.mock import patch
 # Import modules under test
 try:
     from development.prototypes.pptx_minimal import MinimalPPTXGenerator, svg_to_pptx
-    from src.ooxml_templates import get_pptx_file_structure, create_slide_xml
+    from core.ooxml_templates import get_pptx_file_structure, create_slide_xml
 except ImportError:
     # Fallback for test environment
     import sys

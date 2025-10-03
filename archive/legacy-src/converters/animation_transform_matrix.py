@@ -202,7 +202,7 @@ class AnimationTransformProcessor:
         """
         try:
             # Use the canonical high-performance TransformEngine for parsing
-            from ...transforms import TransformEngine
+            from core.transforms import TransformEngine
 
             engine = services.transform_parser
             transforms = engine.parse(transform_str)

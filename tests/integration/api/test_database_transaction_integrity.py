@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.batch.models import (
+from core.batch.models import (
     BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, 
     init_database, DatabaseManager
 )

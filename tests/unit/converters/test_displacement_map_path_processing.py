@@ -20,11 +20,11 @@ from unittest.mock import Mock, patch, MagicMock
 import math
 
 # Import the filter implementation (to be created)
-from src.converters.filters.geometric.displacement_map import (
+from core.converters.filters.geometric.displacement_map import (
     DisplacementMapFilter,
     DisplacementMapParameters
 )
-from src.converters.filters.core.base import FilterContext, FilterResult
+from core.converters.filters.core.base import FilterContext, FilterResult
 
 
 class TestPathSubdivisionAlgorithms(unittest.TestCase):

@@ -18,6 +18,21 @@ from zipfile import ZipFile
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 GOLDEN_DIR = FIXTURES_DIR / "golden_standards"
 
+
+
+def convert_svg_for_test(svg_path, output_path):
+    """Helper for test file conversion."""
+    from core.pipeline.converter import CleanSlateConverter
+    from pathlib import Path
+    
+    converter = CleanSlateConverter()
+    result = converter.convert_file(Path(svg_path), Path(output_path))
+    if result and result.output_data:
+        with open(output_path, 'wb') as f:
+            f.write(result.output_data)
+        return output_path
+    return None
+
 class GoldenTestResult:
     """Result of a golden standard test comparison."""
     
@@ -219,7 +234,7 @@ class TestGoldenStandards:
     
     def test_basic_shapes_golden(self, pptx_validator, golden_test_data):
         """Test basic shapes against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         for svg_file, expected_pptx in golden_test_data:
             if "basic_shapes" not in svg_file.name:
@@ -228,7 +243,7 @@ class TestGoldenStandards:
             # Convert SVG to PPTX
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    convert_svg_to_pptx(str(svg_file), tmp.name)
+                    convert_svg_for_test(str(svg_file), tmp.name)
                     
                     # Compare against golden standard
                     result = pptx_validator.compare_pptx_files(Path(tmp.name), expected_pptx)
@@ -242,7 +257,7 @@ class TestGoldenStandards:
     
     def test_complex_paths_golden(self, pptx_validator, golden_test_data):
         """Test complex paths against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         for svg_file, expected_pptx in golden_test_data:
             if "complex_paths" not in svg_file.name:
@@ -250,7 +265,7 @@ class TestGoldenStandards:
             
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    convert_svg_to_pptx(str(svg_file), tmp.name)
+                    convert_svg_for_test(str(svg_file), tmp.name)
                     result = pptx_validator.compare_pptx_files(Path(tmp.name), expected_pptx)
                     
                     if not result.passed:
@@ -261,7 +276,7 @@ class TestGoldenStandards:
     
     def test_text_rendering_golden(self, pptx_validator, golden_test_data):
         """Test text rendering against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         for svg_file, expected_pptx in golden_test_data:
             if "text_rendering" not in svg_file.name:
@@ -269,7 +284,7 @@ class TestGoldenStandards:
             
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    convert_svg_to_pptx(str(svg_file), tmp.name)
+                    convert_svg_for_test(str(svg_file), tmp.name)
                     result = pptx_validator.compare_pptx_files(Path(tmp.name), expected_pptx)
                     
                     if not result.passed:
@@ -280,7 +295,7 @@ class TestGoldenStandards:
     
     def test_transforms_golden(self, pptx_validator, golden_test_data):
         """Test transforms against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         for svg_file, expected_pptx in golden_test_data:
             if "transforms" not in svg_file.name:
@@ -288,7 +303,7 @@ class TestGoldenStandards:
             
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    convert_svg_to_pptx(str(svg_file), tmp.name)
+                    convert_svg_for_test(str(svg_file), tmp.name)
                     result = pptx_validator.compare_pptx_files(Path(tmp.name), expected_pptx)
                     
                     if not result.passed:
@@ -300,14 +315,14 @@ class TestGoldenStandards:
     @pytest.mark.slow
     def test_comprehensive_golden_suite(self, pptx_validator, golden_test_data):
         """Run comprehensive golden test suite."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.pipeline.converter import CleanSlateConverter
         
         results = []
         
         for svg_file, expected_pptx in golden_test_data:
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
                 try:
-                    convert_svg_to_pptx(str(svg_file), tmp.name)
+                    convert_svg_for_test(str(svg_file), tmp.name)
                     result = pptx_validator.compare_pptx_files(Path(tmp.name), expected_pptx)
                     results.append(result)
                     

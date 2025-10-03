@@ -23,8 +23,8 @@ from lxml import etree as ET
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import the module under test
-from src.converters.masking import MaskingConverter, MaskDefinition, ClipPathDefinition, MaskType, ClippingType
-from src.converters.base import ConversionContext
+from core.converters.masking import MaskingConverter, MaskDefinition, ClipPathDefinition, MaskType, ClippingType
+from core.converters.base import ConversionContext
 
 class TestMaskingConverter:
     """

@@ -28,7 +28,7 @@ __all__ = [
     "Point", "Rect", "Segment", "BezierSegment", "LineSegment",
 
     # Paint and styling
-    "Paint", "SolidPaint", "LinearGradientPaint", "RadialGradientPaint", "PatternPaint",
+    "Paint", "SolidPaint", "LinearGradientPaint", "RadialGradientPaint", "PatternPaint", "GradientReferencePaint",
     "GradientStop",
     "Stroke", "StrokeJoin", "StrokeCap",
 
@@ -49,4 +49,7 @@ __all__ = [
 
     # Validation
     "validate_ir", "IRValidationError",
+
+    # Navigation utilities
+    "get_effective_navigation", "has_navigation", "update_element_navigation",
 ]

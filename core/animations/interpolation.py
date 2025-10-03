@@ -84,7 +84,7 @@ class ColorInterpolator:
                 color = services.color_parser(color_str)
             else:
                 # Fallback to direct Color import for backward compatibility
-                from ..color import Color
+                from core.color import Color
                 color = Color(color_str)
 
             return color.rgb()

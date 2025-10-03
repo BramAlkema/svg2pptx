@@ -15,8 +15,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
-from src.converters.text import TextConverter
-from src.converters.base import ConversionContext, CoordinateSystem
+from core.converters.text import TextConverter
+from core.converters.base import ConversionContext, CoordinateSystem
 from core.units import UnitConverter
 from core.color import Color
 from core.services.conversion_services import ConversionServices

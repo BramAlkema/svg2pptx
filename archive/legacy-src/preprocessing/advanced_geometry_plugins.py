@@ -91,7 +91,7 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
         """Parse path data using consolidated PathProcessor service."""
         try:
             # Use the consolidated PathProcessor for consistent path parsing
-            from ..utils.path_processor import path_processor
+            from core.utils.path_processor import path_processor
 
             path_commands = path_processor.parse_path_string(path_data)
 
@@ -147,7 +147,7 @@ class AdvancedPathSimplificationPlugin(PreprocessingPlugin):
         """Convert commands back to path data string using PathProcessor."""
         try:
             # Use PathProcessor for consistent path string generation
-            from ..utils.path_processor import path_processor, PathCommand, PathPoint
+            from core.utils.path_processor import path_processor, PathCommand, PathPoint
 
             # Convert tuple format back to PathCommand objects
             path_commands = []
@@ -229,7 +229,7 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
         """Parse points string into coordinate pairs using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent points parsing
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             result = preprocessor_utilities.parse_points_string(points_str)
             return result.data if result.success else []
         except ImportError:
@@ -264,7 +264,7 @@ class AdvancedPolygonSimplificationPlugin(PreprocessingPlugin):
         """Format number with appropriate precision using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number formatting
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             return preprocessor_utilities.format_number(num, precision)
         except ImportError:
             # Fallback to legacy implementation
@@ -339,7 +339,7 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
         """Parse points string into coordinate pairs using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent points parsing
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             result = preprocessor_utilities.parse_points_string(points_str)
             return result.data if result.success else []
         except ImportError:
@@ -423,7 +423,7 @@ class CubicSmoothingPlugin(PreprocessingPlugin):
         """Format number with appropriate precision using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number formatting
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             return preprocessor_utilities.format_number(num, precision)
         except ImportError:
             # Fallback to legacy implementation

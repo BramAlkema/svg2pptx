@@ -15,7 +15,7 @@ from core.services.wordart_color_service import (
     GradientStop,
     create_wordart_color_service
 )
-from src.converters.wordart_gradient_mapper import (
+from core.converters.wordart_gradient_mapper import (
     WordArtGradientMapper,
     create_wordart_gradient_mapper
 )

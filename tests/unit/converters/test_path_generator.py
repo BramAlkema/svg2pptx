@@ -8,8 +8,8 @@ import pytest
 import math
 from unittest.mock import Mock, patch, MagicMock
 
-from src.converters.path_generator import PathGenerator, PathCommand, PathPoint
-from src.converters.font_metrics import GlyphOutline
+from core.converters.path_generator import PathGenerator, PathCommand, PathPoint
+from core.converters.font_metrics import GlyphOutline
 
 
 class TestPathPoint:

@@ -15,15 +15,14 @@ from lxml import etree as ET
 
 # Import all our systems for comprehensive testing
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext, ConverterRegistry
-from src.svg2pptx import SVGToPowerPointConverter
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.converters.base import ConversionContext, ConverterRegistry
+from core.pipeline.converter import CleanSlateConverter
 
 # Import filter systems
-from src.converters.filters.image.blur import GaussianBlurFilter, BlurParameters
-from src.converters.filters.image.color import ColorMatrixFilter
-from src.converters.filters.core.registry import FilterRegistry
-from src.converters.filters.core.base import FilterContext, FilterResult
+from core.converters.filters.image.blur import GaussianBlurFilter, BlurParameters
+from core.converters.filters.image.color import ColorMatrixFilter
+from core.converters.filters.core.registry import FilterRegistry
+from core.converters.filters.core.base import FilterContext, FilterResult
 
 # Import API systems
 from api.routes.google_slides import GoogleSlidesConverter, convert_with_google_slides_fallback
@@ -40,7 +39,7 @@ class TestAllConvertersIntegration:
     @pytest.fixture
     def registry(self, services):
         """Create converter registry with all converters."""
-        from src.converters.registry_factory import ConverterRegistryFactory
+        from core.converters.registry_factory import ConverterRegistryFactory
         return ConverterRegistryFactory.create_default_registry(services)
 
     def test_rectangle_converter_integration(self, services, registry):
@@ -358,7 +357,7 @@ class TestEndToEndConversionPipeline:
 
     @pytest.mark.asyncio
     async def test_complete_pptx_pipeline(self):
-        """Test complete SVG to PPTX conversion."""
+        """Test complete SVG to PPTX conversion using CleanSlateConverter."""
         svg_content = '''<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
             <rect x="20" y="20" width="160" height="110" fill="lightblue" stroke="navy" stroke-width="2"/>
             <circle cx="100" cy="75" r="30" fill="red" opacity="0.7"/>
@@ -366,11 +365,15 @@ class TestEndToEndConversionPipeline:
         </svg>'''
 
         try:
-            # Test SVGToPowerPointConverter
-            pptx_converter = SVGToPowerPointConverter()
+            # Test CleanSlateConverter
+            pptx_converter = CleanSlateConverter()
 
             with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
-                result = pptx_converter.convert_to_file(svg_content, temp_file.name)
+                result = pptx_converter.convert_string(svg_content)
+
+                if result and result.output_data:
+                    with open(temp_file.name, 'wb') as f:
+                        f.write(result.output_data)
 
                 assert Path(temp_file.name).exists(), "PPTX file should be created"
                 assert Path(temp_file.name).stat().st_size > 0, "PPTX should not be empty"
@@ -388,21 +391,22 @@ class TestEndToEndConversionPipeline:
 
     @pytest.mark.asyncio
     async def test_drawingml_conversion(self):
-        """Test SVG to DrawingML conversion."""
+        """Test SVG to PPTX conversion produces valid output."""
         svg_content = '''<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <rect x="10" y="10" width="80" height="80" fill="green"/>
         </svg>'''
 
         try:
-            drawingml_converter = SVGToDrawingMLConverter()
-            result = drawingml_converter.convert(svg_content)
+            converter = CleanSlateConverter()
+            result = converter.convert_string(svg_content)
 
-            assert isinstance(result, str), "Should return DrawingML XML string"
-            assert len(result) > 0, "Should produce some output"
-            assert 'xml' in result or '<' in result, "Should contain XML"
+            assert result is not None, "Should return ConversionResult"
+            assert result.output_data is not None, "Should have output data"
+            assert isinstance(result.output_data, bytes), "Should return bytes"
+            assert len(result.output_data) > 0, "Should produce some output"
 
         except Exception as e:
-            pytest.skip(f"DrawingML conversion failed: {e}")
+            pytest.skip(f"PPTX conversion failed: {e}")
 
     def test_conversion_services_integration(self):
         """Test ConversionServices provides all required services."""

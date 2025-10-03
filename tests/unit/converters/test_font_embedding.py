@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch, mock_open
 from pathlib import Path
 
 # We'll create these classes as we implement
-# from src.converters.font_embedding import FontEmbeddingAnalyzer, EmbeddedFontFace, FontEmbedResult
+# from core.converters.font_embedding import FontEmbeddingAnalyzer, EmbeddedFontFace, FontEmbedResult
 
 
 class TestFontFaceDataUrlParsing:

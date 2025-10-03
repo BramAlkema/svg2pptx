@@ -11,8 +11,8 @@ from unittest.mock import Mock, patch
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
-from src.converters.filters.core.base import Filter, FilterResult, FilterContext
-from src.converters.filters.image.convolve_matrix import (
+from core.converters.filters.core.base import Filter, FilterResult, FilterContext
+from core.converters.filters.image.convolve_matrix import (
     ConvolveMatrixFilter,
     ConvolveMatrixParameters,
     EdgeMode,

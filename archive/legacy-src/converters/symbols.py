@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
-from ..transforms import Matrix
+from core.transforms import Matrix
 
 
 @dataclass
@@ -115,7 +115,7 @@ class SymbolConverter(BaseConverter):
                 if hasattr(self, 'services') and self.services and hasattr(self.services, 'viewport_resolver'):
                     resolver = self.services.viewport_resolver
                 else:
-                    from ..services.conversion_services import ConversionServices
+                    from core.services.conversion_services import ConversionServices
                     services = ConversionServices.create_default()
                     resolver = services.viewport_resolver
 

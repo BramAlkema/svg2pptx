@@ -47,20 +47,44 @@ class TestW3CCompliance:
     @pytest.fixture
     def svg_converter(self):
         """Get SVG to PPTX converter for testing."""
-        # Import and create converter - adapt to your actual converter interface
-        try:
-            from src.svg2pptx import SVGToPowerPointConverter
-            return SVGToPowerPointConverter()
-        except ImportError:
-            # Fallback mock converter for testing infrastructure
-            class MockConverter:
-                def convert_svg_element(self, svg_element):
-                    return "mock_pptx_output"
+        from core.pipeline.converter import CleanSlateConverter
+        from pathlib import Path
+        from lxml import etree as ET
+        import tempfile
 
-                def convert(self, svg_content):
-                    return "mock_pptx_output"
+        class W3CConverterAdapter:
+            """Adapter to make CleanSlateConverter work with W3C test interface."""
 
-            return MockConverter()
+            def __init__(self):
+                self._converter = CleanSlateConverter()
+
+            def convert_svg_element(self, svg_element):
+                """Convert SVG element to PPTX file and return path."""
+                # Convert element to string
+                svg_content = ET.tostring(svg_element, encoding='unicode')
+
+                # Create temp output file
+                output_path = Path(tempfile.mktemp(suffix='.pptx'))
+
+                # Convert and write to file
+                result = self._converter.convert_string(svg_content)
+                if result and result.output_data:
+                    with open(output_path, 'wb') as f:
+                        f.write(result.output_data)
+                    return output_path
+                return None
+
+            def convert(self, svg_content):
+                """Convert SVG content string to PPTX file and return path."""
+                output_path = Path(tempfile.mktemp(suffix='.pptx'))
+                result = self._converter.convert_string(svg_content)
+                if result and result.output_data:
+                    with open(output_path, 'wb') as f:
+                        f.write(result.output_data)
+                    return output_path
+                return None
+
+        return W3CConverterAdapter()
 
     def load_test_cases(self, test_suite_dir: Path, category: str) -> List[Dict]:
         """

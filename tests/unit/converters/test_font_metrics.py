@@ -10,7 +10,7 @@ import platform
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 
-from src.converters.font_metrics import FontMetricsAnalyzer, FontMetrics, GlyphOutline
+from core.converters.font_metrics import FontMetricsAnalyzer, FontMetrics, GlyphOutline
 
 
 class TestFontMetricsAnalyzer:

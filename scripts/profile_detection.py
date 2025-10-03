@@ -14,8 +14,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.multislide.detection import SlideDetector
-from src.multislide.config import DetectionConfig
+from core.multislide.detection import SlideDetector
+from core.multislide.config import DetectionConfig
 from tests.support.multislide.performance_helpers import (
     DetectionPerformanceTester,
     generate_test_svg,

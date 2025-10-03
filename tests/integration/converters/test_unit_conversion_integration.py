@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from src.converters.base import CoordinateSystem
+    from core.converters.base import CoordinateSystem
     COORDINATE_AVAILABLE = True
 except ImportError:
     COORDINATE_AVAILABLE = False

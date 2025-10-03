@@ -74,7 +74,7 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
         """Clean numeric values using consolidated PreprocessorUtilities."""
         try:
             # Use PreprocessorUtilities for consistent number cleaning
-            from ..utils.preprocessor_utilities import preprocessor_utilities
+            from core.utils.preprocessor_utilities import preprocessor_utilities
             return preprocessor_utilities.clean_numeric_value(value, precision)
         except ImportError:
             # Fallback to legacy implementation
@@ -82,7 +82,7 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
 
         # Legacy implementation
         # Remove 'px' units
-        from ..utils.input_validator import InputValidator
+        from core.utils.input_validator import InputValidator
         validator = InputValidator()
         parsed_value = validator.parse_length_safe(value, default_unit='px')
         if parsed_value is not None:
@@ -108,7 +108,7 @@ class CleanupNumericValuesPlugin(PreprocessingPlugin):
 
         try:
             # Use PathProcessor for consistent path cleaning and optimization
-            from ..utils.path_processor import path_processor
+            from core.utils.path_processor import path_processor
             return path_processor.clean_path_data(path_data, precision)
 
         except ImportError:
@@ -217,7 +217,7 @@ class ConvertColorsPlugin(PreprocessingPlugin):
         """Convert a color value to its shortest representation using canonical Color system."""
         try:
             # Use canonical Color class for parsing and optimization
-            from ..color import Color
+            from core.color import Color
             color_obj = Color(color.strip())
 
             # Get hex color
@@ -347,7 +347,7 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
 
             # Use PathProcessor for consistent shape-to-path conversion
             try:
-                from ..utils.path_processor import path_processor
+                from core.utils.path_processor import path_processor
                 return path_processor.rect_to_path(x, y, width, height, rx, ry, precision)
             except ImportError:
                 # Fallback to legacy implementation
@@ -379,7 +379,7 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
 
             # Use PathProcessor for consistent shape-to-path conversion
             try:
-                from ..utils.path_processor import path_processor
+                from core.utils.path_processor import path_processor
                 return path_processor.circle_to_path(cx, cy, r, precision)
             except ImportError:
                 # Fallback to legacy implementation
@@ -408,7 +408,7 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
 
             # Use PathProcessor for consistent shape-to-path conversion
             try:
-                from ..utils.path_processor import path_processor
+                from core.utils.path_processor import path_processor
                 return path_processor.ellipse_to_path(cx, cy, rx, ry, precision)
             except ImportError:
                 # Fallback to legacy implementation
@@ -437,7 +437,7 @@ class ConvertShapeToPathPlugin(PreprocessingPlugin):
 
             # Use PathProcessor for consistent shape-to-path conversion
             try:
-                from ..utils.path_processor import path_processor
+                from core.utils.path_processor import path_processor
                 return path_processor.line_to_path(x1, y1, x2, y2, precision)
             except ImportError:
                 # Fallback to legacy implementation

@@ -125,7 +125,7 @@ class PPTXPackageBuilder:
 
         # Auto-detect font embedding requirements if not specified
         if embed_fonts is None:
-            from ..services.svg_font_analyzer import SVGFontAnalyzer
+            from core.services.svg_font_analyzer import SVGFontAnalyzer
             analyzer = SVGFontAnalyzer()
             font_analysis = analyzer.analyze_svg_fonts(svg_content)
             embed_fonts = font_analysis['should_embed_fonts']
@@ -174,12 +174,12 @@ class PPTXPackageBuilder:
                 import numpy as np
 
                 try:
-                    from ..services.conversion_services import ConversionServices
+                    from core.services.conversion_services import ConversionServices
                     services = ConversionServices.create_default()
                     resolver = services.viewport_resolver
                 except ImportError:
                     # Fallback to direct import
-                    from ..viewbox import ViewportEngine
+                    from core.viewbox import ViewportEngine
                     resolver = ViewportEngine()
 
                 parsed = resolver.parse_viewbox_strings(np.array([viewbox]))
@@ -418,7 +418,7 @@ class PPTXPackageBuilder:
         """
         try:
             from lxml import etree as ET
-            from ..services.conversion_services import ConversionServices
+            from core.services.conversion_services import ConversionServices
             from ..converters.base import ConversionContext, ConverterRegistry
 
             # Parse SVG content

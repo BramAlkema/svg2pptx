@@ -149,7 +149,7 @@ class TestBasicInfrastructure:
     def test_converters_importable(self):
         """Test that converter modules can be imported."""
         try:
-            from src.converters.base import BaseConverter
+            from core.converters.base import BaseConverter
             assert BaseConverter is not None
         except ImportError as e:
             pytest.fail(f"Cannot import base converter: {e}")

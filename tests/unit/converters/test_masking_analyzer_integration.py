@@ -10,9 +10,9 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch
 from lxml import etree as ET
 
-from src.converters.masking import MaskingConverter
-from src.converters.clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity
-from src.converters.base import ConversionContext
+from core.converters.masking import MaskingConverter
+from core.converters.clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 from tests.fixtures.clippath_fixtures import (
     create_svg_element, create_simple_rect_clippath,

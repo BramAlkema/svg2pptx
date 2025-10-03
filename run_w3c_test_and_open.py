@@ -95,7 +95,7 @@ def run_w3c_conversion_test():
     # Convert using our working PathSystem
     print("\n🔧 Converting with PathSystem (API)...")
     try:
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
 
         output_pptx = "w3c_compliance_test.pptx"
         result = convert_svg_to_pptx(str(test_svg), output_pptx)

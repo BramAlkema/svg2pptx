@@ -11,14 +11,14 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, Optional, List
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
     FilterException,
     FilterValidationError
 )
-from src.converters.filters.image.blur import (
+from core.converters.filters.image.blur import (
     GaussianBlurFilter,
     MotionBlurFilter,
     BlurFilterException
@@ -564,7 +564,7 @@ class TestBlurIntegration:
 
     def test_integration_with_filter_registry(self):
         """Test blur filters integration with FilterRegistry."""
-        from src.converters.filters.core.registry import FilterRegistry
+        from core.converters.filters.core.registry import FilterRegistry
 
         registry = FilterRegistry()
 
@@ -589,7 +589,7 @@ class TestBlurIntegration:
 
     def test_integration_with_filter_chain(self):
         """Test blur filters integration with FilterChain."""
-        from src.converters.filters.core.chain import FilterChain
+        from core.converters.filters.core.chain import FilterChain
 
         # Create filter chain with blur filters
         gaussian_blur = GaussianBlurFilter()

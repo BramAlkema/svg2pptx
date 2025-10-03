@@ -18,9 +18,9 @@ from typing import Dict, List, Tuple, Optional
 import re
 import math
 import numpy as np
-from .units import EMU_PER_POINT
-from .viewbox import ViewportEngine, AspectAlign, MeetOrSlice
-from .services.conversion_services import ConversionServices
+from core.units import EMU_PER_POINT
+from core.viewbox import ViewportEngine, AspectAlign, MeetOrSlice
+from core.services.conversion_services import ConversionServices
 from .converters.base import ConverterRegistryFactory, CoordinateSystem, ConversionContext
 
 

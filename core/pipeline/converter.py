@@ -30,6 +30,9 @@ from core.animations import SMILParser
 from core.performance.measurement import BenchmarkEngine
 from core.converters import CustGeomGenerator
 
+# Import font embedding coordinator
+from core.fonts import SVGFontEmbedCoordinator
+
 logger = logging.getLogger(__name__)
 
 
@@ -173,6 +176,9 @@ class CleanSlateConverter:
         """
         start_time = time.perf_counter()
 
+        # Store original SVG for font extraction
+        self._current_svg_content = svg_content
+
         try:
             # Stage 1: Parse SVG
             parse_start = time.perf_counter()
@@ -195,6 +201,23 @@ class CleanSlateConverter:
                     exception=e
                 )
                 raise ConversionError(f"SVG parsing failed: {e}", stage="parsing", cause=e)
+
+            # Stage 1.5: Extract definitions from <defs>
+            try:
+                # Extract gradients
+                self.services.gradient_service.extract_from_svg(parse_result.svg_root)
+
+                # Extract filters
+                self.services.filter_service.process_svg_filters(parse_result.svg_root)
+
+                self.logger.debug(
+                    f"Extracted definitions - "
+                    f"gradients: {len(self.services.gradient_service._gradient_cache)}, "
+                    f"filters: {len(self.services.filter_service._filter_cache)}"
+                )
+            except Exception as e:
+                self.logger.warning(f"Definition extraction failed: {e}")
+                # Non-fatal - continue with conversion
 
             # Stage 2: Analyze SVG structure
             analyze_start = time.perf_counter()
@@ -319,27 +342,9 @@ class CleanSlateConverter:
             policy_config = PolicyConfig()
             self.policy = PolicyEngine(policy_config)
 
-            # Initialize mappers with services
-            # Create individual mappers first
-            path_mapper = PathMapper(self.policy, self.services)
-            text_mapper = FontMapperAdapter(self.policy, self.services)
-            image_mapper = ImageMapper(self.policy, self.services)
-
-            # Create group mapper with child_mappers wired
-            child_mappers = {
-                'path': path_mapper,
-                'text': text_mapper,
-                'image': image_mapper
-            }
-            group_mapper = GroupMapper(self.policy, self.services, child_mappers)
-
-            self.mappers = {
-                'path': path_mapper,
-                'textframe': text_mapper,
-                'richtextframe': text_mapper,  # TextMapper handles both TextFrame and RichTextFrame
-                'group': group_mapper,
-                'image': image_mapper
-            }
+            # Note: Mappers are now created fresh per conversion in _create_mappers()
+            # to avoid state accumulation across conversions
+            # self.mappers is created per-conversion, not stored
 
             # Initialize embedder
             self.embedder = DrawingMLEmbedder(
@@ -347,7 +352,7 @@ class CleanSlateConverter:
                 slide_height_emu=self.config.slide_config.height_emu
             )
 
-            # Initialize package writer
+            # Initialize package writer (writes media files from EmbedderResult)
             self.package_writer = PackageWriter()
 
             # Initialize migrated system integrations
@@ -355,15 +360,44 @@ class CleanSlateConverter:
             self.performance_engine = BenchmarkEngine()  # For performance monitoring
             self.custgeom_generator = CustGeomGenerator()  # For custom geometry generation
 
+            # Initialize font embedding coordinator with policy
+            self.font_coordinator = SVGFontEmbedCoordinator(policy=self.policy)  # For custom font embedding
+
             self.logger.debug("Pipeline components initialized successfully")
-            self.logger.debug("Migrated systems integrated: animations, performance, custom geometry")
+            self.logger.debug("Migrated systems integrated: animations, performance, custom geometry, font embedding")
 
         except Exception as e:
             raise ConversionError(f"Failed to initialize pipeline components: {e}",
                                 stage="initialization", cause=e)
 
+    def _create_mappers(self):
+        """Create fresh mappers for a conversion (avoids state accumulation)"""
+        # Create individual mappers first
+        path_mapper = PathMapper(self.policy, services=self.services)
+        text_mapper = FontMapperAdapter(self.policy, self.services)
+        image_mapper = ImageMapper(self.policy, self.services)
+
+        # Create group mapper with child_mappers wired
+        child_mappers = {
+            'path': path_mapper,
+            'text': text_mapper,
+            'image': image_mapper
+        }
+        group_mapper = GroupMapper(self.policy, self.services, child_mappers)
+
+        return {
+            'path': path_mapper,
+            'textframe': text_mapper,
+            'richtextframe': text_mapper,
+            'group': group_mapper,
+            'image': image_mapper
+        }
+
     def _map_scene_elements(self, scene: SceneGraph) -> List[MapperResult]:
         """Map all elements in scene using appropriate mappers"""
+        # Create fresh mappers for this conversion
+        mappers = self._create_mappers()
+
         mapper_results = []
 
         # Defensive: accept SceneGraph, list, or None
@@ -384,7 +418,7 @@ class CleanSlateConverter:
         for element in elements:
             try:
                 # Find appropriate mapper
-                mapper = self._find_mapper(element)
+                mapper = self._find_mapper(element, mappers)
                 if not mapper:
                     element_type = type(element).__name__
                     self.error_reporter.report_mapping_error(
@@ -419,16 +453,16 @@ class CleanSlateConverter:
 
         return mapper_results
 
-    def _find_mapper(self, element: IRElement) -> Optional[Mapper]:
+    def _find_mapper(self, element: IRElement, mappers: dict) -> Optional[Mapper]:
         """Find appropriate mapper for IR element"""
         element_type = type(element).__name__.lower()
 
         # Direct type mapping
-        if element_type in self.mappers:
-            return self.mappers[element_type]
+        if element_type in mappers:
+            return mappers[element_type]
 
         # Check mapper capabilities
-        for mapper in self.mappers.values():
+        for mapper in mappers.values():
             if mapper.can_map(element):
                 return mapper
 
@@ -444,7 +478,39 @@ class CleanSlateConverter:
                     [embedder_result],
                     output_stream := io.BytesIO()
                 )
-                return output_stream.getvalue()
+                pptx_data = output_stream.getvalue()
+
+                # Embed custom fonts from SVG @font-face declarations
+                try:
+                    import tempfile
+                    import os
+
+                    # Write PPTX to temp file for font embedding
+                    with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
+                        tmp_path = tmp.name
+                        tmp.write(pptx_data)
+
+                    # Embed fonts from original SVG
+                    font_registry = self.font_coordinator.harvest_and_embed(
+                        self._current_svg_content,
+                        tmp_path
+                    )
+
+                    if font_registry:
+                        self.logger.info(f"Embedded {len(font_registry)} custom font families: {list(font_registry.keys())}")
+
+                    # Read back the augmented PPTX
+                    with open(tmp_path, 'rb') as f:
+                        pptx_data = f.read()
+
+                    # Clean up temp file
+                    os.unlink(tmp_path)
+
+                except Exception as e:
+                    self.logger.warning(f"Font embedding failed: {e}")
+                    # Continue with non-embedded PPTX
+
+                return pptx_data
 
             elif self.config.output_format == OutputFormat.SLIDE_XML:
                 # Return just the slide XML

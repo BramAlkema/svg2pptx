@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, Optional, List
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
@@ -19,7 +19,7 @@ from src.converters.filters.core.base import (
     FilterValidationError
 )
 
-from src.converters.filters.geometric.composite import (
+from core.converters.filters.geometric.composite import (
     CompositeFilter,
     MergeFilter,
     BlendFilter,
@@ -529,7 +529,7 @@ class TestCompositeIntegration:
 
     def test_integration_with_filter_registry(self, integration_setup):
         """Test composite filters integration with FilterRegistry."""
-        from src.converters.filters.core.registry import FilterRegistry
+        from core.converters.filters.core.registry import FilterRegistry
 
         registry = FilterRegistry()
 

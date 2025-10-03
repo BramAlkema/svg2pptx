@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch, MagicMock
 from lxml import etree as ET
 
 from core.services.conversion_services import ConversionServices, ServiceInitializationError
-from src.config.hybrid_config import HybridConversionConfig
+from core.config.hybrid_config import HybridConversionConfig
 
 
 class TestConversionServicesHybridExtensions:

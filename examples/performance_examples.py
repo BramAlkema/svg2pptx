@@ -14,7 +14,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.performance import (
+from core.performance import (
     benchmark, benchmark_suite, parametrized_benchmark,
     PerformanceFramework, BenchmarkEngine, MetricsCollector,
     measure_performance, measure_block, PerformanceProfiler,
@@ -313,7 +313,7 @@ def metrics_collection_example():
     # Simulate running some benchmarks and collecting metrics
     for i in range(5):
         # Simulate a benchmark result
-        from src.performance import BenchmarkResult
+        from core.performance import BenchmarkResult
 
         execution_times = [random.uniform(8, 15) for _ in range(10)]
         result = BenchmarkResult(

@@ -22,11 +22,11 @@ from lxml import etree as ET
 from dataclasses import dataclass
 
 # Import the module under test
-from src.converters.markers import (
+from core.converters.markers import (
     MarkerConverter, MarkerDefinition, SymbolDefinition, MarkerInstance,
     MarkerPosition, MarkerUnits
 )
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 from core.color import Color
 from core.transforms import Matrix
 

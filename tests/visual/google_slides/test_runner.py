@@ -25,7 +25,7 @@ from .visual_validator import VisualValidator, ValidationReport
 
 # SVG2PPTX imports
 try:
-    from src.svg2pptx import convert_svg_to_pptx
+    from core.pipeline.converter import CleanSlateConverter
     SVG2PPTX_AVAILABLE = True
 except ImportError:
     SVG2PPTX_AVAILABLE = False
@@ -335,13 +335,20 @@ class GoogleSlidesTestRunner:
             logger.error(f"Cleanup error: {e}")
 
     async def _convert_svg_to_pptx(self, svg_path: Path, test_name: str) -> Path:
-        """Convert SVG to PPTX using SVG2PPTX library."""
+        """Convert SVG to PPTX using CleanSlateConverter."""
+        from core.pipeline.converter import CleanSlateConverter
+
         output_path = self.config.temp_dir / f"{test_name}.pptx"
 
         logger.info(f"Converting SVG to PPTX: {svg_path} -> {output_path}")
 
-        # Use SVG2PPTX conversion
-        convert_svg_to_pptx(str(svg_path), str(output_path))
+        # Use CleanSlateConverter
+        converter = CleanSlateConverter()
+        result = converter.convert_file(svg_path, output_path)
+
+        if result and result.output_data:
+            with open(output_path, 'wb') as f:
+                f.write(result.output_data)
 
         if not output_path.exists():
             raise RuntimeError(f"PPTX conversion failed: {output_path}")

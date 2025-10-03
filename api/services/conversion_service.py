@@ -221,117 +221,58 @@ class ConversionService:
         temp_pptx_path = None
         
         try:
-            from src.preprocessing import create_optimizer
-            from src.converters import ConverterRegistry, CoordinateSystem, ConversionContext
-            from core.legacy.pptx_builder import PPTXBuilder
+            from core.api import convert_svg_to_pptx
             import tempfile
             import os
-            from lxml import etree as ET
-            
-            logger.info(f"Starting SVG to PPTX conversion for content from {source_url}")
-            
-            # Step 1: Preprocess SVG content for better conversion quality
-            svg_text = svg_content.decode('utf-8', errors='replace')
-            
+
+            logger.info(f"Starting SVG to PPTX conversion using Clean Slate for content from {source_url}")
+
+            # Step 1: Prepare preprocessing config
+            preprocessing_config = None
             if self.settings.svg_preprocessing_enabled:
                 logger.info(f"Preprocessing SVG with {self.settings.svg_preprocessing_preset} preset")
-                
-                optimizer = create_optimizer(
-                    preset=self.settings.svg_preprocessing_preset,
-                    precision=self.settings.svg_preprocessing_precision,
-                    multipass=self.settings.svg_preprocessing_multipass
-                )
-                optimized_svg = optimizer.optimize(svg_text)
-                logger.info("SVG preprocessing completed")
+                preprocessing_config = {
+                    'preset': self.settings.svg_preprocessing_preset,
+                    'precision': self.settings.svg_preprocessing_precision,
+                    'multipass': self.settings.svg_preprocessing_multipass
+                }
             else:
-                logger.info("SVG preprocessing disabled, using original content")
-                optimized_svg = svg_text
+                logger.info("SVG preprocessing disabled")
             
-            # Step 2: Parse optimized SVG
-            root = ET.fromstring(optimized_svg)
-            logger.info("Parsed optimized SVG structure")
-            
-            # Step 3: Initialize modular conversion system with services
-            from core.services.conversion_services import ConversionServices
+            # Step 2: Create temporary file for SVG input
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False, encoding='utf-8') as svg_file:
+                svg_file.write(svg_content.decode('utf-8', errors='replace'))
+                temp_svg_path = svg_file.name
 
-            # Create default services for conversion
-            services = ConversionServices.create_default()
-            registry = ConverterRegistry(services=services)
-            registry.register_default_converters()
+            # Step 3: Create temporary file for PPTX output
+            with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as pptx_file:
+                temp_pptx_path = pptx_file.name
 
-            # Extract viewBox or use default coordinates
-            viewbox = root.get('viewBox')
-            if viewbox:
-                coords = [float(x) for x in viewbox.split()]
-                coord_system = CoordinateSystem(tuple(coords))
-            else:
-                width = float(root.get('width', '800').replace('px', ''))
-                height = float(root.get('height', '600').replace('px', ''))
-                coord_system = CoordinateSystem((0, 0, width, height))
+            # Step 4: Convert using Clean Slate API
+            logger.info("Converting SVG using Clean Slate API")
+            result = convert_svg_to_pptx(
+                svg_input=temp_svg_path,
+                output_path=temp_pptx_path,
+                preprocessing_config=preprocessing_config
+            )
 
-            # Step 4: Convert SVG using modular converters
-            # ConversionContext now requires services parameter
-            context = ConversionContext(services=services, svg_root=root)
-            context.coordinate_system = coord_system
-            context.converter_registry = registry
+            if not result.success:
+                raise ConversionError(f"Clean Slate conversion failed: {result.error_message}")
 
-            logger.info("Converting SVG using modular converter system")
-            drawingml_elements = []
-
-            for element in root:
-                # get_converter expects ET.Element, not element tag
-                converter = registry.get_converter(element)
-                if converter:
-                    try:
-                        result = converter.convert(element, context)
-                        if result:
-                            drawingml_elements.append(result)
-                    except Exception as e:
-                        logger.warning(f"Failed to convert element {element.tag}: {e}")
-            
-            # Combine all DrawingML elements
-            drawingml = '\n'.join(drawingml_elements)
-            logger.info(f"Generated DrawingML with {len(drawingml_elements)} elements ({len(drawingml)} characters)")
-            
-            # Fallback to legacy converter if no elements were converted
-            if not drawingml_elements:
-                logger.warning("No elements converted with modular system, falling back to legacy converter")
-                from src.svg2drawingml import SVGToDrawingMLConverter
-                from core.services.conversion_services import ConversionServices
-
-                # Save optimized SVG to temporary file for legacy converter
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False, encoding='utf-8') as f:
-                    f.write(optimized_svg)
-                    temp_svg_path = f.name
-
-                # Create converter with default services
-                services = ConversionServices.create_default()
-                converter = SVGToDrawingMLConverter(services=services)
-                drawingml = converter.convert_file(temp_svg_path)
-                logger.info(f"Fallback conversion completed ({len(drawingml)} characters)")
-            
-            # Step 5: Create PPTX file using the builder
-            builder = PPTXBuilder()
-            with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as f:
-                temp_pptx_path = f.name
-            
-            logger.info(f"Creating PPTX file: {temp_pptx_path}")
-            builder.create_minimal_pptx(drawingml, temp_pptx_path)
-            
-            # Read the generated PPTX content
+            # Step 5: Read the generated PPTX content
             with open(temp_pptx_path, 'rb') as f:
                 pptx_content = f.read()
-            
-            logger.info(f"Successfully converted SVG to PPTX ({len(pptx_content)} bytes)")
-            
+
+            logger.info(f"Successfully converted SVG to PPTX using Clean Slate ({len(pptx_content)} bytes)")
+
             # Verify the PPTX content is valid
             if len(pptx_content) < 1000:  # PPTX files should be at least 1KB
                 raise ConversionError("Generated PPTX file appears to be too small to be valid")
-            
+
             # Check for ZIP signature (PPTX files are ZIP archives)
             if not pptx_content.startswith(b'PK'):
                 raise ConversionError("Generated file does not have valid ZIP/PPTX signature")
-            
+
             return pptx_content
             
         except ImportError as e:

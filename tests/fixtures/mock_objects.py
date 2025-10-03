@@ -16,7 +16,7 @@ def mock_conversion_context():
     Returns:
         Configured ConversionContext instance for testing.
     """
-    from src.converters.base import ConversionContext, CoordinateSystem
+    from core.converters.base import ConversionContext, CoordinateSystem
     from unittest.mock import Mock
     
     # Create a mock coordinate system
@@ -227,7 +227,7 @@ def mock_viewport_handler():
 def mock_base_converter():
     """Mock base converter with common functionality."""
     from unittest.mock import Mock
-    from src.converters.base import BaseConverter
+    from core.converters.base import BaseConverter
 
     mock = Mock(spec=BaseConverter)
     mock.can_convert.return_value = True

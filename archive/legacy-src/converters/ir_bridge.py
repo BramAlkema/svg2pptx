@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List
 from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from ..config.hybrid_config import HybridConversionConfig
 
 logger = logging.getLogger(__name__)

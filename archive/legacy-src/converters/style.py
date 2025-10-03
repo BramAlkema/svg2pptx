@@ -7,7 +7,7 @@ from lxml import etree as ET
 import re
 from typing import Dict, List, Optional, Tuple
 from .base import BaseConverter, ConversionContext
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 
 
 class StyleConverter(BaseConverter):

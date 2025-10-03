@@ -67,7 +67,6 @@ class LegacyMigrationAnalyzer:
         # Files to exclude from analysis
         self.excluded_files = {
             'src/services/conversion_services.py',  # Service definitions
-            'src/services/service_adapters.py',    # Adapter definitions
             'src/units/__init__.py',               # Unit system core
             'src/units/core.py',                   # Unit system core
             'src/color/__init__.py',               # Color system core

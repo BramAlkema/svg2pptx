@@ -11,9 +11,9 @@ Tests the new TextPathEngine implementation with focus on:
 import pytest
 from lxml import etree as ET
 from unittest.mock import Mock, MagicMock
-from src.converters.text_path_engine import TextPathEngine
-from src.converters.result_types import TextConversionConfig
-from src.converters.base import ConversionContext
+from core.converters.text_path_engine import TextPathEngine
+from core.converters.result_types import TextConversionConfig
+from core.converters.base import ConversionContext
 
 
 class TestTextPathEngine:

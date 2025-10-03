@@ -35,9 +35,9 @@ from dataclasses import dataclass
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from src.converters.gradients.mesh_engine import MeshGradientEngine, ColorInterpolator, MeshPatch
-    from src.converters.gradients.converter import GradientConverter
-    from src.converters.base import ConversionContext
+    from core.converters.gradients.mesh_engine import MeshGradientEngine, ColorInterpolator, MeshPatch
+    from core.converters.gradients.converter import GradientConverter
+    from core.converters.base import ConversionContext
     from core.services.conversion_services import ConversionServices
     MESH_GRADIENT_AVAILABLE = True
 except ImportError:

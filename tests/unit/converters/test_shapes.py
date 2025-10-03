@@ -16,15 +16,15 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import with correct module path
-import src.converters.shapes as shapes
-from src.converters.shapes import (
+import core.converters.shapes as shapes
+from core.converters.shapes import (
     RectangleConverter,
     CircleConverter, 
     EllipseConverter,
     PolygonConverter,
     LineConverter
 )
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 
 
@@ -83,7 +83,7 @@ class TestRectangleConverter:
         element = ET.fromstring('<rect x="10" y="20" width="100" height="50"/>')
         
         # Create converter instance to access standardized tools
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -147,7 +147,7 @@ class TestRectangleConverter:
         mock_coord_system = Mock()
         mock_coord_system.svg_to_emu.return_value = (0, 0)
         # Use the actual unit converter for consistent EMU conversions
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -172,7 +172,7 @@ class TestRectangleConverter:
         ''')
         
         # Use UnitConverter for EMU calculation  
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -212,7 +212,7 @@ class TestRectangleConverter:
         element = ET.fromstring('<rect x="0" y="0" width="100" height="50" rx="10" ry="5"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -292,7 +292,7 @@ class TestCircleConverter:
         element = ET.fromstring('<circle cx="50" cy="50" r="25"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -398,7 +398,7 @@ class TestEllipseConverter:
         element = ET.fromstring('<ellipse cx="100" cy="50" rx="60" ry="30"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -504,7 +504,7 @@ class TestPolygonConverter:
         element = ET.fromstring('<polygon points="0,0 100,0 50,100"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -542,7 +542,7 @@ class TestPolygonConverter:
         element = ET.fromstring('<polyline points="0,0 50,50 100,0"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -635,7 +635,7 @@ class TestLineConverter:
         element = ET.fromstring('<line x1="0" y1="0" x2="100" y2="50"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -680,7 +680,7 @@ class TestLineConverter:
         element = ET.fromstring('<line x1="50" y1="0" x2="50" y2="100"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -707,7 +707,7 @@ class TestLineConverter:
         element = ET.fromstring('<line x1="0" y1="50" x2="100" y2="50"/>')
         
         # Use UnitConverter for EMU calculations
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         class MockConverter(BaseConverter):
             def can_convert(self, element): return True
             def convert(self, element, context): return ""
@@ -759,7 +759,7 @@ class TestShapeConverterIntegration:
     
     def test_all_shape_converters_inherit_from_base(self, mock_services):
         """Test that all shape converters inherit from BaseConverter."""
-        from src.converters.base import BaseConverter
+        from core.converters.base import BaseConverter
         
         assert issubclass(RectangleConverter, BaseConverter)
         assert issubclass(CircleConverter, BaseConverter)

@@ -194,7 +194,7 @@ class PowerPointAnimationGenerator:
             return self._generate_emphasis_animation(config, animation_id)
         else:
             # For unrecognized types, use centralized XML builder
-            from ..utils.xml_builder import get_xml_builder
+            from core.utils.xml_builder import get_xml_builder
             xml_builder = get_xml_builder()
             return xml_builder.create_animation_xml(
                 effect_type="fade",

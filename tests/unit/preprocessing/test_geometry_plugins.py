@@ -19,10 +19,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 # Import geometry preprocessing modules under test
 GEOMETRY_PLUGINS_AVAILABLE = True
 try:
-    from src.preprocessing.geometry_plugins import (
+    from core.preprocessing.geometry_plugins import (
         ConvertEllipseToCirclePlugin, SimplifyPolygonPlugin
     )
-    from src.preprocessing.base import PreprocessingContext
+    from core.preprocessing.base import PreprocessingContext
 except ImportError:
     GEOMETRY_PLUGINS_AVAILABLE = False
 

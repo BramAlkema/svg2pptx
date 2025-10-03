@@ -25,7 +25,7 @@ from enum import Enum
 
 from .base import BaseConverter
 from .base import ConversionContext
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from .clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity, ClipPathAnalysis
 from .clippath_analyzer import ClipPathAnalyzer
 from .boolean_flattener import BooleanFlattener

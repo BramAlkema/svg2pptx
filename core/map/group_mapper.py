@@ -9,10 +9,12 @@ and nested structure handling.
 import time
 import logging
 from typing import Dict, Any, Optional, List, Union
+from lxml.etree import Element
 
 from ..ir import IRElement, Group, Path, TextFrame, Image, Point, Rect
 from ..policy import Policy, PolicyDecision, GroupDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
+from ..utils.enhanced_xml_builder import EnhancedXMLBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +27,19 @@ class GroupMapper(Mapper):
     and group-level clipping and transforms.
     """
 
-    def __init__(self, policy: Policy, child_mappers: Dict[str, Mapper] = None):
+    def __init__(self, policy: Policy, services=None, child_mappers: Dict[str, Mapper] = None):
         """
         Initialize group mapper.
 
         Args:
             policy: Policy engine for decision making
+            services: Optional ConversionServices for advanced functionality
             child_mappers: Mappers for child elements (path, text, image)
         """
-        super().__init__(policy)
+        super().__init__(policy, services)
         self.logger = logging.getLogger(__name__)
         self.child_mappers = child_mappers or {}
+        self.xml_builder = EnhancedXMLBuilder()
 
     def can_map(self, element: IRElement) -> bool:
         """Check if element is a Group"""
@@ -93,18 +97,27 @@ class GroupMapper(Mapper):
     def _map_flattened_group(self, group: Group, decision: GroupDecision) -> MapperResult:
         """Map group as flattened individual shapes"""
         try:
+            # Get parent filter for propagation
+            parent_filter = getattr(group, 'filter', None)
+
             # Map each child element individually
             child_results = []
             for child in group.children:
-                child_mapper = self._get_child_mapper(child)
+                # Propagate parent filter to child if needed
+                child_with_filter = self._propagate_filter_to_child(child, parent_filter)
+
+                child_mapper = self._get_child_mapper(child_with_filter)
                 if child_mapper:
-                    child_result = child_mapper.map(child)
+                    child_result = child_mapper.map(child_with_filter)
                     child_results.append(child_result.xml_content)
                 else:
                     self.logger.warning(f"No mapper found for child type: {type(child)}")
 
             # Combine child XML content
             xml_content = '\n'.join(child_results)
+
+            # Extract hyperlink information
+            hyperlink_info = self._extract_hyperlink_info(group)
 
             return MapperResult(
                 element=group,
@@ -120,7 +133,8 @@ class GroupMapper(Mapper):
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.9,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
+                **hyperlink_info
             )
 
         except Exception as e:
@@ -136,44 +150,54 @@ class GroupMapper(Mapper):
             width_emu = int(bbox.width * 12700)
             height_emu = int(bbox.height * 12700)
 
+            # Get parent filter for propagation
+            parent_filter = getattr(group, 'filter', None)
+
             # Map child elements
             child_xmls = []
             for child in group.children:
-                child_mapper = self._get_child_mapper(child)
+                # Propagate parent filter to child if needed
+                child_with_filter = self._propagate_filter_to_child(child, parent_filter)
+
+                child_mapper = self._get_child_mapper(child_with_filter)
                 if child_mapper:
-                    child_result = child_mapper.map(child)
+                    child_result = child_mapper.map(child_with_filter)
                     child_xmls.append(child_result.xml_content)
                 else:
                     self.logger.warning(f"No mapper found for child type: {type(child)}")
 
             # Generate group clipping if needed
-            clip_xml = self._generate_group_clip_xml(group.clip) if group.clip else ""
+            clip_xml = self._generate_group_clip_xml(group.clip) if group.clip else None
 
-            # Generate opacity if needed
-            opacity_xml = ""
-            if group.opacity < 1.0:
-                opacity_val = int(group.opacity * 100000)
-                opacity_xml = f'<a:effectLst><a:alpha val="{opacity_val}"/></a:effectLst>'
+            # Convert child XML strings to Elements for template-based generation
+            child_elements = []
+            for child_xml in child_xmls:
+                try:
+                    # Parse child XML string to Element
+                    from lxml import etree as ET
+                    child_element = ET.fromstring(child_xml)
+                    child_elements.append(child_element)
+                except ET.XMLSyntaxError as e:
+                    self.logger.warning(f"Failed to parse child XML: {e}")
+                    continue
 
-            # Create group shape
-            xml_content = f"""<p:grpSp>
-    <p:nvGrpSpPr>
-        <p:cNvPr id="1" name="Group"/>
-        <p:cNvGrpSpPr/>
-        <p:nvPr/>
-    </p:nvGrpSpPr>
-    <p:grpSpPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-            <a:chOff x="0" y="0"/>
-            <a:chExt cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        {opacity_xml}
-        {clip_xml}
-    </p:grpSpPr>
-    {chr(10).join(child_xmls)}
-</p:grpSp>"""
+            # Create group shape using enhanced XML builder
+            group_element = self.xml_builder.generate_group_shape(
+                group_id=1,  # TODO: Use proper ID from context
+                x_emu=x_emu,
+                y_emu=y_emu,
+                width_emu=width_emu,
+                height_emu=height_emu,
+                child_elements=child_elements,
+                opacity=group.opacity if group.opacity < 1.0 else None,
+                clip_xml=clip_xml
+            )
+
+            # Convert Element back to XML string
+            xml_content = self.xml_builder.element_to_string(group_element)
+
+            # Extract hyperlink information
+            hyperlink_info = self._extract_hyperlink_info(group)
 
             return MapperResult(
                 element=group,
@@ -190,7 +214,8 @@ class GroupMapper(Mapper):
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.85,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
+                **hyperlink_info
             )
 
         except Exception as e:
@@ -206,34 +231,18 @@ class GroupMapper(Mapper):
             width_emu = int(bbox.width * 12700)
             height_emu = int(bbox.height * 12700)
 
-            xml_content = f"""<p:pic>
-    <p:nvPicPr>
-        <p:cNvPr id="1" name="EMF_Group"/>
-        <p:cNvPicPr/>
-        <p:nvPr/>
-    </p:nvPicPr>
-    <p:blipFill>
-        <a:blip r:embed="rId1">
-            <a:extLst>
-                <a:ext uri="{{A7D7AC89-857B-4B46-9C2E-2B86D7B4E2B4}}">
-                    <emf:emfBlip xmlns:emf="http://schemas.microsoft.com/office/drawing/2010/emf"/>
-                </a:ext>
-            </a:extLst>
-        </a:blip>
-        <a:stretch>
-            <a:fillRect/>
-        </a:stretch>
-    </p:blipFill>
-    <p:spPr>
-        <a:xfrm>
-            <a:off x="{x_emu}" y="{y_emu}"/>
-            <a:ext cx="{width_emu}" cy="{height_emu}"/>
-        </a:xfrm>
-        <a:prstGeom prst="rect">
-            <a:avLst/>
-        </a:prstGeom>
-    </p:spPr>
-</p:pic>"""
+            # Create group picture using enhanced XML builder for EMF fallback
+            group_pic_element = self.xml_builder.generate_group_picture(
+                group_id=1,  # TODO: Use proper ID from context
+                x_emu=x_emu,
+                y_emu=y_emu,
+                width_emu=width_emu,
+                height_emu=height_emu,
+                embed_id="rId1"  # EMF embed reference
+            )
+
+            # Convert Element back to XML string
+            xml_content = self.xml_builder.element_to_string(group_pic_element)
 
             return MapperResult(
                 element=group,
@@ -249,11 +258,94 @@ class GroupMapper(Mapper):
                 },
                 estimated_quality=0.98,  # EMF preserves full fidelity
                 estimated_performance=0.8,   # Slower than native
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
+                **hyperlink_info
             )
 
         except Exception as e:
             raise MappingError(f"Failed to generate EMF for group: {e}", group, e)
+
+    def _propagate_filter_to_child(self, child: IRElement, parent_filter: Optional[str]) -> IRElement:
+        """
+        Propagate parent group's filter to child if child doesn't have its own filter.
+
+        Args:
+            child: Child IR element
+            parent_filter: Filter from parent group
+
+        Returns:
+            Child element with filter applied (returns original if no propagation needed)
+        """
+        if not parent_filter:
+            return child
+
+        # Check if child already has a filter
+        if hasattr(child, 'filter') and child.filter:
+            # Child has its own filter, don't override
+            return child
+
+        # Child doesn't have filter, propagate from parent
+        # Create new instance with filter
+        try:
+            if isinstance(child, Path):
+                return Path(
+                    segments=child.segments,
+                    fill=child.fill,
+                    stroke=child.stroke,
+                    clip=child.clip,
+                    opacity=child.opacity,
+                    transform=child.transform,
+                    hyperlink=child.hyperlink,
+                    navigation=child.navigation,
+                    id=child.id,
+                    filter=parent_filter
+                )
+            elif isinstance(child, TextFrame):
+                return TextFrame(
+                    origin=child.origin,
+                    runs=child.runs,
+                    bbox=child.bbox,
+                    anchor=child.anchor,
+                    line_height=child.line_height,
+                    baseline_shift=child.baseline_shift,
+                    hyperlink=child.hyperlink,
+                    navigation=child.navigation,
+                    id=child.id,
+                    filter=parent_filter
+                )
+            elif isinstance(child, Image):
+                return Image(
+                    origin=child.origin,
+                    size=child.size,
+                    data=child.data,
+                    format=child.format,
+                    href=child.href,
+                    clip=child.clip,
+                    opacity=child.opacity,
+                    transform=child.transform,
+                    hyperlink=child.hyperlink,
+                    navigation=child.navigation,
+                    id=child.id,
+                    filter=parent_filter
+                )
+            elif isinstance(child, Group):
+                # For nested groups, propagate to the group itself
+                return Group(
+                    children=child.children,
+                    clip=child.clip,
+                    opacity=child.opacity,
+                    transform=child.transform,
+                    hyperlink=child.hyperlink,
+                    navigation=child.navigation,
+                    id=child.id,
+                    filter=parent_filter
+                )
+            else:
+                # Unknown type, return as-is
+                return child
+        except Exception as e:
+            self.logger.warning(f"Failed to propagate filter to child: {e}")
+            return child
 
     def _get_child_mapper(self, child: IRElement) -> Optional[Mapper]:
         """Get appropriate mapper for child element"""

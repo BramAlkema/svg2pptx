@@ -19,8 +19,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 from core.transforms import Matrix
 from core.color import Color, ColorBatch
 from core.units import UnitConverter, ConversionContext
-from src.converters.base import CoordinateSystem, ConversionContext as BaseConversionContext
-from src.converters.shapes import RectangleConverter, CircleConverter
+from core.converters.base import CoordinateSystem, ConversionContext as BaseConversionContext
+from core.converters.shapes import RectangleConverter, CircleConverter
 from core.services.conversion_services import ConversionServices, ConversionConfig
 
 

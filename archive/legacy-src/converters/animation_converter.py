@@ -4,7 +4,7 @@ from lxml import etree as ET
 from dataclasses import dataclass
 
 from .base import BaseConverter, ConversionContext
-from ..services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from ..animations.parser import SMILParser
 from ..animations.timeline import TimelineGenerator, TimelineConfig
 from ..animations.powerpoint import PowerPointAnimationGenerator
@@ -109,7 +109,7 @@ class AnimationConverter(BaseConverter):
             xml = self.powerpoint_generator.generate_animation_sequence([anim_def], scenes)
 
             # Normalize color animations to match expected format
-            from ..utils.pptx_anim_normalize import normalize_if_color_anim
+            from core.utils.pptx_anim_normalize import normalize_if_color_anim
             xml = normalize_if_color_anim(xml, anim_def)
 
             return xml or ""

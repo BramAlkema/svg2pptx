@@ -12,8 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.multislide.detection import SlideDetector
-from src.multislide.config import DetectionConfig
+from core.multislide.detection import SlideDetector
+from core.multislide.config import DetectionConfig
 from tests.support.multislide.performance_helpers import generate_test_svg
 
 
@@ -39,7 +39,7 @@ class UnoptimizedSlideDetector(SlideDetector):
         # 1. Explicit markers (full tree traversal)
         for element in svg_root.iter():
             if element.get('data-slide-break') in ['true', '1']:
-                from src.multislide.detection import SlideBoundary, SlideType
+                from core.multislide.detection import SlideBoundary, SlideType
                 boundary = SlideBoundary(
                     boundary_type=SlideType.SECTION_MARKER,
                     element=element,
@@ -76,7 +76,7 @@ class UnoptimizedSlideDetector(SlideDetector):
                         time_groups[begin_time] = []
                     time_groups[begin_time].append(elem)
 
-                from src.multislide.detection import SlideBoundary, SlideType
+                from core.multislide.detection import SlideBoundary, SlideType
                 for time_point, animations in time_groups.items():
                     if len(animations) >= 2:
                         boundary = SlideBoundary(
@@ -104,7 +104,7 @@ class UnoptimizedSlideDetector(SlideDetector):
                                 content_count += 1
 
                         if content_count >= 3:
-                            from src.multislide.detection import SlideBoundary, SlideType
+                            from core.multislide.detection import SlideBoundary, SlideType
                             boundary = SlideBoundary(
                                 boundary_type=SlideType.NESTED_SVG,
                                 element=element,
@@ -138,7 +138,7 @@ class UnoptimizedSlideDetector(SlideDetector):
                                 content_count += 1
 
                         if content_count >= 3:
-                            from src.multislide.detection import SlideBoundary, SlideType
+                            from core.multislide.detection import SlideBoundary, SlideType
                             boundary = SlideBoundary(
                                 boundary_type=SlideType.LAYER_GROUP,
                                 element=element,
@@ -168,7 +168,7 @@ class UnoptimizedSlideDetector(SlideDetector):
                     is_bold = font_weight in ['bold', '600', '700', '800', '900']
 
                     if is_section_marker or (is_large and is_bold):
-                        from src.multislide.detection import SlideBoundary, SlideType
+                        from core.multislide.detection import SlideBoundary, SlideType
                         boundary = SlideBoundary(
                             boundary_type=SlideType.SECTION_MARKER,
                             element=element,

@@ -39,6 +39,11 @@ from .accessibility import ColorAccessibility, ContrastLevel, ColorBlindnessType
 from .manipulation import ColorManipulation, BlendMode
 from .color_spaces import ColorSpaceConverter
 
+# ICC Color Profile System
+from .profile_model import ColorProfileRef, ProfiledColor, RenderingIntent
+from .profile_registry import ColorProfileRegistry, ProfileRegistryConfig
+from .profile_asset_loader import ColorProfileAssetLoader, AssetLoadingPolicy
+
 # Modern Color system only - no legacy compatibility needed
 
 # Export main public API
@@ -57,6 +62,15 @@ __all__ = [
     'ColorManipulation',
     'BlendMode',
     'ColorSpaceConverter',
+
+    # ICC Color Profile System
+    'ColorProfileRef',
+    'ProfiledColor',
+    'RenderingIntent',
+    'ColorProfileRegistry',
+    'ProfileRegistryConfig',
+    'ColorProfileAssetLoader',
+    'AssetLoadingPolicy',
 ]
 
 # Version info

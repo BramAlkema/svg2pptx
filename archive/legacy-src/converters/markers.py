@@ -32,11 +32,11 @@ from lxml import etree as ET
 
 from .base import BaseConverter
 from .base import ConversionContext
-from ..services.conversion_services import ConversionServices
-from ..transforms.core import Matrix
+from core.services.conversion_services import ConversionServices
+from core.transforms.core import Matrix
 
 if TYPE_CHECKING:
-    from ..color import Color
+    from core.color import Color
 
 logger = logging.getLogger(__name__)
 

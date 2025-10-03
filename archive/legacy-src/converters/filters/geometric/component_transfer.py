@@ -35,7 +35,7 @@ from typing import Dict, Any, Optional, List, Tuple, Union
 from lxml import etree
 from dataclasses import dataclass
 
-from ..core.base import Filter, FilterContext, FilterResult
+from core.legacy.base import Filter, FilterContext, FilterResult
 
 logger = logging.getLogger(__name__)
 

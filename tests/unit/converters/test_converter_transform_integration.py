@@ -23,13 +23,13 @@ except ImportError:
     TRANSFORM_AVAILABLE = False
 
 try:
-    from src.converters.base import CoordinateSystem, ConversionContext
+    from core.converters.base import CoordinateSystem, ConversionContext
     BASE_AVAILABLE = True
 except ImportError:
     BASE_AVAILABLE = False
 
 try:
-    from src.converters.shapes import RectangleConverter, CircleConverter
+    from core.converters.shapes import RectangleConverter, CircleConverter
     SHAPE_CONVERTERS_AVAILABLE = True
 except ImportError:
     SHAPE_CONVERTERS_AVAILABLE = False

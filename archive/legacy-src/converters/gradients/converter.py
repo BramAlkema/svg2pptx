@@ -11,7 +11,7 @@ from lxml import etree as ET
 import math
 
 from ..base import BaseConverter, ConversionContext
-from ...services.conversion_services import ConversionServices
+from core.services.conversion_services import ConversionServices
 from .core import GradientEngine
 from .mesh_engine import MeshGradientEngine
 

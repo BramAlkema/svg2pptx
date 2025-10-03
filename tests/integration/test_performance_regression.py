@@ -15,8 +15,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from src.svg2pptx import convert_svg_to_pptx
-from src.svg2drawingml import SVGToDrawingMLConverter
+from core.pipeline.converter import CleanSlateConverter
+from core.svg2drawingml import SVGToDrawingMLConverter
 from core.services.conversion_services import ConversionServices
 
 

@@ -31,7 +31,7 @@ from enum import Enum
 from lxml import etree as ET
 
 from .base import BaseConverter, ConversionContext
-from ..paths import create_path_system  # For path processing
+from core.paths import create_path_system  # For path processing
 
 
 class TextPathMethod(Enum):
@@ -145,7 +145,7 @@ class PathSampler:
     """Samples points along SVG paths for text positioning."""
 
     def __init__(self, services=None):
-        from ..services.conversion_services import ConversionServices
+        from core.services.conversion_services import ConversionServices
         if services is None:
             services = ConversionServices.create_default()
         # Path system will be created per-conversion with viewport configuration

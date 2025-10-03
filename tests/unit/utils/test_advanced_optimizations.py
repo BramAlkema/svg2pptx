@@ -4,7 +4,7 @@ Comprehensive test of all SVGO optimizations ported to Python.
 """
 
 import pytest
-from src.preprocessing import create_optimizer
+from core.preprocessing import create_optimizer
 
 # Import centralized fixtures
 from tests.fixtures.common import *

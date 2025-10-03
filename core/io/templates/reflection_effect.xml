@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:effectLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:sp3d extrusionH="76200" contourW="38100" prstMaterial="clear">
+    <a:bevelT w="38100" h="19050"/>
+    <a:lightRig rig="contrasting" dir="tl">
+      <a:rot lat="0" lon="0" rev="2400000"/>
+    </a:lightRig>
+  </a:sp3d>
+  <a:outerShdw blurRad="12700" dist="25400" dir="16200000" rotWithShape="1" sx="100000" sy="100000" kx="0" ky="0" algn="ctr">
+    <a:srgbClr val="FFFFFF">
+      <a:alpha val="80000"/>
+    </a:srgbClr>
+  </a:outerShdw>
+  <a:reflection blurRad="6350" stA="50000" stPos="0" endA="30000" endPos="100000" dist="38100" dir="5400000"/>
+</a:effectLst>

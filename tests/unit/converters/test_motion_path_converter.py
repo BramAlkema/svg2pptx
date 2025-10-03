@@ -10,8 +10,8 @@ import pytest
 from unittest.mock import Mock
 from lxml import etree
 
-from src.converters.animation_converter import AnimationConverter
-from src.converters.base import ConversionContext
+from core.converters.animation_converter import AnimationConverter
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 
 

@@ -12,9 +12,9 @@ Tests the composable façade over the modular animation system that:
 import pytest
 from lxml import etree as ET
 
-from src.converters.animation_converter import AnimationConverter
+from core.converters.animation_converter import AnimationConverter
 from core.services.conversion_services import ConversionServices
-from src.converters.base import ConversionContext
+from core.converters.base import ConversionContext
 
 
 def make_svg(svg_inner: str) -> ET.Element:

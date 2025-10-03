@@ -10,8 +10,8 @@ import pytest
 from lxml import etree as ET
 from unittest.mock import Mock
 
-from src.converters.gradients import GradientConverter
-from src.converters.base import ConversionContext
+from core.converters.gradients import GradientConverter
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 
 

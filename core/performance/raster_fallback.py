@@ -15,8 +15,8 @@ from lxml import etree as ET
 import time
 
 try:
-    from src.emf_blob import EMFBlob
-    from src.performance.cache import ConversionCache
+    from core.emf_blob import EMFBlob
+    from core.performance.cache import ConversionCache
 except ImportError:
     # Handle import for testing
     import sys

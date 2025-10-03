@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
-from src.batch.file_manager import BatchFileManager, ConvertedFile
+from core.batch.file_manager import BatchFileManager, ConvertedFile
 
 
 class TestBatchFileRetrieval:
@@ -56,7 +56,7 @@ class TestBatchFileRetrieval:
         file_manager.store_converted_files(job_id, sample_converted_files)
 
         # Import the route function and test file retrieval logic
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         # Mock the default file manager to return our test manager
         with patch('src.batch.file_manager._default_manager', file_manager):
@@ -89,7 +89,7 @@ class TestBatchFileRetrieval:
 
     def test_get_converted_files_not_found(self, file_manager):
         """Test file retrieval for non-existent job."""
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         with patch('src.batch.file_manager._default_manager', file_manager):
             file_manager_instance = get_default_file_manager()
@@ -106,7 +106,7 @@ class TestBatchFileRetrieval:
 
     def test_get_converted_files_error_handling(self, file_manager):
         """Test error handling in file retrieval."""
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         with patch('src.batch.file_manager._default_manager', file_manager):
             file_manager_instance = get_default_file_manager()
@@ -160,7 +160,7 @@ class TestBatchFileRetrieval:
         # Store files
         file_manager.store_converted_files(job_id, sample_converted_files)
 
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         with patch('src.batch.file_manager._default_manager', file_manager):
             file_manager_instance = get_default_file_manager()
@@ -195,7 +195,7 @@ class TestBatchFileRetrieval:
         # Store empty file list
         file_manager.store_converted_files(job_id, [])
 
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         with patch('src.batch.file_manager._default_manager', file_manager):
             file_manager_instance = get_default_file_manager()
@@ -222,7 +222,7 @@ class TestAPIRouteIntegration:
 
     def test_api_route_error_handling_pattern(self):
         """Test the error handling pattern used in API routes."""
-        from src.batch.file_manager import get_default_file_manager
+        from core.batch.file_manager import get_default_file_manager
 
         # Mock file manager to simulate different scenarios
         mock_manager = Mock()

@@ -259,7 +259,7 @@ class MeshGradientEngine:
 
         try:
             # Use canonical Color class for parsing (import locally to avoid circular imports)
-            from ...color import Color
+            from core.color import Color
             color = Color(color_str)
             # Get hex without '#' prefix for mesh gradient compatibility
             return color.hex().lstrip('#').upper()

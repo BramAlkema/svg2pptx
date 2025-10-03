@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:r xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:rPr lang="en-US" sz="1200" b="0" i="0">
+    <a:solidFill>
+      <a:srgbClr val="000000"/>
+    </a:solidFill>
+    <a:latin typeface="Arial"/>
+    <!-- FORMATTING WILL BE INSERTED HERE -->
+  </a:rPr>
+  <a:t><!-- TEXT CONTENT WILL BE INSERTED HERE --></a:t>
+</a:r>

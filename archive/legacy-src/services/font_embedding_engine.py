@@ -409,7 +409,7 @@ class FontEmbeddingEngine:
             Dictionary with embedding results and package statistics
         """
         from ..pptx.package_builder import PPTXPackageBuilder
-        from ..services.svg_font_analyzer import SVGFontAnalyzer
+        from core.services.svg_font_analyzer import SVGFontAnalyzer
 
         # Analyze SVG for font requirements
         analyzer = SVGFontAnalyzer()

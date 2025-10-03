@@ -42,6 +42,51 @@ class PPTXBuilder:
         self.next_rel_id = 10  # Start relationship IDs from rId10
         self._next_shape_id = 1000  # simple local id counter for shapes
 
+        # State for adapter compatibility
+        self._presentation = None
+        self._slides = []
+
+    def create_presentation(self, template: Optional[str] = None) -> 'PPTXBuilder':
+        """
+        Create a presentation object (adapter compatibility method).
+
+        Args:
+            template: Optional template (ignored for now)
+
+        Returns:
+            Self for method chaining
+        """
+        # Initialize presentation state
+        self._presentation = {'template': template, 'created': True}
+        self._slides = []
+        return self
+
+    def add_slide(self, presentation: Optional['PPTXBuilder'] = None, layout_index: int = 0) -> Dict[str, int]:
+        """
+        Add a slide to the presentation (adapter compatibility method).
+
+        Args:
+            presentation: PPTXBuilder instance (can be self or None)
+            layout_index: Layout index (ignored for now)
+
+        Returns:
+            Dictionary with slide information
+        """
+        # Use self if no presentation provided
+        if presentation is None:
+            presentation = self
+
+        # Add slide to internal state
+        slide_id = len(self._slides) + 1
+        slide_info = {
+            'slide_id': slide_id,
+            'layout_index': layout_index,
+            'shapes': []
+        }
+        self._slides.append(slide_info)
+
+        return slide_info
+
     def create_minimal_pptx(self, drawingml_shapes: str, output_path: str):
         """Create a minimal PPTX file with DrawingML shapes."""
 

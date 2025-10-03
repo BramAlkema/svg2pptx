@@ -11,14 +11,14 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, Optional, List
 from lxml import etree
 
-from src.converters.filters.core.base import (
+from core.converters.filters.core.base import (
     Filter,
     FilterContext,
     FilterResult,
     FilterException,
     FilterValidationError
 )
-from src.converters.filters.image.color import (
+from core.converters.filters.image.color import (
     ColorMatrixFilter,
     FloodFilter,
     LightingFilter,
@@ -562,7 +562,7 @@ class TestColorFiltersIntegration:
 
     def test_integration_with_filter_registry(self):
         """Test color filters integration with FilterRegistry."""
-        from src.converters.filters.core.registry import FilterRegistry
+        from core.converters.filters.core.registry import FilterRegistry
 
         registry = FilterRegistry()
 
@@ -586,7 +586,7 @@ class TestColorFiltersIntegration:
 
     def test_integration_with_filter_chain(self):
         """Test color filters integration with FilterChain."""
-        from src.converters.filters.core.chain import FilterChain
+        from core.converters.filters.core.chain import FilterChain
 
         # Create chain with color filters
         color_matrix = ColorMatrixFilter()

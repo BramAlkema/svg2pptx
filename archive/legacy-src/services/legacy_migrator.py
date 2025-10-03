@@ -157,7 +157,7 @@ def __init__(self, services: Optional[ConversionServices] = None, ...):
 
     # Service-aware fallback pattern (recommended for robustness):
     # try:
-    #     from ..services.conversion_services import ConversionServices
+    #     from core.services.conversion_services import ConversionServices
     #     services = ConversionServices.create_default()
     #     self.unit_converter = services.unit_converter
     # except (ImportError, RuntimeError):

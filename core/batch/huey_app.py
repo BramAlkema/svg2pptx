@@ -2,30 +2,40 @@
 """
 Huey application configuration for SVG to PowerPoint batch processing.
 
-Uses SQLite as the backend - completely pure Python, no external dependencies.
+Default: MemoryHuey (no background threads, immediate execution)
+Production: Set HUEY_USE_SQLITE=true for persistent queue with background workers
 """
 
 import os
-from huey import SqliteHuey
+from huey import MemoryHuey, SqliteHuey
 from pathlib import Path
 
-# Create data directory for Huey database
-DATA_DIR = Path(os.getenv('HUEY_DATA_DIR', './data'))
-DATA_DIR.mkdir(exist_ok=True)
+# Check if production mode with SQLite backend is needed
+USE_SQLITE = os.getenv('HUEY_USE_SQLITE', 'false').lower() == 'true'
 
-# Database path
-DB_PATH = DATA_DIR / 'svg2pptx_jobs.db'
+if USE_SQLITE:
+    # Production: SQLite backend with background workers
+    data_dir = Path(os.getenv('HUEY_DATA_DIR', './data'))
+    data_dir.mkdir(exist_ok=True)
+    db_path = data_dir / 'svg2pptx_jobs.db'
 
-# Create Huey instance with SQLite backend
-huey = SqliteHuey(
-    name='svg2pptx',
-    filename=str(DB_PATH),
-    # Configuration
-    immediate=os.getenv('HUEY_IMMEDIATE', 'false').lower() == 'true',  # Sync mode for testing
-    results=True,  # Store task results
-    store_none=False,  # Don't store None results
-    utc=True  # Use UTC timestamps
-)
+    huey = SqliteHuey(
+        name='svg2pptx',
+        filename=str(db_path),
+        immediate=False,  # Async mode with background threads
+        results=True,
+        store_none=False,
+        utc=True
+    )
+else:
+    # Default: Memory backend - no threads, immediate execution
+    huey = MemoryHuey(
+        name='svg2pptx',
+        immediate=True,  # Synchronous execution, no background threads
+        results=True,
+        store_none=False,
+        utc=True
+    )
 
 # Export for use in tasks
 __all__ = ['huey']
