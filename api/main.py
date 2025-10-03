@@ -17,6 +17,7 @@ from .services.conversion_service import ConversionService, ConversionError
 from .routes.previews import router as previews_router
 from .routes.batch import router as batch_router
 from .routes.visual_testing import router as visual_testing_router
+from .routes.analysis import router as analysis_router
 from src.svg2pptx import convert_svg_to_pptx
 
 # Configure logging
@@ -48,6 +49,9 @@ app.include_router(batch_router)
 
 # Include visual testing routes
 app.include_router(visual_testing_router)
+
+# Include analysis routes
+app.include_router(analysis_router)
 
 
 
