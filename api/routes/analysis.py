@@ -13,6 +13,7 @@ import logging
 
 from ..auth import get_current_user
 from core.analyze import create_api_analyzer, SVGAnalysisResult
+from core.analyze.svg_validator import create_svg_validator
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,20 @@ class AnalyzeRequest(BaseModel):
             "example": {
                 "svg_content": "<svg>...</svg>",
                 "analyze_depth": "detailed"
+            }
+        }
+
+
+class ValidateRequest(BaseModel):
+    """Request model for SVG validation."""
+    svg_content: Optional[str] = Field(None, description="SVG XML content")
+    strict_mode: bool = Field(False, description="Enable strict validation (warnings become errors)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "svg_content": "<svg viewBox='0 0 100 100'>...</svg>",
+                "strict_mode": False
             }
         }
 
@@ -117,6 +132,88 @@ async def analyze_svg(
         raise HTTPException(
             status_code=500,
             detail=f"Analysis failed: {str(e)}"
+        )
+
+
+@router.post("/validate")
+async def validate_svg(
+    request: ValidateRequest = None,
+    svg_file: Optional[UploadFile] = File(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Validate SVG content and check compatibility.
+
+    Performs comprehensive validation including:
+    - XML well-formedness
+    - SVG semantic validation
+    - Attribute validation
+    - Feature compatibility checking
+    - PowerPoint/Google Slides compatibility
+
+    Accepts SVG via:
+    - JSON body with `svg_content` field
+    - File upload
+
+    Args:
+        request: Validation request with SVG content and strict mode flag
+        svg_file: Optional file upload
+        current_user: Authenticated user
+
+    Returns:
+        JSON response with validation results, errors, warnings, and compatibility report
+    """
+    try:
+        # Get SVG content from request or file upload
+        svg_content = None
+        strict_mode = False
+
+        if svg_file:
+            # File upload takes precedence
+            content = await svg_file.read()
+            svg_content = content.decode('utf-8')
+            # Use default strict_mode=False for file uploads
+        elif request and request.svg_content:
+            svg_content = request.svg_content
+            strict_mode = request.strict_mode
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Must provide either svg_content or upload a file"
+            )
+
+        # Validate SVG content size (max 10MB)
+        if len(svg_content) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=413,
+                detail="SVG content too large (max 10MB)"
+            )
+
+        logger.info(f"Validating SVG for user {current_user.get('api_key', 'unknown')} ({len(svg_content)} bytes, strict={strict_mode})")
+
+        # Create validator and run validation
+        validator = create_svg_validator()
+        result = validator.validate(svg_content, strict_mode=strict_mode)
+
+        # Convert to dict for JSON response
+        response_data = result.to_dict()
+
+        # Determine HTTP status code based on validation result
+        # 200 if valid, 400 if invalid (has errors)
+        status_code = 200 if result.valid else 400
+
+        return JSONResponse(
+            content=response_data,
+            status_code=status_code
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"SVG validation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Validation failed: {str(e)}"
         )
 
 
