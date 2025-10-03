@@ -156,18 +156,60 @@ async def create_batch_job(
         
         # Add background task to process the batch using Huey
         try:
-            from src.batch.drive_tasks import coordinate_batch_workflow
-            
-            # Schedule Huey task for complete workflow
-            conversion_options = {
-                'preprocessing_preset': job_request.preprocessing_preset,
-                'generate_previews': job_request.generate_previews,
-                'use_clean_slate': job_request.use_clean_slate
-            }
-            
-            task = coordinate_batch_workflow(job_id, job_request.urls, conversion_options)
-            
-            logger.info(f"Scheduled Huey batch workflow task for job {job_id}")
+            # Use Clean Slate coordinator if enabled or None (default)
+            use_clean_slate = job_request.use_clean_slate
+            if use_clean_slate is None:
+                use_clean_slate = True  # Default to Clean Slate
+
+            if use_clean_slate:
+                # Use Clean Slate workflow
+                from core.batch.url_downloader import download_svgs_to_temp
+                from core.batch.coordinator import coordinate_batch_workflow_clean_slate
+
+                # Download URLs to temp files
+                logger.info(f"Downloading {len(job_request.urls)} SVG URLs for job {job_id}")
+                download_result = download_svgs_to_temp(
+                    urls=job_request.urls,
+                    job_id=job_id
+                )
+
+                if not download_result.success:
+                    # Update job to failed
+                    batch_job.status = "failed"
+                    batch_job.save(DEFAULT_DB_PATH)
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Failed to download {len(download_result.errors)} URLs"
+                    )
+
+                logger.info(f"Successfully downloaded {len(download_result.file_paths)} files")
+
+                # Schedule Clean Slate coordinator task
+                conversion_options = {
+                    'quality': 'high' if job_request.preprocessing_preset == 'aggressive' else 'balanced',
+                    'generate_previews': job_request.generate_previews
+                }
+
+                task = coordinate_batch_workflow_clean_slate(
+                    job_id=job_id,
+                    file_paths=download_result.file_paths,
+                    conversion_options=conversion_options
+                )
+
+                logger.info(f"Scheduled Clean Slate batch workflow task for job {job_id}")
+            else:
+                # Use legacy workflow
+                from src.batch.drive_tasks import coordinate_batch_workflow
+
+                conversion_options = {
+                    'preprocessing_preset': job_request.preprocessing_preset,
+                    'generate_previews': job_request.generate_previews,
+                    'use_clean_slate': False
+                }
+
+                task = coordinate_batch_workflow(job_id, job_request.urls, conversion_options)
+
+                logger.info(f"Scheduled legacy batch workflow task for job {job_id}")
             
         except Exception as e:
             logger.warning(f"Failed to schedule Huey task, using fallback: {e}")
@@ -468,6 +510,68 @@ async def get_batch_upload_progress(
         )
 
 
+@router.get("/jobs/{job_id}/trace")
+async def get_batch_job_trace(
+    job_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get E2E trace data for a batch job.
+
+    Retrieves complete end-to-end trace data from the Clean Slate pipeline,
+    including parse, analyze, map, embed, and package stages.
+
+    Args:
+        job_id: Batch job identifier
+        current_user: Authenticated user information
+
+    Returns:
+        JSON response with complete trace data
+    """
+    try:
+        # Verify job exists
+        batch_job = BatchJob.get_by_id(DEFAULT_DB_PATH, job_id)
+        if not batch_job:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Batch job {job_id} not found"
+            )
+
+        # Get trace data from job metadata
+        # Note: Coordinator stores trace in metadata field (to be implemented)
+        trace_data = batch_job.metadata.get('trace_data', {}) if batch_job.metadata else {}
+
+        if not trace_data:
+            return JSONResponse(
+                content={
+                    "job_id": job_id,
+                    "trace_available": False,
+                    "message": "No trace data available (job may use legacy workflow or still processing)"
+                }
+            )
+
+        logger.info(f"Retrieved trace data for batch job {job_id}")
+
+        return JSONResponse(
+            content={
+                "job_id": job_id,
+                "trace_available": True,
+                "architecture": trace_data.get('architecture', 'unknown'),
+                "page_count": trace_data.get('page_count', 0),
+                "trace_data": trace_data
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting trace for job {job_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error retrieving trace data"
+        )
+
+
 @router.get("/jobs/{job_id}/drive-info", response_model=BatchDriveInfo)
 async def get_batch_drive_info(
     job_id: str,
@@ -475,14 +579,14 @@ async def get_batch_drive_info(
 ):
     """
     Get Google Drive integration information for a batch job.
-    
+
     Retrieves Drive folder information, uploaded files, and preview URLs
     for a batch job with Drive integration.
-    
+
     Args:
         job_id: Batch job identifier
         current_user: Authenticated user information
-        
+
     Returns:
         BatchDriveInfo with Drive integration details
     """

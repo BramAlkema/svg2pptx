@@ -47,6 +47,53 @@ if 'transform' in element.attrib:
 if element.get('transform'):
 ```
 
+### lxml Iterator Methods - MANDATORY
+**ALWAYS call lxml iterator methods and dictionary methods - do NOT use them as objects**
+
+This is a critical lxml/Cython foot-gun that causes `TypeError: argument of type 'cython_function_or_method' is not iterable`.
+
+```python
+# ❌ FORBIDDEN - Using method objects without calling them
+if 'filter' in element.attrib.keys:           # Missing ()
+if svg_ns in root.nsmap.values:               # Missing ()
+for child in element.iterchildren:            # Missing ()
+for desc in element.iterdescendants:          # Missing ()
+
+# ✅ REQUIRED - Call the methods
+if 'filter' in element.attrib:                # Direct dict test (best)
+if svg_ns in root.nsmap.values():             # Call method
+for child in element.iterchildren():          # Call method
+for desc in element.iterdescendants():        # Call method
+
+# ✅ BEST - Use safe iteration helpers
+from core.xml.safe_iter import children, walk
+
+for child in children(element):               # Only elements, no comments/PIs
+for node in walk(root):                       # Safe depth-first traversal
+```
+
+**Why This Matters**:
+- lxml's Cython-optimized methods return method objects if not called
+- Membership tests like `in` or iteration on method objects fail cryptically
+- Comments and Processing Instructions have `.tag` as a callable, not a string
+- Direct iteration `for x in element:` includes non-element nodes
+
+**Safe Patterns**:
+```python
+# Dict-like attribute access (safest)
+if 'width' in element.attrib                  # Direct containment check
+for key, val in element.attrib.items():       # Call items()
+
+# Namespace map (always check for None)
+if root.nsmap and svg_ns in root.nsmap.values():
+nsmap_dict = dict(root.nsmap or {})
+
+# Iteration (use safe helpers)
+from core.xml.safe_iter import children, walk
+for child in children(element):               # Elements only
+for node in walk(root):                       # All elements, depth-first
+```
+
 ## Essential Commands
 
 ### Environment Setup

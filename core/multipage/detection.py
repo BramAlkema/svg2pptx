@@ -6,10 +6,13 @@ Simple, focused page boundary detection for multi-page conversion.
 Replaces the complex 1700+ line detection system with common use cases.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 from lxml import etree as ET
 from ..xml.safe_iter import walk, children, is_element
+
+if TYPE_CHECKING:
+    from ..policy.engine import PolicyEngine
 
 
 @dataclass
@@ -30,14 +33,22 @@ class SimplePageDetector:
     3. Large SVG documents split by size thresholds
     """
 
-    def __init__(self, size_threshold: int = 10000):
+    def __init__(self, size_threshold: int = 10000, policy_engine: Optional['PolicyEngine'] = None):
         """
         Initialize simple page detector.
 
         Args:
-            size_threshold: Content size threshold for automatic page breaks
+            size_threshold: Content size threshold for automatic page breaks (deprecated - use policy_engine)
+            policy_engine: Optional policy engine for threshold configuration
         """
-        self.size_threshold = size_threshold
+        self._policy_engine = policy_engine
+
+        # Use policy thresholds if available, otherwise use parameter
+        if policy_engine:
+            # Convert from KB to bytes for backward compatibility
+            self.size_threshold = policy_engine.config.thresholds.max_single_page_size_kb * 1024
+        else:
+            self.size_threshold = size_threshold
 
     def detect_page_breaks_in_svg(self, svg_content: str) -> List[PageBreak]:
         """
@@ -108,11 +119,20 @@ class SimplePageDetector:
         # Look for top-level groups that might represent pages
         top_level_groups = root.findall('.//g')
 
+        # Get max pages from policy or use default
+        max_pages = 10
+        if self._policy_engine:
+            max_pages = self._policy_engine.config.thresholds.max_pages_per_conversion
+
         if len(top_level_groups) > 1:
-            for i, group in enumerate(top_level_groups[:10]):  # Limit to 10 pages max
+            for i, group in enumerate(top_level_groups[:max_pages]):
                 # Check if group has substantial content
                 children = list(group)
-                if len(children) >= 3:  # At least 3 elements suggest a page
+                min_elements = 3
+                if self._policy_engine:
+                    min_elements = self._policy_engine.config.thresholds.min_elements_per_page
+
+                if len(children) >= min_elements:
                     title = self._extract_title(group) or f"Page {i+1}"
                     page_breaks.append(PageBreak(
                         element=group,

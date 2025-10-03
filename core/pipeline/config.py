@@ -3,11 +3,15 @@
 Pipeline Configuration
 
 Configuration classes for the clean slate conversion pipeline.
+Integrates with core.policy.PolicyConfig for unified policy decisions.
 """
 
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 from enum import Enum
+
+# Import comprehensive policy configuration
+from ..policy.config import PolicyConfig, OutputTarget
 
 
 class OutputFormat(Enum):
@@ -22,20 +26,6 @@ class QualityLevel(Enum):
     FAST = "fast"          # Prioritize performance, accept lower quality
     BALANCED = "balanced"  # Balance quality and performance
     HIGH = "high"          # Prioritize quality, accept slower performance
-
-
-@dataclass
-class PolicyThresholds:
-    """Thresholds for policy decisions"""
-    path_complexity_threshold: float = 0.7
-    text_complexity_threshold: float = 0.6
-    group_nesting_threshold: int = 3
-    image_size_threshold: int = 1024 * 1024  # 1MB
-
-    # EMF fallback thresholds
-    emf_path_segments: int = 50
-    emf_text_runs: int = 20
-    emf_group_children: int = 10
 
 
 @dataclass
@@ -58,19 +48,23 @@ class PerformanceConfig:
 
 @dataclass
 class PipelineConfig:
-    """Complete pipeline configuration"""
+    """
+    Complete pipeline configuration.
+
+    Integrates with core.policy.PolicyConfig for unified policy decisions.
+    """
     # Quality and output settings
     quality_level: QualityLevel = QualityLevel.BALANCED
     output_format: OutputFormat = OutputFormat.PPTX
 
-    # Policy thresholds
-    policy_thresholds: PolicyThresholds = None
+    # Policy configuration (unified with core.policy)
+    policy_config: Optional[PolicyConfig] = None
 
     # Slide configuration
-    slide_config: SlideConfig = None
+    slide_config: Optional[SlideConfig] = None
 
     # Performance settings
-    performance_config: PerformanceConfig = None
+    performance_config: Optional[PerformanceConfig] = None
 
     # Debug and logging
     enable_debug: bool = False
@@ -84,8 +78,15 @@ class PipelineConfig:
 
     def __post_init__(self):
         """Initialize default sub-configurations"""
-        if self.policy_thresholds is None:
-            self.policy_thresholds = PolicyThresholds()
+        if self.policy_config is None:
+            # Map QualityLevel to OutputTarget
+            target_map = {
+                QualityLevel.FAST: OutputTarget.SPEED,
+                QualityLevel.BALANCED: OutputTarget.BALANCED,
+                QualityLevel.HIGH: OutputTarget.QUALITY,
+            }
+            target = target_map.get(self.quality_level, OutputTarget.BALANCED)
+            self.policy_config = PolicyConfig(target=target)
 
         if self.slide_config is None:
             self.slide_config = SlideConfig()
@@ -98,14 +99,7 @@ class PipelineConfig:
         """Create configuration optimized for speed"""
         return cls(
             quality_level=QualityLevel.FAST,
-            policy_thresholds=PolicyThresholds(
-                path_complexity_threshold=0.5,
-                text_complexity_threshold=0.4,
-                group_nesting_threshold=2,
-                emf_path_segments=30,
-                emf_text_runs=10,
-                emf_group_children=5
-            ),
+            policy_config=PolicyConfig(target=OutputTarget.SPEED),
             performance_config=PerformanceConfig(
                 enable_caching=True,
                 parallel_processing=True,
@@ -121,14 +115,7 @@ class PipelineConfig:
         """Create configuration optimized for quality"""
         return cls(
             quality_level=QualityLevel.HIGH,
-            policy_thresholds=PolicyThresholds(
-                path_complexity_threshold=0.9,
-                text_complexity_threshold=0.8,
-                group_nesting_threshold=5,
-                emf_path_segments=100,
-                emf_text_runs=50,
-                emf_group_children=20
-            ),
+            policy_config=PolicyConfig(target=OutputTarget.QUALITY),
             performance_config=PerformanceConfig(
                 enable_caching=True,
                 parallel_processing=False,
@@ -159,18 +146,9 @@ class PipelineConfig:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary"""
-        return {
+        result = {
             'quality_level': self.quality_level.value,
             'output_format': self.output_format.value,
-            'policy_thresholds': {
-                'path_complexity_threshold': self.policy_thresholds.path_complexity_threshold,
-                'text_complexity_threshold': self.policy_thresholds.text_complexity_threshold,
-                'group_nesting_threshold': self.policy_thresholds.group_nesting_threshold,
-                'image_size_threshold': self.policy_thresholds.image_size_threshold,
-                'emf_path_segments': self.policy_thresholds.emf_path_segments,
-                'emf_text_runs': self.policy_thresholds.emf_text_runs,
-                'emf_group_children': self.policy_thresholds.emf_group_children
-            },
             'slide_config': {
                 'width_emu': self.slide_config.width_emu,
                 'height_emu': self.slide_config.height_emu,
@@ -191,6 +169,12 @@ class PipelineConfig:
             'enable_image_conversion': self.enable_image_conversion
         }
 
+        # Add policy config if present
+        if self.policy_config:
+            result['policy_target'] = self.policy_config.target.value
+
+        return result
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PipelineConfig':
         """Create configuration from dictionary"""
@@ -202,9 +186,9 @@ class PipelineConfig:
         if 'output_format' in data:
             config.output_format = OutputFormat(data['output_format'])
 
-        if 'policy_thresholds' in data:
-            thresholds_data = data['policy_thresholds']
-            config.policy_thresholds = PolicyThresholds(**thresholds_data)
+        if 'policy_target' in data:
+            target = OutputTarget(data['policy_target'])
+            config.policy_config = PolicyConfig(target=target)
 
         if 'slide_config' in data:
             slide_data = data['slide_config']

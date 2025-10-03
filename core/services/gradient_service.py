@@ -5,9 +5,12 @@ GradientService for handling SVG gradient definitions and conversions.
 Provides gradient resolution, caching, and conversion to DrawingML.
 """
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, TYPE_CHECKING
 from lxml import etree as ET
 import logging
+
+if TYPE_CHECKING:
+    from core.policy.engine import PolicyEngine
 
 # Mesh gradient engine will be imported lazily to avoid circular imports
 
@@ -17,10 +20,11 @@ logger = logging.getLogger(__name__)
 class GradientService:
     """Service for managing SVG gradient definitions and conversions."""
 
-    def __init__(self):
+    def __init__(self, policy_engine: Optional['PolicyEngine'] = None):
         self._gradient_cache: Dict[str, ET.Element] = {}
         self._conversion_cache: Dict[str, str] = {}
         self._mesh_engine = None  # Lazy initialization
+        self._policy_engine = policy_engine
 
     def register_gradient(self, gradient_id: str, gradient_element: ET.Element) -> None:
         """Register a gradient definition for later resolution."""
@@ -69,24 +73,81 @@ class GradientService:
 
     def _convert_linear_gradient(self, gradient_element: ET.Element) -> str:
         """Convert linear gradient to basic DrawingML representation."""
-        stops = self._extract_gradient_stops(gradient_element)
+        # Get all stops before potential simplification
+        all_stops = gradient_element.findall('.//{http://www.w3.org/2000/svg}stop')
+        stop_count = len(all_stops)
+
+        # Use policy engine if available
+        if self._policy_engine:
+            decision = self._policy_engine.decide_gradient(
+                gradient=gradient_element,
+                gradient_type='linear',
+                stop_count=stop_count
+            )
+
+            # Handle simplification if needed
+            if decision.use_simplified_gradient:
+                stops = self._simplify_gradient_stops(all_stops, decision)
+            else:
+                stops = self._extract_gradient_stops(gradient_element)
+        else:
+            stops = self._extract_gradient_stops(gradient_element)
 
         # Simple linear gradient representation
         return f"<a:gradFill><a:gsLst>{stops}</a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
 
     def _convert_radial_gradient(self, gradient_element: ET.Element) -> str:
         """Convert radial gradient to basic DrawingML representation."""
-        stops = self._extract_gradient_stops(gradient_element)
+        # Get all stops before potential simplification
+        all_stops = gradient_element.findall('.//{http://www.w3.org/2000/svg}stop')
+        stop_count = len(all_stops)
+
+        # Use policy engine if available
+        if self._policy_engine:
+            decision = self._policy_engine.decide_gradient(
+                gradient=gradient_element,
+                gradient_type='radial',
+                stop_count=stop_count
+            )
+
+            # Handle simplification if needed
+            if decision.use_simplified_gradient:
+                stops = self._simplify_gradient_stops(all_stops, decision)
+            else:
+                stops = self._extract_gradient_stops(gradient_element)
+        else:
+            stops = self._extract_gradient_stops(gradient_element)
 
         # Simple radial gradient representation
         return f"<a:gradFill><a:gsLst>{stops}</a:gsLst><a:path path=\"circle\"/></a:gradFill>"
 
     def _convert_mesh_gradient(self, gradient_element: ET.Element) -> str:
         """Convert mesh gradient to DrawingML using the mesh gradient engine."""
+        # Analyze mesh dimensions
+        mesh_rows, mesh_cols = self._analyze_mesh_dimensions(gradient_element)
+
+        # Use policy engine if available
+        if self._policy_engine:
+            decision = self._policy_engine.decide_gradient(
+                gradient=gradient_element,
+                gradient_type='mesh',
+                stop_count=0,  # Mesh gradients don't have traditional stops
+                mesh_rows=mesh_rows,
+                mesh_cols=mesh_cols
+            )
+
+            # Check if mesh is too complex for native conversion
+            if not decision.use_native:
+                return f"<!-- Mesh gradient: EMF fallback required (patches: {decision.mesh_patch_count}) -->"
+
         # Lazy import and initialization to avoid circular imports
         if self._mesh_engine is None:
-            from ..converters.gradients.mesh_engine import MeshGradientEngine
-            self._mesh_engine = MeshGradientEngine()
+            try:
+                from ..converters.gradients.mesh_engine import MeshGradientEngine
+                self._mesh_engine = MeshGradientEngine()
+            except ImportError:
+                logger.warning("Mesh gradient engine not available")
+                return "<!-- Mesh gradient: Engine not available -->"
 
         return self._mesh_engine.convert_mesh_gradient(gradient_element)
 
@@ -174,3 +235,80 @@ class GradientService:
         """Clear all cached gradients and conversions."""
         self._gradient_cache.clear()
         self._conversion_cache.clear()
+
+    def _simplify_gradient_stops(self, stops: List[ET.Element], decision: Any) -> str:
+        """
+        Simplify gradient stops by reducing count to match policy thresholds.
+
+        Args:
+            stops: List of gradient stop elements
+            decision: GradientDecision with target stop count
+
+        Returns:
+            Simplified stops as DrawingML string
+        """
+        if not stops:
+            return ""
+
+        # Get max stops from policy
+        max_stops = self._policy_engine.config.thresholds.max_gradient_stops if self._policy_engine else 10
+
+        # If already within limit, use all stops
+        if len(stops) <= max_stops:
+            simplified_stops = []
+            for stop in stops:
+                offset = stop.get('offset', '0')
+                if offset.endswith('%'):
+                    pos = int(float(offset[:-1]) * 1000)
+                else:
+                    pos = int(float(offset) * 100000)
+
+                color = self._extract_stop_color(stop)
+                color_hex = self._convert_color_to_hex(color)
+                simplified_stops.append(f'<a:gs pos="{pos}"><a:srgbClr val="{color_hex}"/></a:gs>')
+
+            return ''.join(simplified_stops)
+
+        # Reduce stops by sampling evenly
+        indices = [int(i * (len(stops) - 1) / (max_stops - 1)) for i in range(max_stops)]
+        simplified_stops = []
+
+        for idx in indices:
+            stop = stops[idx]
+            offset = stop.get('offset', '0')
+            if offset.endswith('%'):
+                pos = int(float(offset[:-1]) * 1000)
+            else:
+                pos = int(float(offset) * 100000)
+
+            color = self._extract_stop_color(stop)
+            color_hex = self._convert_color_to_hex(color)
+            simplified_stops.append(f'<a:gs pos="{pos}"><a:srgbClr val="{color_hex}"/></a:gs>')
+
+        logger.info(f"Simplified gradient from {len(stops)} to {max_stops} stops")
+        return ''.join(simplified_stops)
+
+    def _analyze_mesh_dimensions(self, gradient_element: ET.Element) -> tuple:
+        """
+        Analyze mesh gradient dimensions.
+
+        Args:
+            gradient_element: Mesh gradient element
+
+        Returns:
+            Tuple of (rows, cols)
+        """
+        # Try to extract from mesh gradient structure
+        # This is a simplified version - actual mesh gradients can be complex
+        rows = int(gradient_element.get('x', '2'))  # Default 2x2 mesh
+        cols = int(gradient_element.get('y', '2'))
+
+        # Look for mesh rows/patches
+        patches = gradient_element.findall('.//{http://www.w3.org/2000/svg}meshrow')
+        if patches:
+            rows = len(patches)
+            # Count patches in first row to estimate cols
+            if patches:
+                cols = len(patches[0].findall('.//{http://www.w3.org/2000/svg}meshpatch'))
+
+        return (rows, cols)

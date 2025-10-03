@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 # Import existing image processing system
 try:
     from ..services.image_service import ImageService, ImageInfo
-    from ..converters.image import ImageConverter
     IMAGE_SYSTEM_AVAILABLE = True
 except ImportError:
     IMAGE_SYSTEM_AVAILABLE = False
@@ -33,7 +32,7 @@ except ImportError:
         content: Optional[bytes] = None
         temp_path: Optional[str] = None
 
-    logging.warning("Existing image system not available - image adapter will use fallback")
+    logging.warning("Image service not available - image adapter will use fallback")
 
 from ..ir import Image
 
@@ -69,13 +68,11 @@ class ImageProcessingAdapter:
         if self._image_system_available:
             try:
                 self.image_service = ImageService(enable_caching=True)
-                self.image_converter = ImageConverter(services) if services else None
             except Exception as e:
-                self.logger.warning(f"Failed to initialize image components: {e}")
+                self.logger.warning(f"Failed to initialize image service: {e}")
                 self._image_system_available = False
         else:
             self.image_service = None
-            self.image_converter = None
 
         if not self._image_system_available:
             self.logger.warning("Image system not available - will use placeholder")

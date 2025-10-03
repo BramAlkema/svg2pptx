@@ -199,7 +199,9 @@ class SVGAnalyzer:
             return result
 
         except Exception as e:
+            import traceback
             self.logger.error(f"SVG analysis failed: {e}")
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             # Return minimal fallback result with empty scene (never None)
             processing_time = (time.perf_counter() - start_time) * 1000
             return AnalysisResult(
@@ -362,9 +364,11 @@ class SVGAnalyzer:
 
     def _calculate_group_nesting_depth(self, svg_root: ET.Element, current_depth: int = 0) -> int:
         """Calculate maximum group nesting depth"""
+        from ..xml.safe_iter import children
+
         max_depth = current_depth
 
-        for child in svg_root:
+        for child in children(svg_root):
             if self._get_local_tag(child.tag) == 'g':
                 child_depth = self._calculate_group_nesting_depth(child, current_depth + 1)
                 max_depth = max(max_depth, child_depth)

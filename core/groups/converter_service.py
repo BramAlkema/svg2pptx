@@ -13,12 +13,15 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
 from lxml import etree as ET
 
 from .group_processor import GroupProcessor
 from .clipping_analyzer import ClippingAnalyzer, ClippingStrategy, ClippingComplexity
 from ..services.conversion_services import ConversionServices
+
+if TYPE_CHECKING:
+    from ..policy.engine import PolicyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +34,21 @@ class GroupConverterService:
     generation to provide comprehensive group conversion capabilities.
     """
 
-    def __init__(self, services: ConversionServices):
+    def __init__(self, services: ConversionServices, policy_engine: Optional['PolicyEngine'] = None):
         """
         Initialize group converter service.
 
         Args:
             services: ConversionServices container
+            policy_engine: Optional policy engine for complexity decisions
         """
         self.services = services
+        self._policy_engine = policy_engine
         self.logger = logging.getLogger(__name__)
 
         # Initialize components
         self.group_processor = GroupProcessor(services)
-        self.clipping_analyzer = ClippingAnalyzer(services)
+        self.clipping_analyzer = ClippingAnalyzer(services, policy_engine=policy_engine)
 
         # Conversion statistics
         self.stats = {
@@ -493,14 +498,15 @@ class GroupConverterService:
         self.clipping_analyzer.reset_statistics()
 
 
-def create_group_converter_service(services: ConversionServices) -> GroupConverterService:
+def create_group_converter_service(services: ConversionServices, policy_engine: Optional['PolicyEngine'] = None) -> GroupConverterService:
     """
     Create a group converter service with services.
 
     Args:
         services: ConversionServices container
+        policy_engine: Optional policy engine for complexity decisions
 
     Returns:
         Configured GroupConverterService
     """
-    return GroupConverterService(services)
+    return GroupConverterService(services, policy_engine=policy_engine)

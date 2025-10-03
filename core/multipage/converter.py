@@ -58,6 +58,9 @@ class MultiPageResult:
     package_size_bytes: int = 0
     compression_ratio: float = 1.0
 
+    # Package debug data (when enable_debug=True)
+    package_debug_data: Optional[Dict[str, Any]] = None
+
 
 class CleanSlateMultiPageConverter:
     """
@@ -88,7 +91,8 @@ class CleanSlateMultiPageConverter:
         self.page_converter = CleanSlateConverter(self.config)
 
         # Initialize package writer for multi-page output
-        self.package_writer = PackageWriter()
+        # Pass enable_debug from config to enable E2E tracing
+        self.package_writer = PackageWriter(enable_debug=self.config.enable_debug)
 
         # Statistics
         self._stats = {
@@ -156,7 +160,8 @@ class CleanSlateMultiPageConverter:
                 avg_quality=sum(r.estimated_quality for r in page_results) / len(page_results),
                 avg_performance=sum(r.estimated_performance for r in page_results) / len(page_results),
                 package_size_bytes=package_result['package_size_bytes'],
-                compression_ratio=package_result.get('compression_ratio', 1.0)
+                compression_ratio=package_result.get('compression_ratio', 1.0),
+                package_debug_data=package_result.get('package_debug_data')  # Include package trace
             )
 
             # Record success
@@ -260,12 +265,18 @@ class CleanSlateMultiPageConverter:
                 package_stats = self.package_writer.write_package_stream(embedder_results, output_stream)
                 package_data = output_stream.getvalue()
 
-            return {
+            result = {
                 'package_data': package_data,
                 'package_size_bytes': len(package_data),
                 'compression_ratio': package_stats.get('compression_ratio', 1.0),
                 'slide_count': len(embedder_results)
             }
+
+            # Include package debug data if available (when enable_debug=True)
+            if 'debug_data' in package_stats:
+                result['package_debug_data'] = package_stats['debug_data']
+
+            return result
 
         except Exception as e:
             raise ValueError(f"Failed to generate multi-page package: {e}") from e
