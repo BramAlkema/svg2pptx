@@ -66,11 +66,20 @@ venv.bak/
 *.swo
 *~
 
-# Project specific
+# Project specific outputs
 out.pptx
-*.pptx
 test_output/
 temp/
+*.svg
+*.pptx
+*.html
+*.json
+
+# Exclude examples and documentation
+!examples/**/*.svg
+!examples/**/*.pptx
+!data/**/*.svg
+!docs/**/*.html
 
 # OS generated files
 *.tmp
