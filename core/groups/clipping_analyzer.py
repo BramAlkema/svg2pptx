@@ -13,12 +13,15 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
 from lxml import etree as ET
 from enum import Enum
 from dataclasses import dataclass
 
 from ..services.conversion_services import ConversionServices
+
+if TYPE_CHECKING:
+    from ..policy.engine import PolicyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -73,14 +76,16 @@ class ClippingAnalyzer:
     clipping conversion with PowerPoint compatibility assessment.
     """
 
-    def __init__(self, services: ConversionServices):
+    def __init__(self, services: ConversionServices, policy_engine: Optional['PolicyEngine'] = None):
         """
         Initialize clipping analyzer.
 
         Args:
             services: ConversionServices container
+            policy_engine: Optional policy engine for complexity decisions
         """
         self.services = services
+        self._policy_engine = policy_engine
         self.logger = logging.getLogger(__name__)
 
         # Analysis cache
@@ -380,6 +385,47 @@ class ClippingAnalyzer:
 
     def _determine_strategy(self, clipping_paths: List[ClippingPath], complexity: ClippingComplexity) -> ClippingStrategy:
         """Determine the recommended conversion strategy."""
+        # Use policy engine if available
+        if self._policy_engine and clipping_paths:
+            # Calculate metrics for policy decision
+            path_segments = self._count_path_segments(clipping_paths)
+            nesting_level = len(clipping_paths)
+
+            # Determine clip type from first clipping path
+            clip_type = "complex"
+            if len(clipping_paths) == 1:
+                clip = clipping_paths[0]
+                if len(clip.shapes) == 1:
+                    tag = clip.shapes[0].tag.split('}')[-1] if '}' in clip.shapes[0].tag else clip.shapes[0].tag
+                    if tag == 'rect':
+                        clip_type = 'rect'
+                    elif tag in ['circle', 'ellipse']:
+                        clip_type = 'ellipse'
+                    elif tag == 'path':
+                        clip_type = 'path'
+
+            # Check for boolean operations (multiple shapes in one clipPath)
+            has_boolean_ops = any(len(clip.shapes) > 1 for clip in clipping_paths)
+
+            # Get policy decision
+            decision = self._policy_engine.decide_clippath(
+                clip_type=clip_type,
+                path_complexity=path_segments,
+                nesting_level=nesting_level,
+                has_boolean_ops=has_boolean_ops
+            )
+
+            # Map policy decision to strategy
+            if decision.use_native_clipping:
+                return ClippingStrategy.POWERPOINT_NATIVE
+            elif decision.use_native:
+                # Native DrawingML with custgeom
+                return ClippingStrategy.CUSTGEOM
+            else:
+                # EMF fallback for complex cases
+                return ClippingStrategy.EMF_VECTOR
+
+        # Legacy behavior without policy engine
         if complexity == ClippingComplexity.UNSUPPORTED:
             return ClippingStrategy.RASTERIZATION
 
@@ -487,6 +533,19 @@ class ClippingAnalyzer:
             estimated_performance_impact='none'
         )
 
+    def _count_path_segments(self, clipping_paths: List[ClippingPath]) -> int:
+        """Count total path segments across all clipping paths."""
+        total_segments = 0
+        for clip in clipping_paths:
+            if clip.path_data:
+                import re
+                commands = re.findall(r'[MmLlHhVvCcSsQqTtAaZz]', clip.path_data)
+                total_segments += len(commands)
+            else:
+                # Estimate segments from shapes
+                total_segments += len(clip.shapes) * 4  # Assume 4 segments per shape
+        return total_segments
+
     def _extract_reference_id(self, reference: str) -> Optional[str]:
         """Extract ID from URL reference."""
         if reference.startswith('url(#') and reference.endswith(')'):
@@ -545,14 +604,15 @@ class ClippingAnalyzer:
         return self.analyze_clipping_scenario(element, context)
 
 
-def create_clipping_analyzer(services: ConversionServices) -> ClippingAnalyzer:
+def create_clipping_analyzer(services: ConversionServices, policy_engine: Optional['PolicyEngine'] = None) -> ClippingAnalyzer:
     """
     Create a clipping analyzer with services.
 
     Args:
         services: ConversionServices container
+        policy_engine: Optional policy engine for complexity decisions
 
     Returns:
         Configured ClippingAnalyzer
     """
-    return ClippingAnalyzer(services)
+    return ClippingAnalyzer(services, policy_engine=policy_engine)

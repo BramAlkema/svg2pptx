@@ -46,11 +46,27 @@ class PackageWriter:
 
     Handles ZIP assembly, content types, relationships, and media files
     to create valid PowerPoint presentations.
+
+    Args:
+        enable_debug: Enable debug data collection for tracing (default: False)
+
+    Example with tracing:
+        >>> writer = PackageWriter(enable_debug=True)
+        >>> result = writer.write_package(embedder_results, "output.pptx")
+        >>> print(result['debug_data']['package_creation_ms'])
+        5.2
     """
 
-    def __init__(self):
-        """Initialize package writer"""
+    def __init__(self, enable_debug: bool = False):
+        """
+        Initialize package writer.
+
+        Args:
+            enable_debug: Enable debug data collection for E2E tracing
+        """
         self.logger = logging.getLogger(__name__)
+        self.enable_debug = enable_debug
+        self._debug_data = {} if enable_debug else None
 
         # Standard PPTX content types
         self._content_types = {
@@ -77,7 +93,13 @@ class PackageWriter:
             manifest: Optional package manifest
 
         Returns:
-            Dictionary with package statistics and metadata
+            Dictionary with package statistics and metadata.
+            When enable_debug=True, includes 'debug_data' with:
+                - package_creation_ms: Time to create ZIP in memory
+                - file_write_ms: Time to write file to disk
+                - package_size_bytes: Final package size
+                - compression_ratio: Compression ratio achieved
+                - zip_structure: Counts of ZIP components
 
         Raises:
             PackageError: If package writing fails
@@ -89,25 +111,61 @@ class PackageWriter:
             if manifest is None:
                 manifest = self._create_default_manifest(embedder_results)
 
+            # Track package creation timing
+            if self.enable_debug:
+                self._debug_data['packaging_start'] = time.perf_counter()
+
             # Create package in memory first
             package_data = self._create_package_data(embedder_results, manifest)
+
+            if self.enable_debug:
+                package_creation_time = (time.perf_counter() - self._debug_data['packaging_start']) * 1000
+                self._debug_data['package_creation_ms'] = package_creation_time
+                self._debug_data['package_size_bytes'] = len(package_data)
+
+                # Track ZIP structure
+                self._debug_data['zip_structure'] = {
+                    'slides': len(embedder_results),
+                    'relationships': len(manifest.relationships),
+                    'media_files': len(manifest.media_files),
+                    'content_types': len(manifest.content_types)
+                }
+
+            # Track file write timing
+            if self.enable_debug:
+                file_write_start = time.perf_counter()
 
             # Write to output file
             self._write_package_file(package_data, output_path)
 
+            if self.enable_debug:
+                file_write_time = (time.perf_counter() - file_write_start) * 1000
+                self._debug_data['file_write_ms'] = file_write_time
+
             # Calculate statistics
             processing_time = (time.perf_counter() - start_time) * 1000
             package_size = len(package_data)
+            compression_ratio = self._estimate_compression_ratio(embedder_results, package_size)
 
-            return {
+            if self.enable_debug:
+                self._debug_data['compression_ratio'] = compression_ratio
+                self._debug_data['total_time_ms'] = processing_time
+
+            result = {
                 'output_path': output_path,
                 'package_size_bytes': package_size,
                 'slide_count': len(embedder_results),
                 'processing_time_ms': processing_time,
                 'media_files': len(manifest.media_files),
                 'relationships': len(manifest.relationships),
-                'compression_ratio': self._estimate_compression_ratio(embedder_results, package_size)
+                'compression_ratio': compression_ratio
             }
+
+            # Include debug data when enabled
+            if self.enable_debug:
+                result['debug_data'] = self._debug_data.copy()
+
+            return result
 
         except Exception as e:
             raise PackageError(f"Failed to write PPTX package: {e}", cause=e)
@@ -476,11 +534,14 @@ class PackageWriter:
             return 1.0
 
 
-def create_package_writer() -> PackageWriter:
+def create_package_writer(enable_debug: bool = False) -> PackageWriter:
     """
     Create PackageWriter instance.
+
+    Args:
+        enable_debug: Enable debug data collection for E2E tracing
 
     Returns:
         Configured PackageWriter
     """
-    return PackageWriter()
+    return PackageWriter(enable_debug=enable_debug)

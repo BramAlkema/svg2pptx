@@ -4,9 +4,31 @@ Huey async tasks for Google Drive integration in batch processing.
 
 Provides asynchronous Google Drive upload, folder creation, preview generation,
 and job coordination tasks using the Huey task queue system.
+
+DEPRECATION NOTICE:
+==================
+The legacy batch workflow in this module is deprecated and will be removed in Q4 2025.
+
+Please migrate to the Clean Slate batch architecture:
+- Module: core.batch
+- Coordinator: core.batch.coordinator.coordinate_batch_workflow_clean_slate()
+- URL Downloader: core.batch.url_downloader.download_svgs_to_temp()
+
+Migration Guide: docs/guides/batch-migration-guide.md
+API Documentation: docs/api/batch-clean-slate.md
+
+Timeline:
+- Q2 2025: Clean Slate becomes default
+- Q3 2025: Legacy marked deprecated (warnings added)
+- Q4 2025: Legacy code removed
+
+For new projects, use:
+    from core.batch.coordinator import coordinate_batch_workflow_clean_slate
+    from core.batch.url_downloader import download_svgs_to_temp
 """
 
 import logging
+import warnings
 import time
 import sys
 from pathlib import Path
@@ -296,23 +318,37 @@ def generate_batch_previews(
 
 @huey.task()
 def coordinate_batch_workflow(
-    job_id: str, 
-    svg_urls: List[str], 
+    job_id: str,
+    svg_urls: List[str],
     conversion_options: Dict[str, Any] = None
 ) -> Dict[str, Any]:
     """
     Coordinate complete batch workflow: conversion + Drive upload.
-    
+
+    DEPRECATED: This function is deprecated and will be removed in Q4 2025.
+    Please migrate to core.batch.coordinator.coordinate_batch_workflow_clean_slate().
+
+    See migration guide: docs/guides/batch-migration-guide.md
+
     Args:
         job_id: Batch job identifier
         svg_urls: List of SVG URLs to convert
         conversion_options: Optional conversion parameters
-        
+
     Returns:
         Dictionary with workflow results
     """
+    # Issue deprecation warning
+    warnings.warn(
+        "coordinate_batch_workflow() is deprecated and will be removed in Q4 2025. "
+        "Please migrate to core.batch.coordinator.coordinate_batch_workflow_clean_slate(). "
+        "See migration guide: docs/guides/batch-migration-guide.md",
+        DeprecationWarning,
+        stacklevel=2
+    )
+
     try:
-        logger.info(f"Starting coordinated batch workflow for job {job_id}")
+        logger.info(f"Starting coordinated batch workflow for job {job_id} (LEGACY)")
         
         # Step 1: Convert SVG files
         conversion_result = convert_svg_batch(job_id, svg_urls, conversion_options or {})

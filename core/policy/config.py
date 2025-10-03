@@ -33,18 +33,37 @@ class Thresholds:
     max_text_complexity_score: int = 15  # Combined text complexity
     min_font_size_pt: float = 6.0        # Minimum readable font size
 
+    # Font strategy thresholds (Three-Tier Strategy: ADR-003)
+    enable_font_embedding: bool = True        # Tier 1: Embed @font-face fonts in PPTX
+    enable_system_font_fallback: bool = True  # Tier 2: Use system font matching
+    enable_text_to_path: bool = True          # Tier 3: Convert to paths as last resort
+    min_font_match_confidence: float = 0.7    # Minimum confidence for system font match
+    prefer_font_embedding: bool = True        # Prefer Tier 1 over Tier 2 when available
+    max_font_file_size_mb: float = 2.0        # Maximum font file size to embed
+
     # Stroke thresholds
     max_stroke_width: float = 100.0      # EMU stroke width limit
-    max_dash_segments: int = 10          # Dash pattern complexity
     max_miter_limit: float = 10.0        # Miter join limit
+
+    # Dash pattern thresholds
+    max_dash_segments: int = 16          # Dash pattern complexity limit
+    prefer_dash_presets: bool = True     # Try to map to dot/dash/lgDash presets
+    allow_custom_dash: bool = True       # Emit <a:custDash> when no preset matches
+    respect_dashoffset: bool = True      # Apply stroke-dashoffset phase rotation
+    min_dash_segment_pct: float = 0.01   # Minimum dash segment as % of stroke width (1%)
 
     # Group thresholds
     max_group_elements: int = 500        # Elements before flattening
     max_nesting_depth: int = 20          # Group nesting limit
 
-    # Gradient thresholds
-    max_gradient_stops: int = 10         # Gradient stop limit
-    max_gradient_transform_complexity: float = 5.0  # Transform det() limit
+    # Gradient thresholds (expanded)
+    max_gradient_stops: int = 10                    # Stop count limit
+    max_gradient_transform_complexity: float = 5.0  # Transform determinant limit
+    enable_gradient_simplification: bool = True     # Reduce stops if needed
+    max_mesh_patches: int = 100                     # Mesh gradient patch limit
+    max_mesh_grid_size: int = 10                    # Max rows/cols for mesh
+    prefer_linear_over_radial: bool = False         # Simplify radial to linear
+    enable_color_space_conversion: bool = True      # Convert non-sRGB gradients
 
     # Performance thresholds
     max_processing_time_ms: float = 100.0  # Per-element processing time
@@ -54,6 +73,38 @@ class Thresholds:
     max_skew_angle_deg: float = 18.0        # Maximum skew angle for WordArt
     max_scale_ratio: float = 5.0            # Maximum scale aspect ratio
     max_rotation_deviation_deg: float = 5.0  # Deviation from orthogonal angles
+
+    # Filter effect thresholds
+    max_filter_primitives: int = 5          # Chain length before fallback
+    enable_native_blur: bool = True         # Use DrawingML blur effects
+    enable_native_shadow: bool = True       # Use DrawingML shadow effects
+    enable_filter_approximation: bool = True  # Approximate unsupported filters
+    max_filter_complexity_score: int = 50   # Complexity before rasterization
+    prefer_filter_rasterization: bool = False  # Prefer image over EMF fallback
+
+    # Multi-page detection thresholds
+    max_single_page_size_kb: int = 500          # Size before auto-split
+    min_elements_per_page: int = 3              # Minimum content for page
+    enable_auto_page_detection: bool = True     # Auto-detect pages
+    prefer_explicit_markers: bool = True        # Trust data-page attributes
+    max_pages_per_conversion: int = 50          # Hard limit on pages
+    enable_size_based_splitting: bool = True    # Split large SVGs
+    page_detection_heuristic: str = "balanced"  # 'strict' | 'balanced' | 'aggressive'
+
+    # Animation thresholds
+    max_animation_keyframes: int = 20           # Keyframe limit
+    max_animation_duration_ms: float = 10000.0  # Duration limit (10s)
+    enable_animation_conversion: bool = True    # Convert animations
+    enable_video_export: bool = False           # Export as video instead
+    max_simultaneous_animations: int = 5        # Concurrent animation limit
+    prefer_entrance_effects: bool = True        # Favor entrance over motion
+
+    # Clipping thresholds
+    max_clip_path_segments: int = 100       # Clip path complexity
+    max_clip_nesting_depth: int = 3         # Nested clip limit
+    enable_native_clipping: bool = True     # Use DrawingML clipping
+    enable_boolean_operations: bool = False # Support union/intersect
+    prefer_rect_clips: bool = True          # Simplify to rectangles
 
 
 @dataclass

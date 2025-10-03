@@ -5,10 +5,13 @@ FilterService for handling SVG filter definitions and conversions.
 Provides filter registration, processing, and conversion to DrawingML.
 """
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, TYPE_CHECKING
 from lxml import etree as ET
 import logging
 import math
+
+if TYPE_CHECKING:
+    from core.policy.engine import PolicyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +19,10 @@ logger = logging.getLogger(__name__)
 class FilterService:
     """Service for managing SVG filter definitions and conversions."""
 
-    def __init__(self):
+    def __init__(self, policy_engine: Optional['PolicyEngine'] = None):
         self._filter_cache: Dict[str, ET.Element] = {}
         self._conversion_cache: Dict[str, str] = {}
+        self._policy_engine = policy_engine
 
     def register_filter(self, filter_id: str, filter_element: ET.Element) -> None:
         """Register a filter definition for later resolution."""
@@ -61,6 +65,31 @@ class FilterService:
     def _convert_filter_definition(self, filter_element: ET.Element, context: Any = None) -> str:
         """Convert a filter definition element to DrawingML."""
         filter_id = filter_element.get('id', f'filter_{id(filter_element)}')
+
+        # Count primitives and analyze filter type
+        primitives = list(filter_element)
+        primitive_count = len(primitives)
+
+        # Determine filter type
+        filter_type = self._analyze_filter_type(primitives)
+
+        # Use policy engine if available
+        if self._policy_engine:
+            decision = self._policy_engine.decide_filter(
+                filter_element=filter_element,
+                filter_type=filter_type,
+                primitive_count=primitive_count
+            )
+
+            # Handle decision strategies
+            if decision.use_rasterization:
+                return self._rasterize_filter(filter_element, filter_id)
+            elif decision.use_emf_fallback:
+                return f'<!-- Filter {filter_id}: EMF fallback required (complex: {filter_type}, primitives: {primitive_count}) -->'
+            elif not decision.use_native_effects:
+                # Policy says skip or not supported
+                return f'<!-- Filter {filter_id}: Not converted per policy -->'
+            # Otherwise fall through to native conversion
 
         # Process child filter primitives with basic conversion
         drawingml_parts = []
@@ -146,3 +175,48 @@ class FilterService:
     def get_supported_filters(self) -> List[str]:
         """Get list of supported filter types."""
         return ['feGaussianBlur', 'feDropShadow']
+
+    def _analyze_filter_type(self, primitives: List[ET.Element]) -> str:
+        """
+        Analyze filter primitives to determine filter type.
+
+        Args:
+            primitives: List of filter primitive elements
+
+        Returns:
+            Filter type string ('blur', 'shadow', 'chain', 'composite', etc.)
+        """
+        if not primitives:
+            return 'empty'
+
+        if len(primitives) == 1:
+            tag_name = primitives[0].tag.split('}')[-1] if '}' in primitives[0].tag else primitives[0].tag
+            if tag_name == 'feGaussianBlur':
+                return 'blur'
+            elif tag_name == 'feDropShadow':
+                return 'shadow'
+            elif tag_name == 'feColorMatrix':
+                return 'color_matrix'
+            elif tag_name == 'feComposite':
+                return 'composite'
+            else:
+                return tag_name.replace('fe', '').lower()
+
+        # Multiple primitives = chain
+        return 'chain'
+
+    def _rasterize_filter(self, filter_element: ET.Element, filter_id: str) -> str:
+        """
+        Rasterize a complex filter to an image.
+
+        This is a fallback strategy for filters too complex for native DrawingML.
+
+        Args:
+            filter_element: The filter element to rasterize
+            filter_id: Unique identifier for the filter
+
+        Returns:
+            Placeholder comment (actual rasterization would require rendering engine)
+        """
+        logger.info(f"Filter {filter_id} requires rasterization (not yet implemented)")
+        return f'<!-- Filter {filter_id}: Rasterization fallback (not implemented) -->'
