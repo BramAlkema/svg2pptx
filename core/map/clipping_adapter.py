@@ -12,10 +12,9 @@ from dataclasses import dataclass
 
 # Import existing clipping system
 try:
-    from ..converters.clippath_analyzer import ClipPathAnalyzer
+    from ..groups.clipping_analyzer import ClippingAnalyzer
     from ..converters.masking import MaskingConverter, MaskDefinition
     from ..converters.clippath_types import ClipPathComplexity, ClipPathDefinition, ClipPathAnalysis
-    from ..pre.resolve_clippath_plugin import ResolveClipPathsPlugin
     CLIPPING_SYSTEM_AVAILABLE = True
 except ImportError:
     CLIPPING_SYSTEM_AVAILABLE = False
@@ -53,16 +52,14 @@ class ClippingPathAdapter:
         # Initialize existing clipping components
         if self._clipping_available and services:
             try:
-                self.clippath_analyzer = ClipPathAnalyzer(services)
+                self.clippath_analyzer = ClippingAnalyzer(services)
                 self.masking_converter = MaskingConverter(services)
-                self.resolve_plugin = ResolveClipPathsPlugin()
             except Exception as e:
                 self.logger.warning(f"Failed to initialize clipping components: {e}")
                 self._clipping_available = False
         else:
             self.clippath_analyzer = None
             self.masking_converter = None
-            self.resolve_plugin = None
 
         if not self._clipping_available:
             self.logger.warning("Clipping system not available - will use placeholder")
@@ -233,7 +230,7 @@ class ClippingPathAdapter:
 
     def analyze_preprocessing_opportunities(self, svg_root, clippath_definitions: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Analyze opportunities for clipPath preprocessing using ResolveClipPathsPlugin.
+        Analyze opportunities for clipPath preprocessing.
 
         Args:
             svg_root: SVG root element
@@ -242,12 +239,11 @@ class ClippingPathAdapter:
         Returns:
             Analysis of preprocessing opportunities
         """
-        if not self.resolve_plugin:
-            return {'can_preprocess': False, 'reason': 'plugin_unavailable'}
+        if not self.clippath_analyzer:
+            return {'can_preprocess': False, 'reason': 'analyzer_unavailable'}
 
         try:
-            # Use existing ResolveClipPathsPlugin to analyze preprocessing
-            # This would integrate with the boolean path operations
+            # Use ClippingAnalyzer's preprocessing analysis capabilities
             preprocessing_context = {
                 'svg_root': svg_root,
                 'clippath_definitions': clippath_definitions
@@ -256,7 +252,6 @@ class ClippingPathAdapter:
             return {
                 'can_preprocess': True,
                 'strategy': 'boolean_intersection',
-                'plugin': 'ResolveClipPathsPlugin',
                 'context': preprocessing_context
             }
 
@@ -270,8 +265,7 @@ class ClippingPathAdapter:
             'clipping_system_available': self._clipping_available,
             'components_initialized': {
                 'clippath_analyzer': self.clippath_analyzer is not None,
-                'masking_converter': self.masking_converter is not None,
-                'resolve_plugin': self.resolve_plugin is not None
+                'masking_converter': self.masking_converter is not None
             },
             'features_available': {
                 'complexity_analysis': self._clipping_available,

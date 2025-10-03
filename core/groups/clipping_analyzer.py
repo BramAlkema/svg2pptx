@@ -520,6 +520,30 @@ class ClippingAnalyzer:
             'cache_hits': 0
         }
 
+    def analyze_clippath(self, element: ET.Element, clippath_definitions: Dict[str, Any], clip_ref: str):
+        """
+        Compatibility method for legacy ClipPathAnalyzer API.
+
+        This method provides backward compatibility with the old ClipPathAnalyzer.analyze_clippath() API.
+        It wraps the new analyze_clipping_scenario() method with API translation.
+
+        Args:
+            element: Element with clip-path attribute
+            clippath_definitions: Available clipPath definitions
+            clip_ref: clipPath reference (e.g., "url(#clip1)")
+
+        Returns:
+            ClipPathAnalysis-compatible result (actually returns ClippingAnalysis which is a superset)
+        """
+        # Create a minimal context object with clippath_definitions
+        context = type('Context', (), {
+            'clippath_definitions': clippath_definitions,
+            'clip_ref': clip_ref
+        })()
+
+        # Call the main analysis method
+        return self.analyze_clipping_scenario(element, context)
+
 
 def create_clipping_analyzer(services: ConversionServices) -> ClippingAnalyzer:
     """

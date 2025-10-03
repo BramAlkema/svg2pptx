@@ -27,7 +27,7 @@ from .base import BaseConverter
 from .base import ConversionContext
 from ..services.conversion_services import ConversionServices
 from .clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity, ClipPathAnalysis
-from .clippath_analyzer import ClipPathAnalyzer
+from ..groups.clipping_analyzer import ClippingAnalyzer
 from .boolean_flattener import BooleanFlattener
 from .custgeom_generator import CustGeomGenerator
 from ..emf_blob import EMFBlob
@@ -108,7 +108,7 @@ class MaskingConverter(BaseConverter):
         self.clipped_elements: List[ClipApplication] = []
 
         # Initialize clipPath analyzer, boolean flattener, and custGeom generator
-        self.clippath_analyzer = ClipPathAnalyzer(services)
+        self.clippath_analyzer = ClippingAnalyzer(services)
         self.boolean_flattener = BooleanFlattener(services)
         self.custgeom_generator = CustGeomGenerator(services)
     
