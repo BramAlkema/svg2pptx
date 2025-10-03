@@ -7,12 +7,6 @@ Essential converters migrated from legacy src/converters/ for self-contained ope
 
 # Import only what's actually available
 try:
-    from .image import ImageConverter
-    _IMAGE_AVAILABLE = True
-except ImportError:
-    _IMAGE_AVAILABLE = False
-
-try:
     from .masking import MaskingConverter, MaskDefinition
     _MASKING_AVAILABLE = True
 except ImportError:
@@ -29,9 +23,6 @@ __all__ = [
     'ClipPathDefinition',
     'ClipPathAnalysis'
 ]
-
-if _IMAGE_AVAILABLE:
-    __all__.append('ImageConverter')
 
 if _MASKING_AVAILABLE:
     __all__.extend(['MaskingConverter', 'MaskDefinition'])
