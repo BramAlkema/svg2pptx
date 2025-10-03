@@ -42,7 +42,7 @@ jobs:
     - name: Run unit tests
       run: |
         python -m pytest tests/unit/ -v \
-          --cov=src \
+          --cov=core \
           --cov-report=xml \
           --cov-report=html \
           --cov-fail-under=80 \
@@ -92,7 +92,7 @@ jobs:
       run: |
         python -m pytest tests/unit/converters/test_missing_svg_elements.py -v \
           -m "missing_elements" \
-          --cov=src \
+          --cov=core \
           --cov-report=xml:coverage-missing-elements.xml \
           --junit-xml=test-results-missing-elements.xml
     
@@ -248,15 +248,15 @@ jobs:
     
     - name: Run linting
       run: |
-        flake8 src tests --max-line-length=120 --extend-ignore=E203,W503
-    
+        flake8 core api tests --max-line-length=120 --extend-ignore=E203,W503
+
     - name: Run type checking
       run: |
-        mypy src --ignore-missing-imports
-    
+        mypy core api --ignore-missing-imports
+
     - name: Run security checks
       run: |
-        bandit -r src -f json -o bandit-report.json || true
+        bandit -r core api -f json -o bandit-report.json || true
     
     - name: Upload security report
       uses: actions/upload-artifact@v4

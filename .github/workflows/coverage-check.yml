@@ -28,7 +28,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/unit/converters/ tests/integration/ tests/e2e_library/ \
-          --cov=src --cov-report=xml --cov-report=term-missing \
+          --cov=core --cov-report=xml --cov-report=term-missing \
           --cov-fail-under=38 --tb=short
     
     - name: Check coverage regression
