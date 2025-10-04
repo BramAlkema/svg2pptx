@@ -15,6 +15,7 @@ from ..auth import get_current_user
 from ..utils.svg_helpers import extract_svg_content
 from ..dependencies import AnalyzerDep, ValidatorDep
 from core.analyze import SVGAnalysisResult
+from core.analyze.feature_registry import FeatureRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ async def analyze_svg(
     request: Optional[AnalyzeRequest] = None,
     svg_file: Optional[UploadFile] = File(None),
     current_user: Dict[str, Any] = Depends(get_current_user),
-    analyzer: AnalyzerDep = Depends(...)
+    analyzer: AnalyzerDep = None
 ) -> JSONResponse:
     """
     Analyze SVG complexity and get policy recommendations.
@@ -120,7 +121,7 @@ async def validate_svg(
     request: Optional[ValidateRequest] = None,
     svg_file: Optional[UploadFile] = File(None),
     current_user: Dict[str, Any] = Depends(get_current_user),
-    validator: ValidatorDep = Depends(...)
+    validator: ValidatorDep = None
 ) -> JSONResponse:
     """
     Validate SVG content and check compatibility.
@@ -198,130 +199,22 @@ async def get_supported_features(
         JSON response with feature support matrix
     """
     try:
-        # Feature support matrix
-        features = {
-            "version": "1.0.0",
-            "last_updated": "2025-10-04",
-            "categories": {
-                "basic_shapes": {
-                    "support_level": "full",
-                    "elements": ["rect", "circle", "ellipse", "line", "polyline", "polygon"],
-                    "notes": "All basic shapes fully supported with native PowerPoint rendering"
-                },
-                "paths": {
-                    "support_level": "full",
-                    "commands": ["M", "L", "H", "V", "C", "S", "Q", "T", "A", "Z"],
-                    "notes": "All path commands fully supported including cubic/quadratic Bezier and arcs"
-                },
-                "text": {
-                    "support_level": "partial",
-                    "features": {
-                        "basic_text": "full",
-                        "tspan": "full",
-                        "text_on_path": "via_wordart",
-                        "bidirectional": "limited",
-                        "vertical_text": "limited"
-                    },
-                    "notes": "Basic text and tspan fully supported. Text-on-path uses WordArt. BiDi and vertical text have limitations."
-                },
-                "gradients": {
-                    "support_level": "full",
-                    "types": {
-                        "linear": "full",
-                        "radial": "full",
-                        "mesh": "partial"
-                    },
-                    "limitations": {
-                        "mesh": "max 400 patches, may use EMF for complex meshes",
-                        "stops": "recommend ≤10 stops for best compatibility"
-                    },
-                    "notes": "Linear and radial gradients fully supported. Mesh gradients supported with patch count limitations."
-                },
-                "filters": {
-                    "support_level": "partial",
-                    "native_support": [
-                        "feGaussianBlur",
-                        "feDropShadow",
-                        "feOffset",
-                        "feFlood",
-                        "feBlend",
-                        "feColorMatrix"
-                    ],
-                    "emf_fallback": [
-                        "feDisplacementMap",
-                        "feTurbulence",
-                        "feConvolveMatrix",
-                        "feDiffuseLighting",
-                        "feSpecularLighting"
-                    ],
-                    "notes": "Common filters have native support. Complex filters use EMF vector fallback."
-                },
-                "transformations": {
-                    "support_level": "full",
-                    "types": ["translate", "rotate", "scale", "skewX", "skewY", "matrix"],
-                    "notes": "All transform types fully supported"
-                },
-                "clipping_masking": {
-                    "support_level": "partial",
-                    "features": {
-                        "clipPath": "partial",
-                        "mask": "via_emf"
-                    },
-                    "notes": "Simple clip paths supported natively. Complex clipping uses EMF."
-                },
-                "patterns": {
-                    "support_level": "via_emf",
-                    "notes": "Patterns converted to EMF for PowerPoint compatibility"
-                },
-                "markers": {
-                    "support_level": "partial",
-                    "notes": "Basic markers supported. Complex markers may use EMF fallback."
-                },
-                "animations": {
-                    "support_level": "limited",
-                    "notes": "Animations converted to static frames or slide sequences based on policy"
-                }
-            },
-            "policy_capabilities": {
-                "speed": {
-                    "description": "Fast conversion with basic feature support",
-                    "features": ["basic shapes", "simple paths", "basic text", "simple gradients"],
-                    "limitations": ["filters may be simplified", "complex features disabled"]
-                },
-                "balanced": {
-                    "description": "Balanced quality and performance",
-                    "features": ["all shapes", "all paths", "text with formatting", "gradients", "basic filters"],
-                    "limitations": ["some filter effects simplified", "complex meshes may use EMF"]
-                },
-                "quality": {
-                    "description": "Maximum fidelity conversion",
-                    "features": ["all elements", "all filters", "mesh gradients", "complex transforms"],
-                    "limitations": ["slower conversion", "larger file sizes"]
-                }
-            },
-            "color_spaces": {
-                "support_level": "full",
-                "supported": ["sRGB", "linearRGB", "display-p3", "adobe-rgb-1998"],
-                "notes": "ICC profile support with LAB color conversion for brand accuracy"
-            }
-        }
-
-        # Filter by category if requested
+        # Use FeatureRegistry instead of hardcoded matrix
         if category:
-            if category in features["categories"]:
-                features = {
-                    "version": features["version"],
-                    "category": category,
-                    "details": features["categories"][category]
-                }
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Category '{category}' not found. Available: {', '.join(features['categories'].keys())}"
-                )
+            # Get specific category
+            features = FeatureRegistry.get_category(category)
+        else:
+            # Get all features
+            features = FeatureRegistry.get_all_features()
 
         return JSONResponse(content=features, status_code=200)
 
+    except ValueError as e:
+        # Category not found
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
     except HTTPException:
         raise
     except Exception as e:
