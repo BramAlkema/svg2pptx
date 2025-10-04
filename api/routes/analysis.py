@@ -13,8 +13,8 @@ import logging
 
 from ..auth import get_current_user
 from ..utils.svg_helpers import extract_svg_content
-from core.analyze import create_api_analyzer, SVGAnalysisResult
-from core.analyze.svg_validator import create_svg_validator
+from ..dependencies import AnalyzerDep, ValidatorDep
+from core.analyze import SVGAnalysisResult
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,8 @@ class ValidateRequest(BaseModel):
 async def analyze_svg(
     request: AnalyzeRequest = None,
     svg_file: Optional[UploadFile] = File(None),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    analyzer: AnalyzerDep = None
 ):
     """
     Analyze SVG complexity and get policy recommendations.
@@ -72,6 +73,7 @@ async def analyze_svg(
         request: Analysis request with SVG content or URL
         svg_file: Optional file upload
         current_user: Authenticated user
+        analyzer: Injected SVG analyzer (cached)
 
     Returns:
         JSON response with analysis results
@@ -82,8 +84,7 @@ async def analyze_svg(
 
         logger.info(f"Analyzing SVG for user {current_user.get('api_key', 'unknown')} ({len(svg_content)} bytes)")
 
-        # Create analyzer and run analysis
-        analyzer = create_api_analyzer()
+        # Run analysis using injected analyzer
         result = analyzer.analyze_svg(svg_content)
 
         # Convert to dict for JSON response
@@ -115,7 +116,8 @@ async def analyze_svg(
 async def validate_svg(
     request: ValidateRequest = None,
     svg_file: Optional[UploadFile] = File(None),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    validator: ValidatorDep = None
 ):
     """
     Validate SVG content and check compatibility.
@@ -135,6 +137,7 @@ async def validate_svg(
         request: Validation request with SVG content and strict mode flag
         svg_file: Optional file upload
         current_user: Authenticated user
+        validator: Injected SVG validator (cached)
 
     Returns:
         JSON response with validation results, errors, warnings, and compatibility report
@@ -148,8 +151,7 @@ async def validate_svg(
 
         logger.info(f"Validating SVG for user {current_user.get('api_key', 'unknown')} ({len(svg_content)} bytes, strict={strict_mode})")
 
-        # Create validator and run validation
-        validator = create_svg_validator()
+        # Run validation using injected validator
         result = validator.validate(svg_content, strict_mode=strict_mode)
 
         # Convert to dict for JSON response
