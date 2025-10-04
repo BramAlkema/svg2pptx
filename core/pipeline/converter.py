@@ -28,7 +28,7 @@ from .error_reporter import PipelineErrorReporter, ErrorSeverity, ErrorCategory,
 # Import migrated systems for integration
 from core.animations import SMILParser
 from core.performance.measurement import BenchmarkEngine
-from core.converters import CustGeomGenerator
+# Avoid circular import - import CustGeomGenerator lazily when needed
 
 logger = logging.getLogger(__name__)
 
@@ -353,6 +353,9 @@ class CleanSlateConverter:
             # Initialize migrated system integrations
             self.animation_parser = SMILParser()  # For SVG animation detection
             self.performance_engine = BenchmarkEngine()  # For performance monitoring
+
+            # Lazy import to avoid circular dependency
+            from core.converters.custgeom_generator import CustGeomGenerator
             self.custgeom_generator = CustGeomGenerator()  # For custom geometry generation
 
             self.logger.debug("Pipeline components initialized successfully")

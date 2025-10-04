@@ -12,6 +12,12 @@ try:
 except ImportError:
     _MASKING_AVAILABLE = False
 
+try:
+    from .custgeom_generator import CustGeomGenerator
+    _CUSTGEOM_AVAILABLE = True
+except ImportError:
+    _CUSTGEOM_AVAILABLE = False
+
 from .clippath_types import ClipPathComplexity, ClipPathDefinition, ClipPathAnalysis
 
 # Re-export ClippingAnalyzer from groups for backward compatibility
@@ -26,3 +32,6 @@ __all__ = [
 
 if _MASKING_AVAILABLE:
     __all__.extend(['MaskingConverter', 'MaskDefinition'])
+
+if _CUSTGEOM_AVAILABLE:
+    __all__.append('CustGeomGenerator')
