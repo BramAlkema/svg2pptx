@@ -8,7 +8,7 @@ and querying supported features.
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any, Literal
 import logging
 
 from ..auth import get_current_user
@@ -26,7 +26,10 @@ class AnalyzeRequest(BaseModel):
     """Request model for SVG analysis."""
     svg_content: Optional[str] = Field(None, description="SVG XML content")
     svg_url: Optional[str] = Field(None, description="URL to SVG file (alternative to content)")
-    analyze_depth: str = Field("detailed", description="Analysis depth: basic, detailed, comprehensive")
+    analyze_depth: Literal["basic", "detailed", "comprehensive"] = Field(
+        "detailed",
+        description="Analysis depth: basic, detailed, comprehensive"
+    )
 
     class Config:
         json_schema_extra = {
@@ -53,11 +56,11 @@ class ValidateRequest(BaseModel):
 
 @router.post("/svg")
 async def analyze_svg(
-    request: AnalyzeRequest = None,
+    request: Optional[AnalyzeRequest] = None,
     svg_file: Optional[UploadFile] = File(None),
-    current_user: dict = Depends(get_current_user),
-    analyzer: AnalyzerDep = None
-):
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    analyzer: AnalyzerDep = Depends(...)
+) -> JSONResponse:
     """
     Analyze SVG complexity and get policy recommendations.
 
@@ -114,11 +117,11 @@ async def analyze_svg(
 
 @router.post("/validate")
 async def validate_svg(
-    request: ValidateRequest = None,
+    request: Optional[ValidateRequest] = None,
     svg_file: Optional[UploadFile] = File(None),
-    current_user: dict = Depends(get_current_user),
-    validator: ValidatorDep = None
-):
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    validator: ValidatorDep = Depends(...)
+) -> JSONResponse:
     """
     Validate SVG content and check compatibility.
 
@@ -179,8 +182,8 @@ async def validate_svg(
 @router.get("/features/supported")
 async def get_supported_features(
     category: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
-):
+    current_user: Dict[str, Any] = Depends(get_current_user)
+) -> JSONResponse:
     """
     Get supported SVG features and capabilities.
 

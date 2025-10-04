@@ -57,7 +57,7 @@ AnalyzerDep = Annotated[SVGAnalyzerAPI, Depends(get_analyzer)]
 ValidatorDep = Annotated[SVGValidator, Depends(get_validator)]
 
 
-def clear_cache():
+def clear_cache() -> None:
     """
     Clear dependency cache.
 

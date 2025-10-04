@@ -2,8 +2,8 @@
 Type definitions for SVG analysis system.
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Set, Optional
+from dataclasses import dataclass, field, asdict
+from typing import Dict, List, Set, Optional, Any
 from enum import Enum
 
 
@@ -85,7 +85,7 @@ class FeatureSet:
     has_embedded_images: bool = False
     has_external_references: bool = False
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
             "animations": self.has_animations,
@@ -126,7 +126,7 @@ class PolicyRecommendation:
     confidence: float  # 0.0 to 1.0
     reasons: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
             "target": self.target,
@@ -145,7 +145,7 @@ class SVGAnalysisResult:
     estimated_performance: PerformanceEstimate
     warnings: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "complexity_score": self.complexity_score,
@@ -166,7 +166,7 @@ class CompatibilityReport:
     google_slides: CompatibilityLevel
     notes: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
             "powerpoint_2016": self.powerpoint_2016.value,
