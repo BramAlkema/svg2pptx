@@ -8,10 +8,12 @@ Leverages existing input validation infrastructure.
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from collections import defaultdict
 from lxml import etree as ET
 
 from core.utils.input_validator import InputValidator, ValidationContext, ValidationError
 from .types import CompatibilityLevel, CompatibilityReport
+from .constants import SVG_NAMESPACE
 
 
 class ValidationSeverity(Enum):
@@ -79,7 +81,7 @@ class SVGValidator:
     def __init__(self):
         """Initialize validator with input validator."""
         self.input_validator = InputValidator()
-        self.svg_ns = "http://www.w3.org/2000/svg"
+        self.svg_ns = SVG_NAMESPACE
 
     def validate(self, svg_content: str, strict_mode: bool = False) -> ValidationResult:
         """
@@ -132,14 +134,17 @@ class SVGValidator:
                 suggestion="Add viewBox for proper scaling (e.g., viewBox='0 0 100 100')"
             ))
 
-        # Step 5: Validate attributes
+        # Step 5: Collect all elements in single pass (performance optimization)
+        elements_by_tag = self._collect_elements(svg_root)
+
+        # Step 6: Validate attributes
         self._validate_attributes(svg_root, result)
 
-        # Step 6: Validate structure
-        self._validate_structure(svg_root, result)
+        # Step 7: Validate structure
+        self._validate_structure(svg_root, result, elements_by_tag)
 
-        # Step 7: Check compatibility
-        result.compatibility = self._check_compatibility(svg_root)
+        # Step 8: Check compatibility
+        result.compatibility = self._check_compatibility(svg_root, elements_by_tag)
 
         # Step 8: Generate suggestions
         result.suggestions = self._generate_suggestions(result)
@@ -149,6 +154,29 @@ class SVGValidator:
             result.valid = False
 
         return result
+
+    def _collect_elements(self, svg_root: ET.Element) -> Dict[str, List[ET.Element]]:
+        """
+        Collect all elements by tag in a single pass.
+
+        Performance optimization: Single tree traversal instead of multiple findall() calls.
+        Reduces O(n*m) to O(n) where n=elements, m=queries.
+
+        Args:
+            svg_root: Root SVG element
+
+        Returns:
+            Dictionary mapping tag names to lists of elements
+        """
+        elements = defaultdict(list)
+
+        for elem in svg_root.iter():
+            if isinstance(elem.tag, str):
+                # Remove namespace prefix if present
+                tag = elem.tag.split('}')[-1]
+                elements[tag].append(elem)
+
+        return elements
 
     def _is_svg_element(self, element: ET.Element) -> bool:
         """Check if element is SVG root."""
@@ -220,19 +248,19 @@ class SVGValidator:
                         suggestion="Use hex (#RGB), rgb(), or named colors"
                     ))
 
-    def _validate_structure(self, svg_root: ET.Element, result: ValidationResult):
-        """Validate SVG structure and element relationships."""
-        # Check for common issues
+    def _validate_structure(self, svg_root: ET.Element, result: ValidationResult,
+                           elements_by_tag: Dict[str, List[ET.Element]]):
+        """
+        Validate SVG structure and element relationships.
 
-        # 1. Empty elements
-        for element in svg_root.iter():
-            if not isinstance(element.tag, str):
-                continue
-
-            tag = element.tag.split('}')[-1]
-
-            # Check paths with no d attribute
-            if tag == 'path' and not element.get('d'):
+        Args:
+            svg_root: Root SVG element
+            result: Validation result to populate
+            elements_by_tag: Pre-collected elements by tag (performance optimization)
+        """
+        # 1. Check paths with no d attribute
+        for path in elements_by_tag.get('path', []):
+            if not path.get('d'):
                 result.warnings.append(ValidationIssue(
                     code="EMPTY_PATH",
                     message="Path element has no 'd' attribute",
@@ -241,18 +269,20 @@ class SVGValidator:
                     suggestion="Add path data or remove empty path element"
                 ))
 
-            # Check gradients with too many stops
-            if tag in ['linearGradient', 'radialGradient']:
-                stops = element.findall(f'{{{self.svg_ns}}}stop')
+        # 2. Check gradients with too many stops
+        for tag in ['linearGradient', 'radialGradient']:
+            for gradient in elements_by_tag.get(tag, []):
+                # Count stop children
+                stops = [child for child in gradient if
+                        isinstance(child.tag, str) and child.tag.split('}')[-1] == 'stop']
                 if len(stops) > 10:
                     result.suggestions.append(
-                        f"Consider simplifying gradient '{element.get('id', 'unnamed')}' "
+                        f"Consider simplifying gradient '{gradient.get('id', 'unnamed')}' "
                         f"({len(stops)} stops, recommend ≤10)"
                     )
 
-        # 2. Check for filter complexity
-        filters = svg_root.findall(f'.//{{{self.svg_ns}}}filter')
-        for filter_elem in filters:
+        # 3. Check for filter complexity
+        for filter_elem in elements_by_tag.get('filter', []):
             primitives = [child for child in filter_elem if isinstance(child.tag, str)]
             if len(primitives) > 5:
                 result.warnings.append(ValidationIssue(
@@ -263,8 +293,18 @@ class SVGValidator:
                     suggestion="Complex filters may be rasterized - consider 'quality' policy"
                 ))
 
-    def _check_compatibility(self, svg_root: ET.Element) -> CompatibilityReport:
-        """Check PowerPoint/Google Slides compatibility."""
+    def _check_compatibility(self, svg_root: ET.Element,
+                            elements_by_tag: Dict[str, List[ET.Element]]) -> CompatibilityReport:
+        """
+        Check PowerPoint/Google Slides compatibility.
+
+        Args:
+            svg_root: Root SVG element
+            elements_by_tag: Pre-collected elements by tag (performance optimization)
+
+        Returns:
+            CompatibilityReport with platform-specific compatibility levels
+        """
         # Default: full compatibility
         powerpoint_2016 = CompatibilityLevel.FULL
         powerpoint_2019 = CompatibilityLevel.FULL
@@ -273,30 +313,29 @@ class SVGValidator:
 
         notes = []
 
-        # Check for features that reduce compatibility
+        # Check for features that reduce compatibility (using pre-collected elements)
         # Filters
-        filters = svg_root.findall(f'.//{{{self.svg_ns}}}filter')
+        filters = elements_by_tag.get('filter', [])
         if filters:
             filter_count = len(filters)
-            if filter_count > 0:
-                notes.append(f"{filter_count} filters may require EMF fallback")
-                google_slides = CompatibilityLevel.LIMITED
+            notes.append(f"{filter_count} filters may require EMF fallback")
+            google_slides = CompatibilityLevel.LIMITED
 
         # Mesh gradients
-        mesh_gradients = svg_root.findall(f'.//{{{self.svg_ns}}}meshgradient')
+        mesh_gradients = elements_by_tag.get('meshgradient', [])
         if mesh_gradients:
             notes.append("Mesh gradients may have limited compatibility")
             powerpoint_2016 = CompatibilityLevel.PARTIAL
             google_slides = CompatibilityLevel.LIMITED
 
         # Masks
-        masks = svg_root.findall(f'.//{{{self.svg_ns}}}mask')
+        masks = elements_by_tag.get('mask', [])
         if masks:
             notes.append("Masks converted to EMF")
             google_slides = CompatibilityLevel.LIMITED
 
         # Patterns
-        patterns = svg_root.findall(f'.//{{{self.svg_ns}}}pattern')
+        patterns = elements_by_tag.get('pattern', [])
         if patterns:
             notes.append("Patterns converted to EMF")
 
@@ -323,12 +362,8 @@ class SVGValidator:
     @staticmethod
     def _is_named_color(color: str) -> bool:
         """Check if color is a named SVG color."""
-        named_colors = {
-            'black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta',
-            'gray', 'grey', 'silver', 'maroon', 'olive', 'lime', 'aqua', 'teal',
-            'navy', 'fuchsia', 'purple', 'orange', 'pink', 'brown', 'transparent'
-        }
-        return color.lower() in named_colors
+        from .constants import SVG_NAMED_COLORS
+        return color.lower() in SVG_NAMED_COLORS
 
 
 def create_svg_validator() -> SVGValidator:
