@@ -8,18 +8,14 @@ policy decisions to final DrawingML XML output.
 
 import pytest
 from pathlib import Path
-import sys
-from unittest.mock import Mock, patch
-import tempfile
 import re
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
-    from core.ir import Scene, Path, TextFrame, Group, Image
+    from core.ir import Scene, Path, TextFrame, Group
     from core.ir import Point, Rect, LineSegment, SolidPaint, Stroke
-    from core.policies import PolicyEngine, ConversionPolicy, QualityPolicy
+    from core.policies import PolicyEngine
     from core.mappers import SceneMapper, PathMapper, TextMapper
     from lxml import etree
     CORE_PIPELINE_AVAILABLE = True

@@ -8,9 +8,7 @@ Tests HTTP behavior, async operations, and real network patterns.
 import pytest
 import httpx
 import asyncio
-import json
 import time
-from typing import Dict, Any
 from unittest.mock import patch, Mock
 from pathlib import Path
 import sys

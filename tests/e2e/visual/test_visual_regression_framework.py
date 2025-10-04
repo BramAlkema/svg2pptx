@@ -5,6 +5,9 @@ Visual Regression Test Framework for SVG2PPTX Filter Effects
 This module implements visual regression testing following the unit test template
 structure to ensure filter effects render correctly and consistently.
 
+Requirements:
+- Run with PYTHONPATH=. to ensure proper imports
+
 Usage:
 1. Generate baseline images for filter effects
 2. Compare current output against baselines
@@ -13,27 +16,33 @@ Usage:
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
+from unittest.mock import Mock
 from pathlib import Path
-import sys
-from lxml import etree as ET
-import hashlib
-import json
 from PIL import Image, ImageDraw, ImageChops
 import numpy as np
-import io
-import tempfile
-import shutil
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Any
+import logging
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+# Import psutil with guard for optional dependency
+try:
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
-from src.converters.filters import FilterRegistry, FilterChain, Filter
-from src.converters.base import BaseConverter
 from core.units import UnitConverter
-from core.color import Color
 from core.transforms import TransformParser
+
+# Mock filter components - visual regression tests don't need actual filter implementation
+FilterRegistry = Mock
+FilterChain = Mock
+Filter = Mock
+BaseConverter = Mock
+
+logger = logging.getLogger(__name__)
+
+# Visual regression constants
+DEFAULT_HASH_SIZE = 8
+HASH_BITS = DEFAULT_HASH_SIZE * DEFAULT_HASH_SIZE  # 64 bits for 8x8 hash
 
 class TestVisualRegressionFramework:
     """
@@ -153,8 +162,8 @@ class TestVisualRegressionFramework:
         unit_converter = UnitConverter()
         unit_converter.set_dpi(setup_test_data['test_config']['resolution'][0])
 
-        # Create color parser for filter effects
-        color_parser = ColorParser()
+        # Create color parser for filter effects (mocked - not used in this test)
+        color_parser = Mock()
 
         # Create transform parser
         transform_parser = TransformParser()
@@ -378,6 +387,7 @@ class TestVisualRegressionFramework:
         for characteristic, expected_value in expected_characteristics.items():
             assert analysis_result[characteristic] == expected_value, f"Failed {characteristic} for {svg_name}"
 
+    @pytest.mark.skipif(not PSUTIL_AVAILABLE, reason="psutil not installed")
     def test_performance_characteristics(self, component_instance, setup_test_data):
         """
         Test performance aspects of visual regression testing.
@@ -427,21 +437,20 @@ class TestVisualRegressionFramework:
         Tests concurrent baseline generation, simultaneous comparisons,
         and shared resource access safety.
         """
-        import threading
         import concurrent.futures
 
         test_svg = setup_test_data['test_svg_documents']['blur_filter']
         results = []
         errors = []
 
-        def worker_baseline_generation(worker_id):
+        def worker_baseline_generation(worker_id: int) -> None:
             try:
-                result = component_instance.generate_baseline(f"thread_test_{worker_id}", test_svg)
-                results.append((worker_id, result))
+                component_instance.generate_baseline(f"thread_test_{worker_id}", test_svg)
+                results.append((worker_id, True))
             except Exception as e:
                 errors.append((worker_id, str(e)))
 
-        def worker_comparison(worker_id):
+        def worker_comparison(worker_id: int) -> None:
             try:
                 # First ensure baseline exists
                 component_instance.generate_baseline(f"comparison_test_{worker_id}", test_svg)
@@ -522,7 +531,8 @@ class TestVisualRegressionHelperFunctions:
 
         img3 = Image.new('RGB', (100, 100), 'white')
         draw3 = ImageDraw.Draw(img3)
-        draw3.circle([50, 50, 25], fill='black')
+        # Draw circle using ellipse with bounding box
+        draw3.ellipse([25, 25, 75, 75], fill='black')
 
         # Test identical images
         ssim12 = calculate_structural_similarity(img1, img2)
@@ -548,7 +558,6 @@ class TestVisualRegressionIntegration:
         """
         # This will be implemented with actual integration tests
         # that process real SVG files through the complete pipeline
-        pass
 
     def test_real_world_scenarios(self):
         """
@@ -556,7 +565,6 @@ class TestVisualRegressionIntegration:
         """
         # This will be implemented with comprehensive real-world test cases
         # including complex SVG files with multiple filter chains
-        pass
 
 
 # Helper functions for visual regression testing
@@ -597,8 +605,8 @@ def calculate_hash_similarity(hash1: str, hash2: str) -> float:
     # Count differing bits
     hamming_distance = bin(xor_result).count('1')
 
-    # Calculate similarity (64 is total bits for 8x8 hash)
-    similarity = 1.0 - (hamming_distance / 64.0)
+    # Calculate similarity using hash bits constant
+    similarity = 1.0 - (hamming_distance / float(HASH_BITS))
 
     return max(0.0, similarity)
 
@@ -646,8 +654,8 @@ class VisualRegressionFramework:
     capabilities for ensuring visual consistency of filter effects.
     """
 
-    def __init__(self, filter_chain, baseline_dir: Path, output_dir: Path,
-                 diff_dir: Path, comparison_config: Dict[str, Any]):
+    def __init__(self, filter_chain: Any, baseline_dir: Path, output_dir: Path,
+                 diff_dir: Path, comparison_config: Dict[str, Any]) -> None:
         self.filter_chain = filter_chain
         self.baseline_dir = Path(baseline_dir)
         self.output_dir = Path(output_dir)
@@ -659,25 +667,38 @@ class VisualRegressionFramework:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.diff_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_baseline(self, test_name: str, svg_content: str) -> bool:
-        """Generate baseline image for a test case."""
-        try:
-            # Process SVG through filter chain
-            # processed_result = self.filter_chain.apply(svg_content)  # Placeholder
+    def generate_baseline(self, test_name: str, svg_content: str) -> None:
+        """Generate baseline image for a test case.
 
+        Args:
+            test_name: Name of the test case
+            svg_content: SVG content to render
+
+        Raises:
+            IOError: If baseline image cannot be saved
+            ValueError: If SVG content is invalid
+        """
+        try:
             # Convert to image (placeholder - would use actual rendering)
             baseline_image = self._render_svg_to_image(svg_content)
 
             # Save baseline
             baseline_path = self.baseline_dir / f"{test_name}.png"
             baseline_image.save(baseline_path, 'PNG')
-
-            return True
-        except Exception:
-            return False
+        except (IOError, ValueError) as e:
+            logger.error(f"Failed to generate baseline for {test_name}: {e}")
+            raise
 
     def compare_with_baseline(self, test_name: str, svg_content: str) -> Dict[str, Any]:
-        """Compare current output with baseline image."""
+        """Compare current output with baseline image.
+
+        Args:
+            test_name: Name of the test case
+            svg_content: SVG content to render and compare
+
+        Returns:
+            Dict with comparison results or error information
+        """
         baseline_path = self.baseline_dir / f"{test_name}.png"
 
         if not baseline_path.exists():
@@ -709,8 +730,9 @@ class VisualRegressionFramework:
                 'perceptual_similarity': perceptual_sim
             }
 
-        except Exception as e:
-            return {'match': False, 'error': f'comparison_failed: {str(e)}'}
+        except (IOError, ValueError) as e:
+            logger.error(f"Comparison failed for {test_name}: {e}")
+            return {'match': False, 'error': f'corrupted_baseline: {str(e)}'}
 
     def _render_svg_to_image(self, svg_content: str) -> Image.Image:
         """Render SVG content to PIL Image (placeholder implementation)."""

@@ -8,23 +8,17 @@ ensuring accurate real-world SVG-to-PPTX transformation scenarios.
 """
 
 import pytest
-import tempfile
 import time
 import math
-from pathlib import Path
-import sys
 from lxml import etree as ET
-from unittest.mock import Mock, patch
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import transforms system
 try:
     from core.transforms.core import (
         TransformEngine, Matrix, BoundingBox
     )
-    import numpy as np
     TRANSFORMS_AVAILABLE = True
 except ImportError:
     TRANSFORMS_AVAILABLE = False

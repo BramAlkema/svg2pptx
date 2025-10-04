@@ -28,7 +28,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         PYTHONPATH=. pytest tests/unit/converters/ tests/integration/ tests/e2e_library/ \
-          --cov=src --cov-report=xml --cov-report=term-missing \
+          --cov=core --cov-report=xml --cov-report=term-missing \
           --cov-fail-under=38 --tb=short
     
     - name: Check coverage regression
@@ -54,7 +54,7 @@ jobs:
     
     - name: Upload coverage report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage-report.html

@@ -8,24 +8,17 @@ real-world SVG-to-PPTX viewport handling scenarios.
 """
 
 import pytest
-import tempfile
 import time
 import math
-from pathlib import Path
-import sys
 from lxml import etree as ET
-from unittest.mock import Mock, patch
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 # Import viewBox system
 try:
     from core.viewbox.core import (
-        ViewportEngine, ViewBoxArray, ViewportArray, ViewportMappingArray,
-        AspectAlign, MeetOrSlice, ALIGNMENT_FACTORS
+        ViewportEngine, ViewportArray, AspectAlign, MeetOrSlice
     )
-    from core.units.core import UnitEngine, ConversionContext
     import numpy as np
     VIEWBOX_AVAILABLE = True
 except ImportError:

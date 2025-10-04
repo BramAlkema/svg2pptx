@@ -11,8 +11,6 @@ Validates that the complete Clean Slate pipeline works end-to-end with all adapt
 
 import sys
 import os
-import tempfile
-from pathlib import Path
 
 # Add paths for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -99,8 +97,6 @@ def test_end_to_end_path_processing():
     try:
         from core.pipeline.factory import PipelineFactory
         from core.ir import Path, LineSegment, Point, SolidPaint
-        from core.policy.targets import DecisionReason
-        from unittest.mock import Mock
 
         # Create pipeline
         pipeline = PipelineFactory.create_complete_pipeline()

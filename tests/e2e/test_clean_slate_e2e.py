@@ -12,9 +12,8 @@ import pytest
 import tempfile
 import time
 import psutil
-import os
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 from zipfile import ZipFile
 from lxml import etree as ET
 
@@ -24,8 +23,6 @@ from core.pipeline.config import PipelineConfig, OutputFormat, QualityLevel
 
 # Legacy validation imports
 from pptx import Presentation
-from pptx.oxml import parse_xml
-from pptx.oxml.ns import nsdecls
 
 
 class PerformanceMonitor:

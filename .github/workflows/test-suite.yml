@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, 3.10, 3.11, 3.12]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     
     steps:
     - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
     - name: Run unit tests
       run: |
         python -m pytest tests/unit/ -v \
-          --cov=src \
+          --cov=core \
           --cov-report=xml \
           --cov-report=html \
           --cov-fail-under=80 \
@@ -57,7 +57,7 @@ jobs:
         fail_ci_if_error: false
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: unit-test-results-${{ matrix.python-version }}
@@ -92,7 +92,7 @@ jobs:
       run: |
         python -m pytest tests/unit/converters/test_missing_svg_elements.py -v \
           -m "missing_elements" \
-          --cov=src \
+          --cov=core \
           --cov-report=xml:coverage-missing-elements.xml \
           --junit-xml=test-results-missing-elements.xml
     
@@ -110,7 +110,7 @@ jobs:
         name: missing-elements-coverage
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: missing-elements-test-results
@@ -148,7 +148,7 @@ jobs:
           --timeout=300
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-test-results
@@ -187,7 +187,7 @@ jobs:
           -m "not slow"
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: visual-test-results
@@ -248,18 +248,18 @@ jobs:
     
     - name: Run linting
       run: |
-        flake8 src tests --max-line-length=120 --extend-ignore=E203,W503
-    
+        flake8 core api tests --max-line-length=120 --extend-ignore=E203,W503
+
     - name: Run type checking
       run: |
-        mypy src --ignore-missing-imports
-    
+        mypy core api --ignore-missing-imports
+
     - name: Run security checks
       run: |
-        bandit -r src -f json -o bandit-report.json || true
+        bandit -r core api -f json -o bandit-report.json || true
     
     - name: Upload security report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-report
@@ -293,7 +293,7 @@ jobs:
           --junit-xml=test-results-${{ matrix.os }}.xml
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: cross-platform-results-${{ matrix.os }}
@@ -307,7 +307,7 @@ jobs:
     
     steps:
     - name: Download all test results
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: test-results
     

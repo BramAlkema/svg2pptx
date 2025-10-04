@@ -44,7 +44,7 @@ class EMFRelationshipManager:
         """
         if name is None:
             # Generate name from content hash
-            hash_obj = hashlib.md5(emf_data)
+            hash_obj = hashlib.md5(emf_data, usedforsecurity=False)
             name = f"emf_{hash_obj.hexdigest()[:8]}.emf"
 
         # Generate relationship ID
@@ -534,7 +534,7 @@ def validate_emf_packaging(integrator: PPTXEMFIntegrator) -> List[str]:
     for rel_id, filename in relationships:
         emf_data = integrator.relationship_manager.get_emf_data(rel_id)
         if emf_data is not None:
-            data_hash = hashlib.md5(emf_data).hexdigest()
+            data_hash = hashlib.md5(emf_data, usedforsecurity=False).hexdigest()
             if data_hash in emf_hashes:
                 warnings.append(f"Duplicate EMF data detected: {filename} and {emf_hashes[data_hash]}")
             else:

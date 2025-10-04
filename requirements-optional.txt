@@ -1,0 +1,26 @@
+# Optional Dependencies for Advanced Features
+# These are NOT required for core SVG to PPTX conversion
+
+# ============================================================================
+# Visual Comparison and Testing Tools
+# ============================================================================
+# Install with: pip install -r requirements-optional.txt
+
+# Browser automation for SVG screenshot capture
+playwright>=1.40.0
+
+# Note: After installing playwright, run: playwright install chromium
+
+# ============================================================================
+# Legacy Font Processing (Not used in Clean Slate architecture)
+# ============================================================================
+# These were used in the legacy pipeline but are no longer required:
+# - uharfbuzz>=0.37.0      # HarfBuzz text shaping (legacy only)
+# - freetype-py>=2.4.0     # FreeType font rendering (legacy only)
+
+# ============================================================================
+# Image Processing (Not used - Removed)
+# ============================================================================
+# These libraries were found to be completely unused:
+# - opencv-python>=4.8.0   # NOT USED - 0 imports found
+# - scikit-image>=0.22.0   # NOT USED - 0 imports found

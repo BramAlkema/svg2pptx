@@ -201,7 +201,7 @@ class TestEndToEndConversion:
     
     def test_basic_svg_conversion(self, sample_svg_files, pptx_analyzer):
         """Test basic SVG to PPTX conversion."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         for test_name, svg_content in sample_svg_files.items():
             with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False) as svg_file:
@@ -241,7 +241,7 @@ class TestEndToEndConversion:
     
     def test_conversion_with_preprocessing(self, sample_svg_files, pptx_analyzer):
         """Test conversion with various preprocessing options."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         preprocessing_configs = [
             {'preset': 'minimal'},
@@ -274,7 +274,7 @@ class TestEndToEndConversion:
     
     def test_error_handling(self, pptx_analyzer):
         """Test conversion error handling."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         # Test malformed SVG
         malformed_svg = '''<?xml version="1.0"?>
@@ -309,7 +309,7 @@ class TestEndToEndConversion:
     
     def test_empty_svg_handling(self, pptx_analyzer):
         """Test handling of empty or minimal SVG files."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         # Empty SVG
         empty_svg = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -338,7 +338,7 @@ class TestEndToEndConversion:
     @pytest.mark.slow
     def test_performance_benchmarks(self, sample_svg_files):
         """Test conversion performance benchmarks."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         performance_results = []
         
@@ -385,7 +385,7 @@ class TestEndToEndConversion:
     def test_concurrent_conversions(self, sample_svg_files):
         """Test concurrent conversion handling."""
         import threading
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         results = []
         errors = []
@@ -446,7 +446,7 @@ if __name__ == "__main__":
         svg_file = sys.argv[1]
         pptx_file = sys.argv[2]
         
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         start_time = time.time()
         try:

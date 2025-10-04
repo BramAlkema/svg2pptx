@@ -169,11 +169,20 @@ class ConversionServices:
 
             pptx_builder = PPTXBuilder(unit_converter)
 
-            gradient_service = GradientService()
+            # Initialize policy engine once (shared between services)
+            policy_engine = None
+            try:
+                from ..policy.engine import create_policy
+                from ..policy.config import OutputTarget
+                policy_engine = create_policy(OutputTarget.BALANCED)
+            except ImportError:
+                logger.debug("Policy engine not available, services will use legacy behavior")
+
+            gradient_service = GradientService(policy_engine=policy_engine)
 
             pattern_service = PatternService()
 
-            filter_service = FilterService()
+            filter_service = FilterService(policy_engine=policy_engine)
 
             image_service = ImageService(enable_caching=config.enable_caching)
 
@@ -195,7 +204,8 @@ class ConversionServices:
                 pattern_service=pattern_service,
                 filter_service=filter_service,
                 image_service=image_service,
-                config=config
+                config=config,
+                policy_engine=policy_engine
             )
 
         except Exception as e:

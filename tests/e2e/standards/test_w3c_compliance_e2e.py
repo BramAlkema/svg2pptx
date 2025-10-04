@@ -9,15 +9,13 @@ with official W3C SVG specifications.
 import pytest
 from pathlib import Path
 import json
-import sys
-from typing import List, Dict, Any
+from typing import List, Dict
 from lxml import etree as ET
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from tests.fixtures.test_suite_manager import TestSuiteManager
-from tests.utils.compliance_validator import ComplianceValidator, ComplianceResult
+from tests.utils.compliance_validator import ComplianceValidator
 from tests.utils.compliance_reporter import ComplianceReporter
 
 
@@ -49,7 +47,7 @@ class TestW3CCompliance:
         """Get SVG to PPTX converter for testing."""
         # Import and create converter - adapt to your actual converter interface
         try:
-            from src.svg2pptx import SVGToPowerPointConverter
+            from core.svg2pptx import SVGToPowerPointConverter
             return SVGToPowerPointConverter()
         except ImportError:
             # Fallback mock converter for testing infrastructure

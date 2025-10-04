@@ -9,9 +9,7 @@ of core modules like converters, transforms, colors, etc.
 import pytest
 import tempfile
 import os
-from pathlib import Path
 from lxml import etree as ET
-from zipfile import ZipFile
 
 
 class TestCoreModuleE2E:
@@ -241,7 +239,7 @@ class TestCoreModuleE2E:
 
     def test_shapes_converter_coverage(self, converter_test_svgs):
         """Test shapes converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['basic_shapes']
         
@@ -266,7 +264,7 @@ class TestCoreModuleE2E:
 
     def test_paths_converter_coverage(self, converter_test_svgs):
         """Test paths converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['paths_and_curves']
         
@@ -287,7 +285,7 @@ class TestCoreModuleE2E:
 
     def test_transforms_converter_coverage(self, converter_test_svgs):
         """Test transforms converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['transforms_test']
         
@@ -308,7 +306,7 @@ class TestCoreModuleE2E:
 
     def test_text_converter_coverage(self, converter_test_svgs):
         """Test text converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['text_elements']
         
@@ -329,7 +327,7 @@ class TestCoreModuleE2E:
 
     def test_gradients_converter_coverage(self, converter_test_svgs):
         """Test gradients converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['gradients_patterns']
         
@@ -350,7 +348,7 @@ class TestCoreModuleE2E:
 
     def test_groups_converter_coverage(self, converter_test_svgs):
         """Test groups converter module coverage."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         svg_content = converter_test_svgs['groups_nested']
         
@@ -371,7 +369,7 @@ class TestCoreModuleE2E:
 
     def test_svg_parser_and_main_pipeline(self, converter_test_svgs):
         """Test main SVG parsing and conversion pipeline."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         # Test with various complex scenarios
         for test_name, svg_content in converter_test_svgs.items():
@@ -422,7 +420,7 @@ class TestCoreModuleE2E:
     <circle cx="150" cy="100" r="20" fill="orange"/>
 </svg>'''
         
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False) as svg_file:
             svg_file.write(svg_with_colors)
@@ -452,7 +450,7 @@ class TestCoreModuleE2E:
     <rect x="50%" y="70%" width="20%" height="15%" fill="purple"/>
 </svg>'''
         
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', delete=False) as svg_file:
             svg_file.write(svg_with_viewbox)
@@ -473,7 +471,7 @@ class TestCoreModuleE2E:
         """Test direct usage of core modules to ensure they're exercised."""
         # Test svg2drawingml module
         try:
-            from src.svg2drawingml import SVGToDrawingMLConverter
+            from core.svg2drawingml import SVGToDrawingMLConverter
             
             # Create simple test case
             svg_string = '''<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -497,7 +495,7 @@ class TestCoreModuleE2E:
 
     def test_error_conditions_and_edge_cases(self):
         """Test error conditions to exercise error handling paths."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         edge_case_svgs = [
             # Empty SVG
@@ -550,7 +548,7 @@ class TestCoreModuleE2E:
 
     def test_all_converter_modules_integration(self, converter_test_svgs):
         """Test integration across all converter modules."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         # Combined SVG that should exercise multiple converters
         comprehensive_svg = '''<?xml version="1.0" encoding="UTF-8"?>

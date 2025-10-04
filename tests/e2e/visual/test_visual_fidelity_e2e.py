@@ -8,15 +8,10 @@ ensuring that the converted presentations maintain visual accuracy and quality.
 
 import pytest
 import tempfile
-import asyncio
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
-from unittest.mock import patch, Mock
-import json
-import sys
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Mock visual testing infrastructure since tools.testing doesn't exist
 class ComparisonMethod:
@@ -113,7 +108,6 @@ class TestVisualFidelityE2E:
     def _create_mock_pptx(self, pptx_path: Path):
         """Create a minimal mock PPTX file for testing."""
         import zipfile
-        from lxml import etree as ET
         
         # Create minimal PPTX structure
         with zipfile.ZipFile(pptx_path, 'w') as zf:

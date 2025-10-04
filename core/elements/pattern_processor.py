@@ -681,7 +681,7 @@ class PatternProcessor:
             children_info.append(f"{child.tag}:{child_attrs}")
 
         key_data = f"{element.tag}:{attrs}:{children_count}:{':'.join(children_info)}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def get_processing_statistics(self) -> Dict[str, int]:
         """Get processing statistics."""

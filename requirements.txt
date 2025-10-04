@@ -1,56 +1,71 @@
-# SVG to PowerPoint Converter Dependencies
+# SVG to PowerPoint Converter - Core Dependencies
+# Production dependencies required for basic conversion functionality
 
-# Core PowerPoint manipulation
-python-pptx>=0.6.21
+# ============================================================================
+# Core PowerPoint and XML Processing
+# ============================================================================
+python-pptx>=0.6.21        # PowerPoint file manipulation
+lxml>=4.9.0                 # High-performance XML parsing (REQUIRED - not xml.etree)
 
-# XML parsing and manipulation
-lxml>=4.9.0
+# ============================================================================
+# Mathematical and Scientific Computing
+# ============================================================================
+numpy>=1.20.0               # Matrix operations, transforms, numerical computing
+colorspacious>=1.1.0        # ICC color profiles, LAB color space conversion
 
+# ============================================================================
+# Font Processing and Text Rendering
+# ============================================================================
+fonttools>=4.42.0           # Font subsetting, embedding, metadata extraction
+
+# ============================================================================
 # Web API Framework
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6
+# ============================================================================
+fastapi>=0.104.0            # REST API server
+uvicorn[standard]>=0.24.0   # ASGI server
+python-multipart>=0.0.6     # File upload support
 
-# HTTP Client for SVG fetching
-httpx>=0.25.0
+# ============================================================================
+# HTTP and Network
+# ============================================================================
+httpx>=0.25.0               # Async HTTP client for SVG URL fetching
+requests>=2.31.0            # Synchronous HTTP for simple requests
 
-# Google Drive Integration
+# ============================================================================
+# Task Queue and Batch Processing
+# ============================================================================
+huey>=2.4.0                 # Redis-backed task queue for batch conversions
+
+# ============================================================================
+# Google Drive Integration (Optional - for cloud storage)
+# ============================================================================
 google-api-python-client>=2.100.0
 google-auth>=2.23.0
 google-auth-oauthlib>=1.1.0
 google-auth-httplib2>=0.1.1
 
-# Environment Configuration
-pydantic-settings>=2.0.0
-python-dotenv>=1.0.0
+# ============================================================================
+# Configuration Management
+# ============================================================================
+pydantic-settings>=2.0.0    # Settings validation
+python-dotenv>=1.0.0        # Environment variable loading
+pyyaml>=6.0                 # YAML configuration files
 
-# Font processing and text-to-path conversion
-fonttools>=4.42.0
-uharfbuzz>=0.37.0
-freetype-py>=2.4.0
+# ============================================================================
+# Image Processing (for visual comparison and testing)
+# ============================================================================
+pillow>=10.0.0              # Image manipulation, comparison, colorspace
 
-# Color science and processing
-colorspacious>=1.1.0
-numpy>=1.20.0
+# ============================================================================
+# Development and Testing
+# ============================================================================
+pytest>=7.0.0               # Test framework
+pytest-cov>=4.0.0           # Coverage reporting
+pytest-asyncio>=0.21.0      # Async test support
 
-# Optional: Enhanced SVG parsing
-# svglib>=1.4.0
-# reportlab>=3.6.0
-
-# Visual Testing Dependencies
-playwright>=1.40.0
-pillow>=10.0.0
-opencv-python>=4.8.0
-scikit-image>=0.22.0
-pyyaml>=6.0
-requests>=2.31.0
-
-# Development and testing
-pytest>=7.0.0
-pytest-cov>=4.0.0
-pytest-asyncio>=0.21.0
-
-# Code quality
-black>=22.0.0
-isort>=5.10.0
-flake8>=5.0.0
+# ============================================================================
+# Code Quality Tools
+# ============================================================================
+black>=22.0.0               # Code formatting
+isort>=5.10.0               # Import sorting
+ruff>=0.1.0                 # Fast Python linter

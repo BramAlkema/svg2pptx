@@ -13,13 +13,9 @@ Tests the complete batch workflow with Google Drive integration:
 import pytest
 import tempfile
 import os
-import json
-import asyncio
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, Any, Optional, List
-import httpx
+from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 # Import the FastAPI app and dependencies
@@ -27,8 +23,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.main import app
 from api.auth import get_current_user
-from api.config import get_settings
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
+from core.batch.models import init_database
 
 
 class BatchDriveE2EFixtures:
@@ -219,7 +214,7 @@ class TestBatchDriveWorkflowValidation(BatchDriveE2EFixtures):
         """Test Drive upload initiation workflow."""
         with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
             # Create a completed batch job
-            from src.batch.models import BatchJob
+            from core.batch.models import BatchJob
             job_id = "e2e_upload_test"
             batch_job = BatchJob(
                 job_id=job_id,
@@ -251,7 +246,7 @@ class TestBatchDriveWorkflowValidation(BatchDriveE2EFixtures):
         """Test Drive information retrieval workflow."""
         with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
             # Create batch with Drive metadata
-            from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata
+            from core.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata
             
             job_id = "e2e_info_test"
             batch_job = BatchJob(
@@ -315,7 +310,7 @@ class TestBatchDriveErrorScenarios(BatchDriveE2EFixtures):
         """Test error handling for jobs not ready for upload."""
         with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
             # Create a processing job
-            from src.batch.models import BatchJob
+            from core.batch.models import BatchJob
             job_id = "e2e_not_ready"
             batch_job = BatchJob(
                 job_id=job_id,
@@ -336,7 +331,7 @@ class TestBatchDriveErrorScenarios(BatchDriveE2EFixtures):
         """Test error handling for jobs without Drive integration."""
         with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
             # Create job without Drive integration
-            from src.batch.models import BatchJob
+            from core.batch.models import BatchJob
             job_id = "e2e_no_drive"
             batch_job = BatchJob(
                 job_id=job_id,
@@ -393,7 +388,7 @@ class TestBatchDrivePerformanceBaseline(BatchDriveE2EFixtures):
         """Test batch status check performance baseline."""
         with patch('api.routes.batch.DEFAULT_DB_PATH', test_db_path):
             # Create a job first
-            from src.batch.models import BatchJob
+            from core.batch.models import BatchJob
             job_id = "e2e_perf_test"
             batch_job = BatchJob(
                 job_id=job_id,

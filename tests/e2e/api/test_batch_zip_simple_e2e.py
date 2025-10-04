@@ -9,18 +9,15 @@ Tests core ZIP file upload and structure preservation functionality:
 """
 
 import pytest
-import tempfile
-import os
 from pathlib import Path
-from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
+from unittest.mock import patch
 
 # Import test infrastructure
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.main import app
 from api.auth import get_current_user
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
+from core.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata
 from tests.e2e.api.test_batch_drive_e2e import BatchDriveE2EFixtures
 
 

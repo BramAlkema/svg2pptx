@@ -8,21 +8,16 @@ SVG → IR → Policy → Mapping → DrawingML → PowerPoint
 """
 
 import pytest
-from pathlib import Path
-import sys
-from unittest.mock import Mock, patch
 import tempfile
 import os
 import zipfile
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
     from core.parsers import SVGParser
-    from core.ir import Scene, Path, TextFrame, Group, Image
-    from core.policies import PolicyEngine, ConversionPolicy, QualityEngine
-    from core.mappers import SceneMapper, PathMapper, TextMapper
+    from core.policies import PolicyEngine, QualityEngine
+    from core.mappers import SceneMapper
     from core.embedding import PowerPointEmbedder
     from lxml import etree
     CORE_PIPELINE_AVAILABLE = True

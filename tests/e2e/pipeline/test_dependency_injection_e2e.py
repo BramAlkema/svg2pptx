@@ -6,14 +6,13 @@ creation through converter instantiation and actual SVG conversion operations.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from lxml import etree as ET
 import tempfile
 import os
 
 from core.services.conversion_services import ConversionServices, ConversionConfig
 from core.services.migration_utils import MigrationHelper
-from src.converters.base import ConversionContext
 
 
 class TestEndToEndServiceInjection:
@@ -47,7 +46,7 @@ class TestEndToEndServiceInjection:
         services = ConversionServices.create_default()
 
         # Test direct converter instantiation with services
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
         converter = RectangleConverter(services=services)
 
         # Verify converter has services
@@ -60,9 +59,9 @@ class TestEndToEndServiceInjection:
 
     def test_migration_helper_integration(self):
         """Test MigrationHelper creates converters with proper service injection."""
-        from src.converters.shapes import RectangleConverter
-        from src.converters.text import TextConverter
-        from src.converters.paths import PathConverter
+        from core.converters.shapes import RectangleConverter
+        from core.converters.text import TextConverter
+        from core.converters.paths import PathConverter
 
         # Test with default services
         rect_converter = MigrationHelper.create_converter_with_services(RectangleConverter)
@@ -89,9 +88,9 @@ class TestEndToEndServiceInjection:
         """Test that all converters share the same service instances."""
         services = ConversionServices.create_default()
 
-        from src.converters.shapes import RectangleConverter
-        from src.converters.text import TextConverter
-        from src.converters.gradients import GradientConverter
+        from core.converters.shapes import RectangleConverter
+        from core.converters.text import TextConverter
+        from core.converters.gradients import GradientConverter
 
         rect_converter = RectangleConverter(services=services)
         text_converter = TextConverter(services=services)
@@ -107,7 +106,7 @@ class TestEndToEndServiceInjection:
         """Test that backward compatibility properties work correctly."""
         services = ConversionServices.create_default()
 
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
         converter = RectangleConverter(services=services)
 
         # Test property access works
@@ -128,7 +127,7 @@ class TestConversionWorkflowIntegration:
         """Test rectangle conversion works with dependency injection."""
         services = ConversionServices.create_default()
 
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
         converter = RectangleConverter(services=services)
 
         # Create test SVG element
@@ -149,7 +148,7 @@ class TestConversionWorkflowIntegration:
         """Test text conversion works with dependency injection."""
         services = ConversionServices.create_default()
 
-        from src.converters.text import TextConverter
+        from core.converters.text import TextConverter
         converter = TextConverter(services=services)
 
         # Create test SVG element
@@ -170,7 +169,7 @@ class TestConversionWorkflowIntegration:
         """Test gradient conversion works with dependency injection."""
         services = ConversionServices.create_default()
 
-        from src.converters.gradients import GradientConverter
+        from core.converters.gradients import GradientConverter
         converter = GradientConverter(services=services)
 
         # Create test SVG element
@@ -214,7 +213,7 @@ class TestServiceConfigurationIntegration:
         assert services.config.enable_caching is False
 
         # Test that services use the configuration
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
         converter = RectangleConverter(services=services)
 
         # Verify converter has access to config through services
@@ -258,7 +257,6 @@ class TestRegistryIntegration:
         services = ConversionServices.create_default()
 
         # Test migration utility with registry
-        from src.converters.shapes import RectangleConverter
         mock_registry = Mock()
         mock_registry.converters = []  # Mock the converters list
 
@@ -272,7 +270,7 @@ class TestRegistryIntegration:
         """Test converter validation works in registry context."""
         services = ConversionServices.create_default()
 
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
         converter = RectangleConverter(services=services)
 
         # Test validation
@@ -307,7 +305,7 @@ class TestPerformanceAndCaching:
         """Test that converter creation with services is efficient."""
         services = ConversionServices.create_default()
 
-        from src.converters.shapes import RectangleConverter
+        from core.converters.shapes import RectangleConverter
 
         # Create multiple converters with same services
         converters = []

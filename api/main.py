@@ -16,6 +16,8 @@ from .auth import validate_api_key, extract_bearer_token, get_current_user
 from .services.conversion_service import ConversionService, ConversionError
 from .routes.previews import router as previews_router
 from .routes.batch import router as batch_router
+from .routes.visual_testing import router as visual_testing_router
+from .routes.analysis import router as analysis_router
 from src.svg2pptx import convert_svg_to_pptx
 
 # Configure logging
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="SVG to Google Drive API",
-    description="Convert SVG files to PowerPoint format with multi-slide support and upload to Google Drive with PNG preview generation",
+    description="Convert SVG files to PowerPoint format with multi-slide support, Google Drive upload, and visual testing",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -44,6 +46,12 @@ app.include_router(previews_router)
 
 # Include batch routes
 app.include_router(batch_router)
+
+# Include visual testing routes
+app.include_router(visual_testing_router)
+
+# Include analysis routes
+app.include_router(analysis_router)
 
 
 

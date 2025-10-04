@@ -10,31 +10,27 @@ This covers the full pipeline: SVG input → preprocessing plugins → optimizat
 
 import pytest
 from pathlib import Path
-import sys
 import tempfile
-import zipfile
 import time
-from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import preprocessing system components
 PREPROCESSING_AVAILABLE = True
 try:
-    from src.preprocessing.optimizer import SVGOptimizer, create_optimizer
-    from src.preprocessing.plugins import (
+    from core.preprocessing.optimizer import SVGOptimizer, create_optimizer
+    from core.preprocessing.plugins import (
         CleanupAttrsPlugin, CleanupNumericValuesPlugin,
         RemoveEmptyAttrsPlugin, RemoveCommentsPlugin
     )
-    from src.preprocessing.geometry_plugins import (
+    from core.preprocessing.geometry_plugins import (
         ConvertEllipseToCirclePlugin, SimplifyPolygonPlugin
     )
-    from src.preprocessing.advanced_plugins import (
+    from core.preprocessing.advanced_plugins import (
         ConvertPathDataPlugin, MergePathsPlugin
     )
-    from src.preprocessing.base import PreprocessingContext
+    from core.preprocessing.base import PreprocessingContext
 except ImportError:
     PREPROCESSING_AVAILABLE = False
 

@@ -8,10 +8,8 @@ used in E2E testing, including file validation, categorization, and metadata ext
 
 import pytest
 import tempfile
-import os
 from pathlib import Path
 import json
-from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Import the test library management system (to be implemented)
@@ -233,7 +231,7 @@ class TestSVGLibraryIntegration:
     def test_integration_with_converter_registry(self):
         """Test that SVG test library integrates with converter registry."""
         # This test ensures the test library works with our existing registry
-        from src.converters.base import ConverterRegistryFactory
+        from core.converters.base import ConverterRegistryFactory
         
         registry = ConverterRegistryFactory.get_registry()
         assert len(registry.converters) > 0
@@ -261,7 +259,7 @@ class TestSVGLibraryIntegration:
 <path d="M187.5 124C196.389 124 203.5 116.889 203.5 108C203.5 99.1112 196.389 92 187.5 92C178.611 92 171.5 99.1112 171.5 108C171.5 116.889 178.611 124 187.5 124Z" fill="#6B7280"/>
 </svg>'''
         
-        from src.converters.base import ConverterRegistryFactory, ConversionContext, CoordinateSystem
+        from core.converters.base import ConverterRegistryFactory, ConversionContext, CoordinateSystem
         
         # Parse the SVG
         root = ET.fromstring(figma_style_svg)
@@ -301,7 +299,6 @@ class TestSVGLibraryValidation:
         # - Coverage of all major design tools
         # - Diverse complexity levels
         # - All converter modules represented
-        pass
     
     def test_svg_file_source_tracking(self):
         """Test tracking of SVG file sources and origins."""

@@ -15,6 +15,7 @@ from ..ir import LinearGradientPaint, RadialGradientPaint, SolidPaint
 from .config import PolicyConfig, OutputTarget
 from .targets import (
     PolicyDecision, PathDecision, TextDecision, GroupDecision, ImageDecision,
+    FilterDecision, GradientDecision, MultiPageDecision, AnimationDecision, ClipPathDecision,
     DecisionReason, PolicyMetrics
 )
 
@@ -644,6 +645,429 @@ class Policy:
             group.is_leaf_group and
             len(group.children) < 10 and
             group.clip is None
+        )
+
+    def decide_filter(self, filter_element: Any = None, filter_type: str = "",
+                     primitive_count: int = 0) -> FilterDecision:
+        """
+        Decide output format for SVG filter effects.
+
+        Args:
+            filter_element: Optional filter element from SVG
+            filter_type: Type of filter ('blur', 'shadow', 'color_matrix', etc.)
+            primitive_count: Number of filter primitives in chain
+
+        Returns:
+            FilterDecision with reasoning
+        """
+        start_time = time.time()
+        decision = self._analyze_filter(filter_type, primitive_count)
+        elapsed_ms = (time.time() - start_time) * 1000.0
+
+        if self.config.enable_metrics:
+            self.metrics.record_decision(decision, elapsed_ms)
+
+        return decision
+
+    def _analyze_filter(self, filter_type: str, primitive_count: int) -> FilterDecision:
+        """Analyze filter complexity and make decision"""
+        thresholds = self.config.thresholds
+
+        # Calculate complexity score (0-100)
+        complexity_score = primitive_count * 10  # Simple scoring for now
+
+        # Check if too many primitives
+        if primitive_count > thresholds.max_filter_primitives:
+            return FilterDecision.emf(
+                filter_type=filter_type or 'chain',
+                reasons=[DecisionReason.FILTER_CHAIN_COMPLEX, DecisionReason.ABOVE_THRESHOLDS],
+                primitive_count=primitive_count,
+                complexity_score=complexity_score
+            )
+
+        # Check complexity score
+        if complexity_score > thresholds.max_filter_complexity_score:
+            if thresholds.prefer_filter_rasterization:
+                return FilterDecision.rasterize(
+                    filter_type=filter_type or 'complex',
+                    reasons=[DecisionReason.FILTER_RASTERIZED, DecisionReason.ABOVE_THRESHOLDS],
+                    primitive_count=primitive_count,
+                    complexity_score=complexity_score
+                )
+            else:
+                return FilterDecision.emf(
+                    filter_type=filter_type or 'complex',
+                    reasons=[DecisionReason.FILTER_CHAIN_COMPLEX],
+                    primitive_count=primitive_count,
+                    complexity_score=complexity_score
+                )
+
+        # Check for native support
+        if filter_type == 'blur' and thresholds.enable_native_blur:
+            return FilterDecision.native(
+                filter_type='blur',
+                reasons=[DecisionReason.NATIVE_FILTER_AVAILABLE, DecisionReason.SIMPLE_FILTER],
+                primitive_count=primitive_count,
+                complexity_score=complexity_score,
+                native_approximation='<a:blur>'
+            )
+
+        if filter_type == 'shadow' and thresholds.enable_native_shadow:
+            return FilterDecision.native(
+                filter_type='shadow',
+                reasons=[DecisionReason.NATIVE_FILTER_AVAILABLE, DecisionReason.SIMPLE_FILTER],
+                primitive_count=primitive_count,
+                complexity_score=complexity_score,
+                native_approximation='<a:outerShdw>'
+            )
+
+        # Simple filters can use approximation
+        if primitive_count <= 2 and thresholds.enable_filter_approximation:
+            return FilterDecision.native(
+                filter_type=filter_type or 'simple',
+                reasons=[DecisionReason.SIMPLE_FILTER, DecisionReason.BELOW_THRESHOLDS],
+                primitive_count=primitive_count,
+                complexity_score=complexity_score
+            )
+
+        # Default to EMF for unsupported filters
+        return FilterDecision.emf(
+            filter_type=filter_type or 'unknown',
+            reasons=[DecisionReason.UNSUPPORTED_FILTER_PRIMITIVE],
+            primitive_count=primitive_count,
+            complexity_score=complexity_score,
+            has_unsupported_primitives=True
+        )
+
+    def decide_gradient(self, gradient: Union[LinearGradientPaint, RadialGradientPaint, Any] = None,
+                       gradient_type: str = "", stop_count: int = 0,
+                       mesh_rows: int = 0, mesh_cols: int = 0) -> GradientDecision:
+        """
+        Decide output format for gradient fills.
+
+        Args:
+            gradient: Gradient paint object
+            gradient_type: 'linear', 'radial', 'mesh', or 'conic'
+            stop_count: Number of gradient stops
+            mesh_rows: Mesh gradient rows (if applicable)
+            mesh_cols: Mesh gradient columns (if applicable)
+
+        Returns:
+            GradientDecision with reasoning
+        """
+        start_time = time.time()
+        decision = self._analyze_gradient(gradient_type, stop_count, mesh_rows, mesh_cols)
+        elapsed_ms = (time.time() - start_time) * 1000.0
+
+        if self.config.enable_metrics:
+            self.metrics.record_decision(decision, elapsed_ms)
+
+        return decision
+
+    def _analyze_gradient(self, gradient_type: str, stop_count: int,
+                         mesh_rows: int, mesh_cols: int) -> GradientDecision:
+        """Analyze gradient complexity and make decision"""
+        thresholds = self.config.thresholds
+
+        # Calculate mesh patch count if mesh gradient
+        mesh_patch_count = 0
+        if gradient_type == 'mesh' and mesh_rows > 0 and mesh_cols > 0:
+            mesh_patch_count = mesh_rows * mesh_cols * 4  # 4 patches per grid cell
+
+        # Check mesh gradient limits
+        if gradient_type == 'mesh':
+            if mesh_patch_count > thresholds.max_mesh_patches or \
+               mesh_rows > thresholds.max_mesh_grid_size or \
+               mesh_cols > thresholds.max_mesh_grid_size:
+                return GradientDecision(
+                    use_native=False,
+                    reasons=[DecisionReason.MESH_GRADIENT_COMPLEX, DecisionReason.ABOVE_THRESHOLDS],
+                    gradient_type='mesh',
+                    stop_count=stop_count,
+                    mesh_rows=mesh_rows,
+                    mesh_cols=mesh_cols,
+                    mesh_patch_count=mesh_patch_count
+                )
+
+        # Check stop count
+        if stop_count > thresholds.max_gradient_stops:
+            if thresholds.enable_gradient_simplification:
+                return GradientDecision.simplified(
+                    gradient_type=gradient_type or 'linear',
+                    stop_count=stop_count,
+                    mesh_rows=mesh_rows,
+                    mesh_cols=mesh_cols,
+                    mesh_patch_count=mesh_patch_count
+                )
+            else:
+                return GradientDecision(
+                    use_native=False,
+                    reasons=[DecisionReason.TOO_MANY_GRADIENT_STOPS, DecisionReason.ABOVE_THRESHOLDS],
+                    gradient_type=gradient_type or 'linear',
+                    stop_count=stop_count
+                )
+
+        # Simple gradients use native
+        return GradientDecision.native(
+            gradient_type=gradient_type or 'linear',
+            reasons=[DecisionReason.SIMPLE_GRADIENT, DecisionReason.BELOW_THRESHOLDS],
+            stop_count=stop_count,
+            mesh_rows=mesh_rows,
+            mesh_cols=mesh_cols,
+            mesh_patch_count=mesh_patch_count
+        )
+
+    def decide_multipage(self, page_count: int = 1, detection_method: str = "none",
+                        total_size_bytes: int = 0, elements_per_page: List[int] = None,
+                        page_titles: List[Optional[str]] = None) -> MultiPageDecision:
+        """
+        Decide multi-page SVG handling strategy.
+
+        Args:
+            page_count: Number of detected pages
+            detection_method: 'markers', 'grouped', 'size_split', or 'none'
+            total_size_bytes: Total SVG content size
+            elements_per_page: Element count per page
+            page_titles: Titles for each page
+
+        Returns:
+            MultiPageDecision with reasoning
+        """
+        start_time = time.time()
+        decision = self._analyze_multipage(page_count, detection_method, total_size_bytes,
+                                           elements_per_page, page_titles)
+        elapsed_ms = (time.time() - start_time) * 1000.0
+
+        if self.config.enable_metrics:
+            self.metrics.record_decision(decision, elapsed_ms)
+
+        return decision
+
+    def _analyze_multipage(self, page_count: int, detection_method: str, total_size_bytes: int,
+                          elements_per_page: List[int] = None,
+                          page_titles: List[Optional[str]] = None) -> MultiPageDecision:
+        """Analyze multi-page requirements and make decision"""
+        thresholds = self.config.thresholds
+
+        # Single page if count is 1
+        if page_count <= 1:
+            return MultiPageDecision.single_page(
+                total_size_bytes=total_size_bytes
+            )
+
+        # Check page limit
+        if page_count > thresholds.max_pages_per_conversion:
+            return MultiPageDecision.single_page(
+                reasons=[DecisionReason.PAGE_LIMIT_EXCEEDED],
+                total_size_bytes=total_size_bytes,
+                page_titles=['Page limit exceeded - treating as single page']
+            )
+
+        # Check size threshold for auto-splitting
+        size_kb = total_size_bytes / 1024
+        if size_kb > thresholds.max_single_page_size_kb and thresholds.enable_size_based_splitting:
+            return MultiPageDecision.multi_page(
+                page_count=page_count,
+                method=detection_method or 'size_split',
+                reasons=[DecisionReason.SIZE_THRESHOLD_EXCEEDED],
+                total_size_bytes=total_size_bytes,
+                elements_per_page=elements_per_page,
+                page_titles=page_titles,
+                split_threshold_exceeded=True
+            )
+
+        # Explicit page markers
+        if detection_method == 'markers' and thresholds.prefer_explicit_markers:
+            return MultiPageDecision.multi_page(
+                page_count=page_count,
+                method='markers',
+                reasons=[DecisionReason.EXPLICIT_PAGE_MARKERS],
+                total_size_bytes=total_size_bytes,
+                elements_per_page=elements_per_page,
+                page_titles=page_titles
+            )
+
+        # Grouped content detected
+        if detection_method == 'grouped':
+            return MultiPageDecision.multi_page(
+                page_count=page_count,
+                method='grouped',
+                reasons=[DecisionReason.GROUPED_CONTENT_DETECTED],
+                total_size_bytes=total_size_bytes,
+                elements_per_page=elements_per_page,
+                page_titles=page_titles
+            )
+
+        # Default multi-page
+        return MultiPageDecision.multi_page(
+            page_count=page_count,
+            method=detection_method or 'auto',
+            total_size_bytes=total_size_bytes,
+            elements_per_page=elements_per_page,
+            page_titles=page_titles
+        )
+
+    def decide_animation(self, animation_type: str = "", keyframe_count: int = 0,
+                        duration_ms: float = 0.0, interpolation: str = "linear") -> AnimationDecision:
+        """
+        Decide animation conversion strategy.
+
+        Args:
+            animation_type: 'transform', 'opacity', 'color', 'path', or 'sequence'
+            keyframe_count: Number of keyframes
+            duration_ms: Animation duration in milliseconds
+            interpolation: Interpolation type
+
+        Returns:
+            AnimationDecision with reasoning
+        """
+        start_time = time.time()
+        decision = self._analyze_animation(animation_type, keyframe_count, duration_ms, interpolation)
+        elapsed_ms = (time.time() - start_time) * 1000.0
+
+        if self.config.enable_metrics:
+            self.metrics.record_decision(decision, elapsed_ms)
+
+        return decision
+
+    def _analyze_animation(self, animation_type: str, keyframe_count: int,
+                          duration_ms: float, interpolation: str) -> AnimationDecision:
+        """Analyze animation complexity and make decision"""
+        thresholds = self.config.thresholds
+
+        # Check if animation conversion is disabled
+        if not thresholds.enable_animation_conversion:
+            return AnimationDecision.skip(
+                animation_type=animation_type or 'unknown',
+                reasons=[DecisionReason.ANIMATION_SKIPPED, DecisionReason.USER_PREFERENCE],
+                keyframe_count=keyframe_count,
+                duration_ms=duration_ms,
+                interpolation=interpolation
+            )
+
+        # Check keyframe count
+        if keyframe_count > thresholds.max_animation_keyframes:
+            return AnimationDecision.skip(
+                animation_type=animation_type or 'complex',
+                reasons=[DecisionReason.ANIMATION_TOO_COMPLEX, DecisionReason.ABOVE_THRESHOLDS],
+                keyframe_count=keyframe_count,
+                duration_ms=duration_ms,
+                interpolation=interpolation
+            )
+
+        # Check duration
+        if duration_ms > thresholds.max_animation_duration_ms:
+            return AnimationDecision.skip(
+                animation_type=animation_type or 'long',
+                reasons=[DecisionReason.ANIMATION_TOO_COMPLEX],
+                keyframe_count=keyframe_count,
+                duration_ms=duration_ms,
+                interpolation=interpolation
+            )
+
+        # Simple animations can convert
+        return AnimationDecision.native(
+            animation_type=animation_type or 'transform',
+            reasons=[DecisionReason.SIMPLE_ANIMATION, DecisionReason.BELOW_THRESHOLDS],
+            keyframe_count=keyframe_count,
+            duration_ms=duration_ms,
+            interpolation=interpolation
+        )
+
+    def decide_clippath(self, clip_type: str = "", path_complexity: int = 0,
+                       nesting_level: int = 0, has_boolean_ops: bool = False,
+                       boolean_op_type: Optional[str] = None) -> ClipPathDecision:
+        """
+        Decide clipping path rendering strategy.
+
+        Args:
+            clip_type: 'rect', 'ellipse', 'path', 'complex', or 'boolean'
+            path_complexity: Number of path segments
+            nesting_level: Clip nesting depth
+            has_boolean_ops: Whether boolean operations are needed
+            boolean_op_type: 'union', 'intersect', or 'subtract'
+
+        Returns:
+            ClipPathDecision with reasoning
+        """
+        start_time = time.time()
+        decision = self._analyze_clippath(clip_type, path_complexity, nesting_level,
+                                          has_boolean_ops, boolean_op_type)
+        elapsed_ms = (time.time() - start_time) * 1000.0
+
+        if self.config.enable_metrics:
+            self.metrics.record_decision(decision, elapsed_ms)
+
+        return decision
+
+    def _analyze_clippath(self, clip_type: str, path_complexity: int, nesting_level: int,
+                         has_boolean_ops: bool, boolean_op_type: Optional[str]) -> ClipPathDecision:
+        """Analyze clipping path complexity and make decision"""
+        thresholds = self.config.thresholds
+
+        # Check if native clipping is disabled
+        if not thresholds.enable_native_clipping:
+            return ClipPathDecision.emf(
+                clip_type=clip_type or 'disabled',
+                reasons=[DecisionReason.USER_PREFERENCE],
+                path_complexity=path_complexity,
+                nesting_level=nesting_level,
+                has_boolean_ops=has_boolean_ops,
+                boolean_op_type=boolean_op_type
+            )
+
+        # Check boolean operations
+        if has_boolean_ops and not thresholds.enable_boolean_operations:
+            return ClipPathDecision.emf(
+                clip_type='boolean',
+                reasons=[DecisionReason.BOOLEAN_CLIP_OPERATION, DecisionReason.UNSUPPORTED_FEATURES],
+                path_complexity=path_complexity,
+                nesting_level=nesting_level,
+                has_boolean_ops=True,
+                boolean_op_type=boolean_op_type
+            )
+
+        # Check nesting depth
+        if nesting_level > thresholds.max_clip_nesting_depth:
+            return ClipPathDecision.emf(
+                clip_type=clip_type or 'nested',
+                reasons=[DecisionReason.NESTED_CLIPPING, DecisionReason.ABOVE_THRESHOLDS],
+                path_complexity=path_complexity,
+                nesting_level=nesting_level,
+                has_boolean_ops=has_boolean_ops,
+                boolean_op_type=boolean_op_type
+            )
+
+        # Check path complexity
+        if path_complexity > thresholds.max_clip_path_segments:
+            return ClipPathDecision.emf(
+                clip_type='complex',
+                reasons=[DecisionReason.CLIP_PATH_COMPLEX, DecisionReason.ABOVE_THRESHOLDS],
+                path_complexity=path_complexity,
+                nesting_level=nesting_level,
+                has_boolean_ops=has_boolean_ops,
+                boolean_op_type=boolean_op_type
+            )
+
+        # Simple clips use native
+        if clip_type in ('rect', 'ellipse') or path_complexity <= 10:
+            return ClipPathDecision.native(
+                clip_type=clip_type or 'simple',
+                reasons=[DecisionReason.SIMPLE_CLIP_PATH, DecisionReason.BELOW_THRESHOLDS],
+                path_complexity=path_complexity,
+                nesting_level=nesting_level,
+                has_boolean_ops=has_boolean_ops,
+                boolean_op_type=boolean_op_type
+            )
+
+        # Default to native for moderate complexity
+        return ClipPathDecision.native(
+            clip_type=clip_type or 'path',
+            reasons=[DecisionReason.SIMPLE_CLIP_PATH],
+            path_complexity=path_complexity,
+            nesting_level=nesting_level,
+            has_boolean_ops=has_boolean_ops,
+            boolean_op_type=boolean_op_type
         )
 
     def get_metrics(self) -> PolicyMetrics:

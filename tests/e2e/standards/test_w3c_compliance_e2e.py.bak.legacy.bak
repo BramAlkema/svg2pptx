@@ -1,0 +1,348 @@
+#!/usr/bin/env python3
+"""
+W3C SVG specification compliance validation tests.
+
+This module provides end-to-end tests for validating SVG2PPTX compliance
+with official W3C SVG specifications.
+"""
+
+import pytest
+from pathlib import Path
+import json
+import sys
+from typing import List, Dict
+from lxml import etree as ET
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
+
+from tests.fixtures.test_suite_manager import TestSuiteManager
+from tests.utils.compliance_validator import ComplianceValidator
+from tests.utils.compliance_reporter import ComplianceReporter
+
+
+class TestW3CCompliance:
+    """W3C SVG specification compliance validation."""
+
+    @pytest.fixture(scope="session")
+    def test_suite_manager(self):
+        """Get test suite manager instance."""
+        return TestSuiteManager()
+
+    @pytest.fixture(scope="session")
+    def w3c_test_suite(self, test_suite_manager):
+        """Download and cache W3C test suite."""
+        return test_suite_manager.download_w3c_suite()
+
+    @pytest.fixture
+    def compliance_validator(self):
+        """Get compliance validator instance."""
+        return ComplianceValidator()
+
+    @pytest.fixture
+    def compliance_reporter(self):
+        """Get compliance reporter instance."""
+        return ComplianceReporter()
+
+    @pytest.fixture
+    def svg_converter(self):
+        """Get SVG to PPTX converter for testing."""
+        # Import and create converter - adapt to your actual converter interface
+        try:
+            from src.svg2pptx import SVGToPowerPointConverter
+            return SVGToPowerPointConverter()
+        except ImportError:
+            # Fallback mock converter for testing infrastructure
+            class MockConverter:
+                def convert_svg_element(self, svg_element):
+                    return "mock_pptx_output"
+
+                def convert(self, svg_content):
+                    return "mock_pptx_output"
+
+            return MockConverter()
+
+    def load_test_cases(self, test_suite_dir: Path, category: str) -> List[Dict]:
+        """
+        Load test cases from a category directory.
+
+        Args:
+            test_suite_dir: Path to W3C test suite
+            category: Test category (e.g., 'shapes', 'paths')
+
+        Returns:
+            List of test case dictionaries
+        """
+        test_cases = []
+
+        # Find directories that match the category
+        for dir_item in test_suite_dir.iterdir():
+            if dir_item.is_dir() and dir_item.name.startswith(f"{category}-"):
+                # Get all SVG files in this directory
+                for svg_file in dir_item.glob('*.svg'):
+                    json_file = svg_file.with_suffix('.json')
+                    metadata = {}
+
+                    if json_file.exists():
+                        try:
+                            with open(json_file, 'r') as f:
+                                metadata = json.load(f)
+                        except (json.JSONDecodeError, IOError):
+                            pytest.skip(f"Failed to load metadata for {svg_file}")
+
+                    with open(svg_file, 'r', encoding='utf-8') as f:
+                        svg_content = f.read()
+
+                    test_cases.append({
+                        'id': metadata.get('id', svg_file.stem),
+                        'svg_content': svg_content,
+                        'metadata': metadata,
+                        'file_path': svg_file,
+                        'category': category
+                    })
+
+        return test_cases
+
+    @pytest.mark.e2e
+    @pytest.mark.w3c
+    def test_basic_shapes_compliance(self, w3c_test_suite, compliance_validator,
+                                   compliance_reporter, svg_converter):
+        """
+        Validate basic shape rendering compliance with W3C standards.
+
+        Tests conversion accuracy for fundamental SVG shape elements
+        including rectangles, circles, and ellipses.
+        """
+        # Load basic shape test cases
+        test_cases = self.load_test_cases(w3c_test_suite, 'shapes')
+
+        if not test_cases:
+            pytest.skip("No W3C shape test cases found")
+
+        results = []
+
+        for test_case in test_cases:
+            try:
+                # Parse SVG content
+                svg_content = test_case['svg_content']
+                svg_root = ET.fromstring(svg_content.encode('utf-8'))
+
+                # Perform conversion
+                pptx_output = svg_converter.convert_svg_element(svg_root)
+
+                # Validate conversion accuracy
+                compliance_result = compliance_validator.validate_basic_shapes(
+                    svg_content,
+                    pptx_output,
+                    test_case['metadata']
+                )
+
+                # Convert to dictionary for reporting
+                result_dict = compliance_result.to_dict()
+                result_dict['category'] = test_case['category']
+
+                results.append(result_dict)
+
+            except Exception as e:
+                # Record error but continue with other tests
+                results.append({
+                    'test_id': test_case['id'],
+                    'score': 0.0,
+                    'passed': False,
+                    'category': test_case['category'],
+                    'errors': [str(e)]
+                })
+
+        # Generate compliance report
+        report = compliance_reporter.generate_report(results, 'w3c_shapes')
+
+        # Assert minimum compliance threshold
+        summary = report['summary']
+        pass_rate = summary['pass_rate']
+
+        # Log results for visibility
+        print(f"\nW3C Shapes Compliance Results:")
+        print(f"  Total Tests: {summary['total_tests']}")
+        print(f"  Passed: {summary['passed']}")
+        print(f"  Failed: {summary['failed']}")
+        print(f"  Pass Rate: {pass_rate:.1%}")
+        print(f"  Average Score: {summary['average_score']:.1%}")
+
+        # Minimum threshold assertion
+        assert pass_rate >= 0.85, (
+            f"W3C shapes compliance: {pass_rate:.2%} "
+            f"(minimum required: 85%, {summary['passed']}/{summary['total_tests']} tests passed)"
+        )
+
+    @pytest.mark.e2e
+    @pytest.mark.w3c
+    def test_basic_paths_compliance(self, w3c_test_suite, compliance_validator,
+                                  compliance_reporter, svg_converter):
+        """
+        Validate basic path rendering compliance with W3C standards.
+
+        Tests conversion accuracy for SVG path elements with basic
+        path commands (M, L, Z).
+        """
+        # Load basic path test cases
+        test_cases = self.load_test_cases(w3c_test_suite, 'paths')
+
+        if not test_cases:
+            pytest.skip("No W3C path test cases found")
+
+        results = []
+
+        for test_case in test_cases:
+            try:
+                # Parse SVG content
+                svg_content = test_case['svg_content']
+                svg_root = ET.fromstring(svg_content.encode('utf-8'))
+
+                # Perform conversion
+                pptx_output = svg_converter.convert_svg_element(svg_root)
+
+                # Validate conversion accuracy using path-specific validation
+                compliance_result = compliance_validator.validate_path_compliance(
+                    svg_content,
+                    pptx_output,
+                    test_case['metadata']
+                )
+
+                # Convert to dictionary for reporting
+                result_dict = compliance_result.to_dict()
+                result_dict['category'] = test_case['category']
+
+                results.append(result_dict)
+
+            except Exception as e:
+                # Record error but continue with other tests
+                results.append({
+                    'test_id': test_case['id'],
+                    'score': 0.0,
+                    'passed': False,
+                    'category': test_case['category'],
+                    'errors': [str(e)]
+                })
+
+        # Generate compliance report
+        report = compliance_reporter.generate_report(results, 'w3c_paths')
+
+        # Assert minimum compliance threshold (lower for paths due to complexity)
+        summary = report['summary']
+        pass_rate = summary['pass_rate']
+
+        # Log results for visibility
+        print(f"\nW3C Paths Compliance Results:")
+        print(f"  Total Tests: {summary['total_tests']}")
+        print(f"  Passed: {summary['passed']}")
+        print(f"  Failed: {summary['failed']}")
+        print(f"  Pass Rate: {pass_rate:.1%}")
+        print(f"  Average Score: {summary['average_score']:.1%}")
+
+        # Paths have lower threshold due to conversion complexity
+        assert pass_rate >= 0.70, (
+            f"W3C paths compliance: {pass_rate:.2%} "
+            f"(minimum required: 70%, {summary['passed']}/{summary['total_tests']} tests passed)"
+        )
+
+    @pytest.mark.e2e
+    @pytest.mark.w3c
+    def test_suite_infrastructure(self, test_suite_manager, w3c_test_suite):
+        """
+        Test the W3C test suite infrastructure itself.
+
+        Validates that the test suite download, caching, and loading
+        mechanisms work correctly.
+        """
+        # Test suite manager functionality
+        assert w3c_test_suite.exists(), "W3C test suite directory should exist"
+
+        # Test cache metadata
+        suite_info = test_suite_manager.get_suite_info('w3c')
+        assert 'test_count' in suite_info, "Suite info should contain test count"
+        assert suite_info['test_count'] > 0, "Should have at least one test"
+
+        # Test category listing
+        categories = test_suite_manager.get_test_categories('w3c')
+        assert len(categories) > 0, "Should have at least one test category"
+        assert 'shapes' in categories, "Should include shapes category"
+
+        # Test file loading
+        test_files = test_suite_manager.get_test_files('shapes', 'w3c')
+        assert len(test_files) > 0, "Should have at least one shapes test file"
+
+        # Validate first test file
+        svg_path, metadata = test_files[0]
+        assert svg_path.exists(), f"Test file should exist: {svg_path}"
+        assert svg_path.suffix == '.svg', "Test file should be SVG"
+
+        # Validate SVG content
+        with open(svg_path, 'r') as f:
+            svg_content = f.read()
+
+        # Should be valid XML
+        try:
+            ET.fromstring(svg_content.encode('utf-8'))
+        except ET.XMLSyntaxError:
+            pytest.fail(f"Test file {svg_path} contains invalid SVG")
+
+    @pytest.mark.integration
+    def test_compliance_pipeline_integration(self, compliance_validator, compliance_reporter):
+        """
+        Test the complete compliance validation pipeline.
+
+        Validates that the compliance validator and reporter work together
+        correctly with sample data.
+        """
+        # Create sample test results
+        sample_results = [
+            {
+                'test_id': 'test-001',
+                'score': 0.95,
+                'passed': True,
+                'category': 'shapes',
+                'errors': []
+            },
+            {
+                'test_id': 'test-002',
+                'score': 0.78,
+                'passed': False,
+                'category': 'shapes',
+                'errors': ['Minor visual differences']
+            },
+            {
+                'test_id': 'test-003',
+                'score': 0.92,
+                'passed': True,
+                'category': 'paths',
+                'errors': []
+            }
+        ]
+
+        # Generate report
+        report = compliance_reporter.generate_report(sample_results, 'test_pipeline')
+
+        # Validate report structure
+        assert 'summary' in report, "Report should contain summary"
+        assert 'details' in report, "Report should contain details"
+        assert 'visualizations' in report, "Report should contain visualizations"
+
+        # Validate summary calculations
+        summary = report['summary']
+        assert summary['total_tests'] == 3, "Should count all tests"
+        assert summary['passed'] == 2, "Should count passed tests correctly"
+        assert summary['failed'] == 1, "Should count failed tests correctly"
+        assert abs(summary['pass_rate'] - 2/3) < 0.01, "Should calculate pass rate correctly"
+
+        # Check that files were created
+        reports_dir = Path('reports/compliance')
+        assert reports_dir.exists(), "Reports directory should be created"
+
+        # Should have generated multiple file formats
+        json_files = list(reports_dir.glob('test_pipeline_*.json'))
+        html_files = list(reports_dir.glob('test_pipeline_report.html'))
+        md_files = list(reports_dir.glob('test_pipeline_summary.md'))
+
+        assert len(json_files) > 0, "Should generate JSON report"
+        assert len(html_files) > 0, "Should generate HTML report"
+        assert len(md_files) > 0, "Should generate Markdown summary"

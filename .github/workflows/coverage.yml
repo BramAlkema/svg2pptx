@@ -46,7 +46,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         python -m pytest \
-          --cov=src \
+          --cov=core \
           --cov-report=xml:coverage.xml \
           --cov-report=html:htmlcov \
           --cov-report=term-missing \
@@ -83,7 +83,7 @@ jobs:
 
     - name: Archive coverage reports
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report-${{ matrix.python-version }}
         path: |
@@ -95,7 +95,7 @@ jobs:
 
     - name: Archive coverage history
       if: matrix.python-version == '3.11' && github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-history
         path: coverage_history.db
@@ -124,7 +124,7 @@ jobs:
     
     steps:
     - name: Download coverage artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage-report-3.11
         path: ./coverage
@@ -171,13 +171,13 @@ jobs:
         python-version: '3.11'
 
     - name: Download coverage history
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage-history
         path: ./
 
     - name: Download coverage data
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage-report-3.11
         path: ./coverage

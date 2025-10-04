@@ -1,0 +1,773 @@
+#!/usr/bin/env python3
+"""
+End-to-End Tests for Complete Clean Slate Pipeline.
+
+Tests the full Clean Slate Architecture pipeline from SVG input
+to final PowerPoint output, validating the entire transformation chain:
+SVG → IR → Policy → Mapping → DrawingML → PowerPoint
+"""
+
+import pytest
+from pathlib import Path
+import sys
+import tempfile
+import os
+import zipfile
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
+try:
+    from core.parsers import SVGParser
+    from core.ir import Path
+    from core.policies import PolicyEngine, QualityEngine
+    from core.mappers import SceneMapper
+    from core.embedding import PowerPointEmbedder
+    from lxml import etree
+    CORE_PIPELINE_AVAILABLE = True
+except ImportError:
+    CORE_PIPELINE_AVAILABLE = False
+    pytest.skip("Complete pipeline components not available", allow_module_level=True)
+
+
+class TestCompleteCleanSlatePipeline:
+    """Test complete Clean Slate Architecture pipeline."""
+
+    def test_simple_svg_to_powerpoint_pipeline(self):
+        """Test complete pipeline for simple SVG."""
+        svg_content = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+            <rect x="50" y="50" width="100" height="80" fill="#FF0000"/>
+            <text x="100" y="100" text-anchor="middle" font-family="Arial" font-size="16">Test</text>
+        </svg>
+        '''
+
+        try:
+            # Step 1: SVG → IR
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(svg_content)
+
+            assert scene_ir is not None
+            assert len(scene_ir.elements) >= 2
+
+            # Step 2: IR → Policy Decisions
+            policy_engine = PolicyEngine()
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            element_decisions = []
+            for element in scene_ir.elements:
+                decision = policy_engine.evaluate_element(element)
+                element_decisions.append(decision)
+
+            assert scene_decision is not None
+            assert len(element_decisions) >= 2
+
+            # Step 3: IR + Policy → DrawingML Mapping
+            scene_mapper = SceneMapper()
+            drawingml_result = scene_mapper.map_scene(scene_ir)
+
+            assert drawingml_result is not None
+            if isinstance(drawingml_result, str):
+                assert len(drawingml_result) > 100
+                assert "Test" in drawingml_result  # Text content preserved
+
+            # Step 4: DrawingML → PowerPoint Embedding
+            try:
+                embedder = PowerPointEmbedder()
+
+                # Create temporary output file
+                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
+                    temp_pptx_path = temp_file.name
+
+                pptx_result = embedder.embed_to_powerpoint(drawingml_result, temp_pptx_path)
+
+                assert pptx_result is not None
+                assert os.path.exists(temp_pptx_path)
+
+                # Validate PPTX structure
+                with zipfile.ZipFile(temp_pptx_path, 'r') as pptx_zip:
+                    file_list = pptx_zip.namelist()
+                    assert 'ppt/slides/slide1.xml' in file_list
+                    assert '[Content_Types].xml' in file_list
+
+                # Clean up
+                os.unlink(temp_pptx_path)
+
+            except NameError:
+                pytest.skip("PowerPointEmbedder not available")
+
+        except NameError as e:
+            pytest.skip(f"Pipeline component not available: {e}")
+
+    def test_complex_svg_to_powerpoint_pipeline(self):
+        """Test complete pipeline for complex SVG."""
+        complex_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#FF0000;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#0000FF;stop-opacity:1" />
+                </linearGradient>
+                <style>
+                    .title { font-family: Arial; font-size: 24px; font-weight: bold; }
+                    .subtitle { font-family: Arial; font-size: 16px; fill: #666; }
+                </style>
+            </defs>
+
+            <!-- Background -->
+            <rect width="100%" height="100%" fill="#F8F8F8"/>
+
+            <!-- Header -->
+            <rect x="0" y="0" width="400" height="60" fill="url(#grad1)"/>
+            <text x="200" y="35" text-anchor="middle" class="title" fill="white">Dashboard</text>
+
+            <!-- Content Area -->
+            <g transform="translate(20, 80)">
+                <!-- Chart bars -->
+                <rect x="50" y="120" width="30" height="60" fill="#3498db"/>
+                <rect x="100" y="100" width="30" height="80" fill="#e74c3c"/>
+                <rect x="150" y="80" width="30" height="100" fill="#2ecc71"/>
+                <rect x="200" y="110" width="30" height="70" fill="#f39c12"/>
+
+                <!-- Labels -->
+                <text x="65" y="200" text-anchor="middle" class="subtitle">Q1</text>
+                <text x="115" y="200" text-anchor="middle" class="subtitle">Q2</text>
+                <text x="165" y="200" text-anchor="middle" class="subtitle">Q3</text>
+                <text x="215" y="200" text-anchor="middle" class="subtitle">Q4</text>
+            </g>
+
+            <!-- Footer -->
+            <text x="200" y="280" text-anchor="middle" font-size="12" fill="#999">Generated Report</text>
+        </svg>
+        '''
+
+        try:
+            # Complete pipeline execution
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(complex_svg)
+
+            assert scene_ir is not None
+            assert len(scene_ir.elements) >= 5  # Multiple elements
+
+            # Policy evaluation with quality considerations
+            policy_engine = PolicyEngine()
+            quality_engine = QualityEngine()
+
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+            scene_quality = quality_engine.evaluate_quality(scene_ir)
+
+            assert scene_decision is not None
+            assert scene_quality is not None
+
+            # Advanced mapping with quality optimization
+            scene_mapper = SceneMapper()
+            drawingml_result = scene_mapper.map_scene(scene_ir)
+
+            assert drawingml_result is not None
+            if isinstance(drawingml_result, str):
+                # Should contain multiple elements and text
+                assert "Dashboard" in drawingml_result
+                assert "Generated Report" in drawingml_result
+                # Should have gradient and multiple shapes
+                assert len(drawingml_result) > 1000
+
+            # PowerPoint embedding with validation
+            try:
+                embedder = PowerPointEmbedder()
+
+                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
+                    temp_pptx_path = temp_file.name
+
+                pptx_result = embedder.embed_to_powerpoint(drawingml_result, temp_pptx_path)
+
+                # Validate complex PPTX
+                assert os.path.exists(temp_pptx_path)
+                file_size = os.path.getsize(temp_pptx_path)
+                assert file_size > 10000  # Should be substantial
+
+                # Clean up
+                os.unlink(temp_pptx_path)
+
+            except NameError:
+                pytest.skip("PowerPointEmbedder not available")
+
+        except NameError as e:
+            pytest.skip(f"Pipeline component not available: {e}")
+
+    def test_multi_slide_pipeline(self):
+        """Test pipeline for multi-slide PowerPoint generation."""
+        # Multiple SVG scenes
+        svgs = [
+            '''
+            <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+                <rect x="50" y="50" width="200" height="100" fill="#FF0000"/>
+                <text x="150" y="110" text-anchor="middle" font-size="18" fill="white">Slide 1</text>
+            </svg>
+            ''',
+            '''
+            <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+                <circle cx="150" cy="100" r="60" fill="#00FF00"/>
+                <text x="150" y="105" text-anchor="middle" font-size="18">Slide 2</text>
+            </svg>
+            ''',
+            '''
+            <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+                <path d="M 50 150 L 150 50 L 250 150 Z" fill="#0000FF"/>
+                <text x="150" y="170" text-anchor="middle" font-size="18" fill="white">Slide 3</text>
+            </svg>
+            '''
+        ]
+
+        try:
+            # Process multiple slides
+            parser = SVGParser()
+            policy_engine = PolicyEngine()
+            scene_mapper = SceneMapper()
+
+            slide_results = []
+
+            for i, svg_content in enumerate(svgs):
+                # SVG → IR
+                scene_ir = parser.parse_to_ir(svg_content)
+                assert scene_ir is not None
+
+                # IR → Policy
+                scene_decision = policy_engine.evaluate_element(scene_ir)
+                assert scene_decision is not None
+
+                # IR + Policy → DrawingML
+                drawingml = scene_mapper.map_scene(scene_ir)
+                assert drawingml is not None
+
+                slide_results.append({
+                    'slide_number': i + 1,
+                    'scene_ir': scene_ir,
+                    'decision': scene_decision,
+                    'drawingml': drawingml
+                })
+
+            assert len(slide_results) == 3
+
+            # Multi-slide PowerPoint embedding
+            try:
+                embedder = PowerPointEmbedder()
+
+                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
+                    temp_pptx_path = temp_file.name
+
+                # Check if multi-slide embedding is supported
+                if hasattr(embedder, 'embed_multi_slide'):
+                    pptx_result = embedder.embed_multi_slide(slide_results, temp_pptx_path)
+
+                    assert os.path.exists(temp_pptx_path)
+
+                    # Validate multi-slide structure
+                    with zipfile.ZipFile(temp_pptx_path, 'r') as pptx_zip:
+                        file_list = pptx_zip.namelist()
+                        assert 'ppt/slides/slide1.xml' in file_list
+                        assert 'ppt/slides/slide2.xml' in file_list
+                        assert 'ppt/slides/slide3.xml' in file_list
+
+                    os.unlink(temp_pptx_path)
+                else:
+                    # Single slide fallback
+                    pptx_result = embedder.embed_to_powerpoint(slide_results[0]['drawingml'], temp_pptx_path)
+                    assert os.path.exists(temp_pptx_path)
+                    os.unlink(temp_pptx_path)
+
+            except NameError:
+                pytest.skip("PowerPointEmbedder not available")
+
+        except NameError as e:
+            pytest.skip(f"Pipeline component not available: {e}")
+
+
+class TestPipelineErrorHandling:
+    """Test error handling throughout the pipeline."""
+
+    def test_malformed_svg_pipeline_handling(self):
+        """Test pipeline handling of malformed SVG input."""
+        malformed_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+            <rect x="50" y="50" width="100" height="80" fill="#FF0000"
+            <!-- Malformed: missing closing tag -->
+        '''
+
+        try:
+            parser = SVGParser()
+
+            # Should handle malformed input gracefully
+            try:
+                scene_ir = parser.parse_to_ir(malformed_svg)
+
+                if scene_ir is not None:
+                    # If parsing succeeds, continue pipeline
+                    policy_engine = PolicyEngine()
+                    scene_decision = policy_engine.evaluate_element(scene_ir)
+
+                    scene_mapper = SceneMapper()
+                    result = scene_mapper.map_scene(scene_ir)
+
+                    assert result is not None
+
+            except (etree.XMLSyntaxError, ValueError, TypeError):
+                # Expected for malformed SVG
+                pass
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+    def test_empty_svg_pipeline_handling(self):
+        """Test pipeline handling of empty SVG."""
+        empty_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+        </svg>
+        '''
+
+        try:
+            # Complete pipeline for empty SVG
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(empty_svg)
+
+            assert scene_ir is not None
+            assert len(scene_ir.elements) == 0
+
+            policy_engine = PolicyEngine()
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            # Should produce valid but empty result
+            assert result is not None
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+    def test_unsupported_elements_pipeline_handling(self):
+        """Test pipeline handling of unsupported SVG elements."""
+        svg_with_unsupported = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+            <rect x="10" y="10" width="50" height="50" fill="#FF0000"/>
+            <foreignObject x="80" y="80" width="100" height="100">
+                <div xmlns="http://www.w3.org/1999/xhtml">Unsupported HTML</div>
+            </foreignObject>
+            <animate attributeName="opacity" from="0" to="1" dur="2s"/>
+            <text x="100" y="150" font-size="16">Supported Text</text>
+        </svg>
+        '''
+
+        try:
+            # Pipeline should handle supported elements and ignore unsupported ones
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(svg_with_unsupported)
+
+            assert scene_ir is not None
+            # Should have at least the supported elements (rect, text)
+            assert len(scene_ir.elements) >= 2
+
+            policy_engine = PolicyEngine()
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                assert "Supported Text" in result
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+
+class TestPipelineQualityAndFidelity:
+    """Test quality and fidelity throughout the pipeline."""
+
+    def test_high_fidelity_pipeline(self):
+        """Test pipeline optimized for high fidelity."""
+        detailed_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+            <defs>
+                <radialGradient id="radial1" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#FF6347;stop-opacity:1" />
+                </radialGradient>
+            </defs>
+
+            <!-- Complex curved path -->
+            <path d="M 50 150 Q 100 50 150 150 T 250 150" stroke="#000" stroke-width="3" fill="none"/>
+
+            <!-- Gradient-filled shape -->
+            <ellipse cx="150" cy="100" rx="80" ry="40" fill="url(#radial1)" stroke="#8B4513" stroke-width="2"/>
+
+            <!-- Styled text -->
+            <text x="150" y="200" text-anchor="middle" font-family="serif" font-size="18"
+                  font-style="italic" fill="#2F4F4F">High Fidelity</text>
+        </svg>
+        '''
+
+        try:
+            # High-fidelity policy configuration
+            from core.policies import QualityPolicy
+
+            fidelity_policy = QualityPolicy(focus='fidelity')
+            policy_engine = PolicyEngine(policies=[fidelity_policy])
+            quality_engine = QualityEngine(policies=[fidelity_policy])
+
+            # Parse with fidelity focus
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(detailed_svg)
+
+            assert scene_ir is not None
+
+            # Evaluate for fidelity
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            # Map with fidelity optimization
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                # High fidelity should preserve complex elements
+                assert len(result) > 500  # Substantial content
+                assert "High Fidelity" in result
+
+        except (NameError, ImportError):
+            pytest.skip("Quality policy components not available")
+
+    def test_performance_optimized_pipeline(self):
+        """Test pipeline optimized for performance."""
+        simple_shapes_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+            <rect x="20" y="20" width="60" height="60" fill="#FF0000"/>
+            <circle cx="130" cy="50" r="30" fill="#00FF00"/>
+            <rect x="20" y="120" width="60" height="60" fill="#0000FF"/>
+            <circle cx="130" cy="150" r="30" fill="#FFFF00"/>
+            <text x="100" y="180" text-anchor="middle" font-size="14">Optimized</text>
+        </svg>
+        '''
+
+        try:
+            from core.policies import QualityPolicy
+
+            performance_policy = QualityPolicy(focus='performance')
+            policy_engine = PolicyEngine(policies=[performance_policy])
+            quality_engine = QualityEngine(policies=[performance_policy])
+
+            # Performance-focused pipeline
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(simple_shapes_svg)
+
+            # Measure pipeline performance
+            import time
+            start_time = time.time()
+
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            pipeline_time = time.time() - start_time
+
+            assert result is not None
+            assert pipeline_time < 0.1  # Should be very fast
+
+            if isinstance(result, str):
+                assert "Optimized" in result
+
+        except (NameError, ImportError):
+            pytest.skip("Quality policy components not available")
+
+    def test_compatibility_focused_pipeline(self):
+        """Test pipeline optimized for compatibility."""
+        basic_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+            <rect x="25" y="25" width="100" height="100" fill="#008080" stroke="#000000" stroke-width="2"/>
+            <text x="75" y="85" text-anchor="middle" font-family="Arial" font-size="16" fill="white">Compatible</text>
+        </svg>
+        '''
+
+        try:
+            from core.policies import QualityPolicy
+
+            # Compatibility-focused policies
+            compat_policy = QualityPolicy(
+                thresholds={
+                    'min_compatibility_score': 95,
+                    'target_version': 'powerpoint_2010'
+                }
+            )
+
+            policy_engine = PolicyEngine(policies=[compat_policy])
+            quality_engine = QualityEngine(policies=[compat_policy])
+
+            # Process with compatibility focus
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(basic_svg)
+
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                # Compatible output should use basic DrawingML
+                assert "Compatible" in result
+                # Should avoid advanced features for compatibility
+
+        except (NameError, ImportError):
+            pytest.skip("Quality policy components not available")
+
+
+class TestPipelineIntegrationScenarios:
+    """Test real-world integration scenarios."""
+
+    def test_logo_conversion_pipeline(self):
+        """Test pipeline for converting a logo SVG."""
+        logo_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+            <!-- Logo background circle -->
+            <circle cx="60" cy="60" r="55" fill="#1976D2" stroke="#0D47A1" stroke-width="3"/>
+
+            <!-- Logo icon -->
+            <rect x="35" y="35" width="20" height="50" fill="white" rx="3"/>
+            <rect x="65" y="35" width="20" height="50" fill="white" rx="3"/>
+            <rect x="35" y="45" width="50" height="8" fill="white" rx="2"/>
+
+            <!-- Company name -->
+            <text x="60" y="105" text-anchor="middle" font-family="Arial" font-size="10"
+                  font-weight="bold" fill="#1976D2">LOGO</text>
+        </svg>
+        '''
+
+        try:
+            # Complete logo conversion pipeline
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(logo_svg)
+
+            assert scene_ir is not None
+            assert len(scene_ir.elements) >= 4  # Circle, rectangles, text
+
+            # Logo-specific policies (high fidelity for branding)
+            policy_engine = PolicyEngine()
+            quality_engine = QualityEngine()
+
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+
+            # Map logo elements
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                assert "LOGO" in result
+                # Should preserve geometric shapes and colors
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+    def test_chart_conversion_pipeline(self):
+        """Test pipeline for converting a chart SVG."""
+        chart_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250">
+            <!-- Chart background -->
+            <rect width="100%" height="100%" fill="#FAFAFA"/>
+
+            <!-- Chart title -->
+            <text x="200" y="25" text-anchor="middle" font-family="Arial" font-size="18"
+                  font-weight="bold">Sales Data</text>
+
+            <!-- Chart area -->
+            <rect x="50" y="50" width="300" height="150" fill="white" stroke="#E0E0E0"/>
+
+            <!-- Data bars -->
+            <rect x="80" y="130" width="40" height="60" fill="#2196F3"/>
+            <rect x="140" y="110" width="40" height="80" fill="#4CAF50"/>
+            <rect x="200" y="90" width="40" height="100" fill="#FF9800"/>
+            <rect x="260" y="120" width="40" height="70" fill="#F44336"/>
+
+            <!-- Axis labels -->
+            <text x="100" y="220" text-anchor="middle" font-size="12">Q1</text>
+            <text x="160" y="220" text-anchor="middle" font-size="12">Q2</text>
+            <text x="220" y="220" text-anchor="middle" font-size="12">Q3</text>
+            <text x="280" y="220" text-anchor="middle" font-size="12">Q4</text>
+        </svg>
+        '''
+
+        try:
+            # Chart-specific pipeline processing
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(chart_svg)
+
+            assert scene_ir is not None
+            assert len(scene_ir.elements) >= 8  # Title, bars, labels
+
+            # Chart preservation policies
+            policy_engine = PolicyEngine()
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            # Map chart with data preservation
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                assert "Sales Data" in result
+                assert "Q1" in result and "Q4" in result
+                # Should preserve chart structure and colors
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+    def test_diagram_conversion_pipeline(self):
+        """Test pipeline for converting a technical diagram."""
+        diagram_svg = '''
+        <svg xmlns="http://www.w3.org/2000/svg" width="350" height="200" viewBox="0 0 350 200">
+            <!-- Process boxes -->
+            <rect x="20" y="60" width="80" height="40" fill="#E3F2FD" stroke="#1976D2" stroke-width="2" rx="5"/>
+            <text x="60" y="85" text-anchor="middle" font-size="12">Input</text>
+
+            <rect x="135" y="60" width="80" height="40" fill="#E8F5E8" stroke="#388E3C" stroke-width="2" rx="5"/>
+            <text x="175" y="85" text-anchor="middle" font-size="12">Process</text>
+
+            <rect x="250" y="60" width="80" height="40" fill="#FFF3E0" stroke="#F57C00" stroke-width="2" rx="5"/>
+            <text x="290" y="85" text-anchor="middle" font-size="12">Output</text>
+
+            <!-- Arrows -->
+            <path d="M 100 80 L 130 80" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M 215 80 L 245 80" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+            <!-- Arrow marker -->
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3"
+                        orient="auto" markerUnits="strokeWidth">
+                    <polygon points="0,0 0,6 9,3" fill="#666"/>
+                </marker>
+            </defs>
+
+            <!-- Title -->
+            <text x="175" y="30" text-anchor="middle" font-family="Arial" font-size="16"
+                  font-weight="bold">Process Flow</text>
+        </svg>
+        '''
+
+        try:
+            # Diagram-specific pipeline
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(diagram_svg)
+
+            assert scene_ir is not None
+
+            # Diagram preservation policies (structure and relationships)
+            policy_engine = PolicyEngine()
+            quality_engine = QualityEngine()
+
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+
+            # Map with relationship preservation
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            assert result is not None
+            if isinstance(result, str):
+                assert "Process Flow" in result
+                assert "Input" in result and "Output" in result
+                # Should preserve diagram structure
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+
+class TestPipelinePerformanceAndScalability:
+    """Test pipeline performance and scalability."""
+
+    def test_large_scene_pipeline_performance(self):
+        """Test pipeline performance with large scenes."""
+        import time
+
+        # Generate large SVG with many elements
+        elements = []
+        for i in range(50):
+            elements.append(f'<rect x="{i*8}" y="{i*4}" width="15" height="10" fill="#{i*5:02x}{255-i*5:02x}00"/>')
+            if i % 5 == 0:
+                elements.append(f'<text x="{i*8+7}" y="{i*4+15}" font-size="8" text-anchor="middle">{i}</text>')
+
+        large_svg = f'''
+        <svg xmlns="http://www.w3.org/2000/svg" width="500" height="300" viewBox="0 0 500 300">
+            {"".join(elements)}
+        </svg>
+        '''
+
+        try:
+            # Time complete pipeline
+            start_time = time.time()
+
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(large_svg)
+
+            policy_engine = PolicyEngine()
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            total_time = time.time() - start_time
+
+            assert result is not None
+            assert len(scene_ir.elements) >= 50
+            assert total_time < 2.0  # Should handle large scenes efficiently
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+    def test_complex_elements_pipeline_performance(self):
+        """Test pipeline performance with complex elements."""
+        import time
+
+        # Complex path with many segments
+        path_commands = ["M 0 0"]
+        for i in range(100):
+            path_commands.append(f"L {i*3} {(i*7)%50}")
+        path_commands.append("Z")
+
+        complex_svg = f'''
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+            <path d="{' '.join(path_commands)}" fill="#FF0000" stroke="#000" stroke-width="1"/>
+            <text x="200" y="180" text-anchor="middle" font-size="16">Complex Path</text>
+        </svg>
+        '''
+
+        try:
+            # Time complex element processing
+            start_time = time.time()
+
+            parser = SVGParser()
+            scene_ir = parser.parse_to_ir(complex_svg)
+
+            policy_engine = PolicyEngine()
+            quality_engine = QualityEngine()
+
+            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+
+            scene_mapper = SceneMapper()
+            result = scene_mapper.map_scene(scene_ir)
+
+            total_time = time.time() - start_time
+
+            assert result is not None
+            assert total_time < 1.0  # Should handle complexity efficiently
+
+        except NameError:
+            pytest.skip("Pipeline components not available")
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

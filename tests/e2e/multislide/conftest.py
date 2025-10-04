@@ -7,8 +7,7 @@ multislide workflows from SVG input to PPTX output.
 
 import pytest
 from pathlib import Path
-from typing import Dict, Any, Generator, Optional
-import tempfile
+from typing import Dict, Any, Generator
 import shutil
 
 # Import test utilities
@@ -154,7 +153,7 @@ def e2e_svg_to_pptx_converter():
     """Complete SVG to PPTX converter for E2E testing."""
     try:
         # Try to import real converter
-        from src.converters.multislide import MultislideConverter
+        from core.converters.multislide import MultislideConverter
         from core.services.conversion_services import ConversionServices
 
         services = ConversionServices.create_default()
