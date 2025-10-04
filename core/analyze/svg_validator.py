@@ -9,11 +9,14 @@ from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from collections import defaultdict
+import logging
 from lxml import etree as ET
 
-from core.utils.input_validator import InputValidator, ValidationContext, ValidationError
+from core.utils.input_validator import InputValidator, ValidationContext, ValidationError, NumericOverflowError
 from .types import CompatibilityLevel, CompatibilityReport
 from .constants import SVG_NAMESPACE
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationSeverity(Enum):
@@ -227,8 +230,12 @@ class SVGValidator:
                             element=element.tag.split('}')[-1],
                             suggestion=f"Use valid length unit (e.g., {attr}='100px')"
                         ))
-                except Exception:
-                    pass  # Already caught by attribute validator
+                except (ValueError, AttributeError, TypeError, NumericOverflowError) as e:
+                    # Log specific parsing failures for debugging
+                    logger.debug(
+                        f"Length parsing failed for {attr}='{value}' "
+                        f"in element {element.tag.split('}')[-1]}: {e}"
+                    )
 
     def _validate_color_attributes(self, element: ET.Element, result: ValidationResult):
         """Validate color attributes."""
