@@ -194,6 +194,61 @@ svg2pptx/
 
 ## API Usage
 
+### Analysis & Validation Endpoints
+
+Pre-flight check your SVG files before conversion:
+
+```python
+import requests
+
+API_BASE_URL = "http://localhost:8000"
+API_KEY = "your-api-key"
+
+# Analyze SVG complexity
+response = requests.post(
+    f"{API_BASE_URL}/analyze/svg",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    json={"svg_content": "<svg>...</svg>"}
+)
+
+result = response.json()
+print(f"Complexity: {result['complexity_score']}/100")
+print(f"Recommended Policy: {result['recommended_policy']['target']}")
+
+# Validate SVG
+validation = requests.post(
+    f"{API_BASE_URL}/analyze/validate",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    json={"svg_content": "<svg>...</svg>"}
+)
+
+if validation.json()['valid']:
+    print("✅ SVG is valid")
+else:
+    print("❌ SVG has errors:", validation.json()['errors'])
+
+# Query supported features
+features = requests.get(
+    f"{API_BASE_URL}/analyze/features/supported?category=filters",
+    headers={"Authorization": f"Bearer {API_KEY}"}
+)
+
+print("Supported filters:", features.json()['details']['native_support'])
+```
+
+**Analysis Endpoints:**
+- `POST /analyze/svg` - Get complexity scores and policy recommendations
+- `POST /analyze/validate` - Validate SVG and check compatibility
+- `GET /analyze/features/supported` - Query feature support matrix
+
+**Use Cases:**
+- 🔧 **Figma Plugin Integration** - Validate exports before conversion
+- 📊 **Batch Processing** - Pre-screen SVG files for conversion suitability
+- ✅ **Quality Assurance** - Detect issues before conversion
+- 🎯 **Policy Selection** - Get data-driven recommendations
+
+See [`docs/api/analysis-endpoints.md`](docs/api/analysis-endpoints.md) for complete documentation and [`examples/api/`](examples/api/) for integration examples.
+
 ### REST API
 
 ```bash
