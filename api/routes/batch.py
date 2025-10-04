@@ -19,9 +19,9 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from ..auth import get_current_user
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
-from src.batch.drive_controller import BatchDriveController, BatchDriveError
-from src.batch.file_manager import get_default_file_manager, ConvertedFile
+from core.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
+from core.batch.drive_controller import BatchDriveController, BatchDriveError
+from core.batch.file_manager import get_default_file_manager, ConvertedFile
 from ..services.conversion_service import ConversionService, ConversionError
 
 logger = logging.getLogger(__name__)
@@ -199,7 +199,7 @@ async def create_batch_job(
                 logger.info(f"Scheduled Clean Slate batch workflow task for job {job_id}")
             else:
                 # Use legacy workflow
-                from src.batch.drive_tasks import coordinate_batch_workflow
+                from core.batch.drive_tasks import coordinate_batch_workflow
 
                 conversion_options = {
                     'preprocessing_preset': job_request.preprocessing_preset,
@@ -389,7 +389,7 @@ async def upload_batch_to_drive(
         
         # Add background task for Drive upload using Huey
         try:
-            from src.batch.drive_tasks import coordinate_upload_only_workflow
+            from core.batch.drive_tasks import coordinate_upload_only_workflow
             
             # Retrieve actual converted files from storage
             file_manager = get_default_file_manager()
@@ -469,7 +469,7 @@ async def get_batch_upload_progress(
     """
     try:
         # Import the Drive task for progress tracking
-        from src.batch.drive_tasks import track_upload_progress
+        from core.batch.drive_tasks import track_upload_progress
         
         # Get progress information
         progress = track_upload_progress(job_id)
