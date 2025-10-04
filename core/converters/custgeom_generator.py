@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass
 
 from .clippath_types import ClipPathDefinition, ClippingType
-from .base import ConversionContext
+from ..units.core import ConversionContext
 
 logger = logging.getLogger(__name__)
 
