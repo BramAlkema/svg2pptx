@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
 
-from src.batch.file_manager import (
+from core.batch.file_manager import (
     BatchFileManager, ConvertedFile, get_default_file_manager
 )
 
@@ -164,7 +164,7 @@ class TestBatchFileManager:
         job_id = "test_job_io_error"
 
         # Mock shutil.copy2 to raise an exception
-        with patch('src.batch.file_manager.shutil.copy2', side_effect=OSError("Disk full")):
+        with patch('core.batch.file_manager.shutil.copy2', side_effect=OSError("Disk full")):
             with pytest.raises(OSError, match="Failed to store files"):
                 file_manager.store_converted_files(job_id, sample_files)
 
