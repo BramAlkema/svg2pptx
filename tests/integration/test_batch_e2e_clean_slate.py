@@ -17,7 +17,7 @@ os.environ['HUEY_IMMEDIATE'] = 'true'
 
 from core.batch.url_downloader import download_svgs_to_temp, cleanup_temp_directory
 from core.batch.coordinator import coordinate_batch_workflow_clean_slate
-from src.batch.models import BatchJob, DEFAULT_DB_PATH
+from core.batch.models import BatchJob, DEFAULT_DB_PATH
 
 
 # Sample SVG content for mocking

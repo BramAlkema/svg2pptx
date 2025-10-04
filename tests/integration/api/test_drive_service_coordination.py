@@ -17,8 +17,8 @@ import sqlite3
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
-from src.batch.drive_controller import BatchDriveController, DriveOperationResult, FileUploadResult, BatchWorkflowResult
+from core.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
+from core.batch.drive_controller import BatchDriveController, DriveOperationResult, FileUploadResult, BatchWorkflowResult
 from api.services.google_drive import GoogleDriveService, GoogleDriveError
 from api.services.google_slides import GoogleSlidesService, GoogleSlidesError
 

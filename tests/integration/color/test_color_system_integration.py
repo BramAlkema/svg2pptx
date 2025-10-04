@@ -29,7 +29,7 @@ from core.color import Color
 
 # Try importing gradient converter - it might not exist yet
 try:
-    from src.converters.gradients import GradientConverter
+    from core.converters.gradients import GradientConverter
     from core.services.conversion_services import ConversionServices
     GRADIENT_CONVERTER_AVAILABLE = True
 except ImportError:
