@@ -5,7 +5,7 @@ Adapts the existing SVG Analyzer to API-friendly response format and adds
 additional features needed for REST API endpoints.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Set
 from lxml import etree as ET
 
 from .analyzer import SVGAnalyzer, AnalysisResult
@@ -16,6 +16,7 @@ from .types import (
     PolicyRecommendation,
     SVGAnalysisResult
 )
+from .constants import FILTER_NAME_MAP, SVG_NAMESPACE
 from core.policy.config import OutputTarget
 
 
@@ -142,23 +143,25 @@ class SVGAnalyzerAPI:
 
         return gradient_types
 
-    def _detect_filter_types(self, svg_root: ET.Element) -> set:
-        """Detect types of filters used in SVG."""
+    def _detect_filter_types(self, svg_root: ET.Element) -> Set[str]:
+        """
+        Detect types of filters used in SVG.
+
+        Uses proper FILTER_NAME_MAP for accurate filter name conversion.
+        Covers all 17 SVG filter primitives.
+
+        Args:
+            svg_root: Root SVG element
+
+        Returns:
+            Set of simplified filter names (e.g., 'blur', 'dropshadow')
+        """
         filter_types = set()
 
-        filter_elements = [
-            'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite',
-            'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
-            'feFlood', 'feGaussianBlur', 'feImage', 'feMerge', 'feMorphology',
-            'feOffset', 'feSpecularLighting', 'feTile', 'feTurbulence',
-            'feDropShadow'
-        ]
-
-        for filter_elem in filter_elements:
-            if svg_root.findall(f'.//{{{self._svg_ns()}}}{filter_elem}'):
-                # Convert to simple name (e.g., feGaussianBlur -> blur)
-                name = filter_elem.replace('fe', '').replace('GaussianBlur', 'blur')
-                filter_types.add(name.lower())
+        # Use proper mapping from constants (all 17 filter primitives)
+        for fe_name, simple_name in FILTER_NAME_MAP.items():
+            if svg_root.findall(f'.//{{{SVG_NAMESPACE}}}{fe_name}'):
+                filter_types.add(simple_name)
 
         return filter_types
 
