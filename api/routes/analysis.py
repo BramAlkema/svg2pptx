@@ -12,6 +12,7 @@ from typing import Optional
 import logging
 
 from ..auth import get_current_user
+from ..utils.svg_helpers import extract_svg_content
 from core.analyze import create_api_analyzer, SVGAnalysisResult
 from core.analyze.svg_validator import create_svg_validator
 
@@ -76,33 +77,8 @@ async def analyze_svg(
         JSON response with analysis results
     """
     try:
-        # Get SVG content from request or file upload
-        svg_content = None
-
-        if svg_file:
-            # File upload takes precedence
-            content = await svg_file.read()
-            svg_content = content.decode('utf-8')
-        elif request and request.svg_content:
-            svg_content = request.svg_content
-        elif request and request.svg_url:
-            # TODO: Fetch from URL
-            raise HTTPException(
-                status_code=501,
-                detail="URL-based analysis not yet implemented. Please use svg_content or file upload."
-            )
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Must provide either svg_content, svg_url, or upload a file"
-            )
-
-        # Validate SVG content size (max 10MB)
-        if len(svg_content) > 10 * 1024 * 1024:
-            raise HTTPException(
-                status_code=413,
-                detail="SVG content too large (max 10MB)"
-            )
+        # Extract SVG content using shared helper
+        svg_content = await extract_svg_content(request, svg_file, max_size_mb=10)
 
         logger.info(f"Analyzing SVG for user {current_user.get('api_key', 'unknown')} ({len(svg_content)} bytes)")
 
@@ -164,30 +140,11 @@ async def validate_svg(
         JSON response with validation results, errors, warnings, and compatibility report
     """
     try:
-        # Get SVG content from request or file upload
-        svg_content = None
-        strict_mode = False
+        # Extract SVG content using shared helper
+        svg_content = await extract_svg_content(request, svg_file, max_size_mb=10)
 
-        if svg_file:
-            # File upload takes precedence
-            content = await svg_file.read()
-            svg_content = content.decode('utf-8')
-            # Use default strict_mode=False for file uploads
-        elif request and request.svg_content:
-            svg_content = request.svg_content
-            strict_mode = request.strict_mode
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Must provide either svg_content or upload a file"
-            )
-
-        # Validate SVG content size (max 10MB)
-        if len(svg_content) > 10 * 1024 * 1024:
-            raise HTTPException(
-                status_code=413,
-                detail="SVG content too large (max 10MB)"
-            )
+        # Get strict_mode from request (default False for file uploads)
+        strict_mode = request.strict_mode if request and hasattr(request, 'strict_mode') else False
 
         logger.info(f"Validating SVG for user {current_user.get('api_key', 'unknown')} ({len(svg_content)} bytes, strict={strict_mode})")
 
