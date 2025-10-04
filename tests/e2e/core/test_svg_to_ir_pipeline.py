@@ -8,18 +8,15 @@ validating the Clean Slate Architecture's first major transformation.
 
 import pytest
 from pathlib import Path
-import sys
-from unittest.mock import Mock, patch
 import tempfile
 import os
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
     from core.parsers import SVGParser
     from core.ir import Scene, Path, TextFrame, Group, Image
-    from core.ir import Point, Rect, LineSegment, SolidPaint
+    from core.ir import Point, Rect, SolidPaint
     from lxml import etree
     CORE_PIPELINE_AVAILABLE = True
 except ImportError:

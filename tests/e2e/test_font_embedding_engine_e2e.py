@@ -8,19 +8,16 @@ embedded font creation, simulating real-world usage scenarios.
 
 import pytest
 from pathlib import Path
-import sys
 import tempfile
-import os
 import time
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from core.services.font_embedding_engine import FontEmbeddingEngine
 from core.services.font_service import FontService
-from src.data.embedded_font import (
-    EmbeddedFont, FontSubsetRequest, FontEmbeddingStats, EmbeddingPermission
+from core.data.embedded_font import (
+    EmbeddedFont
 )
 
 

@@ -10,7 +10,7 @@ import pytest
 import os
 import tempfile
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List
 from lxml import etree as ET
 from zipfile import ZipFile
 
@@ -219,7 +219,7 @@ class TestGoldenStandards:
     
     def test_basic_shapes_golden(self, pptx_validator, golden_test_data):
         """Test basic shapes against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         for svg_file, expected_pptx in golden_test_data:
             if "basic_shapes" not in svg_file.name:
@@ -242,7 +242,7 @@ class TestGoldenStandards:
     
     def test_complex_paths_golden(self, pptx_validator, golden_test_data):
         """Test complex paths against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         for svg_file, expected_pptx in golden_test_data:
             if "complex_paths" not in svg_file.name:
@@ -261,7 +261,7 @@ class TestGoldenStandards:
     
     def test_text_rendering_golden(self, pptx_validator, golden_test_data):
         """Test text rendering against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         for svg_file, expected_pptx in golden_test_data:
             if "text_rendering" not in svg_file.name:
@@ -280,7 +280,7 @@ class TestGoldenStandards:
     
     def test_transforms_golden(self, pptx_validator, golden_test_data):
         """Test transforms against golden standards."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         for svg_file, expected_pptx in golden_test_data:
             if "transforms" not in svg_file.name:
@@ -300,7 +300,7 @@ class TestGoldenStandards:
     @pytest.mark.slow
     def test_comprehensive_golden_suite(self, pptx_validator, golden_test_data):
         """Run comprehensive golden test suite."""
-        from src.svg2pptx import convert_svg_to_pptx
+        from core.svg2pptx import convert_svg_to_pptx
         
         results = []
         

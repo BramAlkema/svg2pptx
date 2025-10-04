@@ -10,23 +10,19 @@ This covers: SVG with mesh gradients → parsing → conversion → DrawingML �
 
 import pytest
 from pathlib import Path
-import sys
 import tempfile
 import time
-from unittest.mock import Mock, patch
 from lxml import etree as ET
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import mesh gradient system components
 MESH_GRADIENT_AVAILABLE = True
 try:
-    from src.converters.gradients.converter import GradientConverter
-    from src.converters.gradients.mesh_engine import MeshGradientEngine
-    from src.converters.base import ConversionContext
+    from core.converters.gradients.converter import GradientConverter
+    from core.converters.base import ConversionContext
     from core.services.conversion_services import ConversionServices
-    from src.pptx_minimal import MinimalPPTXGenerator
+    from core.pptx_minimal import MinimalPPTXGenerator
 except ImportError as e:
     MESH_GRADIENT_AVAILABLE = False
     print(f"Mesh gradient imports not available: {e}")
@@ -408,7 +404,6 @@ class TestMeshGradientE2E:
     def test_mesh_gradient_memory_efficiency_e2e(self, services, complex_mesh_svg):
         """Test memory efficiency of mesh gradient conversion"""
         import gc
-        import sys
 
         # Parse SVG
         svg_root = ET.fromstring(complex_mesh_svg.encode('utf-8'))

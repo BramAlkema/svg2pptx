@@ -432,7 +432,7 @@ class ImageProcessor:
         transform = element.get('transform', '')
 
         key_data = f"{href}:{width}:{height}:{transform}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def apply_image_optimizations(self, element: ET.Element, analysis: ImageAnalysis,
                                 context: Any) -> ET.Element:

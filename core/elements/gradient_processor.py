@@ -473,7 +473,7 @@ class GradientProcessor:
             stop_info.append(str(stop_attrs))
 
         key_data = f"{element.tag}:{attrs}:{children_count}:{':'.join(stop_info)}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def apply_gradient_optimizations(self, element: ET.Element, analysis: GradientAnalysis,
                                    context: Any) -> ET.Element:

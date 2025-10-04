@@ -11,23 +11,15 @@ Tests comprehensive multi-file batch processing with Google Drive integration:
 """
 
 import pytest
-import tempfile
-import os
-import json
-import time
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, Any, List
-import httpx
-from fastapi.testclient import TestClient
-from datetime import datetime
+from unittest.mock import patch
 
 # Import test infrastructure
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.main import app
 from api.auth import get_current_user
-from src.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, init_database
+from core.batch.models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata
 from tests.e2e.api.test_batch_drive_e2e import BatchDriveE2EFixtures
 
 

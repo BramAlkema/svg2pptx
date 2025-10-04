@@ -7,14 +7,8 @@ to PPTX download, covering all endpoints and error scenarios.
 """
 
 import pytest
-import tempfile
-import os
-import json
-import asyncio
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, Any, Optional
-import httpx
+from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 # Import the FastAPI app and dependencies
@@ -22,7 +16,6 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from api.main import app
 from api.auth import get_current_user
-from api.config import get_settings
 
 
 class TestFastAPIE2E:

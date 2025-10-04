@@ -12,13 +12,13 @@ import json
 from pathlib import Path
 from unittest.mock import Mock
 from lxml import etree as ET
-from typing import Dict, List, Tuple, Any
+from typing import Dict
 
-from src.converters.custgeom_generator import CustGeomGenerator
-from src.converters.clippath_analyzer import ClipPathAnalyzer
-from src.converters.masking import MaskingConverter
-from src.converters.clippath_types import ClipPathDefinition, ClippingType
-from src.converters.base import ConversionContext
+from core.converters.custgeom_generator import CustGeomGenerator
+from core.converters.clippath_analyzer import ClipPathAnalyzer
+from core.converters.masking import MaskingConverter
+from core.converters.clippath_types import ClipPathDefinition, ClippingType
+from core.converters.base import ConversionContext
 from core.services.conversion_services import ConversionServices
 
 
@@ -192,7 +192,7 @@ class TestCustGeomClipping:
         )
 
         # Should be classified as NESTED due to clip-path reference in clipPath content
-        from src.converters.clippath_types import ClipPathComplexity
+        from core.converters.clippath_types import ClipPathComplexity
         assert analysis.complexity in [ClipPathComplexity.NESTED, ClipPathComplexity.COMPLEX]
 
     def test_performance_benchmarks(self):

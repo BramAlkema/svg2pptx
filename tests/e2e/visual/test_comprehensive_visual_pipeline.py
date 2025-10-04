@@ -7,12 +7,10 @@ and fallback systems to ensure production-quality visual fidelity.
 """
 
 import asyncio
-import base64
 import io
 import tempfile
-import uuid
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -21,13 +19,9 @@ import cv2
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from PIL import Image
-from lxml import etree as ET
 
 # Import our systems
-from src.svg2pptx import SVGToPowerPointConverter
-from src.svg2drawingml import SVGToDrawingMLConverter
-from core.services.conversion_services import ConversionServices
-from api.routes.batch import BatchJobCreate
+from core.svg2pptx import SVGToPowerPointConverter
 
 
 @dataclass

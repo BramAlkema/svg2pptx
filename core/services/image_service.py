@@ -232,7 +232,7 @@ class ImageService:
     def _get_cache_key(self, image_source: str, base_path: Optional[str]) -> str:
         """Generate cache key for image source."""
         key_data = f"{image_source}:{base_path or ''}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def generate_embed_id(self, image_info: ImageInfo) -> str:
         """Generate relationship embed ID for image."""
@@ -241,9 +241,9 @@ class ImageService:
 
         # Generate based on content hash for consistency
         if image_info.content:
-            content_hash = hashlib.md5(image_info.content).hexdigest()[:8]
+            content_hash = hashlib.md5(image_info.content, usedforsecurity=False).hexdigest()[:8]
         else:
-            content_hash = hashlib.md5(str(image_info.temp_path).encode()).hexdigest()[:8]
+            content_hash = hashlib.md5(str(image_info.temp_path, usedforsecurity=False).encode()).hexdigest()[:8]
 
         embed_id = f"rId_img_{content_hash}"
         image_info.embed_id = embed_id

@@ -333,7 +333,7 @@ class FontSystem:
     def _create_font_key(self, font_metadata: FontMetadata) -> str:
         """Create cache key for font metadata."""
         key_data = f"{font_metadata.family}:{font_metadata.weight}:{font_metadata.style}:{font_metadata.size_pt}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def _strategy_to_availability(self, strategy: FontStrategy) -> FontAvailability:
         """Convert font strategy to availability status."""

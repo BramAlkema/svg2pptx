@@ -15,24 +15,20 @@ Usage:
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
+from unittest.mock import Mock
 from pathlib import Path
-import sys
 from lxml import etree as ET
 import time
-import threading
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 # Import the modules under test
 try:
-    from src.converters.filters import (
+    from core.converters.filters import (
         Filter, FilterContext, FilterResult, FilterRegistry, FilterChain
     )
-    from src.converters.filters.core.base import Filter as BaseFilter
     FILTERS_AVAILABLE = True
 except ImportError as e:
     print(f"Filter imports not available: {e}")
@@ -587,12 +583,10 @@ class TestFilterEffectsHelperFunctions:
         """Test filter type detection helper function."""
         # This would test any module-level helper functions
         # Currently placeholder as we don't have standalone helper functions
-        pass
 
     def test_svg_parsing_utilities(self):
         """Test SVG parsing utility functions."""
         # Placeholder for SVG parsing utilities
-        pass
 
 
 @pytest.mark.integration

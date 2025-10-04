@@ -16,24 +16,20 @@ Usage:
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
+from unittest.mock import Mock
 from pathlib import Path
-from lxml import etree as ET
 from PIL import Image, ImageDraw, ImageChops
 import numpy as np
-import io
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Any
 import logging
 
 # Import psutil with guard for optional dependency
 try:
-    import psutil
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
 
 from core.units import UnitConverter
-from core.color import Color
 from core.transforms import TransformParser
 
 # Mock filter components - visual regression tests don't need actual filter implementation
@@ -441,7 +437,6 @@ class TestVisualRegressionFramework:
         Tests concurrent baseline generation, simultaneous comparisons,
         and shared resource access safety.
         """
-        import threading
         import concurrent.futures
 
         test_svg = setup_test_data['test_svg_documents']['blur_filter']
@@ -563,7 +558,6 @@ class TestVisualRegressionIntegration:
         """
         # This will be implemented with actual integration tests
         # that process real SVG files through the complete pipeline
-        pass
 
     def test_real_world_scenarios(self):
         """
@@ -571,7 +565,6 @@ class TestVisualRegressionIntegration:
         """
         # This will be implemented with comprehensive real-world test cases
         # including complex SVG files with multiple filter chains
-        pass
 
 
 # Helper functions for visual regression testing
