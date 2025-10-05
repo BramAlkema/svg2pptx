@@ -46,28 +46,34 @@ requires-python = ">=3.9"
 dependencies = [
     # Core PowerPoint manipulation
     "python-pptx>=0.6.21",
-    
-    # XML parsing and manipulation  
+
+    # XML parsing and manipulation
     "lxml>=4.9.0",
-    
+
+    # CLI Framework
+    "click>=8.0.0",
+
     # Web API Framework
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "python-multipart>=0.0.6",
-    
+
     # HTTP Client for SVG fetching
     "httpx>=0.25.0",
-    
+
     # Google Drive Integration
     "google-api-python-client>=2.100.0",
     "google-auth>=2.23.0",
     "google-auth-oauthlib>=1.1.0",
     "google-auth-httplib2>=0.1.1",
-    
+
+    # Token encryption
+    "cryptography>=41.0.0",
+
     # Environment Configuration
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.0.0",
-    
+
     # Font processing and text-to-path conversion
     "fonttools>=4.42.0",
     "uharfbuzz>=0.37.0",
@@ -115,12 +121,15 @@ Repository = "https://github.com/svg2pptx/svg2pptx"
 "Bug Tracker" = "https://github.com/svg2pptx/svg2pptx/issues"
 
 [project.scripts]
+svg2pptx = "cli.main:main"
 svg2pptx-server = "api.main:run_server"
 
 [tool.hatch.build]
 include = [
     "src/**/*.py",
     "api/**/*.py",
+    "cli/**/*.py",
+    "core/**/*.py",
     "tests/**/*.py",
     "README.md",
     "LICENSE*"
@@ -138,12 +147,14 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src", "api"]
+packages = ["src", "api", "cli", "core"]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "src",
-    "api", 
+    "api",
+    "cli",
+    "core",
     "tests",
     "README.md",
     "LICENSE*",
