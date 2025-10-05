@@ -57,25 +57,29 @@ Example Usage:
 """
 
 # Core implementation
-from .core import UnitConverter, ConversionContext, UnitType
-
 # Fluent API
-from .core import UnitValue, UnitBatch, unit, units
-
 # Convenience functions for backward compatibility
-from .core import to_emu, to_pixels, create_context
-
 # EMU constants
 from .core import (
-    EMU_PER_INCH,
-    EMU_PER_POINT,
-    EMU_PER_MM,
-    EMU_PER_CM,
-    SLIDE_WIDTH_EMU,
-    SLIDE_HEIGHT_EMU,
     DEFAULT_DPI,
+    EMU_PER_CM,
+    EMU_PER_INCH,
+    EMU_PER_MM,
+    EMU_PER_POINT,
+    HIGH_DPI,
     PRINT_DPI,
-    HIGH_DPI
+    SLIDE_HEIGHT_EMU,
+    SLIDE_WIDTH_EMU,
+    ConversionContext,
+    UnitBatch,
+    UnitConverter,
+    UnitType,
+    UnitValue,
+    create_context,
+    to_emu,
+    to_pixels,
+    unit,
+    units,
 )
 
 # Export clean public API
@@ -105,5 +109,5 @@ __all__ = [
     'SLIDE_HEIGHT_EMU',
     'DEFAULT_DPI',
     'PRINT_DPI',
-    'HIGH_DPI'
+    'HIGH_DPI',
 ]

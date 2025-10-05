@@ -5,13 +5,13 @@ Slide Builder
 High-level slide construction from IR scenes using the mapper + embedder pipeline.
 """
 
-import time
 import logging
-from typing import Dict, Any, Optional, List
+import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ..ir import SceneGraph, IRElement
+from ..ir import IRElement, SceneGraph
 from ..map.base import Mapper, MapperResult
 from ..policy import Policy
 from .embedder import DrawingMLEmbedder, EmbedderResult
@@ -32,8 +32,8 @@ class SlideTemplate(Enum):
 class SlideMetadata:
     """Metadata for generated slide"""
     template: SlideTemplate
-    title: Optional[str] = None
-    notes: Optional[str] = None
+    title: str | None = None
+    notes: str | None = None
     layout_id: int = 1
     master_id: int = 1
 
@@ -46,7 +46,7 @@ class SlideBuilder:
     into complete PowerPoint slides with proper structure and relationships.
     """
 
-    def __init__(self, mappers: Dict[str, Mapper], embedder: DrawingMLEmbedder,
+    def __init__(self, mappers: dict[str, Mapper], embedder: DrawingMLEmbedder,
                  policy: Policy):
         """
         Initialize slide builder.
@@ -66,7 +66,7 @@ class SlideBuilder:
             'slides_built': 0,
             'total_elements': 0,
             'total_time_ms': 0.0,
-            'avg_elements_per_slide': 0.0
+            'avg_elements_per_slide': 0.0,
         }
 
     def build_slide(self, scene: SceneGraph, metadata: SlideMetadata = None) -> EmbedderResult:
@@ -113,7 +113,7 @@ class SlideBuilder:
             self.logger.error(f"Failed to build slide: {e}")
             raise RuntimeError(f"Slide building failed: {e}") from e
 
-    def build_from_elements(self, elements: List[IRElement],
+    def build_from_elements(self, elements: list[IRElement],
                            metadata: SlideMetadata = None) -> EmbedderResult:
         """
         Build slide from list of IR elements.
@@ -129,12 +129,12 @@ class SlideBuilder:
         scene = SceneGraph(
             elements=elements,
             viewport=None,  # Will use embedder defaults
-            background=None
+            background=None,
         )
 
         return self.build_slide(scene, metadata)
 
-    def _map_scene_elements(self, scene: SceneGraph) -> List[MapperResult]:
+    def _map_scene_elements(self, scene: SceneGraph) -> list[MapperResult]:
         """Map all elements in scene using appropriate mappers"""
         mapper_results = []
 
@@ -156,7 +156,7 @@ class SlideBuilder:
 
         return mapper_results
 
-    def _find_mapper(self, element: IRElement) -> Optional[Mapper]:
+    def _find_mapper(self, element: IRElement) -> Mapper | None:
         """Find appropriate mapper for IR element"""
         element_type = type(element).__name__.lower()
 
@@ -183,7 +183,7 @@ class SlideBuilder:
                 '</p:sld>',
                 f'    <p:sldLayoutIdLst>{layout_ref}</p:sldLayoutIdLst>\n'
                 f'    <p:sldMasterIdLst>{master_ref}</p:sldMasterIdLst>\n'
-                '</p:sld>'
+                '</p:sld>',
             )
 
             # Add notes if present
@@ -191,7 +191,7 @@ class SlideBuilder:
                 notes_xml = f'<p:notes>{metadata.notes}</p:notes>'
                 slide_xml = slide_xml.replace(
                     '</p:sld>',
-                    f'    {notes_xml}\n</p:sld>'
+                    f'    {notes_xml}\n</p:sld>',
                 )
 
             return slide_xml
@@ -212,7 +212,7 @@ class SlideBuilder:
                 self._stats['total_elements'] / self._stats['slides_built']
             )
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get slide building statistics"""
         return {
             **self._stats,
@@ -223,7 +223,7 @@ class SlideBuilder:
                 name: mapper.get_statistics()
                 for name, mapper in self.mappers.items()
             },
-            'embedder_stats': self.embedder.get_statistics()
+            'embedder_stats': self.embedder.get_statistics(),
         }
 
     def reset_statistics(self) -> None:
@@ -232,7 +232,7 @@ class SlideBuilder:
             'slides_built': 0,
             'total_elements': 0,
             'total_time_ms': 0.0,
-            'avg_elements_per_slide': 0.0
+            'avg_elements_per_slide': 0.0,
         }
 
         # Reset mapper and embedder stats
@@ -244,12 +244,12 @@ class SlideBuilder:
         """Add or replace mapper for element type"""
         self.mappers[element_type] = mapper
 
-    def get_supported_elements(self) -> List[str]:
+    def get_supported_elements(self) -> list[str]:
         """Get list of supported element types"""
         return list(self.mappers.keys())
 
 
-def create_slide_builder(mappers: Dict[str, Mapper],
+def create_slide_builder(mappers: dict[str, Mapper],
                         embedder: DrawingMLEmbedder,
                         policy: Policy) -> SlideBuilder:
     """

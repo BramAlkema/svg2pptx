@@ -6,8 +6,9 @@ Provides utilities for converting SVG transforms to PowerPoint DrawingML format.
 Handles unit conversions, angle calculations, and XML generation for <a:xfrm> elements.
 """
 
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict
+
 from lxml import etree as ET
 
 from .xml_builder import XMLBuilder
@@ -119,7 +120,7 @@ class OOXMLTransformUtils:
         rotation_deg: float = 0.0,
         flip_h: bool = False,
         flip_v: bool = False,
-        input_unit: str = "px"
+        input_unit: str = "px",
     ) -> OOXMLTransform:
         """
         Create OOXML transform from SVG transform components.
@@ -166,7 +167,7 @@ class OOXMLTransformUtils:
             height=h_emu,
             rotation=rotation_units,
             flip_h=flip_h,
-            flip_v=flip_v
+            flip_v=flip_v,
         )
 
     def generate_xfrm_xml(self, transform: OOXMLTransform) -> ET.Element:
@@ -217,7 +218,7 @@ class OOXMLTransformUtils:
         element = self.generate_xfrm_xml(transform)
         return ET.tostring(element, encoding='unicode', pretty_print=True)
 
-    def validate_transform_limits(self, transform: OOXMLTransform) -> Dict[str, Any]:
+    def validate_transform_limits(self, transform: OOXMLTransform) -> dict[str, Any]:
         """
         Validate transform against PowerPoint limits.
 
@@ -230,7 +231,7 @@ class OOXMLTransformUtils:
         result = {
             'valid': True,
             'warnings': [],
-            'errors': []
+            'errors': [],
         }
 
         # Check coordinate limits (PowerPoint has practical limits)
@@ -285,7 +286,7 @@ class OOXMLTransformUtils:
             0: 0,
             90 * self.ANGLE_UNITS_PER_DEGREE: 90 * self.ANGLE_UNITS_PER_DEGREE,
             180 * self.ANGLE_UNITS_PER_DEGREE: 180 * self.ANGLE_UNITS_PER_DEGREE,
-            270 * self.ANGLE_UNITS_PER_DEGREE: 270 * self.ANGLE_UNITS_PER_DEGREE
+            270 * self.ANGLE_UNITS_PER_DEGREE: 270 * self.ANGLE_UNITS_PER_DEGREE,
         }
 
         # Snap to common angles if within 1° tolerance
@@ -302,7 +303,7 @@ class OOXMLTransformUtils:
             height=transform.height,
             rotation=normalized_rotation,
             flip_h=transform.flip_h,
-            flip_v=transform.flip_v
+            flip_v=transform.flip_v,
         )
 
 

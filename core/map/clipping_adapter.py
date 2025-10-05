@@ -7,14 +7,18 @@ Leverages proven ClipPathAnalyzer, MaskingConverter, and ResolveClipPathsPlugin.
 """
 
 import logging
-from typing import Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict
 
 # Import existing clipping system
 try:
+    from ..converters.clippath_types import (
+        ClipPathAnalysis,
+        ClipPathComplexity,
+        ClipPathDefinition,
+    )
+    from ..converters.masking import MaskDefinition, MaskingConverter
     from ..groups.clipping_analyzer import ClippingAnalyzer
-    from ..converters.masking import MaskingConverter, MaskDefinition
-    from ..converters.clippath_types import ClipPathComplexity, ClipPathDefinition, ClipPathAnalysis
     CLIPPING_SYSTEM_AVAILABLE = True
 except ImportError:
     CLIPPING_SYSTEM_AVAILABLE = False
@@ -30,7 +34,7 @@ class ClippingResult:
     complexity: str  # SIMPLE, NESTED, COMPLEX, UNSUPPORTED
     strategy: str    # native_dml, custgeom, emf_fallback
     preprocessing_applied: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class ClippingPathAdapter:
@@ -73,7 +77,7 @@ class ClippingPathAdapter:
             clip_ref.clip_id is not None
         )
 
-    def generate_clip_xml(self, clip_ref: ClipRef, element_context: Dict[str, Any] = None) -> ClippingResult:
+    def generate_clip_xml(self, clip_ref: ClipRef, element_context: dict[str, Any] = None) -> ClippingResult:
         """
         Generate DrawingML clipping XML from IR clip reference.
 
@@ -98,7 +102,7 @@ class ClippingPathAdapter:
             self.logger.warning(f"Existing clipping system failed, using fallback: {e}")
             return self._generate_fallback_clipping(clip_ref, element_context)
 
-    def _generate_with_existing_system(self, clip_ref: ClipRef, element_context: Dict[str, Any]) -> ClippingResult:
+    def _generate_with_existing_system(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
         """Generate clipping using existing comprehensive clipping system"""
 
         # Step 1: Analyze clipPath complexity if we have the actual clipPath element
@@ -110,7 +114,7 @@ class ClippingPathAdapter:
             analysis = self.clippath_analyzer.analyze_clippath(
                 element=clippath_element,
                 clippath_definitions=clippath_definitions,
-                clip_ref=clip_ref.clip_id
+                clip_ref=clip_ref.clip_id,
             )
 
             # Step 2: Generate DrawingML based on analysis
@@ -141,8 +145,8 @@ class ClippingPathAdapter:
                 metadata={
                     'analysis': analysis,
                     'clippath_definitions': clippath_definitions,
-                    'generation_method': 'existing_system'
-                }
+                    'generation_method': 'existing_system',
+                },
             )
 
         else:
@@ -184,7 +188,7 @@ class ClippingPathAdapter:
 <!-- Strategy: EMF vector for unsupported features -->
 <!-- Complexity: {analysis.complexity.value} -->'''
 
-    def _generate_basic_clipping(self, clip_ref: ClipRef, element_context: Dict[str, Any]) -> ClippingResult:
+    def _generate_basic_clipping(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
         """Generate basic clipping when full analysis not available"""
         clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
 
@@ -206,11 +210,11 @@ class ClippingPathAdapter:
             preprocessing_applied=False,
             metadata={
                 'clip_id': clip_id,
-                'generation_method': 'basic_fallback'
-            }
+                'generation_method': 'basic_fallback',
+            },
         )
 
-    def _generate_fallback_clipping(self, clip_ref: ClipRef, element_context: Dict[str, Any]) -> ClippingResult:
+    def _generate_fallback_clipping(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
         """Fallback clipping when existing system unavailable"""
         clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
 
@@ -224,11 +228,11 @@ class ClippingPathAdapter:
             metadata={
                 'clip_id': clip_id,
                 'generation_method': 'fallback_placeholder',
-                'reason': 'clipping_system_unavailable'
-            }
+                'reason': 'clipping_system_unavailable',
+            },
         )
 
-    def analyze_preprocessing_opportunities(self, svg_root, clippath_definitions: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_preprocessing_opportunities(self, svg_root, clippath_definitions: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze opportunities for clipPath preprocessing.
 
@@ -246,34 +250,34 @@ class ClippingPathAdapter:
             # Use ClippingAnalyzer's preprocessing analysis capabilities
             preprocessing_context = {
                 'svg_root': svg_root,
-                'clippath_definitions': clippath_definitions
+                'clippath_definitions': clippath_definitions,
             }
 
             return {
                 'can_preprocess': True,
                 'strategy': 'boolean_intersection',
-                'context': preprocessing_context
+                'context': preprocessing_context,
             }
 
         except Exception as e:
             self.logger.warning(f"Preprocessing analysis failed: {e}")
             return {'can_preprocess': False, 'reason': str(e)}
 
-    def get_clipping_statistics(self) -> Dict[str, Any]:
+    def get_clipping_statistics(self) -> dict[str, Any]:
         """Get statistics about clipping system usage"""
         return {
             'clipping_system_available': self._clipping_available,
             'components_initialized': {
                 'clippath_analyzer': self.clippath_analyzer is not None,
-                'masking_converter': self.masking_converter is not None
+                'masking_converter': self.masking_converter is not None,
             },
             'features_available': {
                 'complexity_analysis': self._clipping_available,
                 'native_dml_clipping': True,
                 'custgeom_clipping': self._clipping_available,
                 'emf_clipping': self._clipping_available,
-                'preprocessing': self._clipping_available
-            }
+                'preprocessing': self._clipping_available,
+            },
         }
 
 

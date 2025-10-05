@@ -12,9 +12,9 @@ Key Features:
 - Type-safe animation definitions
 """
 
-from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 
 class AnimationType(Enum):
@@ -55,7 +55,7 @@ class AnimationTiming:
     """Animation timing information."""
     begin: float = 0.0
     duration: float = 1.0
-    repeat_count: Union[int, str] = 1
+    repeat_count: int | str = 1
     fill_mode: FillMode = FillMode.REMOVE
 
     def get_end_time(self) -> float:
@@ -107,8 +107,8 @@ class AnimationTiming:
 class AnimationKeyframe:
     """Single keyframe with time, values, and easing."""
     time: float
-    values: List[str]
-    easing: Optional[str] = None
+    values: list[str]
+    easing: str | None = None
 
     def __post_init__(self):
         """Validate keyframe data."""
@@ -124,12 +124,12 @@ class AnimationDefinition:
     element_id: str
     animation_type: AnimationType
     target_attribute: str
-    values: List[str]
+    values: list[str]
     timing: AnimationTiming
-    key_times: Optional[List[float]] = None
-    key_splines: Optional[List[List[float]]] = None
+    key_times: list[float] | None = None
+    key_splines: list[list[float]] | None = None
     calc_mode: CalcMode = CalcMode.LINEAR
-    transform_type: Optional[TransformType] = None
+    transform_type: TransformType | None = None
     additive: str = "replace"
     accumulate: str = "none"
 
@@ -165,7 +165,7 @@ class AnimationDefinition:
                 if not all(0.0 <= v <= 1.0 for v in spline):
                     raise ValueError("All key_spline values must be between 0 and 1")
 
-    def get_keyframes(self) -> List[AnimationKeyframe]:
+    def get_keyframes(self) -> list[AnimationKeyframe]:
         """Generate keyframes from animation definition."""
         if self.key_times:
             # Use explicit key times
@@ -323,7 +323,7 @@ class AnimationDefinition:
 class AnimationScene:
     """Snapshot of all animated elements at specific time."""
     time: float
-    element_states: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    element_states: dict[str, dict[str, str]] = field(default_factory=dict)
 
     def set_element_property(self, element_id: str, property_name: str, value: str):
         """Set property value for an element."""
@@ -331,11 +331,11 @@ class AnimationScene:
             self.element_states[element_id] = {}
         self.element_states[element_id][property_name] = value
 
-    def get_element_property(self, element_id: str, property_name: str) -> Optional[str]:
+    def get_element_property(self, element_id: str, property_name: str) -> str | None:
         """Get property value for an element."""
         return self.element_states.get(element_id, {}).get(property_name)
 
-    def get_all_animated_elements(self) -> List[str]:
+    def get_all_animated_elements(self) -> list[str]:
         """Get list of all elements that have animations."""
         return list(self.element_states.keys())
 
@@ -347,7 +347,7 @@ class AnimationScene:
             self.element_states[element_id].update(properties)
 
 
-def format_transform_string(transform_type: TransformType, values: List[float]) -> str:
+def format_transform_string(transform_type: TransformType, values: list[float]) -> str:
     """Format transform values into SVG transform string."""
     if transform_type == TransformType.TRANSLATE:
         if len(values) == 1:
@@ -415,7 +415,7 @@ class AnimationSummary:
     has_easing: bool = False
     has_sequences: bool = False
     element_count: int = 0
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     def add_warning(self, message: str):
         """Add a warning message."""

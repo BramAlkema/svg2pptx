@@ -10,15 +10,16 @@ This module provides specialized caches for expensive operations like:
 """
 
 import hashlib
-import pickle
 import json
-import time
+import pickle
 import threading
-from typing import Any, Dict, Optional, Tuple, List
-from functools import wraps
-from dataclasses import dataclass
-from lxml import etree as ET
+import time
 from collections import defaultdict
+from dataclasses import dataclass
+from functools import wraps
+from typing import Any, Dict, List, Optional, Tuple
+
+from lxml import etree as ET
 
 
 @dataclass
@@ -43,11 +44,11 @@ class CacheStats:
 class BaseCache:
     """Base cache implementation with statistics and size limits."""
     
-    def __init__(self, max_size: int = 1000, ttl: Optional[float] = None):
+    def __init__(self, max_size: int = 1000, ttl: float | None = None):
         self.max_size = max_size
         self.ttl = ttl  # Time to live in seconds
-        self._cache: Dict[str, Any] = {}
-        self._timestamps: Dict[str, float] = {}
+        self._cache: dict[str, Any] = {}
+        self._timestamps: dict[str, float] = {}
         self._stats = CacheStats()
         self._lock = threading.RLock()
     
@@ -76,7 +77,7 @@ class BaseCache:
             self._cache.pop(oldest_key, None)
             self._timestamps.pop(oldest_key, None)
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache."""
         with self._lock:
             self._stats.total_requests += 1
@@ -118,7 +119,7 @@ class PathCache(BaseCache):
         super().__init__(max_size)
         self._path_complexity_cache = {}
     
-    def get_parsed_path(self, path_data: str) -> Optional[List[Tuple[str, List[float]]]]:
+    def get_parsed_path(self, path_data: str) -> list[tuple[str, list[float]]] | None:
         """Get parsed path commands using modern PathSystem."""
         try:
             # Use PathSystem for modern path processing
@@ -146,7 +147,7 @@ class PathCache(BaseCache):
             key = f"parse:{self._generate_key(path_data)}"
             return self.get(key)
 
-    def cache_parsed_path(self, path_data: str, parsed_commands: List[Tuple[str, List[float]]]):
+    def cache_parsed_path(self, path_data: str, parsed_commands: list[tuple[str, list[float]]]):
         """Cache parsed path commands - PathSystem has built-in efficiency."""
         try:
             # PathSystem has optimized processing, so explicit caching is less needed
@@ -166,7 +167,7 @@ class PathCache(BaseCache):
             key = f"parse:{self._generate_key(path_data)}"
             self.put(key, parsed_commands)
     
-    def get_simplified_path(self, path_data: str, tolerance: float) -> Optional[str]:
+    def get_simplified_path(self, path_data: str, tolerance: float) -> str | None:
         """Get simplified path from cache."""
         key = f"simplify:{self._generate_key(path_data, tolerance)}"
         return self.get(key)
@@ -176,17 +177,17 @@ class PathCache(BaseCache):
         key = f"simplify:{self._generate_key(path_data, tolerance)}"
         self.put(key, simplified)
     
-    def get_path_bounds(self, path_data: str) -> Optional[Tuple[float, float, float, float]]:
+    def get_path_bounds(self, path_data: str) -> tuple[float, float, float, float] | None:
         """Get path bounding box from cache."""
         key = f"bounds:{self._generate_key(path_data)}"
         return self.get(key)
     
-    def cache_path_bounds(self, path_data: str, bounds: Tuple[float, float, float, float]):
+    def cache_path_bounds(self, path_data: str, bounds: tuple[float, float, float, float]):
         """Cache path bounding box."""
         key = f"bounds:{self._generate_key(path_data)}"
         self.put(key, bounds)
     
-    def get_path_complexity(self, path_data: str) -> Optional[int]:
+    def get_path_complexity(self, path_data: str) -> int | None:
         """Get path complexity score from cache."""
         key = f"complexity:{self._generate_key(path_data)}"
         return self.get(key)
@@ -203,27 +204,27 @@ class ColorCache(BaseCache):
     def __init__(self, max_size: int = 200):
         super().__init__(max_size)
     
-    def get_parsed_color(self, color_str: str) -> Optional[Tuple[int, int, int, float]]:
+    def get_parsed_color(self, color_str: str) -> tuple[int, int, int, float] | None:
         """Get parsed color (RGBA) from cache."""
         key = f"parse:{self._generate_key(color_str)}"
         return self.get(key)
     
-    def cache_parsed_color(self, color_str: str, rgba: Tuple[int, int, int, float]):
+    def cache_parsed_color(self, color_str: str, rgba: tuple[int, int, int, float]):
         """Cache parsed color."""
         key = f"parse:{self._generate_key(color_str)}"
         self.put(key, rgba)
     
-    def get_gradient_definition(self, gradient_id: str) -> Optional[Dict]:
+    def get_gradient_definition(self, gradient_id: str) -> dict | None:
         """Get gradient definition from cache."""
         key = f"gradient:{self._generate_key(gradient_id)}"
         return self.get(key)
     
-    def cache_gradient_definition(self, gradient_id: str, definition: Dict):
+    def cache_gradient_definition(self, gradient_id: str, definition: dict):
         """Cache gradient definition."""
         key = f"gradient:{self._generate_key(gradient_id)}"
         self.put(key, definition)
     
-    def get_powerpoint_color(self, svg_color: str) -> Optional[str]:
+    def get_powerpoint_color(self, svg_color: str) -> str | None:
         """Get PowerPoint color conversion from cache."""
         key = f"pptx:{self._generate_key(svg_color)}"
         return self.get(key)
@@ -240,7 +241,7 @@ class TransformCache(BaseCache):
     def __init__(self, max_size: int = 300):
         super().__init__(max_size)
     
-    def get_parsed_transform(self, transform_str: str) -> Optional[List[List[float]]]:
+    def get_parsed_transform(self, transform_str: str) -> list[list[float]] | None:
         """Get parsed transform matrix using canonical TransformEngine cache."""
         try:
             # Delegate to TransformEngine which has superior built-in caching
@@ -257,7 +258,7 @@ class TransformCache(BaseCache):
                 return [
                     [matrix.a, matrix.c, matrix.e],
                     [matrix.b, matrix.d, matrix.f],
-                    [0.0, 0.0, 1.0]
+                    [0.0, 0.0, 1.0],
                 ]
             else:
                 return None
@@ -271,7 +272,7 @@ class TransformCache(BaseCache):
             key = f"parse:{self._generate_key(transform_str)}"
             return self.get(key)
 
-    def cache_parsed_transform(self, transform_str: str, matrix: List[List[float]]):
+    def cache_parsed_transform(self, transform_str: str, matrix: list[list[float]]):
         """Cache parsed transform matrix - now delegates to TransformEngine's superior caching."""
         try:
             # TransformEngine has built-in caching, so we don't need to cache here
@@ -290,22 +291,22 @@ class TransformCache(BaseCache):
             key = f"parse:{self._generate_key(transform_str)}"
             self.put(key, matrix)
     
-    def get_combined_transform(self, *transforms: str) -> Optional[List[List[float]]]:
+    def get_combined_transform(self, *transforms: str) -> list[list[float]] | None:
         """Get combined transform matrix from cache."""
         key = f"combine:{self._generate_key(*transforms)}"
         return self.get(key)
     
-    def cache_combined_transform(self, transforms: Tuple[str, ...], matrix: List[List[float]]):
+    def cache_combined_transform(self, transforms: tuple[str, ...], matrix: list[list[float]]):
         """Cache combined transform matrix."""
         key = f"combine:{self._generate_key(*transforms)}"
         self.put(key, matrix)
     
-    def get_applied_transform(self, transform_str: str, x: float, y: float) -> Optional[Tuple[float, float]]:
+    def get_applied_transform(self, transform_str: str, x: float, y: float) -> tuple[float, float] | None:
         """Get transformed coordinates from cache."""
         key = f"apply:{self._generate_key(transform_str, x, y)}"
         return self.get(key)
     
-    def cache_applied_transform(self, transform_str: str, x: float, y: float, result: Tuple[float, float]):
+    def cache_applied_transform(self, transform_str: str, x: float, y: float, result: tuple[float, float]):
         """Cache transformed coordinates."""
         key = f"apply:{self._generate_key(transform_str, x, y)}"
         self.put(key, result)
@@ -321,10 +322,10 @@ class FilterCache(BaseCache):
             'repeated_patterns': defaultdict(int),
             'optimization_applied': 0,
             'consistency_checks': 0,
-            'consistency_failures': 0
+            'consistency_failures': 0,
         }
 
-    def generate_filter_cache_key(self, filter_chain: List[ET.Element], context: Dict) -> str:
+    def generate_filter_cache_key(self, filter_chain: list[ET.Element], context: dict) -> str:
         """Generate unique cache key for filter combination."""
         key_data = {
             'filter_elements': [self._serialize_filter_element(f) for f in filter_chain],
@@ -332,21 +333,21 @@ class FilterCache(BaseCache):
             'parameters': context.get('filter_parameters', {}),
             'coordinate_system': context.get('coordinate_system', {}),
             'viewport': context.get('viewport', {}),
-            'transform_chain': context.get('transform_chain', [])
+            'transform_chain': context.get('transform_chain', []),
         }
         key_str = json.dumps(key_data, sort_keys=True)
         return hashlib.blake2b(key_str.encode()).hexdigest()
 
-    def _serialize_filter_element(self, element: ET.Element) -> Dict:
+    def _serialize_filter_element(self, element: ET.Element) -> dict:
         """Serialize filter element to deterministic dictionary."""
         return {
             'tag': element.tag.split('}')[-1] if '}' in element.tag else element.tag,
             'attributes': dict(element.attrib),
             'text': element.text if element.text else None,
-            'children': [self._serialize_filter_element(child) for child in element]
+            'children': [self._serialize_filter_element(child) for child in element],
         }
 
-    def _hash_input_data(self, input_data: Dict) -> str:
+    def _hash_input_data(self, input_data: dict) -> str:
         """Generate hash for input data."""
         if not input_data:
             return "empty_input"
@@ -355,12 +356,12 @@ class FilterCache(BaseCache):
         input_str = json.dumps(input_data, sort_keys=True)
         return hashlib.md5(input_str.encode()).hexdigest()
 
-    def get_filter_result(self, filter_chain: List[ET.Element], context: Dict) -> Optional[Dict]:
+    def get_filter_result(self, filter_chain: list[ET.Element], context: dict) -> dict | None:
         """Get cached filter result for filter combination."""
         key = self.generate_filter_cache_key(filter_chain, context)
         return self.get(key)
 
-    def cache_filter_result(self, filter_chain: List[ET.Element], context: Dict, result: Dict):
+    def cache_filter_result(self, filter_chain: list[ET.Element], context: dict, result: dict):
         """Cache filter result for filter combination."""
         key = self.generate_filter_cache_key(filter_chain, context)
 
@@ -370,12 +371,12 @@ class FilterCache(BaseCache):
             'cache_key': key,
             'cached_at': time.time(),
             'filter_count': len(filter_chain),
-            'complexity_score': self._calculate_complexity_score(filter_chain)
+            'complexity_score': self._calculate_complexity_score(filter_chain),
         }
 
         self.put(key, cached_result)
 
-    def _calculate_complexity_score(self, filter_chain: List[ET.Element]) -> float:
+    def _calculate_complexity_score(self, filter_chain: list[ET.Element]) -> float:
         """Calculate complexity score for filter chain."""
         complexity = 0.0
 
@@ -394,7 +395,7 @@ class FilterCache(BaseCache):
                 'feTurbulence': 3.5,
                 'feDisplacementMap': 4.0,
                 'feDiffuseLighting': 3.5,
-                'feSpecularLighting': 3.5
+                'feSpecularLighting': 3.5,
             }
 
             base_complexity = complexity_map.get(tag, 2.0)
@@ -412,26 +413,26 @@ class FilterCache(BaseCache):
 
         return complexity
 
-    def get_emf_cached_result(self, cache_key: str) -> Optional[bytes]:
+    def get_emf_cached_result(self, cache_key: str) -> bytes | None:
         """Get EMF blob from cache by key."""
         result = self.get(cache_key)
         if result and 'emf_blob' in result:
             return result['emf_blob']
         return None
 
-    def cache_emf_result(self, cache_key: str, emf_blob: bytes, metadata: Dict = None):
+    def cache_emf_result(self, cache_key: str, emf_blob: bytes, metadata: dict = None):
         """Cache EMF blob result."""
         cached_result = {
             'emf_blob': emf_blob,
             'cached_at': time.time(),
             'type': 'emf_fallback',
             'metadata': metadata or {},
-            'checksum': hashlib.md5(emf_blob).hexdigest() if emf_blob else None
+            'checksum': hashlib.md5(emf_blob).hexdigest() if emf_blob else None,
         }
         self.put(cache_key, cached_result)
 
     # Subtask 3.2.5: Cache invalidation and update strategies
-    def invalidate_by_filter_types(self, filter_types: List[str]) -> int:
+    def invalidate_by_filter_types(self, filter_types: list[str]) -> int:
         """Invalidate cache entries containing specific filter types."""
         invalidated = 0
         with self._lock:
@@ -575,7 +576,7 @@ class FilterCache(BaseCache):
                     self._timestamps[cache_key] = time.time()
                     self._performance_stats['optimization_applied'] += 1
 
-    def get_performance_metrics(self) -> Dict:
+    def get_performance_metrics(self) -> dict:
         """Get cache performance metrics."""
         total_patterns = sum(self._performance_stats['repeated_patterns'].values())
         optimized_percentage = (
@@ -587,7 +588,7 @@ class FilterCache(BaseCache):
             'total_pattern_accesses': total_patterns,
             'optimization_percentage': optimized_percentage,
             'cache_efficiency': self._stats.hit_rate,
-            'current_size': len(self._cache)
+            'current_size': len(self._cache),
         }
 
     # Subtask 3.2.8: Verify cached results maintain visual consistency
@@ -628,7 +629,7 @@ class FilterCache(BaseCache):
 
             return True
 
-    def _verify_metadata_consistency(self, entry: Dict) -> bool:
+    def _verify_metadata_consistency(self, entry: dict) -> bool:
         """Verify metadata consistency in cache entry."""
         required_fields = ['cached_at', 'type']
 
@@ -648,14 +649,14 @@ class FilterCache(BaseCache):
 
         return True
 
-    def audit_cache_consistency(self) -> Dict[str, Any]:
+    def audit_cache_consistency(self) -> dict[str, Any]:
         """Perform comprehensive cache consistency audit."""
         audit_results = {
             'total_entries': len(self._cache),
             'consistent_entries': 0,
             'inconsistent_entries': 0,
             'corrupted_entries': 0,
-            'removed_entries': 0
+            'removed_entries': 0,
         }
 
         to_remove = []
@@ -711,25 +712,25 @@ class ConversionCache:
         self._element_bounds_cache = BaseCache(max_size=800, ttl=300)
         self._drawingml_cache = BaseCache(max_size=400, ttl=600)  # 10 min TTL
     
-    def cache_element_style(self, element: ET.Element, computed_style: Dict):
+    def cache_element_style(self, element: ET.Element, computed_style: dict):
         """Cache computed style for an element."""
         element_hash = self._hash_element(element)
         key = f"style:{element_hash}"
         self._element_style_cache.put(key, computed_style)
     
-    def get_element_style(self, element: ET.Element) -> Optional[Dict]:
+    def get_element_style(self, element: ET.Element) -> dict | None:
         """Get cached computed style for an element."""
         element_hash = self._hash_element(element)
         key = f"style:{element_hash}"
         return self._element_style_cache.get(key)
     
-    def cache_element_bounds(self, element: ET.Element, bounds: Tuple[float, float, float, float]):
+    def cache_element_bounds(self, element: ET.Element, bounds: tuple[float, float, float, float]):
         """Cache bounding box for an element."""
         element_hash = self._hash_element(element)
         key = f"bounds:{element_hash}"
         self._element_bounds_cache.put(key, bounds)
     
-    def get_element_bounds(self, element: ET.Element) -> Optional[Tuple[float, float, float, float]]:
+    def get_element_bounds(self, element: ET.Element) -> tuple[float, float, float, float] | None:
         """Get cached bounding box for an element."""
         element_hash = self._hash_element(element)
         key = f"bounds:{element_hash}"
@@ -741,7 +742,7 @@ class ConversionCache:
         key = f"drawingml:{element_hash}:{context_hash}"
         self._drawingml_cache.put(key, output)
     
-    def get_drawingml_output(self, element: ET.Element, context_hash: str) -> Optional[str]:
+    def get_drawingml_output(self, element: ET.Element, context_hash: str) -> str | None:
         """Get cached DrawingML output for an element."""
         element_hash = self._hash_element(element)
         key = f"drawingml:{element_hash}:{context_hash}"
@@ -752,7 +753,7 @@ class ConversionCache:
         element_str = ET.tostring(element, encoding='unicode')
         return hashlib.md5(element_str.encode()).hexdigest()
     
-    def get_total_stats(self) -> Dict[str, CacheStats]:
+    def get_total_stats(self) -> dict[str, CacheStats]:
         """Get statistics for all caches."""
         return {
             'path_cache': self.path_cache.get_stats(),
@@ -774,7 +775,7 @@ class ConversionCache:
         self._element_bounds_cache.clear()
         self._drawingml_cache.clear()
     
-    def get_memory_usage(self) -> Dict[str, int]:
+    def get_memory_usage(self) -> dict[str, int]:
         """Get memory usage for all caches."""
         stats = self.get_total_stats()
         memory_usage = {name: stat.memory_usage for name, stat in stats.items()}
@@ -787,9 +788,9 @@ class ConversionCache:
         return memory_usage
 
     def cache_complex_filter_result(self,
-                                  filter_chain: List[ET.Element],
-                                  context: Dict,
-                                  result: Dict) -> Optional[str]:
+                                  filter_chain: list[ET.Element],
+                                  context: dict,
+                                  result: dict) -> str | None:
         """
         Cache complex filter result using EMF storage.
 
@@ -806,7 +807,7 @@ class ConversionCache:
 
         try:
             return self.emf_filter_cache.cache_complex_filter_result(
-                filter_chain, context, result
+                filter_chain, context, result,
             )
         except Exception as e:
             # Log error but don't fail the operation
@@ -814,8 +815,8 @@ class ConversionCache:
             return None
 
     def get_cached_filter_result(self,
-                               filter_chain: List[ET.Element],
-                               context: Dict) -> Optional[Dict]:
+                               filter_chain: list[ET.Element],
+                               context: dict) -> dict | None:
         """
         Get cached complex filter result from EMF storage.
 
@@ -831,13 +832,13 @@ class ConversionCache:
 
         try:
             return self.emf_filter_cache.get_cached_filter_result(
-                filter_chain, context
+                filter_chain, context,
             )
         except Exception as e:
             print(f"Warning: Failed to retrieve EMF filter result: {e}")
             return None
 
-    def invalidate_filter_cache(self, filter_types: List[str] = None) -> int:
+    def invalidate_filter_cache(self, filter_types: list[str] = None) -> int:
         """
         Invalidate cached filter results.
 

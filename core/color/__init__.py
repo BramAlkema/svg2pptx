@@ -28,16 +28,15 @@ Example Usage:
 """
 
 # Core Color class - primary public API
-from .core import Color
+# Advanced features
+from .accessibility import ColorAccessibility, ColorBlindnessType, ContrastLevel
 
 # Utility classes for specific use cases
 from .batch import ColorBatch
-from .harmony import ColorHarmony
-
-# Advanced features
-from .accessibility import ColorAccessibility, ContrastLevel, ColorBlindnessType
-from .manipulation import ColorManipulation, BlendMode
 from .color_spaces import ColorSpaceConverter
+from .core import Color
+from .harmony import ColorHarmony
+from .manipulation import BlendMode, ColorManipulation
 
 # Modern Color system only - no legacy compatibility needed
 

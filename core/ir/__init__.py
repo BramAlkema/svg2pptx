@@ -12,12 +12,12 @@ Key principles:
 - Battle-tested math (transforms, coordinates) preserved
 """
 
-from .scene import *
-from .paint import *
+from .font_metadata import *
 from .geometry import *
+from .paint import *
+from .scene import *
 from .text import *
 from .text_path import *
-from .font_metadata import *
 from .validation import *
 
 __all__ = [

@@ -9,16 +9,15 @@ This replaces the unwieldy 7000+ line multislide implementation with a clean,
 maintainable approach focused on common use cases.
 """
 
-import time
 import logging
-from typing import List, Dict, Any, Optional, Union
+import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from ..pipeline.converter import CleanSlateConverter, ConversionResult
-from ..pipeline.config import PipelineConfig
 from ..io import PackageWriter
-
+from ..pipeline.config import PipelineConfig
+from ..pipeline.converter import CleanSlateConverter, ConversionResult
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +26,8 @@ logger = logging.getLogger(__name__)
 class PageSource:
     """Represents a single page source for multi-page conversion."""
     content: str  # SVG content
-    title: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    title: str | None = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -43,7 +42,7 @@ class MultiPageResult:
     total_time_ms: float
 
     # Per-page statistics
-    page_results: List[ConversionResult]
+    page_results: list[ConversionResult]
 
     # Overall statistics
     total_elements: int = 0
@@ -59,7 +58,7 @@ class MultiPageResult:
     compression_ratio: float = 1.0
 
     # Package debug data (when enable_debug=True)
-    package_debug_data: Optional[Dict[str, Any]] = None
+    package_debug_data: dict[str, Any] | None = None
 
 
 class CleanSlateMultiPageConverter:
@@ -100,10 +99,10 @@ class CleanSlateMultiPageConverter:
             'successful_conversions': 0,
             'failed_conversions': 0,
             'total_pages': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
-    def convert_pages(self, pages: List[PageSource], output_path: str = None) -> MultiPageResult:
+    def convert_pages(self, pages: list[PageSource], output_path: str = None) -> MultiPageResult:
         """
         Convert multiple page sources to a multi-page PPTX.
 
@@ -161,7 +160,7 @@ class CleanSlateMultiPageConverter:
                 avg_performance=sum(r.estimated_performance for r in page_results) / len(page_results),
                 package_size_bytes=package_result['package_size_bytes'],
                 compression_ratio=package_result.get('compression_ratio', 1.0),
-                package_debug_data=package_result.get('package_debug_data')  # Include package trace
+                package_debug_data=package_result.get('package_debug_data'),  # Include package trace
             )
 
             # Record success
@@ -173,7 +172,7 @@ class CleanSlateMultiPageConverter:
             self._record_failure()
             raise ValueError(f"Multi-page conversion failed: {e}") from e
 
-    def convert_files(self, svg_files: List[Union[str, Path]], output_path: str) -> MultiPageResult:
+    def convert_files(self, svg_files: list[str | Path], output_path: str) -> MultiPageResult:
         """
         Convert multiple SVG files to a multi-page PPTX.
 
@@ -198,7 +197,7 @@ class CleanSlateMultiPageConverter:
                 page = PageSource(
                     content=content,
                     title=file_path.stem,
-                    metadata={'source_file': str(file_path)}
+                    metadata={'source_file': str(file_path)},
                 )
                 pages.append(page)
 
@@ -208,7 +207,7 @@ class CleanSlateMultiPageConverter:
 
         return self.convert_pages(pages, output_path)
 
-    def _generate_multipage_package(self, page_results: List[ConversionResult], output_path: str = None) -> Dict[str, Any]:
+    def _generate_multipage_package(self, page_results: list[ConversionResult], output_path: str = None) -> dict[str, Any]:
         """Generate multi-page PPTX package from individual page results."""
         try:
             # Extract embedder results from page conversion results
@@ -250,7 +249,7 @@ class CleanSlateMultiPageConverter:
                     elements_embedded=page_result.elements_processed,
                     native_elements=page_result.native_elements,
                     emf_elements=page_result.emf_elements,
-                    total_size_bytes=len(page_result.output_data)
+                    total_size_bytes=len(page_result.output_data),
                 )
                 embedder_results.append(embedder_result)
 
@@ -269,7 +268,7 @@ class CleanSlateMultiPageConverter:
                 'package_data': package_data,
                 'package_size_bytes': len(package_data),
                 'compression_ratio': package_stats.get('compression_ratio', 1.0),
-                'slide_count': len(embedder_results)
+                'slide_count': len(embedder_results),
             }
 
             # Include package debug data if available (when enable_debug=True)
@@ -293,7 +292,7 @@ class CleanSlateMultiPageConverter:
         self._stats['total_conversions'] += 1
         self._stats['failed_conversions'] += 1
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get conversion statistics."""
         total = max(self._stats['total_conversions'], 1)
         return {
@@ -301,7 +300,7 @@ class CleanSlateMultiPageConverter:
             'success_rate': self._stats['successful_conversions'] / total,
             'avg_pages_per_conversion': self._stats['total_pages'] / max(self._stats['successful_conversions'], 1),
             'avg_time_per_conversion': self._stats['total_time_ms'] / max(self._stats['successful_conversions'], 1),
-            'page_converter_stats': self.page_converter.get_statistics()
+            'page_converter_stats': self.page_converter.get_statistics(),
         }
 
     def reset_statistics(self) -> None:
@@ -311,7 +310,7 @@ class CleanSlateMultiPageConverter:
             'successful_conversions': 0,
             'failed_conversions': 0,
             'total_pages': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
         self.page_converter.reset_statistics()
 

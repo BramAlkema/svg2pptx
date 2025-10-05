@@ -6,13 +6,19 @@ Factory for creating configured clean slate conversion pipelines.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-from ..policy import PolicyEngine, PolicyConfig
-from ..map import GroupMapper, create_path_mapper, create_text_mapper, create_group_mapper, create_image_mapper
 from ..io import DrawingMLEmbedder, SlideBuilder, create_embedder, create_package_writer
-from .converter import CleanSlateConverter
+from ..map import (
+    GroupMapper,
+    create_group_mapper,
+    create_image_mapper,
+    create_path_mapper,
+    create_text_mapper,
+)
+from ..policy import PolicyConfig, PolicyEngine
 from .config import PipelineConfig
+from .converter import CleanSlateConverter
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +77,7 @@ class PipelineFactory:
         return PolicyEngine(policy_config)
 
     @staticmethod
-    def create_services(config: PipelineConfig) -> Optional[Any]:
+    def create_services(config: PipelineConfig) -> Any | None:
         """
         Create services for enhanced processing (optional).
 
@@ -93,7 +99,7 @@ class PipelineFactory:
             return None
 
     @staticmethod
-    def create_mappers(policy: PolicyEngine, config: PipelineConfig, services=None) -> Dict[str, Any]:
+    def create_mappers(policy: PolicyEngine, config: PipelineConfig, services=None) -> dict[str, Any]:
         """
         Create configured mapper instances.
 
@@ -110,7 +116,7 @@ class PipelineFactory:
             'path': create_path_mapper(policy, services),
             'textframe': create_text_mapper(policy, services),
             'group': create_group_mapper(policy),  # Group mapper doesn't need services yet
-            'image': create_image_mapper(policy, services)
+            'image': create_image_mapper(policy, services),
         }
 
         # Configure group mapper with child mappers if needed
@@ -118,7 +124,7 @@ class PipelineFactory:
             mappers['group'].set_child_mappers({
                 'path': mappers['path'],
                 'text': mappers['textframe'],
-                'image': mappers['image']
+                'image': mappers['image'],
             })
 
         return mappers
@@ -136,11 +142,11 @@ class PipelineFactory:
         """
         return create_embedder(
             slide_width_emu=config.slide_config.width_emu,
-            slide_height_emu=config.slide_config.height_emu
+            slide_height_emu=config.slide_config.height_emu,
         )
 
     @staticmethod
-    def create_slide_builder(mappers: Dict[str, Any], embedder: DrawingMLEmbedder,
+    def create_slide_builder(mappers: dict[str, Any], embedder: DrawingMLEmbedder,
                            policy: PolicyEngine, config: PipelineConfig) -> SlideBuilder:
         """
         Create configured slide builder.
@@ -158,7 +164,7 @@ class PipelineFactory:
         return create_slide_builder(mappers, embedder, policy)
 
     @classmethod
-    def create_complete_pipeline(cls, config: PipelineConfig = None) -> Dict[str, Any]:
+    def create_complete_pipeline(cls, config: PipelineConfig = None) -> dict[str, Any]:
         """
         Create complete pipeline with all components.
 
@@ -192,7 +198,7 @@ class PipelineFactory:
                 'embedder': embedder,
                 'slide_builder': slide_builder,
                 'package_writer': package_writer,
-                'converter': converter
+                'converter': converter,
             }
 
         except Exception as e:
@@ -233,7 +239,7 @@ class PipelineFactory:
         return PipelineFactory.create_converter(config)
 
     @staticmethod
-    def validate_pipeline(pipeline: Dict[str, Any]) -> bool:
+    def validate_pipeline(pipeline: dict[str, Any]) -> bool:
         """
         Validate pipeline components.
 

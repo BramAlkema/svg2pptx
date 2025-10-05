@@ -13,13 +13,19 @@ Key Features:
 - Error handling and validation reporting
 """
 
-from typing import List, Optional
 import re
+from typing import List, Optional
+
 from lxml import etree
 
 from .core import (
-    AnimationDefinition, AnimationTiming, AnimationType, FillMode,
-    TransformType, CalcMode, AnimationSummary
+    AnimationDefinition,
+    AnimationSummary,
+    AnimationTiming,
+    AnimationType,
+    CalcMode,
+    FillMode,
+    TransformType,
 )
 
 
@@ -37,11 +43,11 @@ class SMILParser:
         self._namespace_map = {
             'svg': 'http://www.w3.org/2000/svg',
             'smil': 'http://www.w3.org/2001/SMIL20/',
-            'xlink': 'http://www.w3.org/1999/xlink'
+            'xlink': 'http://www.w3.org/1999/xlink',
         }
         self.svg_namespace = self._namespace_map['svg']
 
-    def parse_svg_animations(self, svg_element: etree.Element) -> List[AnimationDefinition]:
+    def parse_svg_animations(self, svg_element: etree.Element) -> list[AnimationDefinition]:
         """
         Parse all SMIL animations from an SVG element.
 
@@ -73,10 +79,10 @@ class SMILParser:
 
         return animations
 
-    def _find_animation_elements(self, svg_element: etree.Element) -> List[etree.Element]:
+    def _find_animation_elements(self, svg_element: etree.Element) -> list[etree.Element]:
         """Find all animation elements in the SVG."""
         animation_tags = [
-            'animate', 'animateTransform', 'animateColor', 'animateMotion', 'set'
+            'animate', 'animateTransform', 'animateColor', 'animateMotion', 'set',
         ]
 
         elements = []
@@ -89,7 +95,7 @@ class SMILParser:
 
         return elements
 
-    def _parse_animation_element(self, element: etree.Element) -> Optional[AnimationDefinition]:
+    def _parse_animation_element(self, element: etree.Element) -> AnimationDefinition | None:
         """
         Parse a single animation element.
 
@@ -149,21 +155,21 @@ class SMILParser:
             calc_mode=calc_mode,
             transform_type=transform_type,
             additive=additive,
-            accumulate=accumulate
+            accumulate=accumulate,
         )
 
-    def _get_animation_type(self, tag_name: str) -> Optional[AnimationType]:
+    def _get_animation_type(self, tag_name: str) -> AnimationType | None:
         """Map element tag to AnimationType."""
         type_map = {
             'animate': AnimationType.ANIMATE,
             'animateTransform': AnimationType.ANIMATE_TRANSFORM,
             'animateColor': AnimationType.ANIMATE_COLOR,
             'animateMotion': AnimationType.ANIMATE_MOTION,
-            'set': AnimationType.SET
+            'set': AnimationType.SET,
         }
         return type_map.get(tag_name)
 
-    def _get_target_element_id(self, element: etree.Element) -> Optional[str]:
+    def _get_target_element_id(self, element: etree.Element) -> str | None:
         """Extract target element ID from animation element."""
         # Check for href attribute (most common)
         href = element.get('href') or element.get('{http://www.w3.org/1999/xlink}href')
@@ -184,7 +190,7 @@ class SMILParser:
 
         return None
 
-    def _parse_animation_values(self, element: etree.Element, animation_type: AnimationType) -> List[str]:
+    def _parse_animation_values(self, element: etree.Element, animation_type: AnimationType) -> list[str]:
         """Parse animation values from various SMIL attributes."""
         # For animateMotion, get the path attribute
         if animation_type == AnimationType.ANIMATE_MOTION:
@@ -253,7 +259,7 @@ class SMILParser:
             begin=begin,
             duration=duration,
             repeat_count=repeat_count,
-            fill_mode=fill_mode
+            fill_mode=fill_mode,
         )
 
     def _parse_time_value(self, time_str: str) -> float:
@@ -282,7 +288,7 @@ class SMILParser:
         # Default to 0 for unparseable values
         return 0.0
 
-    def _parse_key_times(self, element: etree.Element) -> Optional[List[float]]:
+    def _parse_key_times(self, element: etree.Element) -> list[float] | None:
         """Parse keyTimes attribute."""
         key_times_attr = element.get('keyTimes')
         if not key_times_attr:
@@ -300,7 +306,7 @@ class SMILParser:
             self.animation_summary.add_warning("Invalid keyTimes format")
             return None
 
-    def _parse_key_splines(self, element: etree.Element) -> Optional[List[List[float]]]:
+    def _parse_key_splines(self, element: etree.Element) -> list[list[float]] | None:
         """Parse keySplines attribute."""
         key_splines_attr = element.get('keySplines')
         if not key_splines_attr:
@@ -333,11 +339,11 @@ class SMILParser:
             'linear': CalcMode.LINEAR,
             'discrete': CalcMode.DISCRETE,
             'paced': CalcMode.PACED,
-            'spline': CalcMode.SPLINE
+            'spline': CalcMode.SPLINE,
         }
         return calc_mode_map.get(calc_mode_attr, CalcMode.LINEAR)
 
-    def _parse_transform_type(self, element: etree.Element, animation_type: AnimationType) -> Optional[TransformType]:
+    def _parse_transform_type(self, element: etree.Element, animation_type: AnimationType) -> TransformType | None:
         """Parse type attribute for animateTransform elements."""
         if animation_type != AnimationType.ANIMATE_TRANSFORM:
             return None
@@ -349,7 +355,7 @@ class SMILParser:
             'rotate': TransformType.ROTATE,
             'skewx': TransformType.SKEWX,
             'skewy': TransformType.SKEWY,
-            'matrix': TransformType.MATRIX
+            'matrix': TransformType.MATRIX,
         }
         return type_map.get(type_attr)
 
@@ -386,7 +392,7 @@ class SMILParser:
         """Reset animation summary for new parsing session."""
         self.animation_summary = AnimationSummary()
 
-    def validate_animation_structure(self, animations: List[AnimationDefinition]) -> List[str]:
+    def validate_animation_structure(self, animations: list[AnimationDefinition]) -> list[str]:
         """
         Validate the overall structure of parsed animations.
 
@@ -429,7 +435,7 @@ class SMILParser:
                                 if self._animations_overlap(anim1, anim2):
                                     warnings.append(
                                         f"Overlapping animations on {element_id}.{attr} "
-                                        f"may cause conflicts"
+                                        f"may cause conflicts",
                                     )
 
         return warnings

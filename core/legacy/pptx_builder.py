@@ -6,11 +6,11 @@ Creates PPTX files by manually building the ZIP structure
 and injecting DrawingML shapes directly into slide XML.
 """
 
-import zipfile
-import tempfile
 import shutil
+import tempfile
+import zipfile
 from pathlib import Path
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 if TYPE_CHECKING:
     from ..units import UnitConverter
@@ -37,7 +37,7 @@ class PPTXBuilder:
             self.slide_width = 9144000   # 10 inches in EMUs
             self.slide_height = 6858000  # 7.5 inches in EMUs
 
-        self.images: List[Tuple[str, str, str]] = []  # (embed_id, file_path, extension)
+        self.images: list[tuple[str, str, str]] = []  # (embed_id, file_path, extension)
         self.next_rel_id = 10  # Start relationship IDs from rId10
         self._next_shape_id = 1000  # simple local id counter for shapes
 
@@ -488,7 +488,7 @@ class PPTXBuilder:
                 raise ValueError(
                     f"No unit converter available and values are not numeric: "
                     f"x='{x}', y='{y}', width='{width}', height='{height}'. "
-                    f"Either provide a UnitConverter or use numeric EMU values."
+                    f"Either provide a UnitConverter or use numeric EMU values.",
                 )
 
         # PowerPoint wants a unique shape id per picture

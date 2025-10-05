@@ -6,8 +6,8 @@ Provides components for integrating mapped IR elements into PowerPoint slides.
 """
 
 from .embedder import DrawingMLEmbedder, EmbedderResult, EmbeddingError, create_embedder
+from .package_writer import PackageError, PackageWriter, create_package_writer
 from .slide_builder import SlideBuilder, SlideTemplate
-from .package_writer import PackageWriter, PackageError, create_package_writer
 
 __all__ = [
     "DrawingMLEmbedder",

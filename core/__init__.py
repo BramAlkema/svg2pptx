@@ -26,8 +26,8 @@ __author__ = "SVG2PPTX Core Team"
 
 # Core components
 from .ir import *
-from .policy import *
 from .multipage import *
+from .policy import *
 
 __all__ = [
     # IR types

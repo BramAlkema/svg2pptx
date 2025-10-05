@@ -7,8 +7,8 @@ Generates EMF blobs that can be embedded in PowerPoint presentations.
 """
 
 import struct
-from typing import List
 from enum import IntEnum
+from typing import List
 
 
 class EMFRecordType(IntEnum):
@@ -147,7 +147,7 @@ class EMFBlob:
         """
         self.width = width
         self.height = height
-        self.records: List[bytes] = []
+        self.records: list[bytes] = []
         self.object_handles = []
         self.next_handle = 1
 
@@ -229,7 +229,7 @@ class EMFBlob:
             "vertical": EMFHatchStyle.HS_VERTICAL,
             "diagonal": EMFHatchStyle.HS_FDIAGONAL,
             "cross": EMFHatchStyle.HS_CROSS,
-            "diagcross": EMFHatchStyle.HS_DIAGCROSS
+            "diagcross": EMFHatchStyle.HS_DIAGCROSS,
         }
 
         hatch_style = hatch_map.get(pattern, EMFHatchStyle.HS_HORIZONTAL)
@@ -464,20 +464,20 @@ def create_pattern_tile(pattern_type: str, **kwargs) -> EMFBlob:
         brush = emf.add_hatch(
             pattern=kwargs.get('direction', 'horizontal'),
             color=kwargs.get('color', 0x000000),
-            background=kwargs.get('background', 0xFFFFFF)
+            background=kwargs.get('background', 0xFFFFFF),
         )
     elif pattern_type == "crosshatch":
         brush = emf.add_crosshatch(
             spacing=kwargs.get('spacing', 10),
             color=kwargs.get('color', 0x000000),
-            background=kwargs.get('background', 0xFFFFFF)
+            background=kwargs.get('background', 0xFFFFFF),
         )
     elif pattern_type == "dots":
         brush = emf.add_hex_dots(
             radius=kwargs.get('radius', 5),
             spacing=kwargs.get('spacing', 15),
             color=kwargs.get('color', 0x000000),
-            background=kwargs.get('background', 0xFFFFFF)
+            background=kwargs.get('background', 0xFFFFFF),
         )
     elif pattern_type == "grid":
         brush = emf.add_grid(
@@ -485,7 +485,7 @@ def create_pattern_tile(pattern_type: str, **kwargs) -> EMFBlob:
             cell_height=kwargs.get('cell_height', 20),
             line_width=kwargs.get('line_width', 1),
             color=kwargs.get('color', 0x000000),
-            background=kwargs.get('background', 0xFFFFFF)
+            background=kwargs.get('background', 0xFFFFFF),
         )
     elif pattern_type == "brick":
         brush = emf.add_brick(
@@ -493,7 +493,7 @@ def create_pattern_tile(pattern_type: str, **kwargs) -> EMFBlob:
             brick_height=kwargs.get('brick_height', 15),
             mortar_width=kwargs.get('mortar_width', 2),
             color=kwargs.get('color', 0x8B4513),
-            mortar_color=kwargs.get('mortar_color', 0xD3D3D3)
+            mortar_color=kwargs.get('mortar_color', 0xD3D3D3),
         )
     else:
         raise ValueError(f"Unknown pattern type: {pattern_type}")

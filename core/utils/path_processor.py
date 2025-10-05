@@ -12,10 +12,10 @@ Consolidates:
 - DrawingML path generation
 """
 
-import re
 import math
-from typing import List, Tuple, Optional
+import re
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 # Integration with modern PathSystem
 try:
@@ -38,20 +38,20 @@ class PathPoint:
     """
     x: float
     y: float
-    angle: Optional[float] = None        # Tangent angle in degrees (for text paths)
-    distance: Optional[float] = None     # Distance along path from start (for text paths)
+    angle: float | None = None        # Tangent angle in degrees (for text paths)
+    distance: float | None = None     # Distance along path from start (for text paths)
 
-    def get_normal_point(self, offset: float) -> Tuple[float, float]:
+    def get_normal_point(self, offset: float) -> tuple[float, float]:
         """Get point offset perpendicular to path (requires angle)."""
         if self.angle is None:
             raise ValueError("PathPoint angle required for normal calculation")
         angle_rad = math.radians(self.angle + 90)  # Perpendicular angle
         return (
             self.x + offset * math.cos(angle_rad),
-            self.y + offset * math.sin(angle_rad)
+            self.y + offset * math.sin(angle_rad),
         )
 
-    def to_simple_tuple(self) -> Tuple[float, float]:
+    def to_simple_tuple(self) -> tuple[float, float]:
         """Convert to simple (x, y) tuple for basic operations."""
         return (self.x, self.y)
 
@@ -66,7 +66,7 @@ class PathCommand:
     - Various preprocessing modules (path parsing)
     """
     command: str  # moveTo, lineTo, curveTo, closePath, or SVG command letters
-    points: List[PathPoint]
+    points: list[PathPoint]
     relative: bool = False
 
     def to_drawingml(self, scale: float = 1.0) -> str:
@@ -129,7 +129,7 @@ class PathProcessor:
         # Shape-to-path conversion constants
         self.circle_segments = 8  # Number of segments for circle approximation
 
-    def parse_path_string(self, path_data: str) -> List[PathCommand]:
+    def parse_path_string(self, path_data: str) -> list[PathCommand]:
         """
         Parse SVG path string into PathCommand objects.
 
@@ -174,8 +174,8 @@ class PathProcessor:
 
         return commands
 
-    def _create_path_command(self, command: str, coords: List[float],
-                           current_pos: PathPoint) -> Optional[PathCommand]:
+    def _create_path_command(self, command: str, coords: list[float],
+                           current_pos: PathPoint) -> PathCommand | None:
         """Create PathCommand from SVG command and coordinates."""
         if not coords and command.upper() != 'Z':
             return None
@@ -217,7 +217,7 @@ class PathProcessor:
                 points = [
                     PathPoint(cp1_x, cp1_y),
                     PathPoint(cp2_x, cp2_y),
-                    PathPoint(end_x, end_y)
+                    PathPoint(end_x, end_y),
                 ]
 
         elif cmd_upper == 'Z':  # ClosePath
@@ -227,7 +227,7 @@ class PathProcessor:
 
         return PathCommand(command, points, is_relative)
 
-    def commands_to_path_string(self, commands: List[PathCommand], precision: int = 3) -> str:
+    def commands_to_path_string(self, commands: list[PathCommand], precision: int = 3) -> str:
         """
         Convert PathCommand objects back to SVG path string.
 
@@ -314,7 +314,7 @@ class PathProcessor:
                 PathCommand('L', [PathPoint(x + width, y)]),
                 PathCommand('L', [PathPoint(x + width, y + height)]),
                 PathCommand('L', [PathPoint(x, y + height)]),
-                PathCommand('Z', [])
+                PathCommand('Z', []),
             ]
         else:
             # Rounded rectangle (simplified implementation)
@@ -331,7 +331,7 @@ class PathProcessor:
                 PathCommand('L', [PathPoint(x + rx, y + height)]),
                 PathCommand('L', [PathPoint(x, y + height - ry)]),
                 PathCommand('L', [PathPoint(x, y + ry)]),
-                PathCommand('Z', [])
+                PathCommand('Z', []),
             ]
 
         return self.commands_to_path_string(commands, precision)
@@ -359,24 +359,24 @@ class PathProcessor:
             PathCommand('C', [
                 PathPoint(cx + r, cy + r * k),
                 PathPoint(cx + r * k, cy + r),
-                PathPoint(cx, cy + r)
+                PathPoint(cx, cy + r),
             ]),
             PathCommand('C', [
                 PathPoint(cx - r * k, cy + r),
                 PathPoint(cx - r, cy + r * k),
-                PathPoint(cx - r, cy)
+                PathPoint(cx - r, cy),
             ]),
             PathCommand('C', [
                 PathPoint(cx - r, cy - r * k),
                 PathPoint(cx - r * k, cy - r),
-                PathPoint(cx, cy - r)
+                PathPoint(cx, cy - r),
             ]),
             PathCommand('C', [
                 PathPoint(cx + r * k, cy - r),
                 PathPoint(cx + r, cy - r * k),
-                PathPoint(cx + r, cy)
+                PathPoint(cx + r, cy),
             ]),
-            PathCommand('Z', [])
+            PathCommand('Z', []),
         ]
 
         return self.commands_to_path_string(commands, precision)
@@ -405,24 +405,24 @@ class PathProcessor:
             PathCommand('C', [
                 PathPoint(cx + rx, cy + ky),
                 PathPoint(cx + kx, cy + ry),
-                PathPoint(cx, cy + ry)
+                PathPoint(cx, cy + ry),
             ]),
             PathCommand('C', [
                 PathPoint(cx - kx, cy + ry),
                 PathPoint(cx - rx, cy + ky),
-                PathPoint(cx - rx, cy)
+                PathPoint(cx - rx, cy),
             ]),
             PathCommand('C', [
                 PathPoint(cx - rx, cy - ky),
                 PathPoint(cx - kx, cy - ry),
-                PathPoint(cx, cy - ry)
+                PathPoint(cx, cy - ry),
             ]),
             PathCommand('C', [
                 PathPoint(cx + kx, cy - ry),
                 PathPoint(cx + rx, cy - ky),
-                PathPoint(cx + rx, cy)
+                PathPoint(cx + rx, cy),
             ]),
-            PathCommand('Z', [])
+            PathCommand('Z', []),
         ]
 
         return self.commands_to_path_string(commands, precision)
@@ -444,7 +444,7 @@ class PathProcessor:
         """
         commands = [
             PathCommand('M', [PathPoint(x1, y1)]),
-            PathCommand('L', [PathPoint(x2, y2)])
+            PathCommand('L', [PathPoint(x2, y2)]),
         ]
 
         return self.commands_to_path_string(commands, precision)
@@ -475,7 +475,7 @@ class PathProcessor:
         # Reconstruct optimized path
         return self.commands_to_path_string(commands, precision)
 
-    def _remove_redundant_commands(self, commands: List[PathCommand]) -> List[PathCommand]:
+    def _remove_redundant_commands(self, commands: list[PathCommand]) -> list[PathCommand]:
         """Remove redundant move and line commands."""
         if not commands:
             return commands
@@ -502,7 +502,7 @@ class PathProcessor:
 
         return optimized
 
-    def _merge_consecutive_lines(self, commands: List[PathCommand]) -> List[PathCommand]:
+    def _merge_consecutive_lines(self, commands: list[PathCommand]) -> list[PathCommand]:
         """Merge consecutive line commands in same direction."""
         if len(commands) < 2:
             return commands
@@ -538,7 +538,7 @@ class PathProcessor:
                         (p2.y - p1.y) * (p3.x - p1.x))
         return abs(cross_product) < tolerance
 
-    def generate_drawingml_path(self, commands: List[PathCommand], scale: float = 1.0) -> str:
+    def generate_drawingml_path(self, commands: list[PathCommand], scale: float = 1.0) -> str:
         """
         Generate complete DrawingML path XML from PathCommand objects.
 
@@ -588,7 +588,7 @@ class PathProcessor:
 path_processor = PathProcessor()
 
 
-def parse_path_string(path_data: str) -> List[PathCommand]:
+def parse_path_string(path_data: str) -> list[PathCommand]:
     """Convenience function for path parsing."""
     return path_processor.parse_path_string(path_data)
 

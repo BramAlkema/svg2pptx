@@ -7,9 +7,10 @@ coordinate transformation through SVG element hierarchies.
 """
 
 import logging
-from typing import List, Tuple, Optional, TYPE_CHECKING
-from lxml import etree as ET
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
 import numpy as np
+from lxml import etree as ET
 
 if TYPE_CHECKING:
     from ..converters.base import ConversionContext, ConverterRegistry
@@ -33,8 +34,12 @@ def create_root_context_with_viewport(svg_root: ET.Element, services: 'Conversio
         ConversionContext with viewport matrix for root element
     """
     try:
-        from ..transforms.matrix_composer import viewport_matrix, needs_normalise, normalise_content_matrix
         from ..converters.base import ConversionContext
+        from ..transforms.matrix_composer import (
+            needs_normalise,
+            normalise_content_matrix,
+            viewport_matrix,
+        )
 
         # Create viewport transformation matrix
         viewport_matrix_transform = viewport_matrix(svg_root, slide_w_emu, slide_h_emu)
@@ -52,7 +57,7 @@ def create_root_context_with_viewport(svg_root: ET.Element, services: 'Conversio
             svg_root=svg_root,
             services=services,
             parent_ctm=None,  # Root has no parent
-            viewport_matrix=viewport_matrix_transform
+            viewport_matrix=viewport_matrix_transform,
         )
 
         return context
@@ -76,8 +81,8 @@ def create_child_context_with_ctm(parent_context: 'ConversionContext', child_ele
         New ConversionContext with proper CTM chain
     """
     try:
-        from ..transforms.matrix_composer import element_ctm
         from ..converters.base import ConversionContext
+        from ..transforms.matrix_composer import element_ctm
 
         # Calculate CTM for child element using parent element's CTM
         child_ctm = element_ctm(child_element, parent_context.element_ctm, parent_context.viewport_matrix)
@@ -87,7 +92,7 @@ def create_child_context_with_ctm(parent_context: 'ConversionContext', child_ele
             svg_root=child_element,
             services=parent_context.services,
             parent_ctm=parent_context.element_ctm,
-            viewport_matrix=parent_context.viewport_matrix
+            viewport_matrix=parent_context.viewport_matrix,
         )
         child_context.element_ctm = child_ctm
 
@@ -127,7 +132,7 @@ def walk_tree_with_ctm(element: ET.Element, context: 'ConversionContext',
         walk_tree_with_ctm(child, child_context, converter_registry, visit_func)
 
 
-def apply_ctm_to_coordinates(ctm: Optional[np.ndarray], points: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+def apply_ctm_to_coordinates(ctm: np.ndarray | None, points: list[tuple[float, float]]) -> list[tuple[float, float]]:
     """
     Apply CTM transformation to a list of coordinate points.
 
@@ -156,7 +161,7 @@ def apply_ctm_to_coordinates(ctm: Optional[np.ndarray], points: List[Tuple[float
         return points  # Return original points on error
 
 
-def transform_point_with_ctm(ctm: Optional[np.ndarray], x: float, y: float) -> Tuple[float, float]:
+def transform_point_with_ctm(ctm: np.ndarray | None, x: float, y: float) -> tuple[float, float]:
     """
     Transform a single point using CTM.
 
@@ -179,7 +184,7 @@ def transform_point_with_ctm(ctm: Optional[np.ndarray], x: float, y: float) -> T
         return x, y
 
 
-def extract_scale_from_ctm(ctm: Optional[np.ndarray], direction: str = 'x') -> float:
+def extract_scale_from_ctm(ctm: np.ndarray | None, direction: str = 'x') -> float:
     """
     Extract scale factor from CTM matrix.
 

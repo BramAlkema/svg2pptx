@@ -1,11 +1,12 @@
 """SVG to PowerPoint text layout conversion."""
 from typing import Tuple
+
 from ..units import EMU_PER_POINT
 
 
 def svg_text_to_ppt_box(svg_x: float, svg_y: float, anchor: str, text: str,
                        font_family: str, font_size_pt: float,
-                       services: 'ConversionServices') -> Tuple[int, int, int, int]:
+                       services: 'ConversionServices') -> tuple[int, int, int, int]:
     """
     Convert SVG baseline-anchored text to PowerPoint top-left textbox.
 

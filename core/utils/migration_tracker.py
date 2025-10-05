@@ -5,11 +5,11 @@ This module provides infrastructure for tracking duplicate code elimination
 and warning about legacy implementations during the consolidation process.
 """
 
+import inspect
 import warnings
-from typing import Dict, List
 from dataclasses import dataclass
 from pathlib import Path
-import inspect
+from typing import Dict, List
 
 
 @dataclass
@@ -28,7 +28,7 @@ class DuplicateWarning:
     """Warning system for marking duplicate implementations."""
 
     # Registry of all known duplicates
-    _duplicate_registry: Dict[str, DuplicateMetadata] = {}
+    _duplicate_registry: dict[str, DuplicateMetadata] = {}
 
     @staticmethod
     def warn_duplicate(canonical_location: str,
@@ -75,16 +75,16 @@ class DuplicateWarning:
             canonical_replacement=canonical_location,
             priority=priority,
             migration_complexity='MEDIUM',  # Default
-            estimated_effort='4h'  # Default
+            estimated_effort='4h',  # Default
         )
 
     @classmethod
-    def get_duplicate_registry(cls) -> Dict[str, DuplicateMetadata]:
+    def get_duplicate_registry(cls) -> dict[str, DuplicateMetadata]:
         """Get registry of all tracked duplicates."""
         return cls._duplicate_registry.copy()
 
     @classmethod
-    def generate_migration_report(cls) -> Dict[str, List[str]]:
+    def generate_migration_report(cls) -> dict[str, list[str]]:
         """Generate report of remaining duplicates by category."""
         report = {}
         for key, metadata in cls._duplicate_registry.items():
@@ -120,7 +120,7 @@ def mark_duplicate(canonical_location: str,
                 canonical_location=canonical_location,
                 replacement_method=replacement_method,
                 category=category,
-                priority=priority
+                priority=priority,
             )
             return func(*args, **kwargs)
 
@@ -150,7 +150,7 @@ def generate_todo_comment(canonical_location: str,
         service=service,
         method=method,
         priority=priority,
-        canonical_implementation=canonical_location
+        canonical_implementation=canonical_location,
     ).strip()
 
 
@@ -168,7 +168,7 @@ MIGRATION_EXAMPLES = {
 def parse_hex_color(self, hex_str: str):
     DuplicateWarning.warn_duplicate('src/color/core.py', 'ColorParser.parse_color_string()', 'color', 'CRITICAL')
     # Legacy implementation continues...
-        '''
+        ''',
     },
     'style': {
         'canonical': 'src/utils/style_parser.py',
@@ -182,7 +182,7 @@ def parse_hex_color(self, hex_str: str):
 def parse_style_attr(self, style_str: str):
     DuplicateWarning.warn_duplicate('src/utils/style_parser.py', 'StyleParser.parse_style_string()', 'style', 'HIGH')
     # Legacy implementation continues...
-        '''
+        ''',
     },
     'coordinate': {
         'canonical': 'src/utils/coordinate_transformer.py',
@@ -196,6 +196,6 @@ def parse_style_attr(self, style_str: str):
 def parse_points(self, points_str: str):
     DuplicateWarning.warn_duplicate('src/utils/coordinate_transformer.py', 'CoordinateTransformer.parse_coordinate_string()', 'coordinate', 'HIGH')
     # Legacy implementation continues...
-        '''
-    }
+        ''',
+    },
 }

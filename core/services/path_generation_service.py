@@ -13,13 +13,13 @@ Key Features:
 - Coordinate system transformation
 """
 
-import re
-import math
-import time
 import logging
-from typing import List, Tuple, Optional, Dict, Any, NamedTuple
+import math
+import re
+import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 # Import Clean Slate components
 from ..ir.font_metadata import FontMetadata
@@ -44,7 +44,7 @@ class PathPoint(NamedTuple):
 class PathCommand:
     """Represents a path command with operation and coordinates."""
     command: str  # moveTo, lineTo, curveTo, closePath
-    points: List[PathPoint]
+    points: list[PathPoint]
 
     def to_drawingml(self, scale: float = 1.0) -> str:
         """Convert to DrawingML path command format."""
@@ -73,7 +73,7 @@ class GlyphOutline:
     glyph_name: str
     path_data: str
     advance_width: float
-    bbox: Tuple[float, float, float, float]
+    bbox: tuple[float, float, float, float]
 
 
 @dataclass
@@ -84,7 +84,7 @@ class PathGenerationResult:
     path_commands_count: int
     optimization_applied: bool
     processing_time_ms: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class PathGenerationService:
@@ -113,7 +113,7 @@ class PathGenerationService:
             'path_precision': 2,
             'curve_smoothing_threshold': 2.0,
             'point_reduction_threshold': 1.0,
-            'max_path_length': 10000
+            'max_path_length': 10000,
         }
 
         # Performance tracking
@@ -121,7 +121,7 @@ class PathGenerationService:
             'total_generations': 0,
             'successful_generations': 0,
             'optimizations_applied': 0,
-            'fallback_paths_created': 0
+            'fallback_paths_created': 0,
         }
 
         # Initialize font system if needed
@@ -132,7 +132,7 @@ class PathGenerationService:
             except ImportError:
                 self.logger.warning("FontSystem not available")
 
-    def generate_text_path(self, text: str, font_families: List[str],
+    def generate_text_path(self, text: str, font_families: list[str],
                           font_size: float, x: float = 0.0, y: float = 0.0) -> PathGenerationResult:
         """
         Generate DrawingML path for text string.
@@ -170,7 +170,7 @@ class PathGenerationService:
 
                     # Apply position and scale transformations
                     transformed_commands = self._apply_transformations(
-                        char_commands, current_x, y, font_size / 1000.0  # Assuming 1000 UPM
+                        char_commands, current_x, y, font_size / 1000.0,  # Assuming 1000 UPM
                     )
 
                     all_path_commands.extend(transformed_commands)
@@ -205,8 +205,8 @@ class PathGenerationService:
                     'font_families': font_families,
                     'font_size': font_size,
                     'optimization_level': self.optimization_level.value,
-                    'fallback_glyphs_used': self.stats['fallback_paths_created']
-                }
+                    'fallback_glyphs_used': self.stats['fallback_paths_created'],
+                },
             )
 
         except Exception as e:
@@ -214,14 +214,14 @@ class PathGenerationService:
             # Return fallback rectangular path
             return self._create_fallback_result(text, font_size, x, y, start_time)
 
-    def _get_font_metadata(self, font_families: List[str], font_size: float) -> FontMetadata:
+    def _get_font_metadata(self, font_families: list[str], font_size: float) -> FontMetadata:
         """Get font metadata for text processing."""
         # Use FontSystem if available for advanced font analysis
         if self.font_system:
             try:
                 return self.font_system.get_font_metadata(
                     font_families[0] if font_families else 'Arial',
-                    size_pt=font_size
+                    size_pt=font_size,
                 )
             except Exception as e:
                 self.logger.debug(f"FontSystem metadata failed: {e}")
@@ -230,10 +230,10 @@ class PathGenerationService:
         from ..ir.font_metadata import create_font_metadata
         return create_font_metadata(
             font_families[0] if font_families else 'Arial',
-            size_pt=font_size
+            size_pt=font_size,
         )
 
-    def _extract_glyph_outlines(self, text: str, font_metadata: FontMetadata) -> List[Tuple[str, Optional[GlyphOutline]]]:
+    def _extract_glyph_outlines(self, text: str, font_metadata: FontMetadata) -> list[tuple[str, GlyphOutline | None]]:
         """Extract glyph outlines for each character in text."""
         glyph_outlines = []
 
@@ -243,7 +243,7 @@ class PathGenerationService:
 
         return glyph_outlines
 
-    def _get_glyph_outline(self, char: str, font_metadata: FontMetadata) -> Optional[GlyphOutline]:
+    def _get_glyph_outline(self, char: str, font_metadata: FontMetadata) -> GlyphOutline | None:
         """Get glyph outline for a specific character."""
         try:
             # Use FontSystem for advanced glyph extraction if available
@@ -267,7 +267,7 @@ class PathGenerationService:
                 glyph_name=f"space_{ord(char)}",
                 path_data="",  # Empty path for space
                 advance_width=advance_width,
-                bbox=(0, 0, advance_width, 0)
+                bbox=(0, 0, advance_width, 0),
             )
         else:
             # Visible character - create rectangular approximation
@@ -279,10 +279,10 @@ class PathGenerationService:
                 glyph_name=f"synthetic_{ord(char)}",
                 path_data=path_data,
                 advance_width=advance_width,
-                bbox=(50, 0, advance_width-50, height)
+                bbox=(50, 0, advance_width-50, height),
             )
 
-    def _convert_glyph_to_commands(self, glyph_outline: GlyphOutline) -> List[PathCommand]:
+    def _convert_glyph_to_commands(self, glyph_outline: GlyphOutline) -> list[PathCommand]:
         """Convert glyph outline to path commands."""
         if not glyph_outline.path_data:
             return []
@@ -293,7 +293,7 @@ class PathGenerationService:
             self.logger.warning(f"Failed to parse glyph path data: {e}")
             return []
 
-    def _parse_svg_path_to_commands(self, path_data: str) -> List[PathCommand]:
+    def _parse_svg_path_to_commands(self, path_data: str) -> list[PathCommand]:
         """Parse SVG path data string into PathCommand objects."""
         commands = []
 
@@ -321,15 +321,15 @@ class PathGenerationService:
                     commands.append(PathCommand('curveTo', [
                         PathPoint(params[0], params[1]),  # Control point 1
                         PathPoint(params[2], params[3]),  # Control point 2
-                        PathPoint(params[4], params[5])   # End point
+                        PathPoint(params[4], params[5]),   # End point
                     ]))
             elif cmd.upper() == 'Z':  # Close path
                 commands.append(PathCommand('closePath', []))
 
         return commands
 
-    def _apply_transformations(self, commands: List[PathCommand], x_offset: float,
-                             y_offset: float, scale: float) -> List[PathCommand]:
+    def _apply_transformations(self, commands: list[PathCommand], x_offset: float,
+                             y_offset: float, scale: float) -> list[PathCommand]:
         """Apply position and scale transformations to path commands."""
         transformed = []
 
@@ -340,7 +340,7 @@ class PathGenerationService:
                 transformed_points = [
                     PathPoint(
                         x=pt.x * scale + x_offset,
-                        y=pt.y * scale + y_offset
+                        y=pt.y * scale + y_offset,
                     )
                     for pt in cmd.points
                 ]
@@ -348,7 +348,7 @@ class PathGenerationService:
 
         return transformed
 
-    def _optimize_path_commands(self, commands: List[PathCommand]) -> List[PathCommand]:
+    def _optimize_path_commands(self, commands: list[PathCommand]) -> list[PathCommand]:
         """Optimize path commands based on optimization level."""
         if self.optimization_level == PathOptimizationLevel.NONE:
             return commands
@@ -365,7 +365,7 @@ class PathGenerationService:
 
         return optimized
 
-    def _remove_redundant_points(self, commands: List[PathCommand]) -> List[PathCommand]:
+    def _remove_redundant_points(self, commands: list[PathCommand]) -> list[PathCommand]:
         """Remove redundant consecutive points."""
         if len(commands) < 2:
             return commands
@@ -381,7 +381,7 @@ class PathGenerationService:
                 current.points and previous.points):
                 dist = math.sqrt(
                     (current.points[0].x - previous.points[0].x) ** 2 +
-                    (current.points[0].y - previous.points[0].y) ** 2
+                    (current.points[0].y - previous.points[0].y) ** 2,
                 )
                 if dist < self.config['point_reduction_threshold']:
                     continue  # Skip this redundant point
@@ -390,13 +390,13 @@ class PathGenerationService:
 
         return optimized
 
-    def _smooth_curves(self, commands: List[PathCommand]) -> List[PathCommand]:
+    def _smooth_curves(self, commands: list[PathCommand]) -> list[PathCommand]:
         """Apply curve smoothing for better visual quality."""
         # Simple curve smoothing implementation
         # In practice, this would use more sophisticated algorithms
         return commands  # Placeholder
 
-    def _generate_drawingml_path(self, commands: List[PathCommand]) -> str:
+    def _generate_drawingml_path(self, commands: list[PathCommand]) -> str:
         """Generate DrawingML path XML from path commands."""
         if not commands:
             return '<a:path w="100" h="100"></a:path>'
@@ -431,7 +431,7 @@ class PathGenerationService:
 {''.join(path_content)}
 </a:path>'''
 
-    def _create_fallback_glyph(self, char: str, x: float, y: float, font_size: float) -> List[PathCommand]:
+    def _create_fallback_glyph(self, char: str, x: float, y: float, font_size: float) -> list[PathCommand]:
         """Create fallback rectangular glyph for missing characters."""
         if char == ' ':
             return []  # Space has no visible path
@@ -445,7 +445,7 @@ class PathGenerationService:
             PathCommand('lineTo', [PathPoint(x + width, y)]),
             PathCommand('lineTo', [PathPoint(x + width, y + height)]),
             PathCommand('lineTo', [PathPoint(x, y + height)]),
-            PathCommand('closePath', [])
+            PathCommand('closePath', []),
         ]
 
     def _create_fallback_result(self, text: str, font_size: float, x: float, y: float,
@@ -469,10 +469,10 @@ class PathGenerationService:
             path_commands_count=5,  # Rectangle + close
             optimization_applied=False,
             processing_time_ms=(time.perf_counter() - start_time) * 1000,
-            metadata={'fallback': True, 'error': 'Path generation failed'}
+            metadata={'fallback': True, 'error': 'Path generation failed'},
         )
 
-    def get_service_statistics(self) -> Dict[str, Any]:
+    def get_service_statistics(self) -> dict[str, Any]:
         """Get service statistics and capabilities."""
         return {
             'statistics': dict(self.stats),
@@ -481,10 +481,10 @@ class PathGenerationService:
                 'font_analysis': self.font_system is not None,
                 'path_optimization': True,
                 'synthetic_glyphs': True,
-                'drawingml_generation': True
+                'drawingml_generation': True,
             },
             'configuration': dict(self.config),
-            'optimization_level': self.optimization_level.value
+            'optimization_level': self.optimization_level.value,
         }
 
 

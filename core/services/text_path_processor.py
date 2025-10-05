@@ -15,15 +15,14 @@ Key Features:
 
 import logging
 import math
-from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
-# Import Clean Slate components
-from ..ir.text_path import (
-    TextPathFrame, TextPathLayout, PathPoint, CharacterPlacement
-)
 from ..ir.font_metadata import FontMetadata, create_font_metadata
 from ..ir.text import EnhancedRun
+
+# Import Clean Slate components
+from ..ir.text_path import CharacterPlacement, PathPoint, TextPathFrame, TextPathLayout
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class TextPathProcessingResult:
     path_coverage: float
     processing_time_ms: float
     complexity_score: int
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class TextPathProcessor:
@@ -100,7 +99,7 @@ class TextPathProcessor:
 
             # Step 3: Calculate character positioning with font metrics
             character_placements = self._calculate_character_positioning(
-                text_path_frame, path_points, path_analysis
+                text_path_frame, path_points, path_analysis,
             )
 
             # Step 4: Create layout result
@@ -111,12 +110,12 @@ class TextPathProcessor:
                 total_path_length=path_analysis['total_length'],
                 layout_time_ms=(time.perf_counter() - start_time) * 1000,
                 method_used="precise_positioning",
-                layout_quality=self._calculate_layout_quality(character_placements, path_analysis)
+                layout_quality=self._calculate_layout_quality(character_placements, path_analysis),
             )
 
             # Step 5: Determine processing method based on complexity
             processing_method = self._determine_processing_method(
-                text_path_frame, path_analysis, character_placements
+                text_path_frame, path_analysis, character_placements,
             )
 
             return TextPathProcessingResult(
@@ -130,15 +129,15 @@ class TextPathProcessor:
                     'path_analysis': path_analysis,
                     'font_system_used': self.font_system is not None,
                     'text_layout_used': self.text_layout_engine is not None,
-                    'path_processor_used': self.path_processor is not None
-                }
+                    'path_processor_used': self.path_processor is not None,
+                },
             )
 
         except Exception as e:
             self.logger.error(f"TextPath processing failed: {e}")
             raise
 
-    def _analyze_path(self, path_data: str) -> Dict[str, Any]:
+    def _analyze_path(self, path_data: str) -> dict[str, Any]:
         """Analyze path complexity and characteristics."""
         try:
             # Basic path analysis (can be enhanced with path_processor)
@@ -147,7 +146,7 @@ class TextPathProcessor:
                 'curve_count': path_data.count('C') + path_data.count('c') + path_data.count('Q') + path_data.count('q'),
                 'has_curves': 'C' in path_data or 'c' in path_data or 'Q' in path_data or 'q' in path_data,
                 'is_closed': 'Z' in path_data or 'z' in path_data,
-                'complexity_score': self._calculate_path_complexity(path_data)
+                'complexity_score': self._calculate_path_complexity(path_data),
             }
 
             # Use path processor if available for detailed analysis
@@ -167,10 +166,10 @@ class TextPathProcessor:
                 'curve_count': 0,
                 'has_curves': False,
                 'is_closed': False,
-                'complexity_score': 1
+                'complexity_score': 1,
             }
 
-    def _sample_path_points(self, path_data: str, path_analysis: Dict[str, Any]) -> List[PathPoint]:
+    def _sample_path_points(self, path_data: str, path_analysis: dict[str, Any]) -> list[PathPoint]:
         """Sample points along path for character positioning."""
         try:
             # Use path processor if available
@@ -178,7 +177,7 @@ class TextPathProcessor:
                 try:
                     return self.path_processor.sample_path_points(
                         path_data,
-                        num_samples=min(200, max(50, int(path_analysis['total_length'] / 2)))
+                        num_samples=min(200, max(50, int(path_analysis['total_length'] / 2))),
                     )
                 except Exception as e:
                     self.logger.debug(f"Path processor sampling failed: {e}")
@@ -191,12 +190,12 @@ class TextPathProcessor:
             # Return minimal fallback path
             return [
                 PathPoint(x=0.0, y=0.0, tangent_angle=0.0, distance_along_path=0.0),
-                PathPoint(x=100.0, y=0.0, tangent_angle=0.0, distance_along_path=100.0)
+                PathPoint(x=100.0, y=0.0, tangent_angle=0.0, distance_along_path=100.0),
             ]
 
     def _calculate_character_positioning(self, text_path_frame: TextPathFrame,
-                                       path_points: List[PathPoint],
-                                       path_analysis: Dict[str, Any]) -> List[CharacterPlacement]:
+                                       path_points: list[PathPoint],
+                                       path_analysis: dict[str, Any]) -> list[CharacterPlacement]:
         """Calculate precise character positioning along path."""
         character_placements = []
         current_distance = text_path_frame.start_offset
@@ -228,7 +227,7 @@ class TextPathProcessor:
                             char_index=char_index,
                             advance_width=advance_width,
                             baseline_offset=text_path_frame.baseline_offset,
-                            rotation=path_point.tangent_degrees if text_path_frame.auto_rotate else 0.0
+                            rotation=path_point.tangent_degrees if text_path_frame.auto_rotate else 0.0,
                         )
                         character_placements.append(placement)
 
@@ -257,7 +256,7 @@ class TextPathProcessor:
             run.font_family,
             weight="700" if run.bold else "400",
             style="italic" if run.italic else "normal",
-            size_pt=run.font_size_pt
+            size_pt=run.font_size_pt,
         )
 
     def _get_character_advance(self, char: str, font_metadata: FontMetadata) -> float:
@@ -294,7 +293,7 @@ class TextPathProcessor:
         else:
             return font_size * 0.6
 
-    def _basic_path_sampling(self, path_data: str, path_analysis: Dict[str, Any]) -> List[PathPoint]:
+    def _basic_path_sampling(self, path_data: str, path_analysis: dict[str, Any]) -> list[PathPoint]:
         """Basic fallback path sampling when path processor unavailable."""
         # Simple line approximation for basic functionality
         num_samples = min(100, max(20, int(path_analysis.get('total_length', 100) / 5)))
@@ -312,13 +311,13 @@ class TextPathProcessor:
                 x=distance,
                 y=0.0,  # Horizontal line approximation
                 tangent_angle=0.0,  # Horizontal tangent
-                distance_along_path=distance
+                distance_along_path=distance,
             )
             points.append(point)
 
         return points
 
-    def _find_path_point_at_distance(self, path_points: List[PathPoint], target_distance: float) -> Optional[PathPoint]:
+    def _find_path_point_at_distance(self, path_points: list[PathPoint], target_distance: float) -> PathPoint | None:
         """Find path point at specific distance along path."""
         if not path_points:
             return None
@@ -361,8 +360,8 @@ class TextPathProcessor:
         score += path_data.count('A') + path_data.count('a')  # Arcs
         return max(1, min(10, score))
 
-    def _calculate_layout_quality(self, character_placements: List[CharacterPlacement],
-                                path_analysis: Dict[str, Any]) -> float:
+    def _calculate_layout_quality(self, character_placements: list[CharacterPlacement],
+                                path_analysis: dict[str, Any]) -> float:
         """Calculate layout quality score (0-1)."""
         if not character_placements:
             return 0.0
@@ -382,8 +381,8 @@ class TextPathProcessor:
         return max(0.0, min(1.0, quality))
 
     def _determine_processing_method(self, text_path_frame: TextPathFrame,
-                                   path_analysis: Dict[str, Any],
-                                   character_placements: List[CharacterPlacement]) -> str:
+                                   path_analysis: dict[str, Any],
+                                   character_placements: list[CharacterPlacement]) -> str:
         """Determine optimal processing method based on complexity."""
 
         # Use positioned characters for simple cases
@@ -401,20 +400,20 @@ class TextPathProcessor:
         else:
             return "emf"
 
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """Get processing statistics and capabilities."""
         return {
             'services_available': {
                 'font_system': self.font_system is not None,
                 'text_layout_engine': self.text_layout_engine is not None,
-                'path_processor': self.path_processor is not None
+                'path_processor': self.path_processor is not None,
             },
             'capabilities': {
                 'precise_font_measurement': self.text_layout_engine is not None,
                 'font_strategy_analysis': self.font_system is not None,
                 'advanced_path_processing': self.path_processor is not None,
-                'basic_text_path_support': True
-            }
+                'basic_text_path_support': True,
+            },
         }
 
 

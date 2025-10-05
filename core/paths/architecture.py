@@ -16,9 +16,9 @@ Key Design Principles:
 4. Error Propagation: Clear error handling chain through all components
 """
 
-from typing import Protocol, List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 
 class PathCommandType(Enum):
@@ -40,7 +40,7 @@ class PathCommand:
     """Represents a single SVG path command with its parameters."""
     command_type: PathCommandType
     is_relative: bool
-    parameters: List[float]
+    parameters: list[float]
     original_command: str  # Original SVG command letter (M, L, C, etc.)
 
 
@@ -76,7 +76,7 @@ class PathBounds:
 class IPathParser(Protocol):
     """Interface for parsing SVG path data into structured commands."""
 
-    def parse_path_data(self, path_data: str) -> List[PathCommand]:
+    def parse_path_data(self, path_data: str) -> list[PathCommand]:
         """
         Parse SVG path data string into structured path commands.
 
@@ -123,7 +123,7 @@ class ICoordinateSystem(Protocol):
         """Get the underlying unit converter for SVG → EMU conversions."""
         ...
 
-    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> Tuple[float, float]:
+    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> tuple[float, float]:
         """
         Convert SVG coordinates to PowerPoint relative coordinates (0-100000 range).
 
@@ -134,7 +134,7 @@ class ICoordinateSystem(Protocol):
         """
         ...
 
-    def calculate_path_bounds(self, commands: List[PathCommand]) -> PathBounds:
+    def calculate_path_bounds(self, commands: list[PathCommand]) -> PathBounds:
         """
         Calculate bounding box for a series of path commands.
 
@@ -143,7 +143,7 @@ class ICoordinateSystem(Protocol):
         ...
 
     def create_conversion_context(self, viewport_width: float, viewport_height: float,
-                                 viewbox: Optional[Tuple[float, float, float, float]] = None,
+                                 viewbox: tuple[float, float, float, float] | None = None,
                                  dpi: float = 96.0) -> Any:  # ConversionContext
         """
         Create a conversion context using existing UnitConverter infrastructure.
@@ -164,7 +164,7 @@ class IArcConverter(Protocol):
 
     def arc_to_bezier_segments(self, start_x: float, start_y: float, rx: float, ry: float,
                               x_axis_rotation: float, large_arc_flag: int, sweep_flag: int,
-                              end_x: float, end_y: float) -> List[BezierSegment]:
+                              end_x: float, end_y: float) -> list[BezierSegment]:
         """
         Convert SVG arc to cubic bezier segments using a2c algorithm.
 
@@ -193,7 +193,7 @@ class IArcConverter(Protocol):
 class IDrawingMLGenerator(Protocol):
     """Interface for generating PowerPoint DrawingML XML."""
 
-    def generate_path_xml(self, commands: List[PathCommand], bounds: PathBounds,
+    def generate_path_xml(self, commands: list[PathCommand], bounds: PathBounds,
                          coordinate_system: ICoordinateSystem, arc_converter: IArcConverter) -> str:
         """
         Generate DrawingML XML for a series of path commands.
@@ -212,7 +212,7 @@ class IDrawingMLGenerator(Protocol):
         """
         ...
 
-    def generate_shape_xml(self, path_xml: str, bounds: PathBounds, style_attributes: Dict[str, Any]) -> str:
+    def generate_shape_xml(self, path_xml: str, bounds: PathBounds, style_attributes: dict[str, Any]) -> str:
         """
         Generate complete PowerPoint shape XML with path and styling.
 
@@ -325,7 +325,7 @@ class PathSystemArchitecture:
         """
 
     @staticmethod
-    def get_component_responsibilities() -> Dict[str, str]:
+    def get_component_responsibilities() -> dict[str, str]:
         """Return detailed component responsibility matrix."""
         return {
             "PathParser": """
@@ -371,5 +371,5 @@ class PathSystemArchitecture:
                 - Component lifecycle management
                 - Error handling coordination
                 - Logging and debugging support
-            """
+            """,
         }

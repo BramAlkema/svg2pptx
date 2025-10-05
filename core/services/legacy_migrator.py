@@ -25,22 +25,22 @@ class LegacyMigrator:
             (
                 r'(\s+)(\w+\s*=\s*)UnitConverter\(\)',
                 r'\1\2services.unit_converter',
-                "Migrate: UnitConverter() -> services.unit_converter"
+                "Migrate: UnitConverter() -> services.unit_converter",
             ),
             (
                 r'(\s+)(\w+\s*=\s*)TransformEngine\(\)',
                 r'\1\2services.transform_parser',
-                "Migrate: TransformEngine() -> services.transform_parser"
+                "Migrate: TransformEngine() -> services.transform_parser",
             ),
             (
                 r'(\s+)(\w+\s*=\s*)StyleParser\(\)',
                 r'\1\2services.style_parser',
-                "Migrate: StyleParser() -> services.style_parser"
+                "Migrate: StyleParser() -> services.style_parser",
             ),
             (
                 r'(\s+)(\w+\s*=\s*)CoordinateTransformer\(\)',
                 r'\1\2services.coordinate_transformer',
-                "Migrate: CoordinateTransformer() -> services.coordinate_transformer"
+                "Migrate: CoordinateTransformer() -> services.coordinate_transformer",
             ),
 
             # Import patterns - more complex, require manual handling
@@ -103,7 +103,7 @@ class LegacyMigrator:
 
         return '\n'.join(lines)
 
-    def migrate_high_priority_files(self) -> Dict[str, bool]:
+    def migrate_high_priority_files(self) -> dict[str, bool]:
         """Migrate high-priority files identified by the analyzer."""
         high_priority_files = [
             "src/fractional_emu.py",
@@ -117,7 +117,7 @@ class LegacyMigrator:
             "src/preprocessing/geometry_plugins.py",
             "src/preprocessing/advanced_plugins.py",
             "src/performance/cache.py",
-            "src/services/viewport_service.py"
+            "src/services/viewport_service.py",
         ]
 
         results = {}

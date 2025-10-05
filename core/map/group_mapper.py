@@ -6,13 +6,13 @@ Maps IR.Group elements to DrawingML or EMF with intelligent flattening
 and nested structure handling.
 """
 
-import time
 import logging
-from typing import Dict, Any, Optional
+import time
+from typing import Any, Dict, Optional
 
-from ..ir import IRElement, Group, Path, TextFrame, Image
-from ..policy import Policy, GroupDecision
-from .base import Mapper, MapperResult, OutputFormat, MappingError
+from ..ir import Group, Image, IRElement, Path, TextFrame
+from ..policy import GroupDecision, Policy
+from .base import Mapper, MapperResult, MappingError, OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class GroupMapper(Mapper):
     and group-level clipping and transforms.
     """
 
-    def __init__(self, policy: Policy, child_mappers: Dict[str, Mapper] = None):
+    def __init__(self, policy: Policy, child_mappers: dict[str, Mapper] = None):
         """
         Initialize group mapper.
 
@@ -116,11 +116,11 @@ class GroupMapper(Mapper):
                     'nesting_depth': 0,  # Flattened
                     'group_strategy': 'flattened',
                     'child_count': len(child_results),
-                    'flattening_applied': True
+                    'flattening_applied': True,
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.9,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -186,11 +186,11 @@ class GroupMapper(Mapper):
                     'group_strategy': 'nested',
                     'child_count': len(child_xmls),
                     'has_opacity': group.opacity < 1.0,
-                    'has_clipping': group.clip is not None
+                    'has_clipping': group.clip is not None,
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.85,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -245,17 +245,17 @@ class GroupMapper(Mapper):
                     'element_count': len(group.children),
                     'nesting_depth': decision.nesting_depth,
                     'bbox': bbox,
-                    'emf_required': True
+                    'emf_required': True,
                 },
                 estimated_quality=0.98,  # EMF preserves full fidelity
                 estimated_performance=0.8,   # Slower than native
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
             raise MappingError(f"Failed to generate EMF for group: {e}", group, e)
 
-    def _get_child_mapper(self, child: IRElement) -> Optional[Mapper]:
+    def _get_child_mapper(self, child: IRElement) -> Mapper | None:
         """Get appropriate mapper for child element"""
         if isinstance(child, Path):
             return self.child_mappers.get('path')
@@ -277,7 +277,7 @@ class GroupMapper(Mapper):
         # with clipping preprocessing results
         return f'<!-- Group clipping: {clip_ref.clip_id} -->'
 
-    def set_child_mappers(self, mappers: Dict[str, Mapper]) -> None:
+    def set_child_mappers(self, mappers: dict[str, Mapper]) -> None:
         """Set child element mappers"""
         self.child_mappers.update(mappers)
 
@@ -285,18 +285,18 @@ class GroupMapper(Mapper):
         """Check if group mapper supports flattening optimization"""
         return True
 
-    def get_flattening_statistics(self) -> Dict[str, int]:
+    def get_flattening_statistics(self) -> dict[str, int]:
         """Get group flattening statistics"""
         stats = self.get_statistics()
         return {
             'total_groups': stats['total_mapped'],
             'flattened_groups': stats.get('flattened_count', 0),
             'nested_groups': stats.get('nested_count', 0),
-            'emf_groups': stats['emf_count']
+            'emf_groups': stats['emf_count'],
         }
 
 
-def create_group_mapper(policy: Policy, child_mappers: Dict[str, Mapper] = None) -> GroupMapper:
+def create_group_mapper(policy: Policy, child_mappers: dict[str, Mapper] = None) -> GroupMapper:
     """
     Create GroupMapper with policy engine and child mappers.
 

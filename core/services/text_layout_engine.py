@@ -14,9 +14,9 @@ Key Features:
 """
 
 import logging
-from typing import Tuple, Dict, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, Tuple
 
 from ..ir.font_metadata import FontMetadata, FontMetrics
 from ..ir.geometry import Point, Rect
@@ -87,7 +87,7 @@ class TextLayoutResult:
             x=float(self.x_emu),
             y=float(self.y_emu),
             width=float(self.width_emu),
-            height=float(self.height_emu)
+            height=float(self.height_emu),
         )
 
     @property
@@ -95,7 +95,7 @@ class TextLayoutResult:
         """Get center point of text box."""
         return Point(
             x=self.x_emu + (self.width_emu // 2),
-            y=self.y_emu + (self.height_emu // 2)
+            y=self.y_emu + (self.height_emu // 2),
         )
 
     @property
@@ -125,7 +125,7 @@ class TextLayoutEngine:
         """
         self._unit_converter = unit_converter
         self._font_processor = font_processor
-        self._measurement_cache: Dict[str, TextMeasurements] = {}
+        self._measurement_cache: dict[str, TextMeasurements] = {}
 
         logger.debug("TextLayoutEngine initialized")
 
@@ -135,7 +135,7 @@ class TextLayoutEngine:
         svg_y: float,
         text: str,
         font_metadata: FontMetadata,
-        anchor: TextAnchor = TextAnchor.START
+        anchor: TextAnchor = TextAnchor.START,
     ) -> TextLayoutResult:
         """
         Calculate precise text layout for PowerPoint placement.
@@ -172,7 +172,7 @@ class TextLayoutEngine:
 
             # Step 6: Apply text anchor adjustment
             x_left_emu = self._apply_text_anchor(
-                baseline_x_emu, measurements.width_emu, anchor
+                baseline_x_emu, measurements.width_emu, anchor,
             )
 
             # Step 7: Create result
@@ -192,7 +192,7 @@ class TextLayoutEngine:
                 baseline_x_emu=baseline_x_emu,
                 baseline_y_emu=baseline_y_emu,
                 ascent_emu=ascent_emu,
-                descent_emu=descent_emu
+                descent_emu=descent_emu,
             )
 
             logger.debug(f"Text layout calculated in {layout_time:.2f}ms: "
@@ -204,7 +204,7 @@ class TextLayoutEngine:
             logger.error(f"Text layout calculation failed: {e}")
             raise
 
-    def _convert_svg_to_emu(self, svg_x: float, svg_y: float) -> Tuple[int, int]:
+    def _convert_svg_to_emu(self, svg_x: float, svg_y: float) -> tuple[int, int]:
         """
         Convert SVG coordinates to EMU units.
 
@@ -252,7 +252,7 @@ class TextLayoutEngine:
                     return FontMetrics(
                         ascent=getattr(processor_metrics, 'ascent', 0.8),
                         descent=getattr(processor_metrics, 'descent', 0.2),
-                        line_height=getattr(processor_metrics, 'line_height', 1.2)
+                        line_height=getattr(processor_metrics, 'line_height', 1.2),
                     )
             except Exception as e:
                 logger.debug(f"Font processor metrics failed: {e}")
@@ -264,7 +264,7 @@ class TextLayoutEngine:
         self,
         text: str,
         font_metadata: FontMetadata,
-        font_metrics: FontMetrics
+        font_metrics: FontMetrics,
     ) -> TextMeasurements:
         """
         Measure text dimensions.
@@ -289,7 +289,7 @@ class TextLayoutEngine:
                 hasattr(self._font_processor, 'measure_text_width')):
             try:
                 width_pt = self._font_processor.measure_text_width(
-                    text, font_metadata.family, font_metadata.size_pt
+                    text, font_metadata.family, font_metadata.size_pt,
                 )
                 measurement_method = "font_processor"
                 confidence = 0.95
@@ -328,7 +328,7 @@ class TextLayoutEngine:
             baseline_offset_pt=baseline_offset_pt,
             baseline_offset_emu=baseline_offset_emu,
             measurement_method=measurement_method,
-            confidence=confidence
+            confidence=confidence,
         )
 
         # Cache result
@@ -358,7 +358,7 @@ class TextLayoutEngine:
     def measure_text_only(
         self,
         text: str,
-        font_metadata: FontMetadata
+        font_metadata: FontMetadata,
     ) -> TextMeasurements:
         """
         Measure text dimensions without full layout calculation.
@@ -378,11 +378,11 @@ class TextLayoutEngine:
         self._measurement_cache.clear()
         logger.debug("Text measurement cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get measurement cache statistics."""
         return {
             "cache_size": len(self._measurement_cache),
-            "cache_enabled": True
+            "cache_enabled": True,
         }
 
 
@@ -409,8 +409,8 @@ def svg_text_to_ppt_box_modern(
     text: str,
     font_family: str,
     font_size_pt: float,
-    services=None
-) -> Tuple[int, int, int, int]:
+    services=None,
+) -> tuple[int, int, int, int]:
     """
     Modern replacement for legacy svg_text_to_ppt_box function.
 
@@ -423,7 +423,7 @@ def svg_text_to_ppt_box_modern(
     anchor_map = {
         'start': TextAnchor.START,
         'middle': TextAnchor.MIDDLE,
-        'end': TextAnchor.END
+        'end': TextAnchor.END,
     }
     text_anchor = anchor_map.get(anchor, TextAnchor.START)
 
@@ -439,7 +439,7 @@ def svg_text_to_ppt_box_modern(
 
     # Calculate layout
     result = layout_engine.calculate_text_layout(
-        svg_x, svg_y, text, font_metadata, text_anchor
+        svg_x, svg_y, text, font_metadata, text_anchor,
     )
 
     # Return in legacy format

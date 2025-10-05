@@ -7,14 +7,17 @@ Leverages the new Clean Slate FontSystem and TextLayoutEngine for enhanced text 
 """
 
 import logging
-from typing import Dict, Any, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, Tuple
 
 # Import Clean Slate text processing services
 try:
-    from ..services.font_system import FontSystem, FontAnalysisResult
-    from ..services.text_layout_engine import TextLayoutEngine, svg_text_to_ppt_box_modern
     from ..ir.font_metadata import create_font_metadata
+    from ..services.font_system import FontAnalysisResult, FontSystem
+    from ..services.text_layout_engine import (
+        TextLayoutEngine,
+        svg_text_to_ppt_box_modern,
+    )
     CLEAN_SLATE_AVAILABLE = True
 except ImportError:
     CLEAN_SLATE_AVAILABLE = False
@@ -29,7 +32,7 @@ except ImportError:
     LEGACY_SYSTEM_AVAILABLE = False
     logging.warning("Legacy text system not available")
 
-from ..ir import TextFrame, RichTextFrame, TextAnchor
+from ..ir import RichTextFrame, TextAnchor, TextFrame
 
 
 @dataclass
@@ -39,7 +42,7 @@ class TextProcessingResult:
     layout_method: str  # native_dml, emf_fallback, adapter_enhanced
     font_metrics_used: bool
     text_layout_applied: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class TextProcessingAdapter:
@@ -160,7 +163,7 @@ class TextProcessingAdapter:
                         run.font_family,
                         weight="700" if run.bold else "400",
                         style="italic" if run.italic else "normal",
-                        size_pt=run.font_size_pt
+                        size_pt=run.font_size_pt,
                     )
 
                     # Analyze font using FontSystem
@@ -171,7 +174,7 @@ class TextProcessingAdapter:
                         'strategy': analysis_result.recommended_strategy.value,
                         'confidence': analysis_result.confidence,
                         'availability': getattr(analysis_result, 'availability', None),
-                        'notes': analysis_result.notes
+                        'notes': analysis_result.notes,
                     }
                     font_analysis_used = True
 
@@ -189,7 +192,7 @@ class TextProcessingAdapter:
                     # Create font metadata for layout
                     font_metadata = create_font_metadata(
                         run.font_family,
-                        size_pt=run.font_size_pt
+                        size_pt=run.font_size_pt,
                     )
 
                     # Calculate precise layout using TextLayoutEngine
@@ -198,7 +201,7 @@ class TextProcessingAdapter:
                         svg_y=text_frame.bbox.y,
                         text=run.text,
                         font_metadata=font_metadata,
-                        anchor=text_frame.anchor
+                        anchor=text_frame.anchor,
                     )
 
                     enhanced_positioning[f'run_{i}'] = {
@@ -208,7 +211,7 @@ class TextProcessingAdapter:
                         'height_emu': layout_result.height_emu,
                         'baseline_x_emu': layout_result.baseline_x_emu,
                         'baseline_y_emu': layout_result.baseline_y_emu,
-                        'layout_time_ms': layout_result.layout_time_ms
+                        'layout_time_ms': layout_result.layout_time_ms,
                     }
                     text_layout_applied = True
 
@@ -219,7 +222,7 @@ class TextProcessingAdapter:
         # Step 3: Generate enhanced XML with Clean Slate improvements
         if font_analysis_used or text_layout_applied:
             xml_content = self._generate_clean_slate_xml(
-                text_frame, enhanced_font_analysis, enhanced_positioning, base_xml
+                text_frame, enhanced_font_analysis, enhanced_positioning, base_xml,
             )
             layout_method = "clean_slate_enhanced"
         else:
@@ -238,8 +241,8 @@ class TextProcessingAdapter:
                 'run_count': len(runs),
                 'processing_method': 'clean_slate',
                 'font_system_used': font_analysis_used,
-                'text_layout_engine_used': text_layout_applied
-            }
+                'text_layout_engine_used': text_layout_applied,
+            },
         )
 
     def _process_with_legacy_system(self, text_frame: TextFrame, base_xml: str) -> TextProcessingResult:
@@ -257,7 +260,7 @@ class TextProcessingAdapter:
                     enhanced_metrics[run.font_family] = {
                         'ascent': metrics.ascent,
                         'descent': metrics.descent,
-                        'available': True
+                        'available': True,
                     }
                     font_metrics_used = True
 
@@ -265,7 +268,7 @@ class TextProcessingAdapter:
                     if hasattr(self.font_service, 'measure_text_width'):
                         try:
                             text_width = self.font_service.measure_text_width(
-                                run.text, run.font_family, run.font_size_pt
+                                run.text, run.font_family, run.font_size_pt,
                             )
                             enhanced_metrics[run.font_family]['measured_width'] = text_width
                         except Exception:
@@ -301,7 +304,7 @@ class TextProcessingAdapter:
                             text=run.text,
                             font_family=run.font_family,
                             font_size_pt=run.font_size_pt,
-                            services=self.services
+                            services=self.services,
                         )
 
                         enhanced_positioning[f'run_{i}'] = {
@@ -309,7 +312,7 @@ class TextProcessingAdapter:
                             'y_emu': y_emu,
                             'width_emu': width_emu,
                             'height_emu': height_emu,
-                            'layout_enhanced': True
+                            'layout_enhanced': True,
                         }
                         text_layout_applied = True
 
@@ -320,7 +323,7 @@ class TextProcessingAdapter:
         # Step 3: Generate enhanced XML with improved metrics and positioning
         if font_metrics_used or text_layout_applied:
             xml_content = self._generate_enhanced_text_xml(
-                text_frame, enhanced_metrics, enhanced_positioning, base_xml
+                text_frame, enhanced_metrics, enhanced_positioning, base_xml,
             )
             layout_method = "adapter_enhanced"
         else:
@@ -339,12 +342,12 @@ class TextProcessingAdapter:
                 'run_count': len(runs),
                 'processing_method': 'existing_system',
                 'font_service_used': font_metrics_used,
-                'text_layout_used': text_layout_applied
-            }
+                'text_layout_used': text_layout_applied,
+            },
         )
 
-    def _generate_enhanced_text_xml(self, text_frame: TextFrame, enhanced_metrics: Dict[str, Any],
-                                   enhanced_positioning: Dict[str, Any], base_xml: str) -> str:
+    def _generate_enhanced_text_xml(self, text_frame: TextFrame, enhanced_metrics: dict[str, Any],
+                                   enhanced_positioning: dict[str, Any], base_xml: str) -> str:
         """Generate enhanced XML with improved font metrics and positioning"""
 
         # If we have enhanced positioning, use it
@@ -403,13 +406,13 @@ class TextProcessingAdapter:
 
         return xml_content
 
-    def _generate_enhanced_paragraphs_xml(self, text_frame: TextFrame, enhanced_metrics: Dict[str, Any]) -> str:
+    def _generate_enhanced_paragraphs_xml(self, text_frame: TextFrame, enhanced_metrics: dict[str, Any]) -> str:
         """Generate paragraph XML with enhanced font metrics"""
         # Convert anchor to alignment
         anchor_map = {
             TextAnchor.START: 'l',
             TextAnchor.MIDDLE: 'ctr',
-            TextAnchor.END: 'r'
+            TextAnchor.END: 'r',
         }
         alignment = anchor_map.get(text_frame.anchor, 'l')
 
@@ -447,8 +450,8 @@ class TextProcessingAdapter:
 
         return paragraph_xml
 
-    def _generate_clean_slate_xml(self, text_frame: TextFrame, font_analysis: Dict[str, Any],
-                                 positioning: Dict[str, Any], base_xml: str) -> str:
+    def _generate_clean_slate_xml(self, text_frame: TextFrame, font_analysis: dict[str, Any],
+                                 positioning: dict[str, Any], base_xml: str) -> str:
         """Generate enhanced XML using Clean Slate font analysis and positioning"""
 
         # Use enhanced positioning if available
@@ -511,13 +514,13 @@ class TextProcessingAdapter:
 
         return xml_content
 
-    def _generate_clean_slate_paragraphs_xml(self, text_frame: TextFrame, font_analysis: Dict[str, Any]) -> str:
+    def _generate_clean_slate_paragraphs_xml(self, text_frame: TextFrame, font_analysis: dict[str, Any]) -> str:
         """Generate paragraph XML with Clean Slate font analysis"""
         # Convert anchor to alignment
         anchor_map = {
             TextAnchor.START: 'l',
             TextAnchor.MIDDLE: 'ctr',
-            TextAnchor.END: 'r'
+            TextAnchor.END: 'r',
         }
         alignment = anchor_map.get(text_frame.anchor, 'l')
 
@@ -625,8 +628,8 @@ class TextProcessingAdapter:
             metadata={
                 'processing_method': 'fallback_placeholder',
                 'reason': 'text_system_unavailable',
-                'run_count': len(self._get_runs(text_frame))
-            }
+                'run_count': len(self._get_runs(text_frame)),
+            },
         )
 
     def validate_font_availability(self, font_family: str) -> bool:
@@ -640,7 +643,7 @@ class TextProcessingAdapter:
         except Exception:
             return False
 
-    def measure_text_dimensions(self, text: str, font_family: str, font_size_pt: float) -> Tuple[float, float]:
+    def measure_text_dimensions(self, text: str, font_family: str, font_size_pt: float) -> tuple[float, float]:
         """Measure text dimensions using FontService if available"""
         if not self.font_service:
             # Fallback estimation
@@ -661,7 +664,7 @@ class TextProcessingAdapter:
             char_width = font_size_pt * 0.6
             return len(text) * char_width, font_size_pt * 1.2
 
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """Get statistics about text processing system usage"""
         return {
             'clean_slate_available': self._clean_slate_available,
@@ -669,7 +672,7 @@ class TextProcessingAdapter:
             'components_initialized': {
                 'font_system': hasattr(self, 'font_system') and self.font_system is not None,
                 'text_layout_engine': hasattr(self, 'text_layout_engine') and self.text_layout_engine is not None,
-                'legacy_font_service': hasattr(self, 'font_service') and self.font_service is not None
+                'legacy_font_service': hasattr(self, 'font_service') and self.font_service is not None,
             },
             'features_available': {
                 'font_analysis': self._clean_slate_available,
@@ -677,8 +680,8 @@ class TextProcessingAdapter:
                 'precise_layout_calculation': self._clean_slate_available,
                 'font_metadata_integration': self._clean_slate_available,
                 'legacy_font_metrics': self._legacy_available,
-                'legacy_text_measurement': self._legacy_available
-            }
+                'legacy_text_measurement': self._legacy_available,
+            },
         }
 
 

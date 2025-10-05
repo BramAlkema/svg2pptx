@@ -13,14 +13,16 @@ Key Features:
 """
 
 from __future__ import annotations
-from typing import Dict, List, Tuple, Union
-from lxml import etree as ET
-import re
-import logging
-from dataclasses import dataclass
 
-from .clippath_types import ClipPathDefinition
+import logging
+import re
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Union
+
+from lxml import etree as ET
+
 from ..units.core import ConversionContext
+from .clippath_types import ClipPathDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +142,7 @@ class CustGeomGenerator:
             raise CustGeomGenerationError(f"CustGeom generation failed: {e}")
 
     def convert_svg_path_to_drawingml(self, svg_path: str,
-                                    coord_context: Union[ConversionContext, CoordinateContext]) -> str:
+                                    coord_context: ConversionContext | CoordinateContext) -> str:
         """
         Convert SVG path data to DrawingML path commands.
 
@@ -195,7 +197,7 @@ class CustGeomGenerator:
                     f'<a:pt x="{x1}" y="{y1}"/>'
                     f'<a:pt x="{x2}" y="{y2}"/>'
                     f'<a:pt x="{x}" y="{y}"/>'
-                    f'</a:cubicBezTo>'
+                    f'</a:cubicBezTo>',
                 )
                 current_point = (params[4], params[5])
 
@@ -205,7 +207,7 @@ class CustGeomGenerator:
 
         return '\n            '.join(drawingml_commands)
 
-    def handle_basic_shapes(self, element: ET.Element, context: Union[ConversionContext, CoordinateContext]) -> str:
+    def handle_basic_shapes(self, element: ET.Element, context: ConversionContext | CoordinateContext) -> str:
         """
         Convert basic SVG shapes to DrawingML path data.
 
@@ -243,7 +245,7 @@ class CustGeomGenerator:
         tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
         return tag_name in ['rect', 'circle', 'ellipse', 'polygon', 'polyline']
 
-    def _parse_svg_path(self, path_data: str) -> List[Tuple[str, List[float]]]:
+    def _parse_svg_path(self, path_data: str) -> list[tuple[str, list[float]]]:
         """Parse SVG path data into command/parameter pairs."""
         commands = []
 
@@ -263,7 +265,7 @@ class CustGeomGenerator:
 
         return commands
 
-    def _scale_coordinates(self, x: float, y: float) -> Tuple[int, int]:
+    def _scale_coordinates(self, x: float, y: float) -> tuple[int, int]:
         """Scale coordinates to DrawingML coordinate system."""
         # Convert to 21600 coordinate system (standard DrawingML)
         scaled_x = int(x * 21600 / 100)  # Assuming 100x100 viewBox
@@ -271,12 +273,12 @@ class CustGeomGenerator:
         return scaled_x, scaled_y
 
     def _convert_shape_to_path_data(self, element: ET.Element,
-                                  context: Union[ConversionContext, CoordinateContext]) -> str:
+                                  context: ConversionContext | CoordinateContext) -> str:
         """Convert a shape element to DrawingML path data."""
         return self.handle_basic_shapes(element, context)
 
     def _convert_rect_to_path(self, element: ET.Element,
-                            context: Union[ConversionContext, CoordinateContext]) -> str:
+                            context: ConversionContext | CoordinateContext) -> str:
         """Convert rect element to DrawingML path."""
         x = float(element.get('x', 0))
         y = float(element.get('y', 0))
@@ -294,7 +296,7 @@ class CustGeomGenerator:
             <a:close/>'''
 
     def _convert_circle_to_path(self, element: ET.Element,
-                              context: Union[ConversionContext, CoordinateContext]) -> str:
+                              context: ConversionContext | CoordinateContext) -> str:
         """Convert circle element to DrawingML path using arcs."""
         cx = float(element.get('cx', 0))
         cy = float(element.get('cy', 0))
@@ -318,7 +320,7 @@ class CustGeomGenerator:
             <a:close/>'''
 
     def _convert_ellipse_to_path(self, element: ET.Element,
-                               context: Union[ConversionContext, CoordinateContext]) -> str:
+                               context: ConversionContext | CoordinateContext) -> str:
         """Convert ellipse element to DrawingML path."""
         cx = float(element.get('cx', 0))
         cy = float(element.get('cy', 0))
@@ -336,7 +338,7 @@ class CustGeomGenerator:
             <a:close/>'''
 
     def _convert_polygon_to_path(self, element: ET.Element,
-                               context: Union[ConversionContext, CoordinateContext]) -> str:
+                               context: ConversionContext | CoordinateContext) -> str:
         """Convert polygon element to DrawingML path."""
         points_str = element.get('points', '')
         if not points_str:
@@ -364,7 +366,7 @@ class CustGeomGenerator:
         return '\n            '.join(path_commands)
 
     def _convert_polyline_to_path(self, element: ET.Element,
-                                context: Union[ConversionContext, CoordinateContext]) -> str:
+                                context: ConversionContext | CoordinateContext) -> str:
         """Convert polyline element to DrawingML path."""
         points_str = element.get('points', '')
         if not points_str:
@@ -409,7 +411,7 @@ class CustGeomGenerator:
                 scale_y=21600,
                 offset_x=0,
                 offset_y=0,
-                base_context=context
+                base_context=context,
             )
         else:
             # userSpaceOnUse uses the current coordinate system
@@ -423,10 +425,10 @@ class CustGeomGenerator:
                 scale_y=21600 / viewbox_height,
                 offset_x=0,
                 offset_y=0,
-                base_context=context
+                base_context=context,
             )
 
-    def _calculate_custgeom_bounds(self, coord_context: 'CoordinateContext') -> Dict[str, int]:
+    def _calculate_custgeom_bounds(self, coord_context: 'CoordinateContext') -> dict[str, int]:
         """Calculate custGeom coordinate bounds."""
         if coord_context.units == 'objectBoundingBox':
             # objectBoundingBox always uses full range
@@ -435,7 +437,7 @@ class CustGeomGenerator:
             # userSpaceOnUse uses scaled viewport
             return {
                 'width': int(coord_context.scale_x * 100),  # Assume 100 unit reference
-                'height': int(coord_context.scale_y * 100)
+                'height': int(coord_context.scale_y * 100),
             }
 
     def _apply_clippath_transform(self, path_data: str, transform: str,
@@ -460,7 +462,7 @@ class CustGeomGenerator:
         logger.debug(f"ClipPath transform applied: {transform}")
         return path_data
 
-    def handle_clippath_units(self, clip_def: ClipPathDefinition, element_bounds: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
+    def handle_clippath_units(self, clip_def: ClipPathDefinition, element_bounds: tuple[float, float, float, float]) -> tuple[float, float, float, float]:
         """
         Handle clipPathUnits coordinate system transformation.
 
@@ -480,14 +482,14 @@ class CustGeomGenerator:
             return element_bounds
 
     def _scale_coordinates_with_context(self, x: float, y: float,
-                                      coord_context: 'CoordinateContext') -> Tuple[int, int]:
+                                      coord_context: 'CoordinateContext') -> tuple[int, int]:
         """Scale coordinates using coordinate context."""
         scaled_x = int((x + coord_context.offset_x) * coord_context.scale_x)
         scaled_y = int((y + coord_context.offset_y) * coord_context.scale_y)
         return scaled_x, scaled_y
 
     def _scale_coordinates_smart(self, x: float, y: float,
-                               context: Union[ConversionContext, CoordinateContext]) -> Tuple[int, int]:
+                               context: ConversionContext | CoordinateContext) -> tuple[int, int]:
         """
         Smart coordinate scaling that handles both context types.
 

@@ -6,11 +6,12 @@ Additional utilities and decorators for performance measurement
 in the SVG2PPTX performance framework.
 """
 
-import time
 import functools
 import logging
-from typing import Dict, Any, Optional, Callable, TypeVar, cast, Tuple
+import time
+from collections.abc import Callable
 from contextlib import contextmanager
+from typing import Any, Dict, Optional, Tuple, TypeVar, cast
 
 from .benchmark import BenchmarkEngine
 from .config import get_config
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 F = TypeVar('F', bound=Callable[..., Any])
 
 
-def measure_performance(benchmark_name: Optional[str] = None,
+def measure_performance(benchmark_name: str | None = None,
                        category: str = "general",
                        warmup_iterations: int = 0,
                        measurement_iterations: int = 1,
@@ -59,7 +60,7 @@ def measure_performance(benchmark_name: Optional[str] = None,
                 benchmark_name=name,
                 category=category,
                 warmup_iterations=warmup_iterations,
-                measurement_iterations=measurement_iterations
+                measurement_iterations=measurement_iterations,
             )
 
             if log_results and result.success:
@@ -129,8 +130,8 @@ class PerformanceProfiler:
 
     def __init__(self, name: str = "profiler"):
         self.name = name
-        self.measurements: Dict[str, List[float]] = {}
-        self.metadata: Dict[str, Dict[str, Any]] = {}
+        self.measurements: dict[str, List[float]] = {}
+        self.metadata: dict[str, dict[str, Any]] = {}
 
     @contextmanager
     def measure(self, operation_name: str, **metadata):
@@ -156,7 +157,7 @@ class PerformanceProfiler:
             self.measurements[operation_name].append(execution_time)
             self.metadata[operation_name].update(metadata)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Get summary of all measurements.
 
@@ -168,7 +169,7 @@ class PerformanceProfiler:
         summary = {
             "profiler_name": self.name,
             "total_operations": len(self.measurements),
-            "operations": {}
+            "operations": {},
         }
 
         for operation, times in self.measurements.items():
@@ -179,7 +180,7 @@ class PerformanceProfiler:
                     "avg_time_ms": statistics.mean(times),
                     "min_time_ms": min(times),
                     "max_time_ms": max(times),
-                    "metadata": self.metadata.get(operation, {})
+                    "metadata": self.metadata.get(operation, {}),
                 }
 
                 if len(times) > 1:
@@ -214,7 +215,7 @@ def benchmark_compare(func1: Callable,
                      func1_name: str = "function1",
                      func2_name: str = "function2",
                      iterations: int = 10,
-                     warmup: int = 3) -> Dict[str, Any]:
+                     warmup: int = 3) -> dict[str, Any]:
     """
     Compare performance of two functions.
 
@@ -236,7 +237,7 @@ def benchmark_compare(func1: Callable,
         benchmark_name=func1_name,
         category="comparison",
         warmup_iterations=warmup,
-        measurement_iterations=iterations
+        measurement_iterations=iterations,
     )
 
     result2 = engine.execute_benchmark(
@@ -244,14 +245,14 @@ def benchmark_compare(func1: Callable,
         benchmark_name=func2_name,
         category="comparison",
         warmup_iterations=warmup,
-        measurement_iterations=iterations
+        measurement_iterations=iterations,
     )
 
     if not result1.success or not result2.success:
         return {
             "error": "One or both benchmarks failed",
             "result1": result1,
-            "result2": result2
+            "result2": result2,
         }
 
     speedup = result1.speedup_vs(result2)
@@ -264,26 +265,26 @@ def benchmark_compare(func1: Callable,
             func1_name: {
                 "avg_time_ms": result1.mean_time_ms,
                 "ops_per_sec": result1.ops_per_sec,
-                "std_dev_ms": result1.std_dev_ms
+                "std_dev_ms": result1.std_dev_ms,
             },
             func2_name: {
                 "avg_time_ms": result2.mean_time_ms,
                 "ops_per_sec": result2.ops_per_sec,
-                "std_dev_ms": result2.std_dev_ms
-            }
+                "std_dev_ms": result2.std_dev_ms,
+            },
         },
         "analysis": {
             "faster_function": winner,
             "speed_improvement": f"{speedup:.2f}x" if speedup != float('inf') else "∞",
             "time_difference_ms": abs(result1.mean_time_ms - result2.mean_time_ms),
-            "statistical_significance": result1.std_dev_ms + result2.std_dev_ms < abs(result1.mean_time_ms - result2.mean_time_ms)
-        }
+            "statistical_significance": result1.std_dev_ms + result2.std_dev_ms < abs(result1.mean_time_ms - result2.mean_time_ms),
+        },
     }
 
 
 # Convenience functions for quick measurements
 
-def time_function(func: Callable, *args, **kwargs) -> Tuple[Any, float]:
+def time_function(func: Callable, *args, **kwargs) -> tuple[Any, float]:
     """
     Time a single function call.
 
@@ -302,7 +303,7 @@ def time_function(func: Callable, *args, **kwargs) -> Tuple[Any, float]:
     return result, execution_time
 
 
-def measure_memory_usage(func: Callable, *args, **kwargs) -> Tuple[Any, float, float]:
+def measure_memory_usage(func: Callable, *args, **kwargs) -> tuple[Any, float, float]:
     """
     Measure memory usage of a function call.
 
@@ -316,8 +317,9 @@ def measure_memory_usage(func: Callable, *args, **kwargs) -> Tuple[Any, float, f
     """
     # Try to import psutil, fallback to 0 if not available
     try:
-        import psutil
         import os
+
+        import psutil
         process = psutil.Process(os.getpid())
         memory_before = process.memory_info().rss / (1024 * 1024)
     except ImportError:

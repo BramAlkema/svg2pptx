@@ -14,17 +14,22 @@ Key Features:
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-from .interfaces import CoordinateSystem as CoordinateSystemInterface
-from .architecture import (
-    PathCommand, PathBounds, PathCommandType,
-    CoordinateTransformError
+from ..units import (  # Used for type hints and fallback compatibility
+    ConversionContext,
+    UnitConverter,
 )
 
 # Import existing infrastructure
 from ..viewbox import ViewportEngine
-from ..units import UnitConverter, ConversionContext  # Used for type hints and fallback compatibility
+from .architecture import (
+    CoordinateTransformError,
+    PathBounds,
+    PathCommand,
+    PathCommandType,
+)
+from .interfaces import CoordinateSystem as CoordinateSystemInterface
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +65,7 @@ class CoordinateSystem(CoordinateSystemInterface):
                 self._unit_converter = UnitConverter()
                 self.log_debug("CoordinateSystem using direct instantiation fallback")
 
-        self._conversion_context: Optional[ConversionContext] = None
+        self._conversion_context: ConversionContext | None = None
 
         # Configuration
         self.precision = 6
@@ -86,7 +91,7 @@ class CoordinateSystem(CoordinateSystemInterface):
         self.log_debug("CoordinateSystem initialized with provided services")
 
     def create_conversion_context(self, viewport_width: float, viewport_height: float,
-                                 viewbox: Optional[Tuple[float, float, float, float]] = None,
+                                 viewbox: tuple[float, float, float, float] | None = None,
                                  dpi: float = 96.0):
         """
         Create conversion context using existing UnitConverter infrastructure.
@@ -101,7 +106,7 @@ class CoordinateSystem(CoordinateSystemInterface):
             self._conversion_context = self._unit_converter.create_context(
                 width=viewport_width,
                 height=viewport_height,
-                dpi=dpi
+                dpi=dpi,
             )
 
             # Set up viewport/viewBox transformation
@@ -119,7 +124,7 @@ class CoordinateSystem(CoordinateSystemInterface):
                     'viewbox_x': vb_x,
                     'viewbox_y': vb_y,
                     'scale_x': scale_x,
-                    'scale_y': scale_y
+                    'scale_y': scale_y,
                 })()
 
                 self.log_debug(f"ViewBox mapping: scale=({scale_x:.3f}, {scale_y:.3f}), offset=({vb_x}, {vb_y})")
@@ -133,7 +138,7 @@ class CoordinateSystem(CoordinateSystemInterface):
         except Exception as e:
             raise CoordinateTransformError(f"Failed to create conversion context: {e}")
 
-    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> Tuple[float, float]:
+    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> tuple[float, float]:
         """
         Convert SVG coordinates to PowerPoint relative coordinates (0-100000 range).
 
@@ -180,7 +185,7 @@ class CoordinateSystem(CoordinateSystemInterface):
         except Exception as e:
             raise CoordinateTransformError(f"Failed to transform coordinates ({x}, {y}): {e}")
 
-    def calculate_path_bounds(self, commands: List[PathCommand]) -> PathBounds:
+    def calculate_path_bounds(self, commands: list[PathCommand]) -> PathBounds:
         """
         Calculate bounding box for a series of path commands.
 
@@ -242,7 +247,7 @@ class CoordinateSystem(CoordinateSystemInterface):
                 max_y=max_y,
                 width=width,
                 height=height,
-                coordinate_system="emu"
+                coordinate_system="emu",
             )
 
             self.log_debug(f"Calculated path bounds: {width}×{height} EMU", bounds=bounds.__dict__)
@@ -251,7 +256,7 @@ class CoordinateSystem(CoordinateSystemInterface):
         except Exception as e:
             raise CoordinateTransformError(f"Failed to calculate path bounds: {e}")
 
-    def _apply_viewport_transform(self, x: float, y: float) -> Tuple[float, float]:
+    def _apply_viewport_transform(self, x: float, y: float) -> tuple[float, float]:
         """Apply viewport/viewBox transformation using ViewportEngine."""
         if self._viewport_mapping is None:
             return x, y
@@ -279,7 +284,7 @@ class CoordinateSystem(CoordinateSystemInterface):
             return 0.0
         return ((y_emu - bounds.min_y) / bounds.height) * 100000
 
-    def _extract_coordinate_points(self, command: PathCommand, current_pos: List[float]) -> List[Tuple[float, float]]:
+    def _extract_coordinate_points(self, command: PathCommand, current_pos: list[float]) -> list[tuple[float, float]]:
         """
         Extract coordinate points from a path command.
 

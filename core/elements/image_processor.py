@@ -13,14 +13,15 @@ Features:
 - Performance optimization for complex images
 """
 
-import logging
 import hashlib
-from typing import Dict, List, Optional, Any
-from lxml import etree as ET
-from enum import Enum
-from dataclasses import dataclass
-from urllib.parse import urlparse
+import logging
 import re
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
+
+from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices
 
@@ -67,11 +68,11 @@ class ImageAnalysis:
     href: str
     format: ImageFormat
     dimensions: ImageDimensions
-    file_size: Optional[int]
+    file_size: int | None
     is_embedded: bool
     is_vector: bool
     requires_preprocessing: bool
-    optimization_opportunities: List[ImageOptimization]
+    optimization_opportunities: list[ImageOptimization]
     powerpoint_compatible: bool
     estimated_performance_impact: str
 
@@ -95,7 +96,7 @@ class ImageProcessor:
         self.logger = logging.getLogger(__name__)
 
         # Analysis cache
-        self.analysis_cache: Dict[str, ImageAnalysis] = {}
+        self.analysis_cache: dict[str, ImageAnalysis] = {}
 
         # Statistics
         self.stats = {
@@ -105,7 +106,7 @@ class ImageProcessor:
             'vector_images': 0,
             'raster_images': 0,
             'cache_hits': 0,
-            'optimizations_applied': 0
+            'optimizations_applied': 0,
         }
 
     def analyze_image_element(self, element: ET.Element, context: Any) -> ImageAnalysis:
@@ -191,16 +192,16 @@ class ImageProcessor:
             requires_preprocessing=requires_preprocessing,
             optimization_opportunities=optimizations,
             powerpoint_compatible=powerpoint_compatible,
-            estimated_performance_impact=performance_impact
+            estimated_performance_impact=performance_impact,
         )
 
-    def _extract_image_href(self, element: ET.Element) -> Optional[str]:
+    def _extract_image_href(self, element: ET.Element) -> str | None:
         """Extract image href from various possible attributes."""
         # Check standard href attributes
         href_attrs = [
             '{http://www.w3.org/1999/xlink}href',
             'href',
-            'xlink:href'
+            'xlink:href',
         ]
 
         for attr in href_attrs:
@@ -224,7 +225,7 @@ class ImageProcessor:
                     'svg+xml': ImageFormat.SVG,
                     'gif': ImageFormat.GIF,
                     'bmp': ImageFormat.BMP,
-                    'tiff': ImageFormat.TIFF
+                    'tiff': ImageFormat.TIFF,
                 }
                 return format_map.get(mime_type, ImageFormat.UNKNOWN)
         else:
@@ -264,7 +265,7 @@ class ImageProcessor:
             width=width,
             height=height,
             aspect_ratio=aspect_ratio,
-            units="px"  # Normalized to pixels
+            units="px",  # Normalized to pixels
         )
 
     def _parse_dimension(self, dimension_str: str, context: Any) -> float:
@@ -297,7 +298,7 @@ class ImageProcessor:
             'mm': 3.7795,  # 96/25.4
             'em': 16.0,    # Approximate
             'rem': 16.0,   # Approximate
-            '%': 1.0       # Treat as pixels for now
+            '%': 1.0,       # Treat as pixels for now
         }
 
         return value * unit_map.get(unit.lower(), 1.0)
@@ -306,7 +307,7 @@ class ImageProcessor:
         """Check if image is embedded as data URL."""
         return href.startswith('data:')
 
-    def _estimate_file_size(self, href: str) -> Optional[int]:
+    def _estimate_file_size(self, href: str) -> int | None:
         """Estimate file size for external images."""
         if self._is_embedded_image(href):
             # For data URLs, estimate from base64 length
@@ -339,7 +340,7 @@ class ImageProcessor:
         return False
 
     def _identify_optimizations(self, element: ET.Element, href: str,
-                              image_format: ImageFormat, dimensions: ImageDimensions) -> List[ImageOptimization]:
+                              image_format: ImageFormat, dimensions: ImageDimensions) -> list[ImageOptimization]:
         """Identify optimization opportunities."""
         optimizations = []
 
@@ -369,7 +370,7 @@ class ImageProcessor:
         # PowerPoint supports most common formats
         compatible_formats = [
             ImageFormat.PNG, ImageFormat.JPEG,
-            ImageFormat.GIF, ImageFormat.BMP
+            ImageFormat.GIF, ImageFormat.BMP,
         ]
 
         if image_format not in compatible_formats:
@@ -382,7 +383,7 @@ class ImageProcessor:
         return True
 
     def _estimate_performance_impact(self, dimensions: ImageDimensions,
-                                   file_size: Optional[int], is_embedded: bool) -> str:
+                                   file_size: int | None, is_embedded: bool) -> str:
         """Estimate performance impact."""
         pixel_count = dimensions.width * dimensions.height
 
@@ -419,7 +420,7 @@ class ImageProcessor:
             requires_preprocessing=False,
             optimization_opportunities=[],
             powerpoint_compatible=False,
-            estimated_performance_impact='none'
+            estimated_performance_impact='none',
         )
 
     def _generate_cache_key(self, element: ET.Element) -> str:
@@ -528,7 +529,7 @@ class ImageProcessor:
 
         return element
 
-    def get_processing_statistics(self) -> Dict[str, int]:
+    def get_processing_statistics(self) -> dict[str, int]:
         """Get processing statistics."""
         return self.stats.copy()
 
@@ -545,7 +546,7 @@ class ImageProcessor:
             'vector_images': 0,
             'raster_images': 0,
             'cache_hits': 0,
-            'optimizations_applied': 0
+            'optimizations_applied': 0,
         }
 
 

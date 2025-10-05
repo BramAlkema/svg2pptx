@@ -7,8 +7,9 @@ eliminating duplicate font handling implementations across text converters.
 """
 
 import re
-from typing import List, Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List
+
 from lxml import etree as ET
 
 
@@ -19,7 +20,7 @@ class FontProperties:
     size: float
     weight: int
     style: str  # 'normal' or 'italic'
-    decoration: List[str]
+    decoration: list[str]
 
 
 class FontProcessor:
@@ -36,7 +37,7 @@ class FontProcessor:
         self._weight_map = {
             'normal': 400, 'bold': 700, 'bolder': 700, 'lighter': 300,
             '100': 100, '200': 200, '300': 300, '400': 400, '500': 500,
-            '600': 600, '700': 700, '800': 800, '900': 900
+            '600': 600, '700': 700, '800': 800, '900': 900,
         }
 
         # Common font size unit conversions (to points)
@@ -48,7 +49,7 @@ class FontProcessor:
             'pc': 12.0,    # 1pc = 12pt
             'in': 72.0,    # 1in = 72pt
             'cm': 28.35,   # 1cm = 28.35pt
-            'mm': 2.835    # 1mm = 2.835pt
+            'mm': 2.835,    # 1mm = 2.835pt
         }
 
     def extract_font_properties(self, element: ET.Element,
@@ -69,7 +70,7 @@ class FontProcessor:
             size=self.get_font_size(element, style_parser, context),
             weight=self.get_font_weight_numeric(element, style_parser),
             style=self.get_font_style(element, style_parser),
-            decoration=self.get_text_decoration(element, style_parser)
+            decoration=self.get_text_decoration(element, style_parser),
         )
 
     def get_font_family(self, element: ET.Element, style_parser=None) -> str:
@@ -98,7 +99,7 @@ class FontProcessor:
 
         return 'Arial'  # Default font
 
-    def get_font_family_list(self, element: ET.Element, style_parser=None) -> List[str]:
+    def get_font_family_list(self, element: ET.Element, style_parser=None) -> list[str]:
         """
         Extract font family list from element.
 
@@ -205,7 +206,7 @@ class FontProcessor:
 
         return 'normal'
 
-    def get_text_decoration(self, element: ET.Element, style_parser=None) -> List[str]:
+    def get_text_decoration(self, element: ET.Element, style_parser=None) -> list[str]:
         """
         Extract text decoration properties.
 
@@ -244,7 +245,7 @@ class FontProcessor:
 
         return font_family
 
-    def _parse_font_family_list(self, font_family: str) -> List[str]:
+    def _parse_font_family_list(self, font_family: str) -> list[str]:
         """Parse comma-separated font family list."""
         families = []
         for family in font_family.split(','):
@@ -294,7 +295,7 @@ class FontProcessor:
         common_system_fonts = {
             'arial', 'helvetica', 'times', 'times new roman',
             'courier', 'courier new', 'verdana', 'georgia',
-            'tahoma', 'trebuchet ms', 'comic sans ms'
+            'tahoma', 'trebuchet ms', 'comic sans ms',
         }
 
         family_lower = family.lower()
@@ -323,7 +324,7 @@ class FontProcessor:
         else:
             return "Regular"
 
-    def validate_font_properties(self, properties: FontProperties) -> List[str]:
+    def validate_font_properties(self, properties: FontProperties) -> list[str]:
         """
         Validate font properties and return list of issues.
 
@@ -349,7 +350,7 @@ class FontProcessor:
 
         return issues
 
-    def process_font_attributes(self, element: Any) -> Dict[str, Any]:
+    def process_font_attributes(self, element: Any) -> dict[str, Any]:
         """
         Process font attributes from element - adapter compatibility alias.
 
@@ -366,7 +367,7 @@ class FontProcessor:
             'weight': properties.weight,
             'style': properties.style,
             'variant': properties.variant,
-            'decoration': properties.decoration
+            'decoration': properties.decoration,
         }
 
 

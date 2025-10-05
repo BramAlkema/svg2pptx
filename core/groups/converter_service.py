@@ -13,12 +13,13 @@ Features:
 """
 
 import logging
-from typing import Dict, Optional, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
 from lxml import etree as ET
 
-from .group_processor import GroupProcessor
-from .clipping_analyzer import ClippingAnalyzer, ClippingStrategy
 from ..services.conversion_services import ConversionServices
+from .clipping_analyzer import ClippingAnalyzer, ClippingStrategy
+from .group_processor import GroupProcessor
 
 if TYPE_CHECKING:
     from ..policy.engine import PolicyEngine
@@ -57,7 +58,7 @@ class GroupConverterService:
             'powerpoint_compatible': 0,
             'emf_fallbacks': 0,
             'rasterization_fallbacks': 0,
-            'optimizations_applied': 0
+            'optimizations_applied': 0,
         }
 
     def convert_group_element(self, element: ET.Element, context: Any,
@@ -78,7 +79,7 @@ class GroupConverterService:
 
             # Process group structure
             group_info = self.group_processor.process_group_element(
-                element, context, apply_optimizations=enable_optimizations
+                element, context, apply_optimizations=enable_optimizations,
             )
 
             # Apply clipping analysis if needed
@@ -127,7 +128,7 @@ class GroupConverterService:
             self.logger.error(f"Clipped element conversion failed: {e}")
             return self._generate_fallback_clipped_element(element, context)
 
-    def _enhance_with_clipping_analysis(self, element: ET.Element, group_info: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    def _enhance_with_clipping_analysis(self, element: ET.Element, group_info: dict[str, Any], context: Any) -> dict[str, Any]:
         """Enhance group info with clipping analysis."""
         clipping_analysis = self.clipping_analyzer.analyze_clipping_scenario(element, context)
 
@@ -143,7 +144,7 @@ class GroupConverterService:
 
         return group_info
 
-    def _apply_clipping_optimizations(self, group_info: Dict[str, Any], analysis) -> Dict[str, Any]:
+    def _apply_clipping_optimizations(self, group_info: dict[str, Any], analysis) -> dict[str, Any]:
         """Apply clipping-specific optimizations."""
         optimizations = analysis.optimization_opportunities
 
@@ -417,7 +418,7 @@ class GroupConverterService:
     </p:spPr>
 </p:sp>'''
 
-    def _update_conversion_statistics(self, group_info: Dict[str, Any]) -> None:
+    def _update_conversion_statistics(self, group_info: dict[str, Any]) -> None:
         """Update conversion statistics based on group info."""
         if group_info.get('powerpoint_compatible', False):
             self.stats['powerpoint_compatible'] += 1
@@ -425,7 +426,7 @@ class GroupConverterService:
         optimizations = group_info.get('applied_optimizations', [])
         self.stats['optimizations_applied'] += len(optimizations)
 
-    def validate_group_element(self, element: ET.Element) -> Dict[str, Any]:
+    def validate_group_element(self, element: ET.Element) -> dict[str, Any]:
         """
         Validate group element and provide recommendations.
 
@@ -440,7 +441,7 @@ class GroupConverterService:
             'issues': [],
             'recommendations': [],
             'optimization_opportunities': [],
-            'preprocessing_benefits': []
+            'preprocessing_benefits': [],
         }
 
         # Check for complex nesting
@@ -472,16 +473,16 @@ class GroupConverterService:
 
         return report
 
-    def get_conversion_statistics(self) -> Dict[str, int]:
+    def get_conversion_statistics(self) -> dict[str, int]:
         """Get conversion statistics."""
         return self.stats.copy()
 
-    def get_combined_statistics(self) -> Dict[str, Any]:
+    def get_combined_statistics(self) -> dict[str, Any]:
         """Get combined statistics from all components."""
         return {
             'converter': self.stats.copy(),
             'group_processor': self.group_processor.get_processing_statistics(),
-            'clipping_analyzer': self.clipping_analyzer.get_analysis_statistics()
+            'clipping_analyzer': self.clipping_analyzer.get_analysis_statistics(),
         }
 
     def reset_statistics(self) -> None:
@@ -492,7 +493,7 @@ class GroupConverterService:
             'powerpoint_compatible': 0,
             'emf_fallbacks': 0,
             'rasterization_fallbacks': 0,
-            'optimizations_applied': 0
+            'optimizations_applied': 0,
         }
         self.group_processor.reset_statistics()
         self.clipping_analyzer.reset_statistics()

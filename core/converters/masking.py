@@ -16,21 +16,26 @@ Key Features:
 - Path-based and shape-based clipping conversion
 """
 
-from lxml import etree as ET
-from typing import Dict, List, Optional, Tuple
 import logging
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
-from .base import BaseConverter
-from .base import ConversionContext
-from ..services.conversion_services import ConversionServices
-from .clippath_types import ClipPathDefinition, ClippingType, ClipPathComplexity, ClipPathAnalysis
-from ..groups.clipping_analyzer import ClippingAnalyzer
-from .boolean_flattener import BooleanFlattener
-from .custgeom_generator import CustGeomGenerator
+from lxml import etree as ET
+
 from ..emf_blob import EMFBlob
 from ..emf_packaging import EMFRelationshipManager
+from ..groups.clipping_analyzer import ClippingAnalyzer
+from ..services.conversion_services import ConversionServices
+from .base import BaseConverter, ConversionContext
+from .boolean_flattener import BooleanFlattener
+from .clippath_types import (
+    ClipPathAnalysis,
+    ClipPathComplexity,
+    ClipPathDefinition,
+    ClippingType,
+)
+from .custgeom_generator import CustGeomGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +57,9 @@ class MaskDefinition:
     y: float
     width: float
     height: float
-    content_elements: List[ET.Element]
+    content_elements: list[ET.Element]
     opacity: float = 1.0
-    transform: Optional[str] = None
+    transform: str | None = None
 
 
 @dataclass
@@ -62,7 +67,7 @@ class MaskApplication:
     """Application of a mask to an element."""
     target_element: ET.Element
     mask_definition: MaskDefinition
-    resolved_bounds: Tuple[float, float, float, float]  # x, y, width, height
+    resolved_bounds: tuple[float, float, float, float]  # x, y, width, height
     requires_rasterization: bool = False
 
 
@@ -71,7 +76,7 @@ class ClipApplication:
     """Application of clipping to an element."""
     target_element: ET.Element
     clip_definition: ClipPathDefinition
-    resolved_path: Optional[str] = None
+    resolved_path: str | None = None
     powerpoint_compatible: bool = True
 
 
@@ -99,19 +104,19 @@ class MaskingConverter(BaseConverter):
         super().__init__(services)
 
         # Storage for mask and clipPath definitions
-        self.mask_definitions: Dict[str, MaskDefinition] = {}
-        self.clippath_definitions: Dict[str, ClipPathDefinition] = {}
+        self.mask_definitions: dict[str, MaskDefinition] = {}
+        self.clippath_definitions: dict[str, ClipPathDefinition] = {}
 
         # Track which elements have masks or clipping applied
-        self.masked_elements: List[MaskApplication] = []
-        self.clipped_elements: List[ClipApplication] = []
+        self.masked_elements: list[MaskApplication] = []
+        self.clipped_elements: list[ClipApplication] = []
 
         # Initialize clipPath analyzer, boolean flattener, and custGeom generator
         self.clippath_analyzer = ClippingAnalyzer(services)
         self.boolean_flattener = BooleanFlattener(services)
         self.custgeom_generator = CustGeomGenerator(services)
     
-    def can_convert(self, element: ET.Element, context: Optional[ConversionContext] = None) -> bool:
+    def can_convert(self, element: ET.Element, context: ConversionContext | None = None) -> bool:
         """Check if element can be converted by this converter."""
         if element.tag.endswith(('mask', 'clipPath')):
             return True
@@ -167,7 +172,7 @@ class MaskingConverter(BaseConverter):
             x=x, y=y, width=width, height=height,
             content_elements=content_elements,
             opacity=opacity,
-            transform=transform
+            transform=transform,
         )
         
         logger.info(f"Processed mask definition: {mask_id}")
@@ -208,7 +213,7 @@ class MaskingConverter(BaseConverter):
             path_data=path_data,
             shapes=shapes,
             clipping_type=clipping_type,
-            transform=transform
+            transform=transform,
         )
         
         logger.info(f"Processed clipPath definition: {clip_id}")
@@ -252,7 +257,7 @@ class MaskingConverter(BaseConverter):
                 element_bounds[0] + mask_def.x * element_bounds[2],
                 element_bounds[1] + mask_def.y * element_bounds[3],
                 mask_def.width * element_bounds[2],
-                mask_def.height * element_bounds[3]
+                mask_def.height * element_bounds[3],
             )
         else:
             # Mask bounds are in user space
@@ -266,7 +271,7 @@ class MaskingConverter(BaseConverter):
             target_element=element,
             mask_definition=mask_def,
             resolved_bounds=resolved_bounds,
-            requires_rasterization=requires_rasterization
+            requires_rasterization=requires_rasterization,
         )
         self.masked_elements.append(mask_app)
         
@@ -338,7 +343,7 @@ class MaskingConverter(BaseConverter):
                 target_element=element,
                 clip_definition=clip_def,
                 resolved_path=resolved_path,
-                powerpoint_compatible=(analysis.complexity in [ClipPathComplexity.SIMPLE, ClipPathComplexity.NESTED])
+                powerpoint_compatible=(analysis.complexity in [ClipPathComplexity.SIMPLE, ClipPathComplexity.NESTED]),
             )
             self.clipped_elements.append(clip_app)
 
@@ -516,7 +521,7 @@ class MaskingConverter(BaseConverter):
             return float(value[:-1]) / 100.0 if is_percentage else float(value[:-1])
         return self.services.unit_converter.convert_to_user_units(value)
     
-    def _extract_reference_id(self, reference: str) -> Optional[str]:
+    def _extract_reference_id(self, reference: str) -> str | None:
         """Extract ID from URL reference like 'url(#id)'."""
         if reference.startswith('url(#') and reference.endswith(')'):
             return reference[5:-1]
@@ -524,7 +529,7 @@ class MaskingConverter(BaseConverter):
             return reference[1:]
         return None
     
-    def _get_element_bounds(self, element: ET.Element, context: ConversionContext) -> Tuple[float, float, float, float]:
+    def _get_element_bounds(self, element: ET.Element, context: ConversionContext) -> tuple[float, float, float, float]:
         """Get bounding box of an element (x, y, width, height)."""
         tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
 
@@ -599,7 +604,7 @@ class MaskingConverter(BaseConverter):
         
         return ""
     
-    def _merge_complex_clip_paths(self, shapes: List[ET.Element], context: ConversionContext) -> str:
+    def _merge_complex_clip_paths(self, shapes: list[ET.Element], context: ConversionContext) -> str:
         """Merge multiple shapes into a single clipping path."""
         path_parts = []
         for shape in shapes:
@@ -614,7 +619,7 @@ class MaskingConverter(BaseConverter):
         
         return ' '.join(path_parts)
     
-    def _transform_path_to_object_bounds(self, path: str, bounds: Tuple[float, float, float, float]) -> str:
+    def _transform_path_to_object_bounds(self, path: str, bounds: tuple[float, float, float, float]) -> str:
         """Transform path coordinates from objectBoundingBox to user space."""
         # This would parse and transform the path coordinates
         # For now, return the path as-is
@@ -783,19 +788,19 @@ class MaskingConverter(BaseConverter):
 
         return ''.join(path_elements)
     
-    def get_mask_definitions(self) -> Dict[str, MaskDefinition]:
+    def get_mask_definitions(self) -> dict[str, MaskDefinition]:
         """Get all processed mask definitions."""
         return self.mask_definitions.copy()
     
-    def get_clippath_definitions(self) -> Dict[str, ClipPathDefinition]:
+    def get_clippath_definitions(self) -> dict[str, ClipPathDefinition]:
         """Get all processed clipPath definitions."""
         return self.clippath_definitions.copy()
     
-    def get_masked_elements(self) -> List[MaskApplication]:
+    def get_masked_elements(self) -> list[MaskApplication]:
         """Get all elements with masks applied."""
         return self.masked_elements.copy()
     
-    def get_clipped_elements(self) -> List[ClipApplication]:
+    def get_clipped_elements(self) -> list[ClipApplication]:
         """Get all elements with clipping applied."""
         return self.clipped_elements.copy()
     

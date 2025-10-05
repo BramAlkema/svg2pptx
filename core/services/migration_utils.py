@@ -7,7 +7,8 @@ to the new ConversionServices dependency injection pattern.
 
 import warnings
 from typing import Optional, Type
-from .conversion_services import ConversionServices, ConversionConfig
+
+from .conversion_services import ConversionConfig, ConversionServices
 
 
 class DeprecationWarning(UserWarning):
@@ -30,7 +31,7 @@ def deprecated_manual_services(func):
             "Manual service instantiation is deprecated. "
             "Use ConversionServices dependency injection instead.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         return func(*args, **kwargs)
     return wrapper
@@ -40,9 +41,9 @@ class MigrationHelper:
     """Helper class for managing converter migration to dependency injection."""
 
     @staticmethod
-    def create_converter_with_services(converter_class: Type,
-                                     services: Optional[ConversionServices] = None,
-                                     config: Optional[ConversionConfig] = None):
+    def create_converter_with_services(converter_class: type,
+                                     services: ConversionServices | None = None,
+                                     config: ConversionConfig | None = None):
         """
         Create converter instance with proper service injection.
 
@@ -85,7 +86,7 @@ class MigrationHelper:
 
     @staticmethod
     @deprecated_manual_services
-    def create_legacy_converter(converter_class: Type):
+    def create_legacy_converter(converter_class: type):
         """
         Create converter using legacy manual service instantiation.
 
@@ -146,7 +147,7 @@ class MigrationHelper:
             converter_status[converter_name] = {
                 'migrated': is_migrated,
                 'has_services': hasattr(converter, 'services'),
-                'services_valid': converter.validate_services() if hasattr(converter, 'services') else False
+                'services_valid': converter.validate_services() if hasattr(converter, 'services') else False,
             }
 
             if is_migrated:
@@ -159,7 +160,7 @@ class MigrationHelper:
             'migrated_converters': migrated_converters,
             'legacy_converters': legacy_converters,
             'migration_percentage': (migrated_converters / total_converters * 100) if total_converters > 0 else 0,
-            'converter_details': converter_status
+            'converter_details': converter_status,
         }
 
     @staticmethod
@@ -180,13 +181,13 @@ class MigrationHelper:
             migration_steps.append({
                 'step': 1,
                 'description': 'Create ConversionServices instance',
-                'action': 'services = ConversionServices.create_default()'
+                'action': 'services = ConversionServices.create_default()',
             })
 
             migration_steps.append({
                 'step': 2,
                 'description': 'Update registry with services',
-                'action': 'registry.services = services'
+                'action': 'registry.services = services',
             })
 
             for converter_name, details in status['converter_details'].items():
@@ -194,7 +195,7 @@ class MigrationHelper:
                     migration_steps.append({
                         'step': len(migration_steps) + 1,
                         'description': f'Migrate {converter_name}',
-                        'action': f'Update {converter_name} constructor to accept services parameter'
+                        'action': f'Update {converter_name} constructor to accept services parameter',
                     })
 
         return migration_steps
@@ -204,7 +205,7 @@ class ServiceCompatibilityChecker:
     """Checker for service compatibility during migration."""
 
     @staticmethod
-    def check_converter_compatibility(converter_class: Type) -> dict:
+    def check_converter_compatibility(converter_class: type) -> dict:
         """
         Check converter class compatibility with dependency injection.
 
@@ -218,7 +219,7 @@ class ServiceCompatibilityChecker:
             'supports_services': False,
             'has_migration_method': False,
             'constructor_signature': None,
-            'issues': []
+            'issues': [],
         }
 
         # Check constructor signature

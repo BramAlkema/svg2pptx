@@ -6,13 +6,14 @@ Validates IR data structures and provides serialization for golden tests.
 Ensures IR is always in valid state for mappers.
 """
 
-from typing import Any, Dict, List, Union
 import json
-# Use shared numpy compatibility
+from typing import Any, Dict, List, Union
 
-from .scene import IRElement, Path, TextFrame, Group, Image
-from .geometry import Point, Rect, Segment, LineSegment, BezierSegment
-from .paint import Paint, SolidPaint, LinearGradientPaint
+from .geometry import BezierSegment, LineSegment, Point, Rect, Segment
+from .paint import LinearGradientPaint, Paint, SolidPaint
+
+# Use shared numpy compatibility
+from .scene import Group, Image, IRElement, Path, TextFrame
 from .text import Run, TextAnchor
 
 
@@ -21,7 +22,7 @@ class IRValidationError(Exception):
     pass
 
 
-def validate_ir(elements: List[IRElement]) -> None:
+def validate_ir(elements: list[IRElement]) -> None:
     """
     Validate IR scene graph for correctness.
 
@@ -117,7 +118,7 @@ def _validate_image(image: Image) -> None:
         raise IRValidationError(f"Image opacity out of range: {image.opacity}")
 
 
-def serialize_ir(elements: List[IRElement]) -> str:
+def serialize_ir(elements: list[IRElement]) -> str:
     """
     Serialize IR to JSON for golden tests and debugging.
 
@@ -130,7 +131,7 @@ def serialize_ir(elements: List[IRElement]) -> str:
     return json.dumps(_serialize_elements(elements), indent=2, sort_keys=True)
 
 
-def deserialize_ir(json_str: str) -> List[IRElement]:
+def deserialize_ir(json_str: str) -> list[IRElement]:
     """
     Deserialize IR from JSON.
 
@@ -144,7 +145,7 @@ def deserialize_ir(json_str: str) -> List[IRElement]:
     return _deserialize_elements(data)
 
 
-def _serialize_elements(elements: List[IRElement]) -> List[Dict[str, Any]]:
+def _serialize_elements(elements: list[IRElement]) -> list[dict[str, Any]]:
     """Serialize elements to JSON-compatible format"""
     result = []
     for element in elements:
@@ -161,7 +162,7 @@ def _serialize_elements(elements: List[IRElement]) -> List[Dict[str, Any]]:
     return result
 
 
-def _serialize_path(path: Path) -> Dict[str, Any]:
+def _serialize_path(path: Path) -> dict[str, Any]:
     """Serialize Path to dict"""
     return {
         "type": "Path",
@@ -172,17 +173,17 @@ def _serialize_path(path: Path) -> Dict[str, Any]:
         "opacity": path.opacity,
         "transform": path.transform.tolist() if path.transform is not None else None,
         "bbox": _serialize_rect(path.bbox),
-        "complexity_score": path.complexity_score
+        "complexity_score": path.complexity_score,
     }
 
 
-def _serialize_segment(segment: Segment) -> Dict[str, Any]:
+def _serialize_segment(segment: Segment) -> dict[str, Any]:
     """Serialize segment to dict"""
     if isinstance(segment, LineSegment):
         return {
             "type": "LineSegment",
             "start": _serialize_point(segment.start),
-            "end": _serialize_point(segment.end)
+            "end": _serialize_point(segment.end),
         }
     elif isinstance(segment, BezierSegment):
         return {
@@ -190,23 +191,23 @@ def _serialize_segment(segment: Segment) -> Dict[str, Any]:
             "start": _serialize_point(segment.start),
             "control1": _serialize_point(segment.control1),
             "control2": _serialize_point(segment.control2),
-            "end": _serialize_point(segment.end)
+            "end": _serialize_point(segment.end),
         }
     else:
         raise IRValidationError(f"Cannot serialize segment type: {type(segment)}")
 
 
-def _serialize_point(point: Point) -> List[float]:
+def _serialize_point(point: Point) -> list[float]:
     """Serialize Point to [x, y]"""
     return [point.x, point.y]
 
 
-def _serialize_rect(rect: Rect) -> List[float]:
+def _serialize_rect(rect: Rect) -> list[float]:
     """Serialize Rect to [x, y, width, height]"""
     return [rect.x, rect.y, rect.width, rect.height]
 
 
-def _serialize_paint(paint: Paint) -> Union[Dict[str, Any], None]:
+def _serialize_paint(paint: Paint) -> dict[str, Any] | None:
     """Serialize Paint to dict"""
     if paint is None:
         return None
@@ -214,7 +215,7 @@ def _serialize_paint(paint: Paint) -> Union[Dict[str, Any], None]:
         return {
             "type": "SolidPaint",
             "rgb": paint.rgb,
-            "opacity": paint.opacity
+            "opacity": paint.opacity,
         }
     elif isinstance(paint, LinearGradientPaint):
         return {
@@ -222,13 +223,13 @@ def _serialize_paint(paint: Paint) -> Union[Dict[str, Any], None]:
             "stops": [{"offset": s.offset, "rgb": s.rgb, "opacity": s.opacity} for s in paint.stops],
             "start": _serialize_point(paint.start),
             "end": _serialize_point(paint.end),
-            "transform": paint.transform.tolist() if paint.transform is not None else None
+            "transform": paint.transform.tolist() if paint.transform is not None else None,
         }
     else:
         return {"type": "UnknownPaint", "class": type(paint).__name__}
 
 
-def _serialize_stroke(stroke) -> Union[Dict[str, Any], None]:
+def _serialize_stroke(stroke) -> dict[str, Any] | None:
     """Serialize Stroke to dict"""
     if stroke is None:
         return None
@@ -238,21 +239,21 @@ def _serialize_stroke(stroke) -> Union[Dict[str, Any], None]:
         "join": stroke.join.value,
         "cap": stroke.cap.value,
         "opacity": stroke.opacity,
-        "is_dashed": stroke.is_dashed
+        "is_dashed": stroke.is_dashed,
     }
 
 
-def _serialize_clip(clip) -> Union[Dict[str, Any], None]:
+def _serialize_clip(clip) -> dict[str, Any] | None:
     """Serialize ClipRef to dict"""
     if clip is None:
         return None
     return {
         "clip_id": clip.clip_id,
-        "strategy": clip.strategy.value
+        "strategy": clip.strategy.value,
     }
 
 
-def _serialize_text_frame(frame: TextFrame) -> Dict[str, Any]:
+def _serialize_text_frame(frame: TextFrame) -> dict[str, Any]:
     """Serialize TextFrame to dict"""
     return {
         "type": "TextFrame",
@@ -261,11 +262,11 @@ def _serialize_text_frame(frame: TextFrame) -> Dict[str, Any]:
         "anchor": frame.anchor.value,
         "bbox": _serialize_rect(frame.bbox),
         "text_content": frame.text_content,
-        "complexity_score": frame.complexity_score
+        "complexity_score": frame.complexity_score,
     }
 
 
-def _serialize_run(run: Run) -> Dict[str, Any]:
+def _serialize_run(run: Run) -> dict[str, Any]:
     """Serialize Run to dict"""
     return {
         "text": run.text,
@@ -275,11 +276,11 @@ def _serialize_run(run: Run) -> Dict[str, Any]:
         "italic": run.italic,
         "underline": run.underline,
         "strike": run.strike,
-        "rgb": run.rgb
+        "rgb": run.rgb,
     }
 
 
-def _serialize_group(group: Group) -> Dict[str, Any]:
+def _serialize_group(group: Group) -> dict[str, Any]:
     """Serialize Group to dict"""
     return {
         "type": "Group",
@@ -288,11 +289,11 @@ def _serialize_group(group: Group) -> Dict[str, Any]:
         "opacity": group.opacity,
         "transform": group.transform.tolist() if group.transform is not None else None,
         "bbox": _serialize_rect(group.bbox),
-        "total_element_count": group.total_element_count
+        "total_element_count": group.total_element_count,
     }
 
 
-def _serialize_image(image: Image) -> Dict[str, Any]:
+def _serialize_image(image: Image) -> dict[str, Any]:
     """Serialize Image to dict"""
     return {
         "type": "Image",
@@ -302,12 +303,12 @@ def _serialize_image(image: Image) -> Dict[str, Any]:
         "data_size": len(image.data),
         "clip": _serialize_clip(image.clip),
         "opacity": image.opacity,
-        "transform": image.transform.tolist() if image.transform is not None else None
+        "transform": image.transform.tolist() if image.transform is not None else None,
     }
 
 
 # Deserialization methods (simplified for now)
-def _deserialize_elements(data: List[Dict[str, Any]]) -> List[IRElement]:
+def _deserialize_elements(data: list[dict[str, Any]]) -> list[IRElement]:
     """Deserialize elements from JSON data"""
     # TODO: Implement full deserialization when needed for golden tests
     # PRIORITY: LOW - Only needed for future golden test framework

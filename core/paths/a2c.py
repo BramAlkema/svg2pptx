@@ -16,9 +16,9 @@ References:
   by L. Maisonobe
 """
 
+import logging
 import math
 from typing import List, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class InvalidArcParametersError(ValueError):
 
 def arc_to_cubic_bezier(start_x: float, start_y: float, rx: float, ry: float,
                        rotation: float, large_arc_flag: bool, sweep_flag: bool,
-                       end_x: float, end_y: float, max_segment_angle: float = 90.0) -> List[Tuple[float, float, float, float, float, float, float, float]]:
+                       end_x: float, end_y: float, max_segment_angle: float = 90.0) -> list[tuple[float, float, float, float, float, float, float, float]]:
     """
     Convert SVG elliptical arc to cubic Bézier curve segments.
 
@@ -160,7 +160,7 @@ def compute_angle(ux: float, uy: float) -> float:
 
 
 def _convert_arc_to_bezier_curves(cx: float, cy: float, rx: float, ry: float,
-                                 phi: float, start_angle: float, sweep_angle: float, max_segment_angle: float = 90.0) -> List[Tuple[float, float, float, float, float, float, float, float]]:
+                                 phi: float, start_angle: float, sweep_angle: float, max_segment_angle: float = 90.0) -> list[tuple[float, float, float, float, float, float, float, float]]:
     """
     Convert arc parameters to cubic Bézier curve segments.
 
@@ -205,7 +205,7 @@ def _convert_arc_to_bezier_curves(cx: float, cy: float, rx: float, ry: float,
 
 
 def _arc_segment_to_bezier(cx: float, cy: float, rx: float, ry: float,
-                          cos_phi: float, sin_phi: float, start_angle: float, segment_angle: float) -> Tuple[float, float, float, float, float, float, float, float]:
+                          cos_phi: float, sin_phi: float, start_angle: float, segment_angle: float) -> tuple[float, float, float, float, float, float, float, float]:
     """
     Convert a single arc segment to a cubic Bézier curve.
 

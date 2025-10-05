@@ -13,7 +13,8 @@ Features:
 """
 
 import logging
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices
@@ -39,7 +40,7 @@ class TextLayoutEngine:
         self.services = services
         self.logger = logging.getLogger(__name__)
 
-    def process_preprocessed_text(self, text_element: ET.Element, context: Any) -> Dict[str, Any]:
+    def process_preprocessed_text(self, text_element: ET.Element, context: Any) -> dict[str, Any]:
         """
         Process text element that has been prepared by TextLayoutPrepPreprocessor.
 
@@ -71,7 +72,7 @@ class TextLayoutEngine:
         """Check if element has preprocessing metadata."""
         return element.get('data-text-layout') is not None
 
-    def _extract_layout_metadata(self, element: ET.Element) -> Dict[str, Any]:
+    def _extract_layout_metadata(self, element: ET.Element) -> dict[str, Any]:
         """Extract preprocessing metadata from text element."""
         metadata = {
             'layout_type': element.get('data-text-layout', 'single-run'),
@@ -84,7 +85,7 @@ class TextLayoutEngine:
             'needs_coord_transform': element.get('data-needs-coord-transform', 'false').lower() == 'true',
             'primary_font': element.get('data-primary-font'),
             'fallback_fonts': element.get('data-fallback-fonts'),
-            'font_cascade': element.get('data-font-cascade', 'Arial')
+            'font_cascade': element.get('data-font-cascade', 'Arial'),
         }
 
         # Extract line break information for multi-run
@@ -93,7 +94,7 @@ class TextLayoutEngine:
 
         return metadata
 
-    def _process_single_run_text(self, element: ET.Element, metadata: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    def _process_single_run_text(self, element: ET.Element, metadata: dict[str, Any], context: Any) -> dict[str, Any]:
         """Process single-run text with preprocessing integration."""
         # Get text content
         text_content = self._extract_text_content(element)
@@ -112,7 +113,7 @@ class TextLayoutEngine:
             'font': {
                 'family': metadata['font_family'],
                 'size': metadata['font_size'],
-                'cascade': metadata['font_cascade'].split(',') if metadata['font_cascade'] else ['Arial']
+                'cascade': metadata['font_cascade'].split(',') if metadata['font_cascade'] else ['Arial'],
             },
             'anchor': metadata['original_anchor'],
             'baseline_adjusted': True,
@@ -122,15 +123,15 @@ class TextLayoutEngine:
                     'font_family': metadata['font_family'],
                     'font_size': metadata['font_size'],
                     'position': {'x': x, 'y': y},
-                    'inherited_styles': self._extract_inherited_styles(element)
-                }
-            ]
+                    'inherited_styles': self._extract_inherited_styles(element),
+                },
+            ],
         }
 
         self.logger.debug(f"Single-run text layout: '{text_content[:20]}...' at ({x:.1f}, {y:.1f})")
         return layout
 
-    def _process_multi_run_text(self, element: ET.Element, metadata: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    def _process_multi_run_text(self, element: ET.Element, metadata: dict[str, Any], context: Any) -> dict[str, Any]:
         """Process multi-run text with tspan elements."""
         # Get base position
         base_x, base_y = self._get_text_position(element, metadata, context)
@@ -163,19 +164,19 @@ class TextLayoutEngine:
             'font': {
                 'family': metadata['font_family'],
                 'size': metadata['font_size'],
-                'cascade': metadata['font_cascade'].split(',') if metadata['font_cascade'] else ['Arial']
+                'cascade': metadata['font_cascade'].split(',') if metadata['font_cascade'] else ['Arial'],
             },
             'anchor': metadata['original_anchor'],
             'baseline_adjusted': True,
             'line_breaks': metadata.get('line_breaks', 0),
-            'runs': runs
+            'runs': runs,
         }
 
         self.logger.debug(f"Multi-run text layout: {len(runs)} runs, {metadata.get('line_breaks', 0)} line breaks")
         return layout
 
     def _process_tspan_run(self, tspan: ET.Element, base_x: float, base_y: float,
-                          metadata: Dict[str, Any], context: Any) -> Dict[str, Any]:
+                          metadata: dict[str, Any], context: Any) -> dict[str, Any]:
         """Process a single tspan run."""
         # Get tspan content
         text_content = tspan.text or ''
@@ -209,12 +210,12 @@ class TextLayoutEngine:
             'run_index': run_index,
             'line_break': tspan.get('data-line-break') == 'true',
             'inherited_styles': inherited_styles,
-            'explicit_positioning': tspan_x is not None or tspan_y is not None
+            'explicit_positioning': tspan_x is not None or tspan_y is not None,
         }
 
         return run_info
 
-    def _get_text_position(self, element: ET.Element, metadata: Dict[str, Any], context: Any) -> Tuple[float, float]:
+    def _get_text_position(self, element: ET.Element, metadata: dict[str, Any], context: Any) -> tuple[float, float]:
         """Get text position with coordinate system awareness."""
         # Get raw coordinates
         x = float(element.get('x', '0'))
@@ -250,7 +251,7 @@ class TextLayoutEngine:
 
         return ' '.join(text_parts)
 
-    def _extract_inherited_styles(self, element: ET.Element) -> Dict[str, Any]:
+    def _extract_inherited_styles(self, element: ET.Element) -> dict[str, Any]:
         """Extract style properties from element."""
         styles = {}
 
@@ -268,7 +269,7 @@ class TextLayoutEngine:
 
         return styles
 
-    def _extract_tspan_styles(self, tspan: ET.Element) -> Dict[str, Any]:
+    def _extract_tspan_styles(self, tspan: ET.Element) -> dict[str, Any]:
         """Extract styles from tspan element including inherited data."""
         styles = self._extract_inherited_styles(tspan)
 
@@ -291,7 +292,7 @@ class TextLayoutEngine:
 
         return styles
 
-    def _parse_css_style(self, style_str: str) -> Dict[str, str]:
+    def _parse_css_style(self, style_str: str) -> dict[str, str]:
         """Parse CSS style string into dictionary."""
         styles = {}
         if not style_str:
@@ -304,7 +305,7 @@ class TextLayoutEngine:
 
         return styles
 
-    def _create_fallback_layout(self, element: ET.Element, context: Any) -> Dict[str, Any]:
+    def _create_fallback_layout(self, element: ET.Element, context: Any) -> dict[str, Any]:
         """Create fallback layout for non-preprocessed text."""
         text_content = self._extract_text_content(element)
         x = float(element.get('x', '0'))
@@ -317,7 +318,7 @@ class TextLayoutEngine:
             'font': {
                 'family': 'Arial',
                 'size': 12.0,
-                'cascade': ['Arial']
+                'cascade': ['Arial'],
             },
             'anchor': 'start',
             'baseline_adjusted': False,
@@ -327,9 +328,9 @@ class TextLayoutEngine:
                     'font_family': 'Arial',
                     'font_size': 12.0,
                     'position': {'x': x, 'y': y},
-                    'inherited_styles': {}
-                }
-            ]
+                    'inherited_styles': {},
+                },
+            ],
         }
 
         self.logger.debug(f"Fallback text layout for non-preprocessed element")

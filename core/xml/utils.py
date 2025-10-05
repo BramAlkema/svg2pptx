@@ -2,8 +2,11 @@
 Extended XML utilities built on safe iteration foundation.
 """
 
+from collections.abc import Iterator
+from typing import Any, Dict, List, Optional
+
 from lxml import etree as ET
-from typing import Iterator, Optional, Dict, List
+
 from .safe_iter import children, walk
 
 
@@ -22,7 +25,7 @@ def get_descendants(elem: ET.Element) -> Iterator[ET.Element]:
             yield node
 
 
-def first_child(elem: ET.Element) -> Optional[ET.Element]:
+def first_child(elem: ET.Element) -> Optional[Any]:  # ET.Element is not a type
     """
     Get first child element (ignoring comments/PIs).
 
@@ -37,7 +40,7 @@ def first_child(elem: ET.Element) -> Optional[ET.Element]:
     return None
 
 
-def collect_attributes(root: ET.Element) -> Dict[str, List[str]]:
+def collect_attributes(root: ET.Element) -> dict[str, list[str]]:
     """
     Collect all unique attribute names and values from tree.
 
@@ -57,7 +60,7 @@ def collect_attributes(root: ET.Element) -> Dict[str, List[str]]:
     return attributes
 
 
-def count_by_tag(root: ET.Element) -> Dict[str, int]:
+def count_by_tag(root: ET.Element) -> dict[str, int]:
     """
     Count elements by tag name (local name, without namespace).
 

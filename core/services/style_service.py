@@ -11,8 +11,10 @@ Lightweight CSS engine that properly handles:
 """
 
 from __future__ import annotations
+
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
+
 from lxml import etree as ET
 
 # Presentation attribute → CSS property mapping (SVG spec subset)
@@ -68,7 +70,7 @@ RULE_SPLIT_RE = re.compile(r'}')
 SELECTOR_SPLIT_RE = re.compile(r'\s*,\s*')
 
 
-def parse_inline_style(style_value: str) -> Dict[str, str]:
+def parse_inline_style(style_value: str) -> dict[str, str]:
     """Parse inline style attribute into property dict."""
     out = {}
     for m in DECL_RE.finditer(style_value or ""):
@@ -79,7 +81,7 @@ def parse_inline_style(style_value: str) -> Dict[str, str]:
     return out
 
 
-def _specificity(selector: str) -> Tuple[int, int, int]:
+def _specificity(selector: str) -> tuple[int, int, int]:
     """
     Calculate CSS specificity: (id_count, class_count, tag_count).
 
@@ -97,7 +99,7 @@ def _specificity(selector: str) -> Tuple[int, int, int]:
     return (0, 0, 1)
 
 
-def parse_css(css_text: str) -> List[Tuple[str, Dict[str, str], Tuple[int, int, int], int]]:
+def parse_css(css_text: str) -> list[tuple[str, dict[str, str], tuple[int, int, int], int]]:
     """
     Parse CSS text into rules.
 
@@ -170,7 +172,7 @@ def _matches(element: ET.Element, selector: str) -> bool:
     return tag == selector
 
 
-def _merge(dst: Dict[str, str], src: Dict[str, str]) -> None:
+def _merge(dst: dict[str, str], src: dict[str, str]) -> None:
     """Merge source properties into destination."""
     for k, v in src.items():
         dst[k] = v
@@ -187,14 +189,14 @@ class StyleService:
     - Provides convenience methods for common property access
     """
 
-    def __init__(self, svg_root: Optional[ET.Element] = None) -> None:
+    def __init__(self, svg_root: Optional[Any] = None) -> None:  # ET.Element is not a type
         """
         Initialize StyleService.
 
         Args:
             svg_root: Optional SVG root element to parse styles from
         """
-        self.rules: List[Tuple[str, Dict[str, str], Tuple[int, int, int], int]] = []
+        self.rules: list[tuple[str, dict[str, str], tuple[int, int, int], int]] = []
         if svg_root is not None:
             self._collect_style_rules(svg_root)
 
@@ -210,7 +212,7 @@ class StyleService:
 
     def compute_style(self,
                      element: ET.Element,
-                     parent_style: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+                     parent_style: dict[str, str] | None = None) -> dict[str, str]:
         """
         Compute the final style for an element.
 
@@ -228,7 +230,7 @@ class StyleService:
             Dict of computed CSS properties
         """
         # 1) Start with inherited properties from parent
-        style: Dict[str, str] = {}
+        style: dict[str, str] = {}
         if parent_style:
             for k in INHERITED:
                 if k in parent_style:
@@ -260,7 +262,7 @@ class StyleService:
 
     # --- Convenience methods for common property access ---
 
-    def fill(self, style: Dict[str, str], default: Optional[str] = None) -> Optional[str]:
+    def fill(self, style: dict[str, str], default: str | None = None) -> str | None:
         """
         Get fill value from computed style.
 
@@ -273,23 +275,23 @@ class StyleService:
         """
         return style.get('fill', default)
 
-    def stroke(self, style: Dict[str, str], default: Optional[str] = None) -> Optional[str]:
+    def stroke(self, style: dict[str, str], default: str | None = None) -> str | None:
         """Get stroke value from computed style."""
         return style.get('stroke', default)
 
-    def stroke_width(self, style: Dict[str, str], default: str = '1') -> str:
+    def stroke_width(self, style: dict[str, str], default: str = '1') -> str:
         """Get stroke-width value from computed style."""
         return style.get('stroke-width', default)
 
-    def opacity(self, style: Dict[str, str], default: str = '1') -> str:
+    def opacity(self, style: dict[str, str], default: str = '1') -> str:
         """Get opacity value from computed style."""
         return style.get('opacity', default)
 
-    def font_family(self, style: Dict[str, str], default: str = 'Arial') -> str:
+    def font_family(self, style: dict[str, str], default: str = 'Arial') -> str:
         """Get font-family value from computed style."""
         return style.get('font-family', default)
 
-    def font_size(self, style: Dict[str, str], default_pt: float = 12.0) -> float:
+    def font_size(self, style: dict[str, str], default_pt: float = 12.0) -> float:
         """
         Get font-size value from computed style in points.
 
@@ -329,27 +331,27 @@ class StyleService:
         except (ValueError, IndexError):
             return default_pt
 
-    def font_weight(self, style: Dict[str, str], default: str = 'normal') -> str:
+    def font_weight(self, style: dict[str, str], default: str = 'normal') -> str:
         """Get font-weight value from computed style."""
         return style.get('font-weight', default)
 
-    def font_style(self, style: Dict[str, str], default: str = 'normal') -> str:
+    def font_style(self, style: dict[str, str], default: str = 'normal') -> str:
         """Get font-style value from computed style."""
         return style.get('font-style', default)
 
-    def text_anchor(self, style: Dict[str, str], default: str = 'start') -> str:
+    def text_anchor(self, style: dict[str, str], default: str = 'start') -> str:
         """Get text-anchor value from computed style."""
         return style.get('text-anchor', default)
 
-    def display(self, style: Dict[str, str], default: str = 'inline') -> str:
+    def display(self, style: dict[str, str], default: str = 'inline') -> str:
         """Get display value from computed style."""
         return style.get('display', default)
 
-    def visibility(self, style: Dict[str, str], default: str = 'visible') -> str:
+    def visibility(self, style: dict[str, str], default: str = 'visible') -> str:
         """Get visibility value from computed style."""
         return style.get('visibility', default)
 
-    def is_visible(self, style: Dict[str, str]) -> bool:
+    def is_visible(self, style: dict[str, str]) -> bool:
         """Check if element should be rendered based on display/visibility."""
         return (self.display(style) != 'none' and
                 self.visibility(style) == 'visible')

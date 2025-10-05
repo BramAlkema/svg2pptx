@@ -30,53 +30,41 @@ Example usage:
 """
 
 # Core types and data models
+# Fluent API builders
+from .builders import (
+    AnimationBuilder,
+    AnimationComposer,
+    AnimationSequenceBuilder,
+    TimingBuilder,
+)
 from .core import (
-    AnimationType,
-    FillMode,
-    TransformType,
-    CalcMode,
     AnimationComplexity,
-    AnimationTiming,
-    AnimationKeyframe,
     AnimationDefinition,
+    AnimationKeyframe,
     AnimationScene,
     AnimationSummary,
-    format_transform_string
-)
-
-# Main parser (converter now in src.converters.animation_converter)
-from .parser import (
-    SMILParser,
-    SMILParsingError
+    AnimationTiming,
+    AnimationType,
+    CalcMode,
+    FillMode,
+    TransformType,
+    format_transform_string,
 )
 
 # Specialized components
 from .interpolation import (
+    BezierEasing,
+    ColorInterpolator,
     InterpolationEngine,
     InterpolationResult,
-    ColorInterpolator,
     NumericInterpolator,
     TransformInterpolator,
-    BezierEasing
 )
 
-from .timeline import (
-    TimelineGenerator,
-    TimelineConfig
-)
-
-from .powerpoint import (
-    PowerPointAnimationGenerator,
-    PowerPointAnimationSequence
-)
-
-# Fluent API builders
-from .builders import (
-    AnimationBuilder,
-    AnimationSequenceBuilder,
-    TimingBuilder,
-    AnimationComposer
-)
+# Main parser (converter now in src.converters.animation_converter)
+from .parser import SMILParser, SMILParsingError
+from .powerpoint import PowerPointAnimationGenerator, PowerPointAnimationSequence
+from .timeline import TimelineConfig, TimelineGenerator
 
 # Version information
 __version__ = "1.0.0"
@@ -181,5 +169,5 @@ __all__ = [
     'parse_svg_animations',
     'create_animation_builder',
     'create_sequence_builder',
-    'create_composer'
+    'create_composer',
 ]

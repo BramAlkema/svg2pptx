@@ -6,27 +6,27 @@ injection for UnitConverter, ColorParser, TransformEngine, and ViewportEngine.
 It eliminates 102 manual imports across converter classes.
 """
 
-from dataclasses import dataclass
-from typing import Optional, Dict, Any, ClassVar
 import json
 import logging
+from dataclasses import dataclass
+from typing import Any, ClassVar, Dict, Optional
 
-from ..units import UnitConverter, unit
 from ..color import Color
-from ..transforms import TransformEngine
-from ..viewbox import ViewportEngine
+from ..legacy.pptx_builder import PPTXBuilder
 from ..paths import PathSystem
-from ..utils.style_parser import StyleParser
+from ..transforms import TransformEngine
+from ..units import UnitConverter, unit
 from ..utils.coordinate_transformer import CoordinateTransformer
 from ..utils.font_processor import FontProcessor
 from ..utils.path_processor import PathProcessor
-from ..legacy.pptx_builder import PPTXBuilder
-from .gradient_service import GradientService
-from .pattern_service import PatternService
+from ..utils.style_parser import StyleParser
+from ..viewbox import ViewportEngine
 from .filter_service import FilterService
-from .image_service import ImageService
-from .style_service import StyleService
 from .font_service import FontService
+from .gradient_service import GradientService
+from .image_service import ImageService
+from .pattern_service import PatternService
+from .style_service import StyleService
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class ServiceInitializationError(Exception):
     """Exception raised when service initialization fails."""
 
-    def __init__(self, message: str, cause: Optional[Exception] = None):
+    def __init__(self, message: str, cause: Exception | None = None):
         super().__init__(message)
         if cause is not None:
             self.__cause__ = cause
@@ -53,7 +53,7 @@ class ConversionConfig:
     enable_caching: bool = True
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> 'ConversionConfig':
+    def from_dict(cls, config_dict: dict[str, Any]) -> 'ConversionConfig':
         """Create ConversionConfig from dictionary with defaults for missing values."""
         # Only use keys that exist in the dataclass
         valid_keys = {field.name for field in cls.__dataclass_fields__.values()}
@@ -72,13 +72,13 @@ class ConversionConfig:
             logger.warning(f"Could not load config from {file_path}: {e}. Using defaults.")
             return cls()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert ConversionConfig to dictionary for serialization."""
         return {
             'default_dpi': self.default_dpi,
             'viewport_width': self.viewport_width,
             'viewport_height': self.viewport_height,
-            'enable_caching': self.enable_caching
+            'enable_caching': self.enable_caching,
         }
 
 
@@ -110,16 +110,16 @@ class ConversionServices:
     config: ConversionConfig = None
 
     # Clean Slate Integration Services
-    ir_scene_factory: Optional[Any] = None
-    policy_engine: Optional[Any] = None
-    mapper_registry: Optional[Any] = None
-    drawingml_embedder: Optional[Any] = None
+    ir_scene_factory: Any | None = None
+    policy_engine: Any | None = None
+    mapper_registry: Any | None = None
+    drawingml_embedder: Any | None = None
 
     # Class-level singleton instance
     _default_instance: ClassVar[Optional['ConversionServices']] = None
 
     @classmethod
-    def create_default(cls, config: Optional[ConversionConfig] = None,
+    def create_default(cls, config: ConversionConfig | None = None,
                        svg_root: Optional['ET.Element'] = None) -> 'ConversionServices':
         """Create ConversionServices with default service configurations.
 
@@ -171,8 +171,8 @@ class ConversionServices:
             # Initialize policy engine once (shared between services)
             policy_engine = None
             try:
-                from ..policy.engine import create_policy
                 from ..policy.config import OutputTarget
+                from ..policy.engine import create_policy
                 policy_engine = create_policy(OutputTarget.BALANCED)
             except ImportError:
                 logger.debug("Policy engine not available, services will use legacy behavior")
@@ -204,7 +204,7 @@ class ConversionServices:
                 filter_service=filter_service,
                 image_service=image_service,
                 config=config,
-                policy_engine=policy_engine
+                policy_engine=policy_engine,
             )
 
         except Exception as e:
@@ -222,11 +222,11 @@ class ConversionServices:
                 service_name = "ViewportEngine"
 
             raise ServiceInitializationError(
-                f"Failed to initialize {service_name}: {e}", e
+                f"Failed to initialize {service_name}: {e}", e,
             )
 
     @classmethod
-    def create_custom(cls, custom_config: Dict[str, Dict[str, Any]]) -> 'ConversionServices':
+    def create_custom(cls, custom_config: dict[str, dict[str, Any]]) -> 'ConversionServices':
         """Create ConversionServices with custom service configurations.
 
         Args:
@@ -260,14 +260,14 @@ class ConversionServices:
 
             # Initialize remaining services
             # PathSystem will be created per-conversion with viewport configuration
-            from ..utils.style_parser import StyleParser
             from ..utils.coordinate_transformer import CoordinateTransformer
             from ..utils.font_processor import FontProcessor
             from ..utils.path_processor import PathProcessor
-            from .gradient_service import GradientService
-            from .pattern_service import PatternService
+            from ..utils.style_parser import StyleParser
             from .filter_service import FilterService
+            from .gradient_service import GradientService
             from .image_service import ImageService
+            from .pattern_service import PatternService
 
             path_system = None  # Will be created per-conversion
             style_parser = StyleParser()
@@ -303,16 +303,16 @@ class ConversionServices:
                 pattern_service=pattern_service,
                 filter_service=filter_service,
                 image_service=image_service,
-                config=config
+                config=config,
             )
 
         except Exception as e:
             raise ServiceInitializationError(
-                f"Failed to create custom services: {e}"
+                f"Failed to create custom services: {e}",
             ) from e
 
     @classmethod
-    def create_with_clean_slate(cls, config: Optional[ConversionConfig] = None,
+    def create_with_clean_slate(cls, config: ConversionConfig | None = None,
                                 svg_root: Optional['ET.Element'] = None) -> 'ConversionServices':
         """Create services with clean slate components enabled.
 
@@ -333,8 +333,8 @@ class ConversionServices:
             # Import clean slate components dynamically to avoid circular imports
             try:
                 from core.ir import SceneFactory
-                from core.policy import PolicyEngine
                 from core.map import MapperRegistry
+                from core.policy import PolicyEngine
                 from core.pptx import DrawingMLEmbedder
             except ImportError as e:
                 logger.warning(f"Clean slate components not available: {e}")
@@ -344,25 +344,25 @@ class ConversionServices:
             services.ir_scene_factory = SceneFactory(
                 unit_converter=services.unit_converter,
                 color_parser=services.color_parser,
-                transform_engine=services.transform_parser
+                transform_engine=services.transform_parser,
             )
 
             services.policy_engine = PolicyEngine(
                 path_complexity_threshold=0.7,
                 text_complexity_threshold=0.6,
                 group_nesting_threshold=3,
-                image_size_threshold=1024 * 1024
+                image_size_threshold=1024 * 1024,
             )
 
             services.mapper_registry = MapperRegistry(
                 path_system=services.path_system,
                 style_service=services.style_service,
-                gradient_service=services.gradient_service
+                gradient_service=services.gradient_service,
             )
 
             services.drawingml_embedder = DrawingMLEmbedder(
                 slide_width_emu=9144000,  # 10 inches
-                slide_height_emu=6858000  # 7.5 inches
+                slide_height_emu=6858000,  # 7.5 inches
             )
 
             logger.info("Clean slate services initialized successfully")
@@ -370,7 +370,7 @@ class ConversionServices:
 
         except Exception as e:
             raise ServiceInitializationError(
-                f"Failed to initialize clean slate services: {e}", e
+                f"Failed to initialize clean slate services: {e}", e,
             )
 
     @classmethod
@@ -451,7 +451,7 @@ class ConversionServices:
                 self.gradient_service,
                 self.pattern_service,
                 self.filter_service,
-                self.image_service
+                self.image_service,
             ]
 
             # Verify all services are not None (except path_system which is created per-conversion)
@@ -518,6 +518,6 @@ class ConversionServices:
                 viewport_width=viewport_width,
                 viewport_height=viewport_height,
                 viewbox=viewbox,
-                enable_logging=enable_logging
+                enable_logging=enable_logging,
             )
         return self.path_system

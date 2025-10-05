@@ -13,9 +13,9 @@ Key Features:
 - Keyframe generation with timing functions
 """
 
-from typing import List, Dict, Optional, Tuple
 import re
 from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 from .core import TransformType
 
@@ -71,7 +71,7 @@ class ColorInterpolator:
             return from_color if progress < 0.5 else to_color
 
     @staticmethod
-    def _parse_color(color_str: str, services=None) -> Optional[Tuple[int, int, int]]:
+    def _parse_color(color_str: str, services=None) -> tuple[int, int, int] | None:
         """Parse color string to RGB tuple."""
         # Use ConversionServices for color parsing when available
         if not color_str:
@@ -141,7 +141,7 @@ class NumericInterpolator:
             return from_value if progress < 0.5 else to_value
 
     @staticmethod
-    def _parse_numeric(value_str: str) -> Tuple[Optional[float], Optional[str]]:
+    def _parse_numeric(value_str: str) -> tuple[float | None, str | None]:
         """Parse numeric value with optional unit."""
         if not value_str:
             return None, None
@@ -200,7 +200,7 @@ class TransformInterpolator:
             return from_transform if progress < 0.5 else to_transform
 
     @staticmethod
-    def _parse_transform_values(transform_str: str) -> Optional[List[float]]:
+    def _parse_transform_values(transform_str: str) -> list[float] | None:
         """Parse transform string to numeric values."""
         if not transform_str:
             return None
@@ -213,7 +213,7 @@ class TransformInterpolator:
             return None
 
     @staticmethod
-    def _format_transform_values(values: List[float], transform_type: TransformType) -> str:
+    def _format_transform_values(values: list[float], transform_type: TransformType) -> str:
         """Format numeric values back to transform string."""
         if transform_type == TransformType.TRANSLATE:
             if len(values) == 1:
@@ -249,7 +249,7 @@ class BezierEasing:
     """Bezier curve easing evaluation for keySplines."""
 
     @staticmethod
-    def evaluate_bezier(t: float, control_points: List[float]) -> float:
+    def evaluate_bezier(t: float, control_points: list[float]) -> float:
         """
         Evaluate cubic Bezier curve at parameter t.
 
@@ -333,8 +333,8 @@ class InterpolationEngine:
         to_value: str,
         progress: float,
         attribute_name: str,
-        transform_type: Optional[TransformType] = None,
-        easing: Optional[List[float]] = None
+        transform_type: TransformType | None = None,
+        easing: list[float] | None = None,
     ) -> InterpolationResult:
         """
         Interpolate between two values with appropriate strategy.
@@ -361,7 +361,7 @@ class InterpolationEngine:
             value = self.color_interpolator.interpolate_color(from_value, to_value, progress, self.services)
         elif transform_type:
             value = self.transform_interpolator.interpolate_transform(
-                from_value, to_value, progress, transform_type
+                from_value, to_value, progress, transform_type,
             )
         elif self._is_numeric_attribute(attribute_name):
             value = self.numeric_interpolator.interpolate_numeric(from_value, to_value, progress)
@@ -372,17 +372,17 @@ class InterpolationEngine:
         return InterpolationResult(
             value=value,
             progress=progress,
-            easing_applied=easing_applied
+            easing_applied=easing_applied,
         )
 
     def interpolate_keyframes(
         self,
-        values: List[str],
-        key_times: Optional[List[float]],
-        key_splines: Optional[List[List[float]]],
+        values: list[str],
+        key_times: list[float] | None,
+        key_splines: list[list[float]] | None,
         progress: float,
         attribute_name: str,
-        transform_type: Optional[TransformType] = None
+        transform_type: TransformType | None = None,
     ) -> InterpolationResult:
         """
         Interpolate through multiple keyframes.
@@ -431,7 +431,7 @@ class InterpolationEngine:
                 # Interpolate between keyframes
                 return self.interpolate_value(
                     values[i], values[i + 1], local_progress,
-                    attribute_name, transform_type, easing
+                    attribute_name, transform_type, easing,
                 )
 
         # Handle edge cases
@@ -444,7 +444,7 @@ class InterpolationEngine:
         """Check if attribute represents a color value."""
         color_attributes = {
             'fill', 'stroke', 'stop-color', 'flood-color',
-            'lighting-color', 'color', 'background-color'
+            'lighting-color', 'color', 'background-color',
         }
         return attribute_name.lower() in color_attributes
 
@@ -454,11 +454,11 @@ class InterpolationEngine:
             'opacity', 'fill-opacity', 'stroke-opacity',
             'stroke-width', 'r', 'cx', 'cy', 'x', 'y',
             'width', 'height', 'rx', 'ry', 'x1', 'y1',
-            'x2', 'y2', 'dx', 'dy', 'offset', 'font-size'
+            'x2', 'y2', 'dx', 'dy', 'offset', 'font-size',
         }
         return attribute_name.lower() in numeric_attributes
 
-    def get_supported_attributes(self) -> Dict[str, str]:
+    def get_supported_attributes(self) -> dict[str, str]:
         """Get list of supported animation attributes and their types."""
         return {
             # Color attributes
@@ -483,5 +483,5 @@ class InterpolationEngine:
             'font-size': 'numeric',
 
             # Transform attributes (handled specially)
-            'transform': 'transform'
+            'transform': 'transform',
         }

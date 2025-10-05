@@ -29,16 +29,15 @@ Usage:
 
 from .converter import (
     CleanSlateMultiPageConverter,
-    PageSource,
     MultiPageResult,
-    create_multipage_converter
+    PageSource,
+    create_multipage_converter,
 )
-
 from .detection import (
-    SimplePageDetector,
     PageBreak,
+    SimplePageDetector,
+    detect_multiple_svg_files,
     split_svg_into_pages,
-    detect_multiple_svg_files
 )
 
 __all__ = [
@@ -52,5 +51,5 @@ __all__ = [
     'SimplePageDetector',
     'PageBreak',
     'split_svg_into_pages',
-    'detect_multiple_svg_files'
+    'detect_multiple_svg_files',
 ]

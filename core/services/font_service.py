@@ -12,11 +12,11 @@ This is the foundation for the advanced font processing system.
 
 import os
 import platform
+from dataclasses import dataclass
 from typing import Dict, List, Optional
+
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttFont import TTLibError
-
-from dataclasses import dataclass
 
 
 class FontServiceError(Exception):
@@ -40,7 +40,7 @@ class FontService:
     """
 
     # Font metrics table: family -> FontMetrics
-    FONT_METRICS: Dict[str, FontMetrics] = {
+    FONT_METRICS: dict[str, FontMetrics] = {
         "Arial": FontMetrics(0.82, 0.18),
         "Helvetica": FontMetrics(0.82, 0.18),
         "Times New Roman": FontMetrics(0.83, 0.17),
@@ -52,7 +52,7 @@ class FontService:
         "Impact": FontMetrics(0.85, 0.15),
         "Trebuchet MS": FontMetrics(0.82, 0.18),
         # Default fallback
-        "default": FontMetrics(0.80, 0.20)
+        "default": FontMetrics(0.80, 0.20),
     }
 
     # Character width table (as fraction of em)
@@ -67,10 +67,10 @@ class FontService:
         ' ': 0.28, '.': 0.28, ',': 0.28, ':': 0.28, ';': 0.28, '!': 0.33, '?': 0.56, '-': 0.33, '_': 0.56,
         '(': 0.33, ')': 0.33, '[': 0.28, ']': 0.28, '{': 0.33, '}': 0.33, '/': 0.28, '\\': 0.28, '|': 0.26,
         '@': 1.0, '#': 0.56, '$': 0.56, '%': 0.89, '^': 0.47, '&': 0.67, '*': 0.39, '+': 0.58, '=': 0.58,
-        '<': 0.58, '>': 0.58, '"': 0.35, "'": 0.19, '`': 0.33, '~': 0.58
+        '<': 0.58, '>': 0.58, '"': 0.35, "'": 0.19, '`': 0.33, '~': 0.58,
     }
 
-    def __init__(self, font_directories: Optional[List[str]] = None):
+    def __init__(self, font_directories: list[str] | None = None):
         """
         Initialize FontService with system font directories.
 
@@ -78,11 +78,11 @@ class FontService:
             font_directories: Optional list of directories to search for fonts.
                              If None, uses platform-specific defaults.
         """
-        self._font_cache: Dict[str, TTFont] = {}
+        self._font_cache: dict[str, TTFont] = {}
         self._font_directories = font_directories or self._get_system_font_directories()
-        self._font_file_cache: Dict[str, Optional[str]] = {}
+        self._font_file_cache: dict[str, str | None] = {}
 
-    def _get_system_font_directories(self) -> List[str]:
+    def _get_system_font_directories(self) -> list[str]:
         """
         Get platform-specific system font directories.
 
@@ -96,26 +96,26 @@ class FontService:
             directories.extend([
                 "/System/Library/Fonts",
                 "/Library/Fonts",
-                os.path.expanduser("~/Library/Fonts")
+                os.path.expanduser("~/Library/Fonts"),
             ])
         elif system == "windows":
             directories.extend([
                 "C:/Windows/Fonts",
-                os.path.expanduser("~/AppData/Local/Microsoft/Windows/Fonts")
+                os.path.expanduser("~/AppData/Local/Microsoft/Windows/Fonts"),
             ])
         elif system == "linux":
             directories.extend([
                 "/usr/share/fonts",
                 "/usr/local/share/fonts",
                 os.path.expanduser("~/.fonts"),
-                os.path.expanduser("~/.local/share/fonts")
+                os.path.expanduser("~/.local/share/fonts"),
             ])
 
         # Filter to existing directories
         return [d for d in directories if os.path.exists(d)]
 
     def find_font_file(self, font_family: str, font_weight: str = "normal",
-                       font_style: str = "normal") -> Optional[str]:
+                       font_style: str = "normal") -> str | None:
         """
         Locate font file in system directories.
 
@@ -200,7 +200,7 @@ class FontService:
         return False
 
     def load_font(self, font_family: str, font_weight: str = "normal",
-                  font_style: str = "normal") -> Optional[TTFont]:
+                  font_style: str = "normal") -> TTFont | None:
         """
         Load font file using fonttools.
 
@@ -229,7 +229,7 @@ class FontService:
             # Font file is corrupted or invalid
             return None
 
-    def load_font_from_path(self, font_path: str) -> Optional[TTFont]:
+    def load_font_from_path(self, font_path: str) -> TTFont | None:
         """
         Load font directly from file path.
 
@@ -249,7 +249,7 @@ class FontService:
         except (TTLibError, OSError, IOError):
             return None
 
-    def validate_font(self, font: TTFont) -> List[FontServiceError]:
+    def validate_font(self, font: TTFont) -> list[FontServiceError]:
         """
         Validate font file and return any issues found.
 
@@ -269,14 +269,14 @@ class FontService:
             if missing_tables:
                 errors.append(FontServiceError(
                     message=f"Missing required font tables: {', '.join(missing_tables)}",
-                    error_type="FontValidationError"
+                    error_type="FontValidationError",
                 ))
 
             # Check if font has glyph data
             if 'glyf' not in font and 'CFF ' not in font and 'CFF2' not in font:
                 errors.append(FontServiceError(
                     message="Font contains no glyph outline data",
-                    error_type="FontValidationError"
+                    error_type="FontValidationError",
                 ))
 
             # Basic table integrity checks
@@ -285,18 +285,18 @@ class FontService:
                 if head_table.unitsPerEm <= 0:
                     errors.append(FontServiceError(
                         message="Invalid unitsPerEm value in head table",
-                        error_type="FontValidationError"
+                        error_type="FontValidationError",
                     ))
 
         except Exception as e:
             errors.append(FontServiceError(
                 message=f"Font validation failed: {str(e)}",
-                error_type="FontValidationError"
+                error_type="FontValidationError",
             ))
 
         return errors
 
-    def get_available_fonts(self) -> List[Dict[str, str]]:
+    def get_available_fonts(self) -> list[dict[str, str]]:
         """
         Get list of available fonts in system directories.
 
@@ -317,7 +317,7 @@ class FontService:
                             font_info = {
                                 'path': file_path,
                                 'filename': file,
-                                'directory': root
+                                'directory': root,
                             }
                             fonts.append(font_info)
             except (OSError, PermissionError):
@@ -330,7 +330,7 @@ class FontService:
         self._font_cache.clear()
         self._font_file_cache.clear()
 
-    def get_cache_stats(self) -> Dict[str, int]:
+    def get_cache_stats(self) -> dict[str, int]:
         """
         Get cache statistics.
 
@@ -340,7 +340,7 @@ class FontService:
         return {
             'loaded_fonts': len(self._font_cache),
             'font_file_paths': len(self._font_file_cache),
-            'font_directories': len(self._font_directories)
+            'font_directories': len(self._font_directories),
         }
 
     def get_metrics(self, font_family: str) -> FontMetrics:
@@ -378,7 +378,7 @@ class FontService:
             "Trebuchet MS": "Trebuchet MS",
             "sans-serif": "Arial",
             "serif": "Times New Roman",
-            "monospace": "Courier New"
+            "monospace": "Courier New",
         }
 
         cleaned = svg_font_family.strip().strip('\'"').split(',')[0].strip()

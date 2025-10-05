@@ -13,7 +13,8 @@ Features:
 """
 
 import logging
-from typing import Dict, Set, Optional
+from typing import Dict, Optional, Set
+
 from lxml import etree as ET
 
 from .base import BasePreprocessor
@@ -31,8 +32,8 @@ class ResolveClipsPreprocessor(BasePreprocessor):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         self.flatten_nested_clips = flatten_nested_clips
-        self.clippath_defs: Dict[str, ET.Element] = {}
-        self.processed_clips: Set[str] = set()
+        self.clippath_defs: dict[str, ET.Element] = {}
+        self.processed_clips: set[str] = set()
 
     def process(self, svg_root: ET.Element) -> ET.Element:
         """
@@ -118,7 +119,7 @@ class ResolveClipsPreprocessor(BasePreprocessor):
         except Exception as e:
             self.logger.error(f"Failed to resolve clip-path {clip_id}: {e}")
 
-    def _extract_clip_id(self, clip_path_attr: str) -> Optional[str]:
+    def _extract_clip_id(self, clip_path_attr: str) -> str | None:
         """Extract clipPath ID from clip-path attribute."""
         # Handle url(#id) format
         if clip_path_attr.startswith('url(#') and clip_path_attr.endswith(')'):
@@ -265,7 +266,7 @@ class ResolveClipsPreprocessor(BasePreprocessor):
                 if parent is not None:
                     parent.remove(defs)
 
-    def _get_href(self, element: ET.Element) -> Optional[str]:
+    def _get_href(self, element: ET.Element) -> str | None:
         """Get href attribute (handles both href and xlink:href)."""
         href = element.get('href')
         if href:

@@ -6,17 +6,18 @@ additional features needed for REST API endpoints.
 """
 
 from typing import List, Set
+
 from lxml import etree as ET
 
-from .analyzer import SVGAnalyzer, AnalysisResult
+from .analyzer import AnalysisResult, SVGAnalyzer
+from .constants import FILTER_NAME_MAP, SVG_NAMESPACE
 from .types import (
     ElementCounts,
     FeatureSet,
     PerformanceEstimate,
     PolicyRecommendation,
-    SVGAnalysisResult
+    SVGAnalysisResult,
 )
-from .constants import FILTER_NAME_MAP, SVG_NAMESPACE
 
 
 class SVGAnalyzerAPI:
@@ -63,7 +64,7 @@ class SVGAnalyzerAPI:
             features=features,
             recommended_policy=recommended_policy,
             estimated_performance=performance,
-            warnings=warnings
+            warnings=warnings,
         )
 
     def _extract_element_counts(self, analysis: AnalysisResult) -> ElementCounts:
@@ -77,7 +78,7 @@ class SVGAnalyzerAPI:
             gradients=analysis.gradient_count,
             filters=analysis.filter_count,
             images=analysis.image_count,
-            max_nesting_depth=analysis.group_nesting_depth
+            max_nesting_depth=analysis.group_nesting_depth,
         )
 
     def _count_shapes(self, analysis: AnalysisResult) -> int:
@@ -142,7 +143,7 @@ class SVGAnalyzerAPI:
 
         return gradient_types
 
-    def _detect_filter_types(self, svg_root: ET.Element) -> Set[str]:
+    def _detect_filter_types(self, svg_root: ET.Element) -> set[str]:
         """
         Detect types of filters used in SVG.
 
@@ -180,7 +181,7 @@ class SVGAnalyzerAPI:
             reasons = [
                 f"Low complexity (score: {int(score * 100)})",
                 f"Only {analysis.element_count} elements",
-                "No complex features detected"
+                "No complex features detected",
             ]
         elif score < 0.6:
             # Moderate complexity - balanced is best
@@ -188,7 +189,7 @@ class SVGAnalyzerAPI:
             confidence = 0.85
             reasons = [
                 f"Moderate complexity (score: {int(score * 100)})",
-                f"{analysis.element_count} elements with some complexity"
+                f"{analysis.element_count} elements with some complexity",
             ]
 
             if analysis.gradient_count > 0:
@@ -201,7 +202,7 @@ class SVGAnalyzerAPI:
             confidence = 0.95
             reasons = [
                 f"High complexity (score: {int(score * 100)})",
-                f"{analysis.element_count} elements require careful rendering"
+                f"{analysis.element_count} elements require careful rendering",
             ]
 
             if analysis.filter_count > 0:
@@ -214,7 +215,7 @@ class SVGAnalyzerAPI:
         return PolicyRecommendation(
             target=target,
             confidence=confidence,
-            reasons=reasons
+            reasons=reasons,
         )
 
     def _estimate_performance(self, analysis: AnalysisResult) -> PerformanceEstimate:
@@ -243,10 +244,10 @@ class SVGAnalyzerAPI:
         return PerformanceEstimate(
             conversion_time_ms=conversion_time_ms,
             output_size_kb=output_size_kb,
-            memory_usage_mb=memory_usage_mb
+            memory_usage_mb=memory_usage_mb,
         )
 
-    def _generate_warnings(self, analysis: AnalysisResult, features: FeatureSet) -> List[str]:
+    def _generate_warnings(self, analysis: AnalysisResult, features: FeatureSet) -> list[str]:
         """Generate warnings based on analysis."""
         warnings = []
 
@@ -254,41 +255,41 @@ class SVGAnalyzerAPI:
         if analysis.filter_count > 0:
             if analysis.filter_count > 5:
                 warnings.append(
-                    f"SVG contains {analysis.filter_count} filters - some may be rasterized for compatibility"
+                    f"SVG contains {analysis.filter_count} filters - some may be rasterized for compatibility",
                 )
             else:
                 warnings.append(
-                    f"SVG contains {analysis.filter_count} filters that may need EMF fallback"
+                    f"SVG contains {analysis.filter_count} filters that may need EMF fallback",
                 )
 
         # Gradient warnings
         if analysis.gradient_count > 10:
             warnings.append(
-                f"High gradient count ({analysis.gradient_count}) may impact file size"
+                f"High gradient count ({analysis.gradient_count}) may impact file size",
             )
 
         # Text warnings
         if analysis.text_complexity > 0.7:
             warnings.append(
-                "Complex text rendering detected - font availability may vary across platforms"
+                "Complex text rendering detected - font availability may vary across platforms",
             )
 
         # Path warnings
         if analysis.path_complexity > 0.8:
             warnings.append(
-                "Very complex paths detected - consider simplifying for better performance"
+                "Very complex paths detected - consider simplifying for better performance",
             )
 
         # Nesting warnings
         if analysis.group_nesting_depth > 10:
             warnings.append(
-                f"Deep nesting ({analysis.group_nesting_depth} levels) may impact conversion performance"
+                f"Deep nesting ({analysis.group_nesting_depth} levels) may impact conversion performance",
             )
 
         # Animation warnings
         if features.has_animations:
             warnings.append(
-                "SVG animations will be converted to static frames or slide sequences"
+                "SVG animations will be converted to static frames or slide sequences",
             )
 
         return warnings

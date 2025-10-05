@@ -1,8 +1,10 @@
 """Viewport coordinate transformation service."""
 from typing import Tuple
+
 from lxml import etree as ET
-from ..viewbox.core import ViewportEngine
+
 from ..units import UnitConverter
+from ..viewbox.core import ViewportEngine
 
 
 class ViewportService:
@@ -33,12 +35,12 @@ class ViewportService:
                                .meet()
                                .resolve_single())
 
-    def svg_to_emu(self, svg_x: float, svg_y: float) -> Tuple[int, int]:
+    def svg_to_emu(self, svg_x: float, svg_y: float) -> tuple[int, int]:
         """Transform SVG coordinates to EMU."""
         emu_x = int(svg_x * self.viewport_mapping['scale_x'] + self.viewport_mapping['translate_x'])
         emu_y = int(svg_y * self.viewport_mapping['scale_y'] + self.viewport_mapping['translate_y'])
         return emu_x, emu_y
 
-    def get_scale_factors(self) -> Tuple[float, float]:
+    def get_scale_factors(self) -> tuple[float, float]:
         """Get viewport scale factors."""
         return self.viewport_mapping['scale_x'], self.viewport_mapping['scale_y']

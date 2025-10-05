@@ -12,12 +12,12 @@ This replaces the existing curve_text_positioning.py with improved
 determinism and WordArt detection capabilities.
 """
 
+import logging
 import math
 import re
-from typing import List, Tuple, Optional, Dict, Any, NamedTuple
-from dataclasses import dataclass
-import logging
 from bisect import bisect_right
+from dataclasses import dataclass
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +30,12 @@ WORDART_CONFIG = {
         'circle_rmse': 0.02,
         'wave_snr_db': 8.0,
         'quadratic_r2': 0.98,
-        'linear_r2': 0.995
+        'linear_r2': 0.995,
     },
     'validation_thresholds': {
         'regeneration_rmse': 0.03,
-        'arclength_error': 0.02
-    }
+        'arclength_error': 0.02,
+    },
 }
 
 
@@ -51,7 +51,7 @@ class PathPoint(NamedTuple):
 class WordArtResult:
     """Result of WordArt classification."""
     preset: str
-    parameters: Dict[str, float]
+    parameters: dict[str, float]
     confidence: float
     estimated_error: float
 
@@ -63,11 +63,11 @@ class Segment:
         """Return total arc length of segment."""
         raise NotImplementedError
 
-    def eval(self, t: float) -> Tuple[float, float]:
+    def eval(self, t: float) -> tuple[float, float]:
         """Evaluate position at parameter t ∈ [0,1]."""
         raise NotImplementedError
 
-    def tan(self, t: float) -> Tuple[float, float]:
+    def tan(self, t: float) -> tuple[float, float]:
         """Evaluate tangent vector at parameter t."""
         raise NotImplementedError
 
@@ -79,25 +79,25 @@ class Segment:
 class Line(Segment):
     """Linear segment implementation."""
 
-    def __init__(self, p0: Tuple[float, float], p1: Tuple[float, float]):
+    def __init__(self, p0: tuple[float, float], p1: tuple[float, float]):
         self.p0, self.p1 = p0, p1
         self._length = math.sqrt((p1[0] - p0[0])**2 + (p1[1] - p0[1])**2)
 
     def length(self) -> float:
         return self._length
 
-    def eval(self, t: float) -> Tuple[float, float]:
+    def eval(self, t: float) -> tuple[float, float]:
         return (
             self.p0[0] + t * (self.p1[0] - self.p0[0]),
-            self.p0[1] + t * (self.p1[1] - self.p0[1])
+            self.p0[1] + t * (self.p1[1] - self.p0[1]),
         )
 
-    def tan(self, t: float) -> Tuple[float, float]:
+    def tan(self, t: float) -> tuple[float, float]:
         if self._length == 0:
             return (1.0, 0.0)
         return (
             (self.p1[0] - self.p0[0]) / self._length,
-            (self.p1[1] - self.p0[1]) / self._length
+            (self.p1[1] - self.p0[1]) / self._length,
         )
 
     def arclen_to_t(self, s: float) -> float:
@@ -107,7 +107,7 @@ class Line(Segment):
 class Quadratic(Segment):
     """Quadratic Bézier segment with arc-length LUT."""
 
-    def __init__(self, p0: Tuple[float, float], p1: Tuple[float, float], p2: Tuple[float, float]):
+    def __init__(self, p0: tuple[float, float], p1: tuple[float, float], p2: tuple[float, float]):
         self.p0, self.p1, self.p2 = p0, p1, p2
         self._build_arclen_lut()
 
@@ -131,13 +131,13 @@ class Quadratic(Segment):
     def length(self) -> float:
         return self._total_length
 
-    def eval(self, t: float) -> Tuple[float, float]:
+    def eval(self, t: float) -> tuple[float, float]:
         # Standard quadratic Bézier evaluation
         x = (1-t)**2 * self.p0[0] + 2*(1-t)*t * self.p1[0] + t**2 * self.p2[0]
         y = (1-t)**2 * self.p0[1] + 2*(1-t)*t * self.p1[1] + t**2 * self.p2[1]
         return (x, y)
 
-    def tan(self, t: float) -> Tuple[float, float]:
+    def tan(self, t: float) -> tuple[float, float]:
         # Derivative: 2(1-t)(p1-p0) + 2t(p2-p1)
         dx = 2*(1-t)*(self.p1[0]-self.p0[0]) + 2*t*(self.p2[0]-self.p1[0])
         dy = 2*(1-t)*(self.p1[1]-self.p0[1]) + 2*t*(self.p2[1]-self.p1[1])
@@ -169,8 +169,8 @@ class Quadratic(Segment):
 class Cubic(Segment):
     """Cubic Bézier segment with arc-length LUT."""
 
-    def __init__(self, p0: Tuple[float, float], p1: Tuple[float, float],
-                 p2: Tuple[float, float], p3: Tuple[float, float]):
+    def __init__(self, p0: tuple[float, float], p1: tuple[float, float],
+                 p2: tuple[float, float], p3: tuple[float, float]):
         self.p0, self.p1, self.p2, self.p3 = p0, p1, p2, p3
         self._build_arclen_lut()
 
@@ -194,13 +194,13 @@ class Cubic(Segment):
     def length(self) -> float:
         return self._total_length
 
-    def eval(self, t: float) -> Tuple[float, float]:
+    def eval(self, t: float) -> tuple[float, float]:
         # Standard cubic Bézier evaluation
         x = (1-t)**3 * self.p0[0] + 3*(1-t)**2*t * self.p1[0] + 3*(1-t)*t**2 * self.p2[0] + t**3 * self.p3[0]
         y = (1-t)**3 * self.p0[1] + 3*(1-t)**2*t * self.p1[1] + 3*(1-t)*t**2 * self.p2[1] + t**3 * self.p3[1]
         return (x, y)
 
-    def tan(self, t: float) -> Tuple[float, float]:
+    def tan(self, t: float) -> tuple[float, float]:
         # Derivative: 3(1-t)²(p1-p0) + 6(1-t)t(p2-p1) + 3t²(p3-p2)
         dx = (3*(1-t)**2*(self.p1[0]-self.p0[0]) +
               6*(1-t)*t*(self.p2[0]-self.p1[0]) +
@@ -241,12 +241,12 @@ class DeterministicCurvePositioner:
     and optional WordArt preset detection for native PowerPoint conversion.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize with configuration."""
         self.config = {**WORDART_CONFIG, **(config or {})}
         self.logger = logging.getLogger(__name__)
 
-    def sample_path_for_text(self, path_data: str, num_samples: Optional[int] = None) -> List[PathPoint]:
+    def sample_path_for_text(self, path_data: str, num_samples: int | None = None) -> list[PathPoint]:
         """
         Sample path with deterministic, equal arc-length spacing.
 
@@ -304,7 +304,7 @@ class DeterministicCurvePositioner:
                 points.append(PathPoint(
                     x=x, y=y,
                     tangent_angle=angle,
-                    distance_along_path=s_target
+                    distance_along_path=s_target,
                 ))
 
             return points
@@ -313,7 +313,7 @@ class DeterministicCurvePositioner:
             self.logger.warning(f"Path sampling failed: {e}")
             return self._fallback_horizontal_line(num_samples or 2)
 
-    def classify_wordart(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def classify_wordart(self, points: list[PathPoint]) -> WordArtResult | None:
         """
         Classify sampled points for WordArt preset detection.
 
@@ -349,7 +349,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"WordArt classification failed: {e}")
             return None
 
-    def _parse_path_to_segments(self, path_data: str) -> List[Segment]:
+    def _parse_path_to_segments(self, path_data: str) -> list[Segment]:
         """Parse SVG path data into segment objects."""
         segments = []
 
@@ -376,13 +376,13 @@ class DeterministicCurvePositioner:
 
         return segments
 
-    def _expand_command(self, cmd: str, params: List[float],
-                       current: Tuple[float, float], start: Tuple[float, float]) -> Tuple[List[Segment], Tuple[float, float], Tuple[float, float]]:
+    def _expand_command(self, cmd: str, params: list[float],
+                       current: tuple[float, float], start: tuple[float, float]) -> tuple[list[Segment], tuple[float, float], tuple[float, float]]:
         """Expand command with multiple parameters and handle relative coordinates."""
         segments = []
         it = iter(params)
 
-        def abspt(x: float, y: float) -> Tuple[float, float]:
+        def abspt(x: float, y: float) -> tuple[float, float]:
             return (current[0] + x, current[1] + y) if cmd.islower() else (x, y)
 
         try:
@@ -448,7 +448,7 @@ class DeterministicCurvePositioner:
 
         return segments, current, start
 
-    def _fallback_horizontal_line(self, num_samples: int) -> List[PathPoint]:
+    def _fallback_horizontal_line(self, num_samples: int) -> list[PathPoint]:
         """Generate fallback horizontal line when path parsing fails."""
         points = []
         for i in range(num_samples):
@@ -456,11 +456,11 @@ class DeterministicCurvePositioner:
             points.append(PathPoint(
                 x=x, y=0.0,
                 tangent_angle=0.0,
-                distance_along_path=x
+                distance_along_path=x,
             ))
         return points
 
-    def _normalize_and_rotate(self, points: List[PathPoint]) -> List[PathPoint]:
+    def _normalize_and_rotate(self, points: list[PathPoint]) -> list[PathPoint]:
         """Normalize points to unit bounding box and find optimal rotation."""
         if len(points) < 2:
             return points
@@ -484,7 +484,7 @@ class DeterministicCurvePositioner:
             normalized.append(PathPoint(
                 x=norm_x, y=norm_y,
                 tangent_angle=p.tangent_angle,
-                distance_along_path=p.distance_along_path
+                distance_along_path=p.distance_along_path,
             ))
 
         # Find rotation for best x-monotonicity
@@ -505,7 +505,7 @@ class DeterministicCurvePositioner:
 
         return normalized
 
-    def _rotate_points(self, points: List[PathPoint], angle: float) -> List[PathPoint]:
+    def _rotate_points(self, points: list[PathPoint], angle: float) -> list[PathPoint]:
         """Rotate points around center by given angle."""
         cos_a, sin_a = math.cos(angle), math.sin(angle)
         cx, cy = 0.5, 0.5  # Center of normalized space
@@ -520,12 +520,12 @@ class DeterministicCurvePositioner:
             rotated.append(PathPoint(
                 x=rx, y=ry,
                 tangent_angle=p.tangent_angle + angle,
-                distance_along_path=p.distance_along_path
+                distance_along_path=p.distance_along_path,
             ))
 
         return rotated
 
-    def _calculate_monotonicity_score(self, points: List[PathPoint]) -> float:
+    def _calculate_monotonicity_score(self, points: list[PathPoint]) -> float:
         """Calculate x-monotonicity score (higher is better)."""
         if len(points) < 2:
             return 1.0
@@ -542,11 +542,11 @@ class DeterministicCurvePositioner:
 
         return increasing_count / max(total_count, 1)
 
-    def _is_x_monotone(self, points: List[PathPoint]) -> bool:
+    def _is_x_monotone(self, points: list[PathPoint]) -> bool:
         """Check if points are approximately x-monotonic."""
         return self._calculate_monotonicity_score(points) >= 0.9
 
-    def _test_circle_arch(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def _test_circle_arch(self, points: list[PathPoint]) -> WordArtResult | None:
         """Test for circle or arch patterns."""
         try:
             circle_fit = self._fit_circle_taubin(points)
@@ -561,7 +561,7 @@ class DeterministicCurvePositioner:
                         preset='circle',
                         parameters={'radius': circle_fit['radius']},
                         confidence=1.0 - rmse / threshold,
-                        estimated_error=rmse
+                        estimated_error=rmse,
                     )
                 else:
                     bend = self._calculate_bend_parameter(circle_fit, points)
@@ -569,7 +569,7 @@ class DeterministicCurvePositioner:
                         preset='arch',
                         parameters={'bend': bend},
                         confidence=1.0 - rmse / threshold,
-                        estimated_error=rmse
+                        estimated_error=rmse,
                     )
 
             return None
@@ -578,7 +578,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"Circle/arch test failed: {e}")
             return None
 
-    def _test_wave(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def _test_wave(self, points: list[PathPoint]) -> WordArtResult | None:
         """Test for wave/sinusoidal patterns."""
         try:
             y_values = [p.y for p in points]
@@ -591,10 +591,10 @@ class DeterministicCurvePositioner:
                     preset='wave',
                     parameters={
                         'amplitude': amplitude,
-                        'period': 1.0 / frequency if frequency > 0 else 1.0
+                        'period': 1.0 / frequency if frequency > 0 else 1.0,
                     },
                     confidence=min(1.0, snr / (threshold * 2)),
-                    estimated_error=1.0 / max(snr, 1.0)
+                    estimated_error=1.0 / max(snr, 1.0),
                 )
 
             return None
@@ -603,7 +603,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"Wave test failed: {e}")
             return None
 
-    def _test_inflate_deflate(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def _test_inflate_deflate(self, points: list[PathPoint]) -> WordArtResult | None:
         """Test for quadratic bowl shapes."""
         try:
             quad_fit = self._fit_quadratic_least_squares(points)
@@ -615,7 +615,7 @@ class DeterministicCurvePositioner:
                     preset=preset,
                     parameters={'curvature': abs(quad_fit['a'])},
                     confidence=quad_fit['r_squared'],
-                    estimated_error=1.0 - quad_fit['r_squared']
+                    estimated_error=1.0 - quad_fit['r_squared'],
                 )
 
             return None
@@ -624,7 +624,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"Inflate/deflate test failed: {e}")
             return None
 
-    def _test_rise_slant(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def _test_rise_slant(self, points: list[PathPoint]) -> WordArtResult | None:
         """Test for linear rise/slant patterns."""
         try:
             linear_fit = self._fit_line_least_squares(points)
@@ -637,7 +637,7 @@ class DeterministicCurvePositioner:
                     preset=preset,
                     parameters={'angle': math.atan(slope)},
                     confidence=linear_fit['r_squared'],
-                    estimated_error=1.0 - linear_fit['r_squared']
+                    estimated_error=1.0 - linear_fit['r_squared'],
                 )
 
             return None
@@ -646,7 +646,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"Rise/slant test failed: {e}")
             return None
 
-    def _test_triangle(self, points: List[PathPoint]) -> Optional[WordArtResult]:
+    def _test_triangle(self, points: list[PathPoint]) -> WordArtResult | None:
         """Test for triangle/chevron patterns."""
         try:
             if self._has_single_apex(points):
@@ -658,7 +658,7 @@ class DeterministicCurvePositioner:
                         preset='triangle',
                         parameters={'apex_x': apex_x},
                         confidence=1.0 - residual / 0.03,
-                        estimated_error=residual
+                        estimated_error=residual,
                     )
 
             return None
@@ -667,7 +667,7 @@ class DeterministicCurvePositioner:
             self.logger.debug(f"Triangle test failed: {e}")
             return None
 
-    def _validate_regeneration(self, original_pts: List[PathPoint], result: WordArtResult) -> bool:
+    def _validate_regeneration(self, original_pts: list[PathPoint], result: WordArtResult) -> bool:
         """Validate WordArt conversion quality by regenerating baseline."""
         try:
             # This would regenerate the WordArt baseline and compare
@@ -680,7 +680,7 @@ class DeterministicCurvePositioner:
 
     # Helper methods for fitting algorithms (simplified implementations)
 
-    def _fit_circle_taubin(self, points: List[PathPoint]) -> Dict[str, float]:
+    def _fit_circle_taubin(self, points: list[PathPoint]) -> dict[str, float]:
         """Fit circle using Taubin method (simplified)."""
         # This is a placeholder - real implementation would use Taubin circle fitting
         xs = [p.x for p in points]
@@ -696,7 +696,7 @@ class DeterministicCurvePositioner:
 
         return {'center_x': cx, 'center_y': cy, 'radius': radius}
 
-    def _rmse_circle(self, points: List[PathPoint], circle: Dict[str, float]) -> float:
+    def _rmse_circle(self, points: list[PathPoint], circle: dict[str, float]) -> float:
         """Calculate RMSE for circle fit."""
         errors = []
         for p in points:
@@ -706,7 +706,7 @@ class DeterministicCurvePositioner:
 
         return math.sqrt(sum(errors) / len(errors))
 
-    def _curvature_flip_count(self, points: List[PathPoint]) -> int:
+    def _curvature_flip_count(self, points: list[PathPoint]) -> int:
         """Count curvature sign flips (simplified)."""
         if len(points) < 3:
             return 0
@@ -732,7 +732,7 @@ class DeterministicCurvePositioner:
 
         return flips
 
-    def _is_closed_path(self, points: List[PathPoint]) -> bool:
+    def _is_closed_path(self, points: list[PathPoint]) -> bool:
         """Check if path is closed."""
         if len(points) < 3:
             return False
@@ -741,12 +741,12 @@ class DeterministicCurvePositioner:
         distance = math.sqrt((last.x - first.x)**2 + (last.y - first.y)**2)
         return distance < 0.01  # Threshold for "closed"
 
-    def _calculate_bend_parameter(self, circle: Dict[str, float], points: List[PathPoint]) -> float:
+    def _calculate_bend_parameter(self, circle: dict[str, float], points: list[PathPoint]) -> float:
         """Calculate bend parameter for arch."""
         # Simplified - real implementation would calculate proper bend based on arc span
         return min(1.0, circle['radius'] / 2.0)
 
-    def _fit_sinusoid_fft(self, y_values: List[float]) -> Tuple[float, float, float]:
+    def _fit_sinusoid_fft(self, y_values: list[float]) -> tuple[float, float, float]:
         """Fit sinusoid using FFT (simplified)."""
         # This is a placeholder - real implementation would use FFT analysis
         # For now, return dummy values that pass threshold
@@ -755,31 +755,31 @@ class DeterministicCurvePositioner:
         snr = 10.0  # dB
         return amplitude, frequency, snr
 
-    def _fit_quadratic_least_squares(self, points: List[PathPoint]) -> Dict[str, float]:
+    def _fit_quadratic_least_squares(self, points: list[PathPoint]) -> dict[str, float]:
         """Fit quadratic using least squares."""
         # Placeholder implementation
         return {'a': -0.1, 'b': 0.0, 'c': 0.5, 'r_squared': 0.99}
 
-    def _fit_line_least_squares(self, points: List[PathPoint]) -> Dict[str, float]:
+    def _fit_line_least_squares(self, points: list[PathPoint]) -> dict[str, float]:
         """Fit line using least squares."""
         # Placeholder implementation
         return {'slope': 0.1, 'intercept': 0.5, 'r_squared': 0.996}
 
-    def _has_single_apex(self, points: List[PathPoint]) -> bool:
+    def _has_single_apex(self, points: list[PathPoint]) -> bool:
         """Check if path has single apex."""
         # Placeholder implementation
         return False
 
-    def _find_apex_position(self, points: List[PathPoint]) -> float:
+    def _find_apex_position(self, points: list[PathPoint]) -> float:
         """Find apex x-position."""
         return 0.5
 
-    def _calculate_polyline_residual(self, points: List[PathPoint]) -> float:
+    def _calculate_polyline_residual(self, points: list[PathPoint]) -> float:
         """Calculate residual for piecewise linear fit."""
         return 0.05
 
 
-def create_deterministic_curve_positioner(config: Optional[Dict[str, Any]] = None) -> DeterministicCurvePositioner:
+def create_deterministic_curve_positioner(config: dict[str, Any] | None = None) -> DeterministicCurvePositioner:
     """
     Factory function to create a deterministic curve positioner.
 

@@ -9,14 +9,15 @@ This service replaces insecure patterns like tempfile.mkstemp and tempfile.mkdte
 that are vulnerable to race conditions and security exploits.
 """
 
+import atexit
+import logging
 import os
 import tempfile
 import threading
-import atexit
-from typing import Set, List, Callable, Optional, ContextManager
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from contextlib import contextmanager
-import logging
+from dataclasses import dataclass, field
+from typing import ContextManager, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class PathTraversalError(SecureFileOperationError):
 class SecureTempFile:
     """Secure temporary file wrapper with automatic cleanup."""
     path: str
-    file_descriptor: Optional[int] = None
+    file_descriptor: int | None = None
     cleanup_registered: bool = False
 
     def __post_init__(self):
@@ -92,10 +93,10 @@ class GlobalCleanupRegistry:
     """Global registry for temporary file cleanup on process exit."""
 
     def __init__(self):
-        self._temp_files: Set[str] = set()
-        self._temp_dirs: Set[str] = set()
+        self._temp_files: set[str] = set()
+        self._temp_dirs: set[str] = set()
         self._lock = threading.Lock()
-        self._cleanup_handlers: List[Callable] = []
+        self._cleanup_handlers: list[Callable] = []
         self._registered_atexit = False
 
     def register_temp_file(self, path: str):
@@ -182,8 +183,8 @@ class SecureFileService:
 
     This service replaces insecure patterns throughout the codebase.
     """
-    temp_file_registry: Set[str] = field(default_factory=set)
-    cleanup_handlers: List[Callable] = field(default_factory=list)
+    temp_file_registry: set[str] = field(default_factory=set)
+    cleanup_handlers: list[Callable] = field(default_factory=list)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     def create_secure_temp_file(self, suffix: str = '', prefix: str = 'svg2pptx_') -> SecureTempFile:
@@ -255,7 +256,7 @@ class SecureFileService:
         except (OSError, IOError) as e:
             raise SecureFileOperationError(f"Failed to create secure temp dir: {e}")
 
-    def validate_output_path(self, path: str, allowed_directories: Optional[List[str]] = None) -> str:
+    def validate_output_path(self, path: str, allowed_directories: list[str] | None = None) -> str:
         """
         Validate and sanitize output paths against traversal attacks.
 

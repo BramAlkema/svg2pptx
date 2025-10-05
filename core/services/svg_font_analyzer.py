@@ -6,7 +6,8 @@ font embedding is necessary for accurate text rendering.
 """
 
 import re
-from typing import Set, List, Dict, Optional
+from typing import Dict, List, Optional, Set
+
 from lxml import etree as ET
 
 from ..data.embedded_font import FontSubsetRequest
@@ -26,7 +27,7 @@ class SVGFontAnalyzer:
         self.font_requirements = {}
         self.total_character_count = 0
 
-    def analyze_svg_fonts(self, svg_content: str) -> Dict[str, any]:
+    def analyze_svg_fonts(self, svg_content: str) -> dict[str, any]:
         """
         Analyze SVG content for embedded fonts.
 
@@ -69,7 +70,7 @@ class SVGFontAnalyzer:
                 'unique_characters': len(self._get_unique_characters(text_elements)),
                 'embedding_recommendation': 'svg_has_embedded_fonts' if should_embed else 'no_embedded_fonts',
                 'text_elements': text_elements,
-                'font_requirements': font_requirements
+                'font_requirements': font_requirements,
             }
 
         except ET.XMLSyntaxError as e:
@@ -79,10 +80,10 @@ class SVGFontAnalyzer:
                 'error': f'Invalid SVG content: {str(e)}',
                 'should_embed_fonts': False,
                 'embedded_fonts': [],
-                'embedding_recommendation': 'invalid_svg'
+                'embedding_recommendation': 'invalid_svg',
             }
 
-    def _extract_text_elements(self, svg_root: ET.Element) -> List[Dict[str, any]]:
+    def _extract_text_elements(self, svg_root: ET.Element) -> list[dict[str, any]]:
         """
         Extract all text elements from SVG.
 
@@ -113,7 +114,7 @@ class SVGFontAnalyzer:
                     'font_weight': self._get_font_weight(text_elem),
                     'font_style': self._get_font_style(text_elem),
                     'character_count': len(text_content),
-                    'unique_characters': set(text_content)
+                    'unique_characters': set(text_content),
                 }
                 text_elements.append(element_info)
 
@@ -241,7 +242,7 @@ class SVGFontAnalyzer:
 
         return 'normal'
 
-    def _extract_embedded_fonts(self, svg_root: ET.Element) -> List[Dict[str, any]]:
+    def _extract_embedded_fonts(self, svg_root: ET.Element) -> list[dict[str, any]]:
         """
         Extract embedded fonts from SVG content.
 
@@ -273,7 +274,7 @@ class SVGFontAnalyzer:
 
         return embedded_fonts
 
-    def _find_svg_font_elements(self, svg_root: ET.Element) -> List[Dict[str, any]]:
+    def _find_svg_font_elements(self, svg_root: ET.Element) -> list[dict[str, any]]:
         """Find SVG font elements (<font>, <font-face>)."""
         fonts = []
 
@@ -288,7 +289,7 @@ class SVGFontAnalyzer:
                 'type': 'svg_font',
                 'font_family': font_elem.get('font-family', 'unknown'),
                 'font_face': None,
-                'element': font_elem
+                'element': font_elem,
             }
 
             # Look for associated font-face
@@ -300,7 +301,7 @@ class SVGFontAnalyzer:
                     'font_family': font_face.get('font-family'),
                     'font_style': font_face.get('font-style', 'normal'),
                     'font_weight': font_face.get('font-weight', 'normal'),
-                    'unicode_range': font_face.get('unicode-range')
+                    'unicode_range': font_face.get('unicode-range'),
                 }
 
             fonts.append(font_info)
@@ -322,13 +323,13 @@ class SVGFontAnalyzer:
                 'font_style': font_face.get('font-style', 'normal'),
                 'font_weight': font_face.get('font-weight', 'normal'),
                 'unicode_range': font_face.get('unicode-range'),
-                'element': font_face
+                'element': font_face,
             }
             fonts.append(font_info)
 
         return fonts
 
-    def _find_css_font_face_rules(self, svg_root: ET.Element) -> List[Dict[str, any]]:
+    def _find_css_font_face_rules(self, svg_root: ET.Element) -> list[dict[str, any]]:
         """Find CSS @font-face rules in <style> elements."""
         fonts = []
 
@@ -346,7 +347,7 @@ class SVGFontAnalyzer:
 
         return fonts
 
-    def _find_inline_font_face_rules(self, svg_root: ET.Element) -> List[Dict[str, any]]:
+    def _find_inline_font_face_rules(self, svg_root: ET.Element) -> list[dict[str, any]]:
         """Find @font-face rules in style attributes."""
         fonts = []
 
@@ -359,7 +360,7 @@ class SVGFontAnalyzer:
 
         return fonts
 
-    def _parse_css_font_face(self, css_content: str) -> List[Dict[str, any]]:
+    def _parse_css_font_face(self, css_content: str) -> list[dict[str, any]]:
         """Parse CSS content for @font-face rules."""
         fonts = []
 
@@ -374,7 +375,7 @@ class SVGFontAnalyzer:
                 'font_style': 'normal',
                 'font_weight': 'normal',
                 'src': None,
-                'has_embedded_data': False
+                'has_embedded_data': False,
             }
 
             # Parse font-family
@@ -408,8 +409,8 @@ class SVGFontAnalyzer:
 
         return fonts
 
-    def _analyze_embedded_font_requirements(self, embedded_fonts: List[Dict[str, any]],
-                                          text_elements: List[Dict[str, any]]) -> Dict[str, Dict[str, any]]:
+    def _analyze_embedded_font_requirements(self, embedded_fonts: list[dict[str, any]],
+                                          text_elements: list[dict[str, any]]) -> dict[str, dict[str, any]]:
         """
         Analyze font requirements based on embedded fonts and text usage.
 
@@ -441,7 +442,7 @@ class SVGFontAnalyzer:
                     'total_character_count': 0,
                     'unique_characters': set(),
                     'usage_count': 0,
-                    'text_samples': []
+                    'text_samples': [],
                 }
 
             # Find matching text elements that use this font
@@ -466,7 +467,7 @@ class SVGFontAnalyzer:
 
         return font_requirements
 
-    def _analyze_font_requirements(self, text_elements: List[Dict[str, any]]) -> Dict[str, Dict[str, any]]:
+    def _analyze_font_requirements(self, text_elements: list[dict[str, any]]) -> dict[str, dict[str, any]]:
         """
         Analyze font requirements from text elements.
 
@@ -490,7 +491,7 @@ class SVGFontAnalyzer:
                     'total_character_count': 0,
                     'unique_characters': set(),
                     'usage_count': 0,
-                    'text_samples': []
+                    'text_samples': [],
                 }
 
             # Accumulate requirements
@@ -508,14 +509,14 @@ class SVGFontAnalyzer:
 
         return font_requirements
 
-    def _get_unique_characters(self, text_elements: List[Dict[str, any]]) -> Set[str]:
+    def _get_unique_characters(self, text_elements: list[dict[str, any]]) -> set[str]:
         """Get all unique characters across all text elements."""
         all_characters = set()
         for element in text_elements:
             all_characters.update(element['unique_characters'])
         return all_characters
 
-    def _should_embed_fonts(self, font_requirements: Dict[str, Dict[str, any]]) -> bool:
+    def _should_embed_fonts(self, font_requirements: dict[str, dict[str, any]]) -> bool:
         """
         Determine if fonts should be embedded based on analysis.
 
@@ -533,7 +534,7 @@ class SVGFontAnalyzer:
         common_fonts = {
             'arial', 'helvetica', 'times', 'times new roman', 'courier',
             'courier new', 'verdana', 'georgia', 'tahoma', 'calibri',
-            'sans-serif', 'serif', 'monospace'
+            'sans-serif', 'serif', 'monospace',
         }
 
         for font_id, req in font_requirements.items():
@@ -553,7 +554,7 @@ class SVGFontAnalyzer:
 
         return False
 
-    def _get_embedding_recommendation(self, font_requirements: Dict[str, Dict[str, any]]) -> str:
+    def _get_embedding_recommendation(self, font_requirements: dict[str, dict[str, any]]) -> str:
         """
         Get specific embedding recommendation.
 
@@ -582,7 +583,7 @@ class SVGFontAnalyzer:
             return 'minimal_usage'
 
     def create_font_subset_requests(self, svg_content: str,
-                                   font_service: Optional[object] = None) -> List[FontSubsetRequest]:
+                                   font_service: object | None = None) -> list[FontSubsetRequest]:
         """
         Create font subset requests based on SVG analysis.
 
@@ -611,7 +612,7 @@ class SVGFontAnalyzer:
                 font_path = font_service.find_font_file(
                     req['font_family'],
                     req['font_weight'],
-                    req['font_style']
+                    req['font_style'],
                 )
 
             if font_path:  # Only create request if font file is found
@@ -620,13 +621,13 @@ class SVGFontAnalyzer:
                     characters=set(req['unique_characters']),
                     font_name=req['font_family'],
                     target_format='ttf',
-                    optimization_level='basic'
+                    optimization_level='basic',
                 )
                 subset_requests.append(subset_request)
 
         return subset_requests
 
-    def get_text_content_summary(self, svg_content: str) -> Dict[str, any]:
+    def get_text_content_summary(self, svg_content: str) -> dict[str, any]:
         """
         Get a summary of text content in SVG.
 
@@ -647,11 +648,11 @@ class SVGFontAnalyzer:
                 req['font_family'] for req in analysis.get('font_requirements', {}).values()
             )),
             'embedding_recommended': analysis.get('should_embed_fonts', False),
-            'recommendation_reason': analysis.get('embedding_recommendation', 'unknown')
+            'recommendation_reason': analysis.get('embedding_recommendation', 'unknown'),
         }
 
 
-def analyze_svg_for_fonts(svg_content: str) -> Dict[str, any]:
+def analyze_svg_for_fonts(svg_content: str) -> dict[str, any]:
     """
     Convenience function to analyze SVG content for font requirements.
 

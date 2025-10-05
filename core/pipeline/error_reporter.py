@@ -6,12 +6,12 @@ Comprehensive error reporting and debugging system for the conversion pipeline.
 Provides detailed error context, recovery suggestions, and debug information.
 """
 
-import time
 import logging
+import time
 import traceback
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,11 @@ class ErrorContext:
     timestamp: float = field(default_factory=time.perf_counter)
     stage: str = ""
     operation: str = ""
-    input_data: Optional[Dict[str, Any]] = None
-    system_state: Optional[Dict[str, Any]] = None
-    performance_metrics: Optional[Dict[str, float]] = None
+    input_data: dict[str, Any] | None = None
+    system_state: dict[str, Any] | None = None
+    performance_metrics: dict[str, float] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             'timestamp': self.timestamp,
@@ -54,7 +54,7 @@ class ErrorContext:
             'operation': self.operation,
             'input_data': self.input_data,
             'system_state': self.system_state,
-            'performance_metrics': self.performance_metrics
+            'performance_metrics': self.performance_metrics,
         }
 
 
@@ -66,13 +66,13 @@ class ErrorReport:
     severity: ErrorSeverity
     category: ErrorCategory
     context: ErrorContext
-    exception: Optional[Exception] = None
-    stack_trace: Optional[str] = None
-    recovery_suggestions: List[str] = field(default_factory=list)
-    debug_info: Dict[str, Any] = field(default_factory=dict)
-    related_errors: List[str] = field(default_factory=list)
+    exception: Exception | None = None
+    stack_trace: str | None = None
+    recovery_suggestions: list[str] = field(default_factory=list)
+    debug_info: dict[str, Any] = field(default_factory=dict)
+    related_errors: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             'error_id': self.error_id,
@@ -84,7 +84,7 @@ class ErrorReport:
             'stack_trace': self.stack_trace,
             'recovery_suggestions': self.recovery_suggestions,
             'debug_info': self.debug_info,
-            'related_errors': self.related_errors
+            'related_errors': self.related_errors,
         }
 
 
@@ -100,8 +100,8 @@ class PipelineErrorReporter:
     """
 
     def __init__(self):
-        self.error_history: List[ErrorReport] = []
-        self.error_counts: Dict[str, int] = {}
+        self.error_history: list[ErrorReport] = []
+        self.error_counts: dict[str, int] = {}
         self.session_start = time.perf_counter()
 
     def report_error(
@@ -109,9 +109,9 @@ class PipelineErrorReporter:
         message: str,
         severity: ErrorSeverity,
         category: ErrorCategory,
-        context: Optional[ErrorContext] = None,
-        exception: Optional[Exception] = None,
-        recovery_suggestions: Optional[List[str]] = None
+        context: ErrorContext | None = None,
+        exception: Exception | None = None,
+        recovery_suggestions: list[str] | None = None,
     ) -> ErrorReport:
         """
         Report a comprehensive error with full context.
@@ -139,7 +139,7 @@ class PipelineErrorReporter:
         stack_trace = None
         if exception:
             stack_trace = ''.join(traceback.format_exception(
-                type(exception), exception, exception.__traceback__
+                type(exception), exception, exception.__traceback__,
             ))
 
         # Generate debug info
@@ -155,7 +155,7 @@ class PipelineErrorReporter:
             exception=exception,
             stack_trace=stack_trace,
             recovery_suggestions=recovery_suggestions,
-            debug_info=debug_info
+            debug_info=debug_info,
         )
 
         # Store and track
@@ -175,8 +175,8 @@ class PipelineErrorReporter:
     def report_parsing_error(
         self,
         message: str,
-        svg_content: Optional[str] = None,
-        exception: Optional[Exception] = None
+        svg_content: str | None = None,
+        exception: Exception | None = None,
     ) -> ErrorReport:
         """Report parsing-specific error with SVG context"""
         context = ErrorContext(
@@ -184,8 +184,8 @@ class PipelineErrorReporter:
             operation="svg_parsing",
             input_data={
                 'svg_length': len(svg_content) if svg_content else 0,
-                'svg_sample': svg_content[:200] + "..." if svg_content and len(svg_content) > 200 else svg_content
-            }
+                'svg_sample': svg_content[:200] + "..." if svg_content and len(svg_content) > 200 else svg_content,
+            },
         )
 
         return self.report_error(
@@ -193,15 +193,15 @@ class PipelineErrorReporter:
             severity=ErrorSeverity.HIGH,
             category=ErrorCategory.PARSING,
             context=context,
-            exception=exception
+            exception=exception,
         )
 
     def report_analysis_error(
         self,
         message: str,
-        element_count: Optional[int] = None,
-        complexity_score: Optional[float] = None,
-        exception: Optional[Exception] = None
+        element_count: int | None = None,
+        complexity_score: float | None = None,
+        exception: Exception | None = None,
     ) -> ErrorReport:
         """Report analysis-specific error with complexity context"""
         context = ErrorContext(
@@ -209,8 +209,8 @@ class PipelineErrorReporter:
             operation="svg_analysis",
             input_data={
                 'element_count': element_count,
-                'complexity_score': complexity_score
-            }
+                'complexity_score': complexity_score,
+            },
         )
 
         return self.report_error(
@@ -218,15 +218,15 @@ class PipelineErrorReporter:
             severity=ErrorSeverity.MEDIUM,
             category=ErrorCategory.ANALYSIS,
             context=context,
-            exception=exception
+            exception=exception,
         )
 
     def report_mapping_error(
         self,
         message: str,
-        element_type: Optional[str] = None,
-        mapper_name: Optional[str] = None,
-        exception: Optional[Exception] = None
+        element_type: str | None = None,
+        mapper_name: str | None = None,
+        exception: Exception | None = None,
     ) -> ErrorReport:
         """Report mapping-specific error with element context"""
         context = ErrorContext(
@@ -234,8 +234,8 @@ class PipelineErrorReporter:
             operation="element_mapping",
             input_data={
                 'element_type': element_type,
-                'mapper_name': mapper_name
-            }
+                'mapper_name': mapper_name,
+            },
         )
 
         return self.report_error(
@@ -243,10 +243,10 @@ class PipelineErrorReporter:
             severity=ErrorSeverity.MEDIUM,
             category=ErrorCategory.MAPPING,
             context=context,
-            exception=exception
+            exception=exception,
         )
 
-    def get_error_summary(self) -> Dict[str, Any]:
+    def get_error_summary(self) -> dict[str, Any]:
         """Get comprehensive error summary for debugging"""
         session_duration = time.perf_counter() - self.session_start
 
@@ -258,14 +258,14 @@ class PipelineErrorReporter:
             'recent_errors': [
                 error.to_dict() for error in self.error_history[-5:]
             ],
-            'error_patterns': self._detect_error_patterns()
+            'error_patterns': self._detect_error_patterns(),
         }
 
     def _generate_recovery_suggestions(
         self,
         category: ErrorCategory,
-        exception: Optional[Exception]
-    ) -> List[str]:
+        exception: Exception | None,
+    ) -> list[str]:
         """Generate context-aware recovery suggestions"""
         suggestions = []
 
@@ -275,35 +275,35 @@ class PipelineErrorReporter:
                 "Validate SVG file structure and encoding",
                 "Check for malformed XML or missing namespaces",
                 "Try preprocessing with SVG optimization tools",
-                "Verify file is valid SVG (not corrupted)"
+                "Verify file is valid SVG (not corrupted)",
             ])
         elif category == ErrorCategory.ANALYSIS:
             suggestions.extend([
                 "Check SVG complexity and element count",
                 "Verify all referenced resources exist",
                 "Try with simplified SVG version",
-                "Check for unsupported SVG features"
+                "Check for unsupported SVG features",
             ])
         elif category == ErrorCategory.MAPPING:
             suggestions.extend([
                 "Verify mapper is registered for element type",
                 "Check element has required attributes",
                 "Try converting problematic elements manually",
-                "Update mapper configuration"
+                "Update mapper configuration",
             ])
         elif category == ErrorCategory.EMBEDDING:
             suggestions.extend([
                 "Check DrawingML template validity",
                 "Verify slide dimensions and constraints",
                 "Check available system resources",
-                "Try reducing output complexity"
+                "Try reducing output complexity",
             ])
         elif category == ErrorCategory.PACKAGING:
             suggestions.extend([
                 "Verify output directory permissions",
                 "Check available disk space",
                 "Try alternative output format",
-                "Check PPTX template integrity"
+                "Check PPTX template integrity",
             ])
 
         # Exception-specific suggestions
@@ -323,14 +323,14 @@ class PipelineErrorReporter:
     def _generate_debug_info(
         self,
         category: ErrorCategory,
-        exception: Optional[Exception],
-        context: ErrorContext
-    ) -> Dict[str, Any]:
+        exception: Exception | None,
+        context: ErrorContext,
+    ) -> dict[str, Any]:
         """Generate detailed debug information"""
         debug_info = {
             'python_version': __import__('sys').version,
             'session_errors': len(self.error_history),
-            'category_error_count': self.error_counts.get(category.value, 0)
+            'category_error_count': self.error_counts.get(category.value, 0),
         }
 
         # Add exception details
@@ -338,7 +338,7 @@ class PipelineErrorReporter:
             debug_info.update({
                 'exception_type': type(exception).__name__,
                 'exception_args': str(exception.args),
-                'exception_str': str(exception)
+                'exception_str': str(exception),
             })
 
         # Add context-specific debug info
@@ -353,11 +353,11 @@ class PipelineErrorReporter:
             ErrorSeverity.LOW: logging.INFO,
             ErrorSeverity.MEDIUM: logging.WARNING,
             ErrorSeverity.HIGH: logging.ERROR,
-            ErrorSeverity.CRITICAL: logging.CRITICAL
+            ErrorSeverity.CRITICAL: logging.CRITICAL,
         }
         return mapping.get(severity, logging.ERROR)
 
-    def _get_severity_distribution(self) -> Dict[str, int]:
+    def _get_severity_distribution(self) -> dict[str, int]:
         """Get distribution of errors by severity"""
         distribution = {}
         for error in self.error_history:
@@ -365,7 +365,7 @@ class PipelineErrorReporter:
             distribution[severity] = distribution.get(severity, 0) + 1
         return distribution
 
-    def _detect_error_patterns(self) -> List[Dict[str, Any]]:
+    def _detect_error_patterns(self) -> list[dict[str, Any]]:
         """Detect patterns in error history"""
         patterns = []
 
@@ -380,7 +380,7 @@ class PipelineErrorReporter:
                 patterns.append({
                     'type': 'repeated_error',
                     'message': message,
-                    'count': count
+                    'count': count,
                 })
 
         # Detect error cascades (multiple errors in short time)
@@ -391,7 +391,7 @@ class PipelineErrorReporter:
                 patterns.append({
                     'type': 'error_cascade',
                     'error_count': 3,
-                    'time_span_ms': time_span * 1000
+                    'time_span_ms': time_span * 1000,
                 })
 
         return patterns

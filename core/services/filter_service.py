@@ -5,10 +5,11 @@ FilterService for handling SVG filter definitions and conversions.
 Provides filter registration, processing, and conversion to DrawingML.
 """
 
-from typing import Dict, Optional, List, Any, TYPE_CHECKING
-from lxml import etree as ET
 import logging
 import math
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from lxml import etree as ET
 
 if TYPE_CHECKING:
     from core.policy.engine import PolicyEngine
@@ -20,15 +21,15 @@ class FilterService:
     """Service for managing SVG filter definitions and conversions."""
 
     def __init__(self, policy_engine: Optional['PolicyEngine'] = None):
-        self._filter_cache: Dict[str, ET.Element] = {}
-        self._conversion_cache: Dict[str, str] = {}
+        self._filter_cache: dict[str, ET.Element] = {}
+        self._conversion_cache: dict[str, str] = {}
         self._policy_engine = policy_engine
 
     def register_filter(self, filter_id: str, filter_element: ET.Element) -> None:
         """Register a filter definition for later resolution."""
         self._filter_cache[filter_id] = filter_element
 
-    def get_filter_content(self, filter_id: str, context: Any = None) -> Optional[str]:
+    def get_filter_content(self, filter_id: str, context: Any = None) -> str | None:
         """
         Get filter content by ID.
 
@@ -78,7 +79,7 @@ class FilterService:
             decision = self._policy_engine.decide_filter(
                 filter_element=filter_element,
                 filter_type=filter_type,
-                primitive_count=primitive_count
+                primitive_count=primitive_count,
             )
 
             # Handle decision strategies
@@ -132,7 +133,7 @@ class FilterService:
             # Fallback for unsupported filter combinations
             return f'<!-- Filter {filter_id}: No supported primitives -->'
 
-    def _combine_filter_effects(self, drawingml_parts: List[str], filter_id: str) -> str:
+    def _combine_filter_effects(self, drawingml_parts: list[str], filter_id: str) -> str:
         """
         Combine multiple filter primitive DrawingML into a complete effect.
 
@@ -172,11 +173,11 @@ class FilterService:
         self._filter_cache.clear()
         self._conversion_cache.clear()
 
-    def get_supported_filters(self) -> List[str]:
+    def get_supported_filters(self) -> list[str]:
         """Get list of supported filter types."""
         return ['feGaussianBlur', 'feDropShadow']
 
-    def _analyze_filter_type(self, primitives: List[ET.Element]) -> str:
+    def _analyze_filter_type(self, primitives: list[ET.Element]) -> str:
         """
         Analyze filter primitives to determine filter type.
 

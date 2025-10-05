@@ -2,10 +2,10 @@
 Core XML processing utilities with cython Comment object safety.
 """
 
-from .safe_iter import is_element, children, walk
+from .safe_iter import children, is_element, walk
 
 __all__ = [
     'is_element',
     'children',
-    'walk'
+    'walk',
 ]

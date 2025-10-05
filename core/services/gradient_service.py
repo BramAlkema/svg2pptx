@@ -5,9 +5,10 @@ GradientService for handling SVG gradient definitions and conversions.
 Provides gradient resolution, caching, and conversion to DrawingML.
 """
 
-from typing import Dict, Optional, List, Any, TYPE_CHECKING
-from lxml import etree as ET
 import logging
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from lxml import etree as ET
 
 if TYPE_CHECKING:
     from core.policy.engine import PolicyEngine
@@ -21,8 +22,8 @@ class GradientService:
     """Service for managing SVG gradient definitions and conversions."""
 
     def __init__(self, policy_engine: Optional['PolicyEngine'] = None):
-        self._gradient_cache: Dict[str, ET.Element] = {}
-        self._conversion_cache: Dict[str, str] = {}
+        self._gradient_cache: dict[str, ET.Element] = {}
+        self._conversion_cache: dict[str, str] = {}
         self._mesh_engine = None  # Lazy initialization
         self._policy_engine = policy_engine
 
@@ -30,7 +31,7 @@ class GradientService:
         """Register a gradient definition for later resolution."""
         self._gradient_cache[gradient_id] = gradient_element
 
-    def get_gradient_content(self, gradient_id: str, context: Any = None) -> Optional[str]:
+    def get_gradient_content(self, gradient_id: str, context: Any = None) -> str | None:
         """
         Get gradient content by ID.
 
@@ -82,7 +83,7 @@ class GradientService:
             decision = self._policy_engine.decide_gradient(
                 gradient=gradient_element,
                 gradient_type='linear',
-                stop_count=stop_count
+                stop_count=stop_count,
             )
 
             # Handle simplification if needed
@@ -107,7 +108,7 @@ class GradientService:
             decision = self._policy_engine.decide_gradient(
                 gradient=gradient_element,
                 gradient_type='radial',
-                stop_count=stop_count
+                stop_count=stop_count,
             )
 
             # Handle simplification if needed
@@ -133,7 +134,7 @@ class GradientService:
                 gradient_type='mesh',
                 stop_count=0,  # Mesh gradients don't have traditional stops
                 mesh_rows=mesh_rows,
-                mesh_cols=mesh_cols
+                mesh_cols=mesh_cols,
             )
 
             # Check if mesh is too complex for native conversion
@@ -217,7 +218,7 @@ class GradientService:
             # Handle basic named colors as final fallback
             basic_colors = {
                 'red': 'FF0000', 'blue': '0000FF', 'green': '008000', 'black': '000000',
-                'white': 'FFFFFF', 'yellow': 'FFFF00', 'cyan': '00FFFF', 'magenta': 'FF00FF'
+                'white': 'FFFFFF', 'yellow': 'FFFF00', 'cyan': '00FFFF', 'magenta': 'FF00FF',
             }
 
             return basic_colors.get(color.lower(), '000000')
@@ -236,7 +237,7 @@ class GradientService:
         self._gradient_cache.clear()
         self._conversion_cache.clear()
 
-    def _simplify_gradient_stops(self, stops: List[ET.Element], decision: Any) -> str:
+    def _simplify_gradient_stops(self, stops: list[ET.Element], decision: Any) -> str:
         """
         Simplify gradient stops by reducing count to match policy thresholds.
 

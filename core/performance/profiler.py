@@ -6,20 +6,22 @@ This module provides detailed performance tracking, bottleneck identification,
 and optimization recommendations for the conversion pipeline.
 """
 
-import time
-import threading
-import psutil
-import gc
-from typing import Dict, List, Optional, Any, Callable
-from dataclasses import dataclass, field
-from collections import defaultdict, deque
-from functools import wraps
 import cProfile
-import pstats
+import gc
 import io
-from contextlib import contextmanager
-import logging
 import json
+import logging
+import pstats
+import threading
+import time
+from collections import defaultdict, deque
+from collections.abc import Callable
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from functools import wraps
+from typing import Any, Dict, List, Optional
+
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ class PerformanceMetric:
     memory_delta: int
     cpu_percent: float
     thread_id: int
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     @property
     def memory_mb(self) -> float:
@@ -49,8 +51,8 @@ class ProfileSession:
     """A profiling session with aggregated metrics."""
     session_id: str
     start_time: float
-    end_time: Optional[float] = None
-    metrics: List[PerformanceMetric] = field(default_factory=list)
+    end_time: float | None = None
+    metrics: list[PerformanceMetric] = field(default_factory=list)
     total_memory_peak: int = 0
     total_duration: float = 0.0
     
@@ -65,7 +67,7 @@ class ProfileSession:
             self.end_time = time.time()
             self.total_duration = self.end_time - self.start_time
     
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get session summary statistics."""
         if not self.metrics:
             return {'error': 'No metrics recorded'}
@@ -82,7 +84,7 @@ class ProfileSession:
             'min_operation_time': min(durations),
             'total_memory_allocated': sum(memory_deltas),
             'peak_memory_usage': self.total_memory_peak,
-            'operations_per_second': len(self.metrics) / max(self.total_duration, 0.001)
+            'operations_per_second': len(self.metrics) / max(self.total_duration, 0.001),
         }
 
 
@@ -111,19 +113,19 @@ class PerformanceProfiler:
         self.profile_memory = profile_memory
         self.profile_cpu = profile_cpu
         
-        self.sessions: Dict[str, ProfileSession] = {}
-        self.current_session: Optional[ProfileSession] = None
-        self.operation_stack: List[Dict[str, Any]] = []
+        self.sessions: dict[str, ProfileSession] = {}
+        self.current_session: ProfileSession | None = None
+        self.operation_stack: list[dict[str, Any]] = []
         
         # Thread safety
         self.lock = threading.RLock()
         
         # Aggregated statistics
-        self.operation_stats: Dict[str, List[float]] = defaultdict(list)
+        self.operation_stats: dict[str, list[float]] = defaultdict(list)
         self.bottleneck_history: deque = deque(maxlen=100)
         
         # CPU profiler
-        self.cpu_profiler: Optional[cProfile.Profile] = None
+        self.cpu_profiler: cProfile.Profile | None = None
         
         # Memory tracking
         if self.profile_memory:
@@ -138,7 +140,7 @@ class PerformanceProfiler:
             
             session = ProfileSession(
                 session_id=session_id,
-                start_time=time.time()
+                start_time=time.time(),
             )
             
             self.sessions[session_id] = session
@@ -153,7 +155,7 @@ class PerformanceProfiler:
             logger.info(f"Started profiling session: {session_id}")
             return session
     
-    def end_session(self, session_id: Optional[str] = None):
+    def end_session(self, session_id: str | None = None):
         """End a profiling session."""
         with self.lock:
             if session_id is None:
@@ -172,7 +174,7 @@ class PerformanceProfiler:
     @contextmanager
     def profile_operation(self, 
                          operation_name: str,
-                         metadata: Optional[Dict[str, Any]] = None):
+                         metadata: dict[str, Any] | None = None):
         """Context manager for profiling individual operations."""
         # Prepare measurement
         start_time = time.time()
@@ -192,7 +194,7 @@ class PerformanceProfiler:
             'memory_before': memory_before,
             'cpu_percent_start': cpu_percent_start,
             'thread_id': threading.get_ident(),
-            'metadata': metadata or {}
+            'metadata': metadata or {},
         }
         
         with self.lock:
@@ -227,7 +229,7 @@ class PerformanceProfiler:
                 memory_delta=memory_after - memory_before,
                 cpu_percent=cpu_percent,
                 thread_id=threading.get_ident(),
-                metadata=metadata or {}
+                metadata=metadata or {},
             )
             
             # Record metric
@@ -255,7 +257,7 @@ class PerformanceProfiler:
                         'duration': duration,
                         'timestamp': end_time,
                         'memory_delta': memory_after - memory_before,
-                        'metadata': metadata
+                        'metadata': metadata,
                     })
             
             # Auto garbage collection for memory-intensive operations
@@ -264,7 +266,7 @@ class PerformanceProfiler:
                 gc.collect()
     
     def profile_function(self, 
-                        operation_name: Optional[str] = None,
+                        operation_name: str | None = None,
                         include_args: bool = False):
         """Decorator for profiling functions."""
         def decorator(func: Callable) -> Callable:
@@ -277,7 +279,7 @@ class PerformanceProfiler:
                     metadata.update({
                         'args_count': len(args),
                         'kwargs_count': len(kwargs),
-                        'args_types': [type(arg).__name__ for arg in args[:5]]  # First 5 only
+                        'args_types': [type(arg).__name__ for arg in args[:5]],  # First 5 only
                     })
                 
                 with self.profile_operation(name, metadata):
@@ -312,7 +314,7 @@ class PerformanceProfiler:
         logger.info("Stopped CPU profiling")
         return result
     
-    def get_session_report(self, session_id: str) -> Dict[str, Any]:
+    def get_session_report(self, session_id: str) -> dict[str, Any]:
         """Get detailed report for a session."""
         with self.lock:
             session = self.sessions.get(session_id)
@@ -328,7 +330,7 @@ class PerformanceProfiler:
                 operation_breakdown[metric.name].append({
                     'duration': metric.duration,
                     'memory_delta': metric.memory_delta,
-                    'cpu_percent': metric.cpu_percent
+                    'cpu_percent': metric.cpu_percent,
                 })
             
             # Top operations by time
@@ -343,14 +345,14 @@ class PerformanceProfiler:
                     'total_memory': total_memory,
                     'avg_cpu': avg_cpu,
                     'call_count': len(metrics),
-                    'avg_time': total_time / len(metrics)
+                    'avg_time': total_time / len(metrics),
                 }
             
             # Sort by total time
             top_operations = sorted(
                 operation_totals.items(),
                 key=lambda x: x[1]['total_time'],
-                reverse=True
+                reverse=True,
             )[:20]
             
             report.update({
@@ -358,12 +360,12 @@ class PerformanceProfiler:
                 'bottlenecks': [b for b in self.bottleneck_history 
                               if b['timestamp'] >= session.start_time and 
                                  (session.end_time is None or b['timestamp'] <= session.end_time)],
-                'memory_peak_mb': session.total_memory_peak / (1024 * 1024)
+                'memory_peak_mb': session.total_memory_peak / (1024 * 1024),
             })
             
             return report
     
-    def get_global_stats(self) -> Dict[str, Any]:
+    def get_global_stats(self) -> dict[str, Any]:
         """Get global performance statistics."""
         with self.lock:
             # Overall operation statistics
@@ -376,7 +378,7 @@ class PerformanceProfiler:
                         'avg_time': sum(durations) / len(durations),
                         'min_time': min(durations),
                         'max_time': max(durations),
-                        'p95_time': sorted(durations)[int(len(durations) * 0.95)] if len(durations) >= 20 else max(durations)
+                        'p95_time': sorted(durations)[int(len(durations) * 0.95)] if len(durations) >= 20 else max(durations),
                     }
             
             # Recent bottlenecks
@@ -398,8 +400,8 @@ class PerformanceProfiler:
                     'max_metrics_per_session': self.max_metrics_per_session,
                     'auto_gc': self.auto_gc,
                     'profile_memory': self.profile_memory,
-                    'profile_cpu': self.profile_cpu
-                }
+                    'profile_cpu': self.profile_cpu,
+                },
             }
     
     def export_session(self, session_id: str, filepath: str):
@@ -444,7 +446,7 @@ class PerformanceProfiler:
             
             logger.info(f"Cleared {len(old_sessions)} old sessions and old statistics")
     
-    def get_optimization_recommendations(self) -> List[str]:
+    def get_optimization_recommendations(self) -> list[str]:
         """Get optimization recommendations based on profiling data."""
         recommendations = []
         
@@ -462,12 +464,12 @@ class PerformanceProfiler:
                 top_bottlenecks = sorted(
                     bottleneck_operations.items(),
                     key=lambda x: x[1],
-                    reverse=True
+                    reverse=True,
                 )[:5]
                 
                 for operation, count in top_bottlenecks:
                     recommendations.append(
-                        f"Operation '{operation}' caused {count} bottlenecks - consider optimization"
+                        f"Operation '{operation}' caused {count} bottlenecks - consider optimization",
                     )
             
             # Memory usage recommendations
@@ -479,7 +481,7 @@ class PerformanceProfiler:
             if high_memory_ops:
                 unique_ops = list(set(high_memory_ops))
                 recommendations.append(
-                    f"High memory usage detected in: {', '.join(unique_ops[:3])} - consider memory optimization"
+                    f"High memory usage detected in: {', '.join(unique_ops[:3])} - consider memory optimization",
                 )
             
             # Performance pattern analysis
@@ -490,7 +492,7 @@ class PerformanceProfiler:
                     
                     if max_time > avg_time * 5:  # High variance
                         recommendations.append(
-                            f"Operation '{op_name}' has high variance ({max_time:.3f}s max vs {avg_time:.3f}s avg) - investigate inconsistent performance"
+                            f"Operation '{op_name}' has high variance ({max_time:.3f}s max vs {avg_time:.3f}s avg) - investigate inconsistent performance",
                         )
             
             # Caching recommendations
@@ -503,7 +505,7 @@ class PerformanceProfiler:
             if frequently_called:
                 recommendations.append(
                     "Consider caching for frequently called operations: " + 
-                    ', '.join([f"{op} ({count} calls)" for op, count in frequently_called[:3]])
+                    ', '.join([f"{op} ({count} calls)" for op, count in frequently_called[:3]]),
                 )
         
         return recommendations

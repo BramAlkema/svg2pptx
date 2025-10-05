@@ -3,8 +3,8 @@ Type definitions for SVG analysis system.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Set, Any
 from enum import Enum
+from typing import Any, Dict, List, Set
 
 
 class SupportLevel(Enum):
@@ -41,7 +41,7 @@ class ElementCounts:
     animations: int = 0
     max_nesting_depth: int = 0
 
-    def to_dict(self) -> Dict[str, int]:
+    def to_dict(self) -> dict[str, int]:
         """Convert to dictionary."""
         return {
             "total_elements": self.total_elements,
@@ -56,7 +56,7 @@ class ElementCounts:
             "symbols": self.symbols,
             "defs": self.defs,
             "animations": self.animations,
-            "max_nesting_depth": self.max_nesting_depth
+            "max_nesting_depth": self.max_nesting_depth,
         }
 
 
@@ -74,10 +74,10 @@ class FeatureSet:
     has_markers: bool = False
 
     # Detailed feature lists
-    gradient_types: Set[str] = field(default_factory=set)  # linear, radial, mesh
-    filter_types: Set[str] = field(default_factory=set)  # blur, drop-shadow, etc.
-    animation_types: Set[str] = field(default_factory=set)  # animate, animateTransform
-    transform_types: Set[str] = field(default_factory=set)  # translate, rotate, scale
+    gradient_types: set[str] = field(default_factory=set)  # linear, radial, mesh
+    filter_types: set[str] = field(default_factory=set)  # blur, drop-shadow, etc.
+    animation_types: set[str] = field(default_factory=set)  # animate, animateTransform
+    transform_types: set[str] = field(default_factory=set)  # translate, rotate, scale
 
     # Complexity indicators
     has_complex_paths: bool = False  # Bezier curves, arcs
@@ -85,7 +85,7 @@ class FeatureSet:
     has_embedded_images: bool = False
     has_external_references: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "animations": self.has_animations,
@@ -99,7 +99,7 @@ class FeatureSet:
             "complex_paths": self.has_complex_paths,
             "complex_transforms": self.has_complex_transforms,
             "embedded_images": self.has_embedded_images,
-            "external_references": self.has_external_references
+            "external_references": self.has_external_references,
         }
 
 
@@ -110,12 +110,12 @@ class PerformanceEstimate:
     output_size_kb: int  # Estimated PPTX file size in KB
     memory_usage_mb: int  # Estimated peak memory usage in MB
 
-    def to_dict(self) -> Dict[str, int]:
+    def to_dict(self) -> dict[str, int]:
         """Convert to dictionary."""
         return {
             "conversion_time_ms": self.conversion_time_ms,
             "output_size_kb": self.output_size_kb,
-            "memory_usage_mb": self.memory_usage_mb
+            "memory_usage_mb": self.memory_usage_mb,
         }
 
 
@@ -124,14 +124,14 @@ class PolicyRecommendation:
     """Policy recommendation with reasoning."""
     target: str  # "speed", "balanced", "quality"
     confidence: float  # 0.0 to 1.0
-    reasons: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "target": self.target,
             "confidence": self.confidence,
-            "reasons": self.reasons
+            "reasons": self.reasons,
         }
 
 
@@ -143,9 +143,9 @@ class SVGAnalysisResult:
     features: FeatureSet
     recommended_policy: PolicyRecommendation
     estimated_performance: PerformanceEstimate
-    warnings: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "complexity_score": self.complexity_score,
@@ -153,7 +153,7 @@ class SVGAnalysisResult:
             "features_detected": self.features.to_dict(),
             "recommended_policy": self.recommended_policy.to_dict(),
             "estimated_performance": self.estimated_performance.to_dict(),
-            "warnings": self.warnings
+            "warnings": self.warnings,
         }
 
 
@@ -164,14 +164,14 @@ class CompatibilityReport:
     powerpoint_2019: CompatibilityLevel
     powerpoint_365: CompatibilityLevel
     google_slides: CompatibilityLevel
-    notes: List[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "powerpoint_2016": self.powerpoint_2016.value,
             "powerpoint_2019": self.powerpoint_2019.value,
             "powerpoint_365": self.powerpoint_365.value,
             "google_slides": self.google_slides.value,
-            "notes": self.notes
+            "notes": self.notes,
         }

@@ -7,13 +7,13 @@ All SVG complexity is preprocessed before reaching this layer.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Union, Literal
 from enum import Enum
+from typing import List, Literal, Optional, Union
+
+from .geometry import Point, Rect, SegmentType
 
 # Use shared numpy compatibility
 from .numpy_compat import np
-
-from .geometry import Point, Rect, SegmentType
 from .paint import Paint, Stroke
 from .text import TextFrame
 
@@ -54,12 +54,12 @@ class Path:
     Transforms already applied to coordinates.
     Ready for direct mapping to DrawingML or EMF.
     """
-    segments: List[SegmentType]
+    segments: list[SegmentType]
     fill: Paint = None
-    stroke: Optional[Stroke] = None
-    clip: Optional[ClipRef] = None
+    stroke: Stroke | None = None
+    clip: ClipRef | None = None
     opacity: float = 1.0
-    transform: Optional[np.ndarray] = None  # Identity if None
+    transform: np.ndarray | None = None  # Identity if None
 
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
@@ -147,10 +147,10 @@ class Group:
     Represents SVG groups with applied transforms and clipping.
     Children are flattened when possible for optimization.
     """
-    children: List[Union['Path', 'TextFrame', 'Group', 'Image']]
-    clip: Optional[ClipRef] = None
+    children: list[Union['Path', 'TextFrame', 'Group', 'Image']]
+    clip: ClipRef | None = None
     opacity: float = 1.0
-    transform: Optional[np.ndarray] = None
+    transform: np.ndarray | None = None
 
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
@@ -203,10 +203,10 @@ class Image:
     size: Rect
     data: bytes                      # Embedded image data
     format: Literal["png", "jpg", "gif", "svg"]
-    href: Optional[str] = None       # Image source reference (data URL, file path, or URL)
-    clip: Optional[ClipRef] = None
+    href: str | None = None       # Image source reference (data URL, file path, or URL)
+    clip: ClipRef | None = None
     opacity: float = 1.0
-    transform: Optional[np.ndarray] = None
+    transform: np.ndarray | None = None
 
     def __post_init__(self):
         if not (0.0 <= self.opacity <= 1.0):
@@ -222,4 +222,4 @@ class Image:
 
 # Type aliases for convenience
 IRElement = Union[Path, TextFrame, Group, Image]
-SceneGraph = List[IRElement]
+SceneGraph = list[IRElement]

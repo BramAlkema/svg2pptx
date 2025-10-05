@@ -8,9 +8,10 @@ registration, parameter validation, and metadata support.
 
 import functools
 import logging
-from typing import Dict, List, Set, Optional, Any, Callable, TypeVar, Union
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Set, TypeVar, Union
 
-from .framework import PerformanceFramework, BenchmarkMetadata
+from .framework import BenchmarkMetadata, PerformanceFramework
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 F = TypeVar('F', bound=Callable[..., Any])
 
 # Global benchmark registry for automatic registration
-_global_benchmarks: Dict[str, BenchmarkMetadata] = {}
+_global_benchmarks: dict[str, BenchmarkMetadata] = {}
 _auto_register = True
 
 
@@ -29,7 +30,7 @@ def enable_auto_registration(enabled: bool = True) -> None:
     logger.debug(f"Automatic benchmark registration: {'enabled' if enabled else 'disabled'}")
 
 
-def get_registered_benchmarks() -> Dict[str, BenchmarkMetadata]:
+def get_registered_benchmarks() -> dict[str, BenchmarkMetadata]:
     """Get all globally registered benchmarks."""
     return _global_benchmarks.copy()
 
@@ -41,18 +42,18 @@ def clear_registered_benchmarks() -> None:
     logger.debug("Cleared all registered benchmarks")
 
 
-def benchmark(name: Optional[str] = None,
+def benchmark(name: str | None = None,
              category: str = "general",
-             target_ops_per_sec: Optional[float] = None,
-             regression_threshold: Optional[float] = None,
-             tags: Optional[Union[Set[str], List[str]]] = None,
-             description: Optional[str] = None,
-             setup: Optional[Callable] = None,
-             teardown: Optional[Callable] = None,
-             warmup_iterations: Optional[int] = None,
-             measurement_iterations: Optional[int] = None,
+             target_ops_per_sec: float | None = None,
+             regression_threshold: float | None = None,
+             tags: set[str] | list[str] | None = None,
+             description: str | None = None,
+             setup: Callable | None = None,
+             teardown: Callable | None = None,
+             warmup_iterations: int | None = None,
+             measurement_iterations: int | None = None,
              enabled: bool = True,
-             framework: Optional[PerformanceFramework] = None) -> Callable[[F], F]:
+             framework: PerformanceFramework | None = None) -> Callable[[F], F]:
     """
     Decorator to register a function as a benchmark.
 
@@ -89,7 +90,7 @@ def benchmark(name: Optional[str] = None,
 
         # Validate parameters
         validation_errors = _validate_benchmark_parameters(
-            benchmark_name, category, target_ops_per_sec, regression_threshold, tags
+            benchmark_name, category, target_ops_per_sec, regression_threshold, tags,
         )
         if validation_errors:
             raise ValueError(f"Invalid benchmark parameters for '{benchmark_name}': {', '.join(validation_errors)}")
@@ -119,7 +120,7 @@ def benchmark(name: Optional[str] = None,
             tags=tag_set,
             description=benchmark_description,
             setup_function=setup,
-            teardown_function=teardown
+            teardown_function=teardown,
         )
 
         # Store additional metadata on the function
@@ -150,10 +151,10 @@ def benchmark(name: Optional[str] = None,
 
 def benchmark_suite(name: str,
                    category: str = "suite",
-                   description: Optional[str] = None,
-                   tags: Optional[Union[Set[str], List[str]]] = None,
-                   setup_all: Optional[Callable] = None,
-                   teardown_all: Optional[Callable] = None) -> Callable[[F], F]:
+                   description: str | None = None,
+                   tags: set[str] | list[str] | None = None,
+                   setup_all: Callable | None = None,
+                   teardown_all: Callable | None = None) -> Callable[[F], F]:
     """
     Decorator to mark a class as a benchmark suite.
 
@@ -200,9 +201,9 @@ def benchmark_suite(name: str,
     return decorator
 
 
-def parametrized_benchmark(name: Optional[str] = None,
+def parametrized_benchmark(name: str | None = None,
                           category: str = "parametrized",
-                          parameters: Optional[Dict[str, List[Any]]] = None,
+                          parameters: dict[str, list[Any]] | None = None,
                           **kwargs) -> Callable[[F], F]:
     """
     Decorator for parametrized benchmarks that run with different parameter sets.
@@ -254,7 +255,7 @@ def parametrized_benchmark(name: Optional[str] = None,
                 benchmark_name,
                 category=category,
                 description=f"{func.__doc__ or 'Parametrized benchmark'} (params: {param_combo})",
-                **kwargs
+                **kwargs,
             )(param_wrapper)
 
         return func
@@ -316,13 +317,13 @@ class BenchmarkRegistry:
     """
 
     def __init__(self):
-        self.benchmarks: Dict[str, BenchmarkMetadata] = {}
-        self.suites: Dict[str, Any] = {}
+        self.benchmarks: dict[str, BenchmarkMetadata] = {}
+        self.suites: dict[str, Any] = {}
 
     def discover_benchmarks(self,
-                           module_names: Optional[List[str]] = None,
-                           include_patterns: Optional[List[str]] = None,
-                           exclude_patterns: Optional[List[str]] = None) -> int:
+                           module_names: list[str] | None = None,
+                           include_patterns: list[str] | None = None,
+                           exclude_patterns: list[str] | None = None) -> int:
         """
         Discover benchmarks from modules.
 
@@ -347,8 +348,8 @@ class BenchmarkRegistry:
 
     def _should_include_benchmark(self,
                                  name: str,
-                                 include_patterns: Optional[List[str]],
-                                 exclude_patterns: Optional[List[str]]) -> bool:
+                                 include_patterns: list[str] | None,
+                                 exclude_patterns: list[str] | None) -> bool:
         """Check if benchmark should be included based on patterns."""
         # Implementation for pattern matching
         if exclude_patterns:
@@ -375,9 +376,9 @@ class BenchmarkRegistry:
 
 def _validate_benchmark_parameters(name: str,
                                  category: str,
-                                 target_ops_per_sec: Optional[float],
-                                 regression_threshold: Optional[float],
-                                 tags: Optional[Union[Set[str], List[str]]]) -> List[str]:
+                                 target_ops_per_sec: float | None,
+                                 regression_threshold: float | None,
+                                 tags: set[str] | list[str] | None) -> list[str]:
     """Validate benchmark decorator parameters."""
     errors = []
 
@@ -409,7 +410,7 @@ def _validate_benchmark_parameters(name: str,
     return errors
 
 
-def _generate_parameter_combinations(parameters: Dict[str, List[Any]]) -> List[Dict[str, Any]]:
+def _generate_parameter_combinations(parameters: dict[str, list[Any]]) -> list[dict[str, Any]]:
     """Generate all parameter combinations for parametrized benchmarks."""
     import itertools
 
@@ -464,5 +465,5 @@ __all__ = [
     'quick_benchmark',
     'performance_critical',
     'regression_test',
-    'memory_benchmark'
+    'memory_benchmark',
 ]

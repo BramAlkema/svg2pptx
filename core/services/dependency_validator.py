@@ -8,9 +8,9 @@ circular dependencies, and method signature mismatches.
 
 import importlib
 import sys
-from typing import Dict, List, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List
 
 
 class DependencyIssueType(Enum):
@@ -38,8 +38,8 @@ class ServiceSpec:
     name: str
     import_path: str
     class_name: str
-    required_methods: List[str]
-    initialization_args: Dict[str, Any]
+    required_methods: list[str]
+    initialization_args: dict[str, Any]
 
 
 class DependencyValidator:
@@ -47,8 +47,8 @@ class DependencyValidator:
 
     def __init__(self):
         """Initialize dependency validator."""
-        self.issues: List[DependencyIssue] = []
-        self.resolved_imports: Dict[str, Any] = {}
+        self.issues: list[DependencyIssue] = []
+        self.resolved_imports: dict[str, Any] = {}
 
         # Define expected service specifications
         self.service_specs = {
@@ -57,102 +57,102 @@ class DependencyValidator:
                 import_path='src.units',
                 class_name='UnitConverter',
                 required_methods=['to_emu', 'to_pixels'],
-                initialization_args={'context': 'ConversionContext'}
+                initialization_args={'context': 'ConversionContext'},
             ),
             'color_factory': ServiceSpec(
                 name='color_factory',
                 import_path='src.color',
                 class_name='Color',
                 required_methods=['__init__', 'from_hex'],
-                initialization_args={}
+                initialization_args={},
             ),
             'transform_parser': ServiceSpec(
                 name='transform_parser',
                 import_path='src.transforms.engine',
                 class_name='TransformEngine',
                 required_methods=['parse_to_matrix', 'apply_combined_transforms'],
-                initialization_args={}
+                initialization_args={},
             ),
             'viewport_resolver': ServiceSpec(
                 name='viewport_resolver',
                 import_path='src.viewbox',
                 class_name='ViewportEngine',
                 required_methods=['parse_viewbox', 'calculate_viewport'],
-                initialization_args={'unit_engine': 'unit_converter'}
+                initialization_args={'unit_engine': 'unit_converter'},
             ),
             'path_system': ServiceSpec(
                 name='path_system',
                 import_path='src.paths',
                 class_name='PathSystem',
                 required_methods=['create_path_system'],
-                initialization_args={}
+                initialization_args={},
             ),
             'style_parser': ServiceSpec(
                 name='style_parser',
                 import_path='src.utils.style_parser',
                 class_name='StyleParser',
                 required_methods=['parse_style_string', 'parse_style_attribute'],
-                initialization_args={}
+                initialization_args={},
             ),
             'coordinate_transformer': ServiceSpec(
                 name='coordinate_transformer',
                 import_path='src.utils.coordinate_transformer',
                 class_name='CoordinateTransformer',
                 required_methods=['parse_coordinate_string', 'transform_coordinates'],
-                initialization_args={}
+                initialization_args={},
             ),
             'font_processor': ServiceSpec(
                 name='font_processor',
                 import_path='src.utils.font_processor',
                 class_name='FontProcessor',
                 required_methods=['get_font_family', 'process_font_attributes'],
-                initialization_args={}
+                initialization_args={},
             ),
             'path_processor': ServiceSpec(
                 name='path_processor',
                 import_path='src.utils.path_processor',
                 class_name='PathProcessor',
                 required_methods=['parse_path_string', 'optimize_path'],
-                initialization_args={}
+                initialization_args={},
             ),
             'pptx_builder': ServiceSpec(
                 name='pptx_builder',
                 import_path='src.core.pptx_builder',
                 class_name='PPTXBuilder',
                 required_methods=['create_presentation', 'add_slide'],
-                initialization_args={}
+                initialization_args={},
             ),
             'gradient_service': ServiceSpec(
                 name='gradient_service',
                 import_path='src.services.gradient_service',
                 class_name='GradientService',
                 required_methods=['get_gradient_content', 'create_gradient'],
-                initialization_args={}
+                initialization_args={},
             ),
             'pattern_service': ServiceSpec(
                 name='pattern_service',
                 import_path='src.services.pattern_service',
                 class_name='PatternService',
                 required_methods=['get_pattern_content', 'create_pattern'],
-                initialization_args={}
+                initialization_args={},
             ),
             'filter_service': ServiceSpec(
                 name='filter_service',
                 import_path='src.services.filter_service',
                 class_name='FilterService',
                 required_methods=['get_filter_content', 'apply_filter'],
-                initialization_args={}
+                initialization_args={},
             ),
             'image_service': ServiceSpec(
                 name='image_service',
                 import_path='src.services.image_service',
                 class_name='ImageService',
                 required_methods=['get_image_info', 'process_image'],
-                initialization_args={'enable_caching': True}
-            )
+                initialization_args={'enable_caching': True},
+            ),
         }
 
-    def validate_all_dependencies(self) -> List[DependencyIssue]:
+    def validate_all_dependencies(self) -> list[DependencyIssue]:
         """Validate all ConversionServices dependencies."""
         self.issues = []
 
@@ -192,7 +192,7 @@ class DependencyValidator:
                         service_name=service_name,
                         description=f"Class {spec.class_name} not found in {spec.import_path}",
                         suggested_fix=f"Create {spec.class_name} class in {spec.import_path}",
-                        severity="critical"
+                        severity="critical",
                     ))
                     print(f"  ❌ {service_name}: Missing class {spec.class_name}")
 
@@ -202,7 +202,7 @@ class DependencyValidator:
                     service_name=service_name,
                     description=f"Cannot import {spec.import_path}: {e}",
                     suggested_fix=f"Create missing module {spec.import_path}",
-                    severity="critical"
+                    severity="critical",
                 ))
                 print(f"  ❌ {service_name}: Import failed - {e}")
 
@@ -230,7 +230,7 @@ class DependencyValidator:
                         service_name=service_name,
                         description=f"Missing method {method_name}",
                         suggested_fix=suggested_fix,
-                        severity="high"
+                        severity="high",
                     ))
                     print(f"  ❌ {service_name}.{method_name} - Missing")
 
@@ -274,7 +274,7 @@ class DependencyValidator:
                         service_name=service,
                         description="Circular dependency detected",
                         suggested_fix="Refactor to remove circular dependency",
-                        severity="high"
+                        severity="high",
                     ))
                     print(f"  ❌ Circular dependency involving {service}")
 
@@ -315,7 +315,7 @@ class DependencyValidator:
                     service_name=service_name,
                     description=f"Failed to initialize: {e}",
                     suggested_fix="Fix initialization parameters or constructor",
-                    severity="high"
+                    severity="high",
                 ))
                 print(f"  ❌ {service_name}: Initialization failed - {e}")
 
@@ -358,7 +358,7 @@ class DependencyValidator:
 
         return "\n".join(report)
 
-    def generate_fixes(self) -> Dict[str, str]:
+    def generate_fixes(self) -> dict[str, str]:
         """Generate code fixes for dependency issues."""
         fixes = {}
 
@@ -377,7 +377,7 @@ class DependencyValidator:
 
                     if missing_method:
                         fixes[f"{issue.service_name}_{missing_method}"] = self._generate_method_stub(
-                            service_class, missing_method
+                            service_class, missing_method,
                         )
 
         return fixes

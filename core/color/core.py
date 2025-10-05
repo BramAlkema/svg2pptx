@@ -7,10 +7,12 @@ and leverages colorspacious for accurate color science operations.
 """
 
 from __future__ import annotations
-import numpy as np
-import colorspacious
-from typing import Union, Tuple, Dict, Any
+
 import threading
+from typing import Any, Dict, Tuple, Union
+
+import colorspacious
+import numpy as np
 
 from .color_spaces import ColorSpaceConverter
 
@@ -67,7 +69,7 @@ class Color:
         >>> palette = Color('#3498db').analogous(5)
     """
 
-    def __init__(self, value: Union[str, Tuple[int, int, int], Tuple[int, int, int, float], Dict[str, Any], np.ndarray]):
+    def __init__(self, value: str | tuple[int, int, int] | tuple[int, int, int, float] | dict[str, Any] | np.ndarray):
         """
         Initialize Color from various input formats.
 
@@ -538,7 +540,7 @@ class Color:
         hex_str = f"{self._rgb[0]:02x}{self._rgb[1]:02x}{self._rgb[2]:02x}"
         return f"#{hex_str}" if include_hash else hex_str
 
-    def rgb(self) -> Tuple[int, int, int]:
+    def rgb(self) -> tuple[int, int, int]:
         """
         Get RGB tuple.
 
@@ -549,7 +551,7 @@ class Color:
             raise ValueError("Color not properly initialized")
         return self._rgb
 
-    def rgba(self) -> Tuple[int, int, int, float]:
+    def rgba(self) -> tuple[int, int, int, float]:
         """
         Get RGBA tuple.
 
@@ -560,7 +562,7 @@ class Color:
             raise ValueError("Color not properly initialized")
         return (*self._rgb, self._alpha)
 
-    def lab(self) -> Tuple[float, float, float]:
+    def lab(self) -> tuple[float, float, float]:
         """
         Get CIE Lab representation using colorspacious.
 
@@ -570,7 +572,7 @@ class Color:
         lab = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELab")
         return tuple(float(x) for x in lab)
 
-    def lch(self) -> Tuple[float, float, float]:
+    def lch(self) -> tuple[float, float, float]:
         """
         Get CIE LCH representation using colorspacious.
 
@@ -580,7 +582,7 @@ class Color:
         lch = colorspacious.cspace_convert(self._rgb, "sRGB255", "CIELCh")
         return tuple(float(x) for x in lch)
 
-    def hsl(self) -> Tuple[float, float, float]:
+    def hsl(self) -> tuple[float, float, float]:
         """
         Get HSL representation.
 
@@ -589,7 +591,7 @@ class Color:
         """
         return self._rgb_to_hsl(*self._rgb)
 
-    def oklab(self) -> Tuple[float, float, float]:
+    def oklab(self) -> tuple[float, float, float]:
         """
         Get OKLab representation - a modern perceptually uniform color space.
 
@@ -605,7 +607,7 @@ class Color:
         """
         return ColorSpaceConverter.rgb_to_oklab(*self._rgb)
 
-    def oklch(self) -> Tuple[float, float, float]:
+    def oklch(self) -> tuple[float, float, float]:
         """
         Get OKLCh representation - cylindrical form of OKLab.
 
@@ -620,7 +622,7 @@ class Color:
         """
         return ColorSpaceConverter.rgb_to_oklch(*self._rgb)
 
-    def to_xyz(self) -> Tuple[float, float, float]:
+    def to_xyz(self) -> tuple[float, float, float]:
         """
         Get CIE XYZ representation using colorspacious.
 

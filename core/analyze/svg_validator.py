@@ -5,16 +5,22 @@ Validates SVG content and provides actionable feedback for pre-flight checks.
 Leverages existing input validation infrastructure.
 """
 
-from typing import List, Dict, Optional
+import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict
-import logging
+from typing import Dict, List, Optional
+
 from lxml import etree as ET
 
-from core.utils.input_validator import InputValidator, ValidationError, NumericOverflowError
-from .types import CompatibilityLevel, CompatibilityReport
+from core.utils.input_validator import (
+    InputValidator,
+    NumericOverflowError,
+    ValidationError,
+)
+
 from .constants import SVG_NAMESPACE
+from .types import CompatibilityLevel, CompatibilityReport
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +38,11 @@ class ValidationIssue:
     code: str
     message: str
     severity: ValidationSeverity
-    element: Optional[str] = None
-    line: Optional[int] = None
-    suggestion: Optional[str] = None
+    element: str | None = None
+    line: int | None = None
+    suggestion: str | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
             "code": self.code,
@@ -44,7 +50,7 @@ class ValidationIssue:
             "severity": self.severity.value,
             "element": self.element,
             "line": self.line,
-            "suggestion": self.suggestion
+            "suggestion": self.suggestion,
         }
 
 
@@ -52,13 +58,13 @@ class ValidationIssue:
 class ValidationResult:
     """SVG validation result."""
     valid: bool
-    version: Optional[str] = None
-    errors: List[ValidationIssue] = field(default_factory=list)
-    warnings: List[ValidationIssue] = field(default_factory=list)
-    suggestions: List[str] = field(default_factory=list)
-    compatibility: Optional[CompatibilityReport] = None
+    version: str | None = None
+    errors: list[ValidationIssue] = field(default_factory=list)
+    warnings: list[ValidationIssue] = field(default_factory=list)
+    suggestions: list[str] = field(default_factory=list)
+    compatibility: CompatibilityReport | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for API response."""
         return {
             "valid": self.valid,
@@ -66,7 +72,7 @@ class ValidationResult:
             "errors": [e.to_dict() for e in self.errors],
             "warnings": [w.to_dict() for w in self.warnings],
             "compatibility": self.compatibility.to_dict() if self.compatibility else None,
-            "suggestions": self.suggestions
+            "suggestions": self.suggestions,
         }
 
 
@@ -109,7 +115,7 @@ class SVGValidator:
                 message=f"Invalid XML: {str(e)}",
                 severity=ValidationSeverity.ERROR,
                 line=e.lineno if hasattr(e, 'lineno') else None,
-                suggestion="Ensure SVG is valid XML with proper closing tags"
+                suggestion="Ensure SVG is valid XML with proper closing tags",
             ))
             return result
 
@@ -120,7 +126,7 @@ class SVGValidator:
                 message="Root element must be <svg>",
                 severity=ValidationSeverity.ERROR,
                 element=svg_root.tag,
-                suggestion="Wrap content in <svg> element"
+                suggestion="Wrap content in <svg> element",
             ))
             result.valid = False
 
@@ -134,7 +140,7 @@ class SVGValidator:
                 message="SVG lacks viewBox attribute",
                 severity=ValidationSeverity.WARNING,
                 element="svg",
-                suggestion="Add viewBox for proper scaling (e.g., viewBox='0 0 100 100')"
+                suggestion="Add viewBox for proper scaling (e.g., viewBox='0 0 100 100')",
             ))
 
         # Step 5: Collect all elements in single pass (performance optimization)
@@ -158,7 +164,7 @@ class SVGValidator:
 
         return result
 
-    def _collect_elements(self, svg_root: ET.Element) -> Dict[str, List[ET.Element]]:
+    def _collect_elements(self, svg_root: ET.Element) -> dict[str, list[ET.Element]]:
         """
         Collect all elements by tag in a single pass.
 
@@ -206,7 +212,7 @@ class SVGValidator:
                     code="INVALID_ATTRIBUTE",
                     message=str(e),
                     severity=ValidationSeverity.WARNING,
-                    element=element.tag.split('}')[-1]
+                    element=element.tag.split('}')[-1],
                 ))
 
             # Validate specific attributes
@@ -228,13 +234,13 @@ class SVGValidator:
                             message=f"Invalid length value: {attr}='{value}'",
                             severity=ValidationSeverity.WARNING,
                             element=element.tag.split('}')[-1],
-                            suggestion=f"Use valid length unit (e.g., {attr}='100px')"
+                            suggestion=f"Use valid length unit (e.g., {attr}='100px')",
                         ))
                 except (ValueError, AttributeError, TypeError, NumericOverflowError) as e:
                     # Log specific parsing failures for debugging
                     logger.debug(
                         f"Length parsing failed for {attr}='{value}' "
-                        f"in element {element.tag.split('}')[-1]}: {e}"
+                        f"in element {element.tag.split('}')[-1]}: {e}",
                     )
 
     def _validate_color_attributes(self, element: ET.Element, result: ValidationResult):
@@ -252,11 +258,11 @@ class SVGValidator:
                         message=f"Potentially invalid color: {attr}='{value}'",
                         severity=ValidationSeverity.WARNING,
                         element=element.tag.split('}')[-1],
-                        suggestion="Use hex (#RGB), rgb(), or named colors"
+                        suggestion="Use hex (#RGB), rgb(), or named colors",
                     ))
 
     def _validate_structure(self, svg_root: ET.Element, result: ValidationResult,
-                           elements_by_tag: Dict[str, List[ET.Element]]):
+                           elements_by_tag: dict[str, list[ET.Element]]):
         """
         Validate SVG structure and element relationships.
 
@@ -273,7 +279,7 @@ class SVGValidator:
                     message="Path element has no 'd' attribute",
                     severity=ValidationSeverity.WARNING,
                     element="path",
-                    suggestion="Add path data or remove empty path element"
+                    suggestion="Add path data or remove empty path element",
                 ))
 
         # 2. Check gradients with too many stops
@@ -285,7 +291,7 @@ class SVGValidator:
                 if len(stops) > 10:
                     result.suggestions.append(
                         f"Consider simplifying gradient '{gradient.get('id', 'unnamed')}' "
-                        f"({len(stops)} stops, recommend ≤10)"
+                        f"({len(stops)} stops, recommend ≤10)",
                     )
 
         # 3. Check for filter complexity
@@ -297,11 +303,11 @@ class SVGValidator:
                     message=f"Filter '{filter_elem.get('id', 'unnamed')}' has {len(primitives)} primitives",
                     severity=ValidationSeverity.WARNING,
                     element="filter",
-                    suggestion="Complex filters may be rasterized - consider 'quality' policy"
+                    suggestion="Complex filters may be rasterized - consider 'quality' policy",
                 ))
 
     def _check_compatibility(self, svg_root: ET.Element,
-                            elements_by_tag: Dict[str, List[ET.Element]]) -> CompatibilityReport:
+                            elements_by_tag: dict[str, list[ET.Element]]) -> CompatibilityReport:
         """
         Check PowerPoint/Google Slides compatibility.
 
@@ -351,10 +357,10 @@ class SVGValidator:
             powerpoint_2019=powerpoint_2019,
             powerpoint_365=powerpoint_365,
             google_slides=google_slides,
-            notes=notes
+            notes=notes,
         )
 
-    def _generate_suggestions(self, result: ValidationResult) -> List[str]:
+    def _generate_suggestions(self, result: ValidationResult) -> list[str]:
         """Generate optimization suggestions based on validation."""
         suggestions = []
 

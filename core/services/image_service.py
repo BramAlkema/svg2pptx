@@ -10,14 +10,14 @@ Provides centralized image management for SVG to PPTX conversion including:
 - Image optimization and caching
 """
 
-import os
 import base64
 import hashlib
-import tempfile
 import logging
-from typing import Optional, Tuple, Dict
-from pathlib import Path
+import os
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional, Tuple
 
 # Optional PIL import for image processing
 try:
@@ -36,9 +36,9 @@ class ImageInfo:
     height: int
     format: str
     file_size: int
-    content: Optional[bytes] = None
-    temp_path: Optional[str] = None
-    embed_id: Optional[str] = None
+    content: bytes | None = None
+    temp_path: str | None = None
+    embed_id: str | None = None
 
 
 class ImageService:
@@ -46,10 +46,10 @@ class ImageService:
 
     def __init__(self, enable_caching: bool = True):
         self.enable_caching = enable_caching
-        self._image_cache: Dict[str, ImageInfo] = {}
+        self._image_cache: dict[str, ImageInfo] = {}
         self._temp_files: set = set()
 
-    def process_image_source(self, image_source: str, base_path: Optional[str] = None) -> Optional[ImageInfo]:
+    def process_image_source(self, image_source: str, base_path: str | None = None) -> ImageInfo | None:
         """Process image source and return ImageInfo with metadata.
 
         Args:
@@ -84,7 +84,7 @@ class ImageService:
             logger.error(f"Failed to process image source '{image_source}': {e}")
             return None
 
-    def _process_data_url(self, data_url: str) -> Optional[ImageInfo]:
+    def _process_data_url(self, data_url: str) -> ImageInfo | None:
         """Process data URL and extract image content."""
         try:
             if ';base64,' not in data_url:
@@ -106,7 +106,7 @@ class ImageService:
                 'image/jpg': 'JPEG',
                 'image/gif': 'GIF',
                 'image/bmp': 'BMP',
-                'image/webp': 'WEBP'
+                'image/webp': 'WEBP',
             }
             image_format = format_map.get(mime_type, 'UNKNOWN')
 
@@ -123,14 +123,14 @@ class ImageService:
                 format=image_format,
                 file_size=file_size,
                 content=image_data,
-                temp_path=temp_path
+                temp_path=temp_path,
             )
 
         except Exception as e:
             logger.error(f"Failed to process data URL: {e}")
             return None
 
-    def _process_file_path(self, file_path: str, base_path: Optional[str] = None) -> Optional[ImageInfo]:
+    def _process_file_path(self, file_path: str, base_path: str | None = None) -> ImageInfo | None:
         """Process local file path and extract image metadata."""
         try:
             # Resolve relative paths
@@ -159,21 +159,21 @@ class ImageService:
                 format=image_format,
                 file_size=file_size,
                 content=content,
-                temp_path=full_path  # Use original path
+                temp_path=full_path,  # Use original path
             )
 
         except Exception as e:
             logger.error(f"Failed to process file path '{file_path}': {e}")
             return None
 
-    def _process_web_url(self, url: str) -> Optional[ImageInfo]:
+    def _process_web_url(self, url: str) -> ImageInfo | None:
         """Process web URL image source."""
         # For now, web URL downloading is not implemented
         # This would require requests library and proper error handling
         logger.warning(f"Web URL image download not implemented: {url}")
         return None
 
-    def _get_image_dimensions_from_bytes(self, image_data: bytes) -> Tuple[int, int]:
+    def _get_image_dimensions_from_bytes(self, image_data: bytes) -> tuple[int, int]:
         """Get image dimensions from raw bytes."""
         if HAS_PIL:
             try:
@@ -186,7 +186,7 @@ class ImageService:
         # Fallback to default dimensions
         return (800, 600)
 
-    def _get_image_info_from_file(self, file_path: str) -> Tuple[int, int, str]:
+    def _get_image_info_from_file(self, file_path: str) -> tuple[int, int, str]:
         """Get image dimensions and format from file."""
         if HAS_PIL:
             try:
@@ -203,7 +203,7 @@ class ImageService:
             '.jpeg': 'JPEG',
             '.gif': 'GIF',
             '.bmp': 'BMP',
-            '.webp': 'WEBP'
+            '.webp': 'WEBP',
         }
         image_format = format_map.get(ext, 'UNKNOWN')
 
@@ -216,7 +216,7 @@ class ImageService:
             'JPEG': '.jpg',
             'GIF': '.gif',
             'BMP': '.bmp',
-            'WEBP': '.webp'
+            'WEBP': '.webp',
         }
         return format_ext_map.get(image_format, '.png')
 
@@ -228,7 +228,7 @@ class ImageService:
         self._temp_files.add(temp_path)
         return temp_path
 
-    def _get_cache_key(self, image_source: str, base_path: Optional[str]) -> str:
+    def _get_cache_key(self, image_source: str, base_path: str | None) -> str:
         """Generate cache key for image source."""
         key_data = f"{image_source}:{base_path or ''}"
         return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()

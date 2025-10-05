@@ -10,8 +10,10 @@ handling common patterns like:
 
 import re
 from typing import Tuple
-from lxml import etree as ET
+
 import numpy as np
+from lxml import etree as ET
+
 from ..utils.transform_utils import get_transform_safe
 
 
@@ -49,7 +51,7 @@ def parse_transform(transform_str: str) -> np.ndarray:
     return matrix
 
 
-def parse_path_bounds(path_d: str) -> Tuple[float, float, float, float]:
+def parse_path_bounds(path_d: str) -> tuple[float, float, float, float]:
     """Extract bounding box from SVG path d attribute (simplified)."""
     if not path_d:
         return 0, 0, 0, 0
@@ -76,7 +78,7 @@ def parse_path_bounds(path_d: str) -> Tuple[float, float, float, float]:
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None) -> Tuple[float, float, float, float]:
+def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None) -> tuple[float, float, float, float]:
     """Calculate bounding box for a single SVG element with transforms."""
     if parent_transform is None:
         parent_transform = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
@@ -102,7 +104,7 @@ def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None)
                 [path_min_x, path_min_y, 1],
                 [path_max_x, path_min_y, 1],
                 [path_min_x, path_max_y, 1],
-                [path_max_x, path_max_y, 1]
+                [path_max_x, path_max_y, 1],
             ]).T
 
             transformed = combined_transform @ corners
@@ -126,7 +128,7 @@ def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None)
             [x, y, 1],
             [x + width, y, 1],
             [x, y + height, 1],
-            [x + width, y + height, 1]
+            [x + width, y + height, 1],
         ]).T
 
         transformed = combined_transform @ corners
@@ -150,7 +152,7 @@ def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None)
             [cx - r, cy, 1],
             [cx + r, cy, 1],
             [cx, cy - r, 1],
-            [cx, cy + r, 1]
+            [cx, cy + r, 1],
         ]).T
 
         transformed = combined_transform @ radius_points
@@ -178,7 +180,7 @@ def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None)
     return min_x, min_y, max_x, max_y
 
 
-def calculate_raw_content_bounds(svg_element: ET.Element) -> Tuple[float, float, float, float]:
+def calculate_raw_content_bounds(svg_element: ET.Element) -> tuple[float, float, float, float]:
     """Calculate raw content bounds without viewBox clipping - for normalization detection."""
     # Get actual content bounds without any viewBox intersection logic
     min_x, min_y, max_x, max_y = get_element_bounds(svg_element)
@@ -190,7 +192,7 @@ def calculate_raw_content_bounds(svg_element: ET.Element) -> Tuple[float, float,
     return min_x, min_y, max_x, max_y
 
 
-def calculate_content_bounds(svg_element: ET.Element) -> Tuple[float, float, float, float]:
+def calculate_content_bounds(svg_element: ET.Element) -> tuple[float, float, float, float]:
     """Calculate the actual content bounding box for an SVG after all transforms."""
     # Get the viewBox for clipping context
     viewbox = svg_element.get('viewBox', '')

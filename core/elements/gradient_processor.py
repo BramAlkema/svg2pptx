@@ -13,12 +13,13 @@ Features:
 - PowerPoint DrawingML generation
 """
 
-import logging
 import hashlib
-from typing import Dict, List, Any
-from lxml import etree as ET
-from enum import Enum
+import logging
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List
+
+from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices
 
@@ -61,8 +62,8 @@ class GradientAnalysis:
     stop_count: int
     has_transforms: bool
     uses_advanced_features: bool
-    color_spaces_used: List[str]
-    optimization_opportunities: List[GradientOptimization]
+    color_spaces_used: list[str]
+    optimization_opportunities: list[GradientOptimization]
     powerpoint_compatible: bool
     estimated_performance_impact: str
     metrics: GradientMetrics
@@ -88,7 +89,7 @@ class GradientProcessor:
         self.logger = logging.getLogger(__name__)
 
         # Analysis cache
-        self.analysis_cache: Dict[str, GradientAnalysis] = {}
+        self.analysis_cache: dict[str, GradientAnalysis] = {}
 
         # Statistics
         self.stats = {
@@ -97,14 +98,14 @@ class GradientProcessor:
             'complex_gradients': 0,
             'optimizations_identified': 0,
             'cache_hits': 0,
-            'preprocessing_benefits': 0
+            'preprocessing_benefits': 0,
         }
 
         # Performance thresholds
         self.complexity_thresholds = {
             'simple_stop_count': 5,
             'moderate_stop_count': 10,
-            'complex_stop_count': 20
+            'complex_stop_count': 20,
         }
 
     def analyze_gradient_element(self, element: ET.Element, context: Any) -> GradientAnalysis:
@@ -164,17 +165,17 @@ class GradientProcessor:
 
         # Assess complexity
         complexity = self._assess_gradient_complexity(
-            stop_analysis['count'], transform_analysis['complexity'], advanced_features
+            stop_analysis['count'], transform_analysis['complexity'], advanced_features,
         )
 
         # Identify optimization opportunities
         optimizations = self._identify_gradient_optimizations(
-            element, stop_analysis, transform_analysis, advanced_features
+            element, stop_analysis, transform_analysis, advanced_features,
         )
 
         # Check PowerPoint compatibility
         powerpoint_compatible = self._assess_powerpoint_compatibility(
-            gradient_type, complexity, advanced_features
+            gradient_type, complexity, advanced_features,
         )
 
         # Calculate metrics
@@ -185,7 +186,7 @@ class GradientProcessor:
 
         # Check if preprocessing would help
         requires_preprocessing = self._requires_preprocessing(
-            element, transform_analysis, optimizations
+            element, transform_analysis, optimizations,
         )
 
         return GradientAnalysis(
@@ -200,10 +201,10 @@ class GradientProcessor:
             powerpoint_compatible=powerpoint_compatible,
             estimated_performance_impact=performance_impact,
             metrics=metrics,
-            requires_preprocessing=requires_preprocessing
+            requires_preprocessing=requires_preprocessing,
         )
 
-    def _analyze_gradient_stops(self, element: ET.Element) -> Dict[str, Any]:
+    def _analyze_gradient_stops(self, element: ET.Element) -> dict[str, Any]:
         """Analyze gradient stops for optimization opportunities."""
         # Find stop elements
         stop_elements = element.findall('.//stop')
@@ -262,10 +263,10 @@ class GradientProcessor:
             'unique_colors': unique_colors,
             'color_complexity': color_complexity,
             'positions': positions,
-            'irregular_spacing': irregular_spacing
+            'irregular_spacing': irregular_spacing,
         }
 
-    def _analyze_gradient_transforms(self, element: ET.Element) -> Dict[str, Any]:
+    def _analyze_gradient_transforms(self, element: ET.Element) -> dict[str, Any]:
         """Analyze gradient transforms for optimization opportunities."""
         transform_str = element.get('gradientTransform', '')
         has_transforms = bool(transform_str.strip())
@@ -275,7 +276,7 @@ class GradientProcessor:
                 'has_transforms': False,
                 'complexity': 0.0,
                 'transform_count': 0,
-                'types': []
+                'types': [],
             }
 
         # Count transform functions
@@ -293,7 +294,7 @@ class GradientProcessor:
             'rotate': 0.5,
             'matrix': 1.0,
             'skewX': 0.7,
-            'skewY': 0.7
+            'skewY': 0.7,
         }
 
         complexity = sum(complexity_weights.get(t, 0.5) for t in transform_types)
@@ -303,14 +304,14 @@ class GradientProcessor:
             'complexity': complexity,
             'transform_count': transform_count,
             'types': transform_types,
-            'transform_string': transform_str
+            'transform_string': transform_str,
         }
 
     def _check_advanced_features(self, element: ET.Element) -> bool:
         """Check for advanced gradient features that may impact compatibility."""
         # Check for advanced attributes
         advanced_attrs = [
-            'gradientUnits', 'spreadMethod', 'href', 'xlink:href'
+            'gradientUnits', 'spreadMethod', 'href', 'xlink:href',
         ]
 
         for attr in advanced_attrs:
@@ -355,9 +356,9 @@ class GradientProcessor:
 
         return base_complexity
 
-    def _identify_gradient_optimizations(self, element: ET.Element, stop_analysis: Dict[str, Any],
-                                       transform_analysis: Dict[str, Any],
-                                       advanced_features: bool) -> List[GradientOptimization]:
+    def _identify_gradient_optimizations(self, element: ET.Element, stop_analysis: dict[str, Any],
+                                       transform_analysis: dict[str, Any],
+                                       advanced_features: bool) -> list[GradientOptimization]:
         """Identify optimization opportunities."""
         optimizations = []
 
@@ -402,8 +403,8 @@ class GradientProcessor:
 
         return True
 
-    def _calculate_gradient_metrics(self, element: ET.Element, stop_analysis: Dict[str, Any],
-                                  transform_analysis: Dict[str, Any]) -> GradientMetrics:
+    def _calculate_gradient_metrics(self, element: ET.Element, stop_analysis: dict[str, Any],
+                                  transform_analysis: dict[str, Any]) -> GradientMetrics:
         """Calculate performance metrics for gradient."""
         # Estimate memory usage
         base_memory = 1024  # Base gradient overhead
@@ -422,7 +423,7 @@ class GradientProcessor:
             color_complexity=stop_analysis['color_complexity'],
             transform_complexity=transform_analysis['complexity'],
             memory_usage=total_memory,
-            processing_time=total_time
+            processing_time=total_time,
         )
 
     def _estimate_performance_impact(self, metrics: GradientMetrics,
@@ -437,8 +438,8 @@ class GradientProcessor:
         else:
             return 'very_high'
 
-    def _requires_preprocessing(self, element: ET.Element, transform_analysis: Dict[str, Any],
-                              optimizations: List[GradientOptimization]) -> bool:
+    def _requires_preprocessing(self, element: ET.Element, transform_analysis: dict[str, Any],
+                              optimizations: list[GradientOptimization]) -> bool:
         """Check if gradient would benefit from preprocessing."""
         # Already has preprocessing metadata
         if element.get('data-gradient-optimized'):
@@ -564,7 +565,7 @@ class GradientProcessor:
         element.set('data-colors-normalized', 'true')
         return element
 
-    def get_processing_statistics(self) -> Dict[str, int]:
+    def get_processing_statistics(self) -> dict[str, int]:
         """Get processing statistics."""
         return self.stats.copy()
 
@@ -580,7 +581,7 @@ class GradientProcessor:
             'complex_gradients': 0,
             'optimizations_identified': 0,
             'cache_hits': 0,
-            'preprocessing_benefits': 0
+            'preprocessing_benefits': 0,
         }
 
 

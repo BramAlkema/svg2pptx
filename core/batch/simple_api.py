@@ -8,13 +8,13 @@ without requiring Huey or any external dependencies.
 
 import logging
 import tempfile
-import zipfile
 import uuid
+import zipfile
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -27,7 +27,7 @@ class SimpleJobResponse(BaseModel):
     status: str = "completed"
     message: str
     total_files: int
-    result: Optional[dict] = None
+    result: dict | None = None
 
 
 class SimpleStatusResponse(BaseModel):
@@ -38,7 +38,7 @@ class SimpleStatusResponse(BaseModel):
     completed_files: int
     failed_files: int
     total_files: int
-    result: Optional[dict] = None
+    result: dict | None = None
 
 
 class ConversionError(Exception):
@@ -98,14 +98,14 @@ def convert_single_svg_sync(file_data: dict, conversion_options: dict = None) ->
                 'slide_width_inches': slide_width,
                 'slide_height_inches': slide_height,
                 'quality': quality,
-                'output_path': str(output_path)
+                'output_path': str(output_path),
             }
 
             # Perform the actual conversion
             conversion_result = svg_to_pptx(
                 content,
                 output_path=str(output_path),
-                **conversion_params
+                **conversion_params,
             )
 
             if not output_path.exists():
@@ -138,7 +138,7 @@ Generated: {datetime.utcnow().isoformat()}
             'input_size': file_size,
             'output_size': output_path.stat().st_size,
             'conversion_options': options,
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
         logger.info(f"Successfully converted {filename} to {output_filename}")
@@ -151,7 +151,7 @@ Generated: {datetime.utcnow().isoformat()}
             'input_filename': filename,
             'error_message': str(e),
             'error_type': 'conversion_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -161,11 +161,11 @@ Generated: {datetime.utcnow().isoformat()}
             'input_filename': filename,
             'error_message': str(e),
             'error_type': 'unexpected_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
-def merge_presentations_sync(conversion_results: List[dict], output_format: str = 'single_pptx') -> dict:
+def merge_presentations_sync(conversion_results: list[dict], output_format: str = 'single_pptx') -> dict:
     """
     Merge multiple PowerPoint presentations synchronously.
     
@@ -234,10 +234,10 @@ Included files:
                         {
                             'original': r['input_filename'],
                             'converted': r['output_filename'],
-                            'size': r['input_size']
+                            'size': r['input_size'],
                         }
                         for r in successful_results
-                    ]
+                    ],
                 }
                 
                 import json
@@ -267,7 +267,7 @@ Included files:
             'failed_files': failed_count,
             'total_input_size': total_input_size,
             'individual_results': conversion_results,
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
         logger.info(f"Successfully merged {len(successful_results)} presentations into {final_output}")
@@ -279,7 +279,7 @@ Included files:
             'success': False,
             'error_message': str(e),
             'error_type': 'merge_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
@@ -289,11 +289,11 @@ def create_simple_router() -> APIRouter:
 
     @router.post("/convert-files", response_model=SimpleJobResponse)
     async def convert_multiple_files(
-        files: List[UploadFile] = File(default=[]),
+        files: list[UploadFile] = File(default=[]),
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),
-        quality: str = Form("high")
+        quality: str = Form("high"),
     ):
         """
         Convert multiple SVG files to PowerPoint immediately (no queuing).
@@ -314,7 +314,7 @@ def create_simple_router() -> APIRouter:
                 if not uploaded_file.filename.lower().endswith('.svg'):
                     raise HTTPException(
                         status_code=400, 
-                        detail=f"Invalid file type: {uploaded_file.filename}"
+                        detail=f"Invalid file type: {uploaded_file.filename}",
                     )
                 
                 content = await uploaded_file.read()
@@ -323,26 +323,26 @@ def create_simple_router() -> APIRouter:
                 if file_size == 0:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Empty file: {uploaded_file.filename}"
+                        detail=f"Empty file: {uploaded_file.filename}",
                     )
                 
                 if file_size > 10 * 1024 * 1024:  # 10MB limit per file
                     raise HTTPException(
                         status_code=400,
-                        detail=f"File too large: {uploaded_file.filename} (max 10MB)"
+                        detail=f"File too large: {uploaded_file.filename} (max 10MB)",
                     )
                 
                 total_size += file_size
                 
                 file_list.append({
                     'filename': uploaded_file.filename,
-                    'content': content
+                    'content': content,
                 })
             
             if total_size > 50 * 1024 * 1024:  # 50MB total limit for sync processing
                 raise HTTPException(
                     status_code=400,
-                    detail="Total upload size too large for synchronous processing (max 50MB)"
+                    detail="Total upload size too large for synchronous processing (max 50MB)",
                 )
             
             # Prepare conversion options
@@ -350,7 +350,7 @@ def create_simple_router() -> APIRouter:
                 'slide_width': slide_width,
                 'slide_height': slide_height,
                 'output_format': output_format,
-                'quality': quality
+                'quality': quality,
             }
             
             # Process files immediately
@@ -371,7 +371,7 @@ def create_simple_router() -> APIRouter:
                 status="completed",
                 message="Files processed successfully",
                 total_files=len(file_list),
-                result=final_result
+                result=final_result,
             )
             
         except HTTPException:
@@ -386,7 +386,7 @@ def create_simple_router() -> APIRouter:
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),
-        quality: str = Form("high")
+        quality: str = Form("high"),
     ):
         """
         Convert SVG files from a ZIP archive immediately (no queuing).
@@ -421,7 +421,7 @@ def create_simple_router() -> APIRouter:
                         if len(svg_files) > 15:  # Lower limit for sync processing
                             raise HTTPException(
                                 status_code=400, 
-                                detail=f"Too many SVG files for synchronous processing: {len(svg_files)} (max 15)"
+                                detail=f"Too many SVG files for synchronous processing: {len(svg_files)} (max 15)",
                             )
                         
                         for svg_filename in svg_files:
@@ -435,7 +435,7 @@ def create_simple_router() -> APIRouter:
                                 file_list.append({
                                     'filename': Path(svg_filename).name,
                                     'content': svg_content,
-                                    'original_path': svg_filename
+                                    'original_path': svg_filename,
                                 })
                             except Exception as e:
                                 logger.warning(f"Failed to extract {svg_filename}: {e}")
@@ -451,7 +451,7 @@ def create_simple_router() -> APIRouter:
                 'slide_width': slide_width,
                 'slide_height': slide_height,
                 'output_format': output_format,
-                'quality': quality
+                'quality': quality,
             }
             
             # Process files immediately
@@ -472,7 +472,7 @@ def create_simple_router() -> APIRouter:
                 status="completed",
                 message="ZIP processed successfully",
                 total_files=len(file_list),
-                result=final_result
+                result=final_result,
             )
             
         except HTTPException:
@@ -495,7 +495,7 @@ def create_simple_router() -> APIRouter:
             completed_files=0,  # Unknown in simple mode
             failed_files=0,     # Unknown in simple mode
             total_files=0,      # Unknown in simple mode
-            result={"message": "Job completed synchronously"}
+            result={"message": "Job completed synchronously"},
         )
 
     @router.get("/download/{job_id}")
@@ -529,7 +529,7 @@ def create_simple_router() -> APIRouter:
             return FileResponse(
                 path=str(output_file),
                 media_type=media_type,
-                filename=output_file.name
+                filename=output_file.name,
             )
             
         except HTTPException:
@@ -544,7 +544,7 @@ def create_simple_router() -> APIRouter:
         return {
             "status": "healthy",
             "mode": "simple_processing",
-            "message": "No external dependencies required"
+            "message": "No external dependencies required",
         }
 
     return router

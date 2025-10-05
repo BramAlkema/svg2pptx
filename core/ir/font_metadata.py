@@ -7,8 +7,8 @@ Designed for the Clean Slate text processing system.
 """
 
 from dataclasses import dataclass
-from typing import Optional, List
 from enum import Enum
+from typing import List, Optional
 
 
 class FontStrategy(Enum):
@@ -74,10 +74,10 @@ class FontMetadata:
     availability: FontAvailability = FontAvailability.UNKNOWN
 
     # Optional advanced properties
-    metrics: Optional[FontMetrics] = None         # Font metrics if available
+    metrics: FontMetrics | None = None         # Font metrics if available
     embedding_required: bool = False              # Whether embedding is needed
     embedding_confidence: float = 0.0            # Confidence in font detection (0-1)
-    fallback_chain: List[str] = None             # Fallback font list
+    fallback_chain: list[str] = None             # Fallback font list
 
     # CSS properties
     variant: str = "normal"                       # normal|small-caps
@@ -118,7 +118,7 @@ class FontMetadata:
             600: 'semi-bold',
             700: 'bold',
             800: 'extra-bold',
-            900: 'black'
+            900: 'black',
         }
         return weight_names.get(self.weight, str(self.weight))
 
@@ -141,7 +141,7 @@ class FontMetadata:
             embedding_confidence=self.embedding_confidence,
             fallback_chain=self.fallback_chain,
             variant=self.variant,
-            stretch=self.stretch
+            stretch=self.stretch,
         )
 
     def with_availability(self, availability: FontAvailability) -> 'FontMetadata':
@@ -158,7 +158,7 @@ class FontMetadata:
             embedding_confidence=self.embedding_confidence,
             fallback_chain=self.fallback_chain,
             variant=self.variant,
-            stretch=self.stretch
+            stretch=self.stretch,
         )
 
 
@@ -169,7 +169,7 @@ class FontAnalysisResult:
     recommended_strategy: FontStrategy
     confidence: float                    # Confidence in recommendation (0-1)
     analysis_time_ms: float             # Time taken for analysis
-    notes: List[str] = None             # Additional analysis notes
+    notes: list[str] = None             # Additional analysis notes
 
     def __post_init__(self):
         if self.notes is None:
@@ -202,7 +202,7 @@ CSS_FONT_WEIGHTS = {
     'ultrabold': 800,
     'heavy': 800,
     'black': 900,
-    'ultrablack': 900
+    'ultrablack': 900,
 }
 
 # CSS font style mapping
@@ -210,7 +210,7 @@ CSS_FONT_STYLES = {
     'normal': 'normal',
     'italic': 'italic',
     'oblique': 'italic',  # Map oblique to italic for PowerPoint
-    'inherit': 'normal'
+    'inherit': 'normal',
 }
 
 
@@ -267,10 +267,10 @@ def normalize_font_style(style_str: str) -> str:
 
 def create_font_metadata(
     family: str,
-    weight: Optional[str] = None,
-    style: Optional[str] = None,
+    weight: str | None = None,
+    style: str | None = None,
     size_pt: float = 12.0,
-    **kwargs
+    **kwargs,
 ) -> FontMetadata:
     """
     Create FontMetadata with CSS value parsing.
@@ -290,5 +290,5 @@ def create_font_metadata(
         weight=parse_font_weight(weight) if weight else 400,
         style=normalize_font_style(style) if style else 'normal',
         size_pt=size_pt,
-        **kwargs
+        **kwargs,
     )

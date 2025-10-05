@@ -8,16 +8,16 @@ with proper slide copying, relationship preservation, and media handling.
 
 import io
 import logging
-from pathlib import Path
-from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 try:
     from pptx import Presentation
-    from pptx.util import Inches, Emu
     from pptx.enum.shapes import MSO_SHAPE_TYPE
     from pptx.oxml import parse_xml
     from pptx.oxml.ns import nsdecls, qn
+    from pptx.util import Emu, Inches
     PPTX_AVAILABLE = True
 except ImportError:
     PPTX_AVAILABLE = False
@@ -29,11 +29,11 @@ logger = logging.getLogger(__name__)
 class MergeResult:
     """Result of a PowerPoint merge operation."""
     success: bool
-    output_path: Optional[Path] = None
+    output_path: Path | None = None
     total_slides: int = 0
-    source_files: List[str] = None
-    error_message: Optional[str] = None
-    warnings: List[str] = None
+    source_files: list[str] = None
+    error_message: str | None = None
+    warnings: list[str] = None
 
     def __post_init__(self):
         if self.source_files is None:
@@ -80,9 +80,9 @@ class PPTXMerger:
         self.temp_dir = None
 
     def merge_presentations(self,
-                          input_files: List[Union[str, Path]],
-                          output_path: Union[str, Path],
-                          presentation_title: Optional[str] = None) -> MergeResult:
+                          input_files: list[str | Path],
+                          output_path: str | Path,
+                          presentation_title: str | None = None) -> MergeResult:
         """
         Merge multiple PPTX files into a single presentation.
 
@@ -138,7 +138,7 @@ class PPTXMerger:
                 output_path=output_path,
                 total_slides=total_slides,
                 source_files=[str(p) for p in input_paths],
-                warnings=warnings
+                warnings=warnings,
             )
 
         except Exception as e:
@@ -148,10 +148,10 @@ class PPTXMerger:
                 success=False,
                 error_message=error_msg,
                 source_files=[str(p) for p in input_paths],
-                warnings=warnings if 'warnings' in locals() else []
+                warnings=warnings if 'warnings' in locals() else [],
             )
 
-    def _validate_input_files(self, input_paths: List[Path]) -> None:
+    def _validate_input_files(self, input_paths: list[Path]) -> None:
         """Validate that all input files exist and are accessible."""
         if not input_paths:
             raise PPTXMergeError("No input files provided")
@@ -166,7 +166,7 @@ class PPTXMerger:
             if path.suffix.lower() != '.pptx':
                 raise PPTXMergeError(f"Input file is not a PPTX file: {path}")
 
-    def _configure_presentation(self, presentation: Presentation, title: Optional[str]) -> None:
+    def _configure_presentation(self, presentation: Presentation, title: str | None) -> None:
         """Configure the base presentation properties."""
         # Set slide size
         presentation.slide_width = Inches(self.default_slide_size[0])
@@ -284,7 +284,7 @@ class PPTXMerger:
                 source_textbox.left,
                 source_textbox.top,
                 source_textbox.width,
-                source_textbox.height
+                source_textbox.height,
             )
 
             # Copy text content
@@ -311,7 +311,7 @@ class PPTXMerger:
 
                 # Add the image to target slide
                 picture = target_slide.shapes.add_picture(
-                    io.BytesIO(image_data), left, top, width, height
+                    io.BytesIO(image_data), left, top, width, height,
                 )
 
                 # Copy rotation and other properties if available
@@ -339,7 +339,7 @@ class PPTXMerger:
 
             # Add the autoshape to target slide
             autoshape = target_slide.shapes.add_shape(
-                auto_shape_type, left, top, width, height
+                auto_shape_type, left, top, width, height,
             )
 
             # Copy text content if present
@@ -433,7 +433,7 @@ class PPTXMerger:
         except Exception as e:
             logger.debug(f"OLE object copying not implemented: {e}")
 
-    def merge_from_file_list(self, file_list_path: Union[str, Path], output_path: Union[str, Path]) -> MergeResult:
+    def merge_from_file_list(self, file_list_path: str | Path, output_path: str | Path) -> MergeResult:
         """
         Merge presentations from a file containing a list of PPTX files.
 
@@ -462,10 +462,10 @@ class PPTXMerger:
         except Exception as e:
             return MergeResult(
                 success=False,
-                error_message=f"Failed to merge from file list: {e}"
+                error_message=f"Failed to merge from file list: {e}",
             )
 
-    def create_merge_summary(self, result: MergeResult) -> Dict[str, Any]:
+    def create_merge_summary(self, result: MergeResult) -> dict[str, Any]:
         """
         Create a summary of the merge operation.
 
@@ -482,7 +482,7 @@ class PPTXMerger:
             'source_files': result.source_files,
             'output_path': str(result.output_path) if result.output_path else None,
             'warnings_count': len(result.warnings),
-            'warnings': result.warnings
+            'warnings': result.warnings,
         }
 
         if not result.success:
@@ -491,9 +491,9 @@ class PPTXMerger:
         return summary
 
 
-def merge_presentations_simple(input_files: List[Union[str, Path]],
-                             output_path: Union[str, Path],
-                             **kwargs) -> Dict[str, Any]:
+def merge_presentations_simple(input_files: list[str | Path],
+                             output_path: str | Path,
+                             **kwargs) -> dict[str, Any]:
     """
     Simple function interface for merging presentations.
 
@@ -516,12 +516,12 @@ def merge_presentations_simple(input_files: List[Union[str, Path]],
             'error': str(e),
             'total_slides': 0,
             'source_file_count': len(input_files),
-            'source_files': [str(f) for f in input_files]
+            'source_files': [str(f) for f in input_files],
         }
 
 
 # Utility function for backward compatibility
-def merge_pptx_files(input_files: List[str], output_file: str) -> bool:
+def merge_pptx_files(input_files: list[str], output_file: str) -> bool:
     """
     Simple utility function to merge PPTX files (backward compatibility).
 

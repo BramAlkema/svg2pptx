@@ -14,15 +14,15 @@ Key Algorithms:
 - Advanced path parsing and normalization
 """
 
-import re
-import math
 import logging
-from typing import List, Tuple, Optional, Dict
+import math
+import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
-from ..ir.text_path import PathPoint
 from ..ir.geometry import Point
+from ..ir.text_path import PathPoint
 
 
 class PathSamplingMethod(Enum):
@@ -38,7 +38,7 @@ class PathSegment:
     """Represents a single path segment."""
     start_point: Point
     end_point: Point
-    control_points: List[Point]
+    control_points: list[Point]
     segment_type: str  # 'line', 'cubic', 'quadratic', 'arc'
     length: float
 
@@ -62,7 +62,7 @@ class CurveTextPositioner:
         self.default_samples_per_unit = 0.5  # Samples per unit length
         self.logger = logging.getLogger(__name__)
 
-    def sample_path_for_text(self, path_data: str, num_samples: Optional[int] = None) -> List[PathPoint]:
+    def sample_path_for_text(self, path_data: str, num_samples: int | None = None) -> list[PathPoint]:
         """
         Sample path points optimized for text positioning.
 
@@ -107,7 +107,7 @@ class CurveTextPositioner:
             self.logger.warning(f"Path sampling failed: {e}")
             return self._fallback_horizontal_line(num_samples or 2)
 
-    def _sample_path_deterministic(self, segments: List[PathSegment], total_length: float, num_samples: int) -> List[PathPoint]:
+    def _sample_path_deterministic(self, segments: list[PathSegment], total_length: float, num_samples: int) -> list[PathPoint]:
         """
         Deterministic equal arc-length sampling with contract guarantees.
 
@@ -144,7 +144,7 @@ class CurveTextPositioner:
 
         return path_points
 
-    def _sample_path_proportional(self, segments: List[PathSegment], total_length: float, num_samples: int) -> List[PathPoint]:
+    def _sample_path_proportional(self, segments: list[PathSegment], total_length: float, num_samples: int) -> list[PathPoint]:
         """Legacy proportional sampling method."""
         path_points = []
         cumulative_distance = 0.0
@@ -167,7 +167,7 @@ class CurveTextPositioner:
 
         return path_points
 
-    def _fallback_horizontal_line(self, num_samples: int) -> List[PathPoint]:
+    def _fallback_horizontal_line(self, num_samples: int) -> list[PathPoint]:
         """Generate fallback horizontal line when path parsing fails."""
         points = []
         for i in range(num_samples):
@@ -175,7 +175,7 @@ class CurveTextPositioner:
             points.append(PathPoint(
                 x=x, y=0.0,
                 tangent_angle=0.0,
-                distance_along_path=x
+                distance_along_path=x,
             ))
         return points
 
@@ -254,7 +254,7 @@ class CurveTextPositioner:
 
         return PathPoint(x=x, y=y, tangent_angle=angle, distance_along_path=distance)
 
-    def _parse_path_segments(self, path_data: str) -> List[PathSegment]:
+    def _parse_path_segments(self, path_data: str) -> list[PathSegment]:
         """Parse SVG path data into segments."""
         segments = []
 
@@ -329,7 +329,7 @@ class CurveTextPositioner:
 
         return segments
 
-    def _parse_path_commands(self, path_data: str) -> List[Tuple]:
+    def _parse_path_commands(self, path_data: str) -> list[tuple]:
         """Parse SVG path data into command tuples."""
         commands = []
         # Improved pattern to capture command and all following numbers
@@ -362,7 +362,7 @@ class CurveTextPositioner:
             end_point=end,
             control_points=[],
             segment_type='line',
-            length=length
+            length=length,
         )
 
     def _create_cubic_segment(self, start: Point, cp1: Point, cp2: Point, end: Point) -> PathSegment:
@@ -378,7 +378,7 @@ class CurveTextPositioner:
             end_point=end,
             control_points=[cp1, cp2],
             segment_type='cubic',
-            length=length
+            length=length,
         )
 
     def _create_quadratic_segment(self, start: Point, cp: Point, end: Point) -> PathSegment:
@@ -393,10 +393,10 @@ class CurveTextPositioner:
             end_point=end,
             control_points=[cp],
             segment_type='quadratic',
-            length=length
+            length=length,
         )
 
-    def _sample_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> List[PathPoint]:
+    def _sample_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> list[PathPoint]:
         """Sample points along a segment."""
         if segment.segment_type == 'line':
             return self._sample_line_segment(segment, num_samples, base_distance)
@@ -408,7 +408,7 @@ class CurveTextPositioner:
             # Fallback to line
             return self._sample_line_segment(segment, num_samples, base_distance)
 
-    def _sample_line_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> List[PathPoint]:
+    def _sample_line_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> list[PathPoint]:
         """Sample points along a line segment."""
         points = []
         start = segment.start_point
@@ -429,13 +429,13 @@ class CurveTextPositioner:
                 x=x,
                 y=y,
                 tangent_angle=angle_rad,
-                distance_along_path=distance
+                distance_along_path=distance,
             )
             points.append(point)
 
         return points
 
-    def _sample_cubic_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> List[PathPoint]:
+    def _sample_cubic_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> list[PathPoint]:
         """Sample points along a cubic Bézier segment."""
         points = []
         start = segment.start_point
@@ -481,13 +481,13 @@ class CurveTextPositioner:
                 x=x,
                 y=y,
                 tangent_angle=angle_rad,
-                distance_along_path=distance
+                distance_along_path=distance,
             )
             points.append(point)
 
         return points
 
-    def _sample_quadratic_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> List[PathPoint]:
+    def _sample_quadratic_segment(self, segment: PathSegment, num_samples: int, base_distance: float) -> list[PathPoint]:
         """Sample points along a quadratic Bézier segment."""
         points = []
         start = segment.start_point
@@ -513,13 +513,13 @@ class CurveTextPositioner:
                 x=x,
                 y=y,
                 tangent_angle=angle_rad,
-                distance_along_path=distance
+                distance_along_path=distance,
             )
             points.append(point)
 
         return points
 
-    def find_point_at_distance(self, path_points: List[PathPoint], target_distance: float) -> Optional[PathPoint]:
+    def find_point_at_distance(self, path_points: list[PathPoint], target_distance: float) -> PathPoint | None:
         """
         Find path point at specific distance using interpolation.
 
@@ -561,7 +561,7 @@ class CurveTextPositioner:
                         x=x,
                         y=y,
                         tangent_angle=angle,
-                        distance_along_path=target_distance
+                        distance_along_path=target_distance,
                     )
                 else:
                     return curr_point
@@ -583,7 +583,7 @@ class CurveTextPositioner:
 
         return angle1 + t * diff
 
-    def calculate_path_curvature(self, path_points: List[PathPoint], point_index: int) -> float:
+    def calculate_path_curvature(self, path_points: list[PathPoint], point_index: int) -> float:
         """
         Calculate curvature at a specific path point.
 
@@ -641,7 +641,7 @@ class WarpFitResult:
     preset_type: str  # 'arch', 'wave', 'bulge', 'none'
     confidence: float  # 0.0 to 1.0
     error_metric: float  # RMS error
-    parameters: Dict[str, float]  # Family-specific parameters
+    parameters: dict[str, float]  # Family-specific parameters
     fit_quality: str  # 'excellent', 'good', 'fair', 'poor'
 
 
@@ -704,7 +704,7 @@ class PathWarpFitter:
 
         return best_fit
 
-    def _fit_arch(self, samples: List[PathPoint]) -> WarpFitResult:
+    def _fit_arch(self, samples: list[PathPoint]) -> WarpFitResult:
         """
         Fit path to arch (circle/ellipse) parametric family.
 
@@ -734,9 +734,9 @@ class PathWarpFitter:
                         'radius': circle_result['radius'],
                         'center_x': circle_result['center_x'],
                         'center_y': circle_result['center_y'],
-                        'direction': self._determine_arch_direction(samples)
+                        'direction': self._determine_arch_direction(samples),
                     },
-                    fit_quality='unknown'
+                    fit_quality='unknown',
                 )
             else:
                 return WarpFitResult(
@@ -749,16 +749,16 @@ class PathWarpFitter:
                         'radius_y': ellipse_result['radius_y'],
                         'center_x': ellipse_result['center_x'],
                         'center_y': ellipse_result['center_y'],
-                        'direction': self._determine_arch_direction(samples)
+                        'direction': self._determine_arch_direction(samples),
                     },
-                    fit_quality='unknown'
+                    fit_quality='unknown',
                 )
 
         except Exception as e:
             self.logger.debug(f"Arch fitting failed: {e}")
             return WarpFitResult('arch', 0.0, float('inf'), {}, 'poor')
 
-    def _fit_wave(self, samples: List[PathPoint]) -> WarpFitResult:
+    def _fit_wave(self, samples: list[PathPoint]) -> WarpFitResult:
         """
         Fit path to sine wave with amplitude/frequency detection.
         """
@@ -783,7 +783,7 @@ class PathWarpFitter:
 
             # Calculate fit quality
             predicted_y = [wave_params['amplitude'] * math.sin(
-                2 * math.pi * wave_params['frequency'] * x + wave_params['phase']
+                2 * math.pi * wave_params['frequency'] * x + wave_params['phase'],
             ) + baseline['slope'] * x + baseline['intercept'] for x in x_values]
 
             rms_error = math.sqrt(sum((actual - pred)**2 for actual, pred in
@@ -802,16 +802,16 @@ class PathWarpFitter:
                     'frequency': wave_params['frequency'],
                     'phase': wave_params['phase'],
                     'baseline_slope': baseline['slope'],
-                    'baseline_intercept': baseline['intercept']
+                    'baseline_intercept': baseline['intercept'],
                 },
-                fit_quality='unknown'
+                fit_quality='unknown',
             )
 
         except Exception as e:
             self.logger.debug(f"Wave fitting failed: {e}")
             return WarpFitResult('wave', 0.0, float('inf'), {}, 'poor')
 
-    def _fit_bulge(self, samples: List[PathPoint]) -> WarpFitResult:
+    def _fit_bulge(self, samples: list[PathPoint]) -> WarpFitResult:
         """
         Fit path to quadratic bulge (parabola) family.
         """
@@ -847,16 +847,16 @@ class PathWarpFitter:
                     'curvature': quadratic_params['a'],
                     'slope': quadratic_params['b'],
                     'offset': quadratic_params['c'],
-                    'direction': 'up' if quadratic_params['a'] > 0 else 'down'
+                    'direction': 'up' if quadratic_params['a'] > 0 else 'down',
                 },
-                fit_quality='unknown'
+                fit_quality='unknown',
             )
 
         except Exception as e:
             self.logger.debug(f"Bulge fitting failed: {e}")
             return WarpFitResult('bulge', 0.0, float('inf'), {}, 'poor')
 
-    def _fit_circle(self, points: List[Tuple[float, float]]) -> Dict[str, float]:
+    def _fit_circle(self, points: list[tuple[float, float]]) -> dict[str, float]:
         """Fit circle using algebraic method."""
         # Simplified circle fitting (algebraic least squares)
         n = len(points)
@@ -881,10 +881,10 @@ class PathWarpFitter:
             'center_y': cy,
             'radius': avg_radius,
             'error': error,
-            'confidence': confidence
+            'confidence': confidence,
         }
 
-    def _fit_ellipse(self, points: List[Tuple[float, float]]) -> Dict[str, float]:
+    def _fit_ellipse(self, points: list[tuple[float, float]]) -> dict[str, float]:
         """Simplified ellipse fitting."""
         # For now, approximate as circle (full ellipse fitting is complex)
         circle_fit = self._fit_circle(points)
@@ -896,11 +896,11 @@ class PathWarpFitter:
             'radius_x': circle_fit['radius'],
             'radius_y': circle_fit['radius'],
             'error': circle_fit['error'],
-            'confidence': min(1.0, circle_fit['confidence'] * 1.1)
+            'confidence': min(1.0, circle_fit['confidence'] * 1.1),
         }
 
-    def _fit_linear_baseline(self, x_values: List[float],
-                           y_values: List[float]) -> Dict[str, float]:
+    def _fit_linear_baseline(self, x_values: list[float],
+                           y_values: list[float]) -> dict[str, float]:
         """Fit linear baseline using least squares."""
         n = len(x_values)
 
@@ -915,8 +915,8 @@ class PathWarpFitter:
 
         return {'slope': slope, 'intercept': intercept}
 
-    def _estimate_wave_parameters(self, x_values: List[float],
-                                 y_values: List[float]) -> Dict[str, float]:
+    def _estimate_wave_parameters(self, x_values: list[float],
+                                 y_values: list[float]) -> dict[str, float]:
         """Estimate sine wave parameters from detrended data."""
         if len(y_values) == 0:
             return {'amplitude': 0.0, 'frequency': 0.0, 'phase': 0.0}
@@ -942,11 +942,11 @@ class PathWarpFitter:
         return {
             'amplitude': amplitude,
             'frequency': frequency,
-            'phase': phase
+            'phase': phase,
         }
 
-    def _fit_quadratic(self, x_values: List[float],
-                      y_values: List[float]) -> Dict[str, float]:
+    def _fit_quadratic(self, x_values: list[float],
+                      y_values: list[float]) -> dict[str, float]:
         """Fit quadratic polynomial using least squares."""
         n = len(x_values)
 
@@ -979,7 +979,7 @@ class PathWarpFitter:
             # Fallback to linear
             return {'a': 0.0, 'b': 0.0, 'c': sum_y / max(n, 1)}
 
-    def _determine_arch_direction(self, samples: List[PathPoint]) -> str:
+    def _determine_arch_direction(self, samples: list[PathPoint]) -> str:
         """Determine if arch is upward or downward."""
         if len(samples) < 3:
             return 'up'
@@ -1011,11 +1011,11 @@ class PathWarpFitter:
             confidence=0.0,
             error_metric=float('inf'),
             parameters={'reason': reason},
-            fit_quality='poor'
+            fit_quality='poor',
         )
 
 
-def create_path_warp_fitter(positioner: Optional[CurveTextPositioner] = None) -> PathWarpFitter:
+def create_path_warp_fitter(positioner: CurveTextPositioner | None = None) -> PathWarpFitter:
     """
     Create path warp fitter with curve positioner.
 

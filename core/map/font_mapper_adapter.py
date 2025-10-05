@@ -3,8 +3,8 @@ FontMapperAdapter - Bridge between TextMapper interface and SmartFontConverter
 Integrates the isolated FontHandler system into the main pipeline.
 """
 
-from .base import Mapper, MapperResult
 from ..ir import IRElement
+from .base import Mapper, MapperResult
 
 try:
     from ..converters.font.smart_converter import SmartFontConverter
@@ -52,8 +52,8 @@ class FontMapperAdapter(Mapper):
                 context = {'services': self.services, 'policy': self.policy}
                 result = self.smart_converter.convert(ir_element, context)
                 # Convert FontConversionResult to MapperResult
+                from ..policy import DecisionReason, PolicyDecision
                 from .base import OutputFormat
-                from ..policy import PolicyDecision, DecisionReason
 
                 return MapperResult(
                     element=ir_element,
@@ -62,16 +62,16 @@ class FontMapperAdapter(Mapper):
                     policy_decision=PolicyDecision(
                         use_native=True,
                         reasons=[DecisionReason.SIMPLE_SHAPE],  # Using simple shape as default
-                        confidence=result.confidence
+                        confidence=result.confidence,
                     ),
                     metadata={
                         'strategy': str(result.strategy_used),
                         'confidence': result.confidence,
                         'complexity': str(result.complexity) if result.complexity else None,
-                        'font_available': result.font_available
+                        'font_available': result.font_available,
                     },
                     estimated_quality=result.confidence,
-                    processing_time_ms=result.total_time_ms
+                    processing_time_ms=result.total_time_ms,
                 )
             except Exception as e:
                 print(f"SmartFontConverter failed, using fallback: {e}")

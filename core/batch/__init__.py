@@ -12,16 +12,16 @@ from .simple_api import create_simple_router
 
 # Try to import Huey-based components (may not be available)
 try:
+    from .api import create_batch_router
     from .huey_app import huey
     from .tasks import (
-        convert_single_svg,
-        merge_presentations, 
         cleanup_temp_files,
-        process_svg_batch,
+        convert_single_svg,
         extract_and_process_zip,
-        periodic_cleanup
+        merge_presentations,
+        periodic_cleanup,
+        process_svg_batch,
     )
-    from .api import create_batch_router
     
     HUEY_AVAILABLE = True
     
@@ -35,7 +35,7 @@ try:
         'periodic_cleanup',
         'create_batch_router',
         'create_simple_router',
-        'HUEY_AVAILABLE'
+        'HUEY_AVAILABLE',
     ]
     
 except ImportError:
@@ -44,5 +44,5 @@ except ImportError:
     
     __all__ = [
         'create_simple_router',
-        'HUEY_AVAILABLE'
+        'HUEY_AVAILABLE',
     ]

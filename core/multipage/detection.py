@@ -6,9 +6,11 @@ Simple, focused page boundary detection for multi-page conversion.
 Replaces the complex 1700+ line detection system with common use cases.
 """
 
-from typing import List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
 from lxml import etree as ET
+
 from ..xml.safe_iter import walk
 
 if TYPE_CHECKING:
@@ -20,7 +22,7 @@ class PageBreak:
     """Simple page break representation."""
     element: ET.Element
     page_number: int
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class SimplePageDetector:
@@ -50,7 +52,7 @@ class SimplePageDetector:
         else:
             self.size_threshold = size_threshold
 
-    def detect_page_breaks_in_svg(self, svg_content: str) -> List[PageBreak]:
+    def detect_page_breaks_in_svg(self, svg_content: str) -> list[PageBreak]:
         """
         Detect page breaks within a single SVG document.
 
@@ -80,7 +82,7 @@ class SimplePageDetector:
             # If SVG is malformed, treat as single page
             return []
 
-    def _find_page_markers(self, root: ET.Element) -> List[PageBreak]:
+    def _find_page_markers(self, root: ET.Element) -> list[PageBreak]:
         """Find explicit page break markers in SVG."""
         page_breaks = []
 
@@ -91,7 +93,7 @@ class SimplePageDetector:
             ".//*[@id[contains(., 'page')]]",
             ".//*[@id[contains(., 'slide')]]",
             ".//g[contains(@class, 'page')]",
-            ".//g[contains(@id, 'page')]"
+            ".//g[contains(@id, 'page')]",
         ]
 
         page_number = 1
@@ -103,7 +105,7 @@ class SimplePageDetector:
                     page_breaks.append(PageBreak(
                         element=element,
                         page_number=page_number,
-                        title=title
+                        title=title,
                     ))
                     page_number += 1
             except:
@@ -112,7 +114,7 @@ class SimplePageDetector:
 
         return page_breaks
 
-    def _find_grouped_pages(self, root: ET.Element) -> List[PageBreak]:
+    def _find_grouped_pages(self, root: ET.Element) -> list[PageBreak]:
         """Find pages based on grouped content structure."""
         page_breaks = []
 
@@ -137,12 +139,12 @@ class SimplePageDetector:
                     page_breaks.append(PageBreak(
                         element=group,
                         page_number=i+1,
-                        title=title
+                        title=title,
                     ))
 
         return page_breaks
 
-    def _split_by_size(self, root: ET.Element) -> List[PageBreak]:
+    def _split_by_size(self, root: ET.Element) -> list[PageBreak]:
         """Split content by size threshold if no other breaks found."""
         page_breaks = []
 
@@ -164,12 +166,12 @@ class SimplePageDetector:
                     page_breaks.append(PageBreak(
                         element=element,
                         page_number=i+1,
-                        title=f"Auto Page {i+1}"
+                        title=f"Auto Page {i+1}",
                     ))
 
         return page_breaks
 
-    def _extract_title(self, element: ET.Element) -> Optional[str]:
+    def _extract_title(self, element: ET.Element) -> str | None:
         """Extract title from element attributes."""
         # Try various title sources
         title_sources = [
@@ -177,7 +179,7 @@ class SimplePageDetector:
             element.get('data-title'),
             element.get('aria-label'),
             element.get('id'),
-            element.get('class')
+            element.get('class'),
         ]
 
         for title in title_sources:
@@ -193,7 +195,7 @@ class SimplePageDetector:
         return None
 
 
-def split_svg_into_pages(svg_content: str) -> List[Tuple[str, Optional[str]]]:
+def split_svg_into_pages(svg_content: str) -> list[tuple[str, str | None]]:
     """
     Split SVG content into multiple pages.
 
@@ -233,7 +235,7 @@ def split_svg_into_pages(svg_content: str) -> List[Tuple[str, Optional[str]]]:
     return pages
 
 
-def detect_multiple_svg_files(file_paths: List[str]) -> List[Tuple[str, str]]:
+def detect_multiple_svg_files(file_paths: list[str]) -> list[tuple[str, str]]:
     """
     Detect pages from multiple SVG files.
 

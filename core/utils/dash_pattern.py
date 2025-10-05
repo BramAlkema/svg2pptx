@@ -7,9 +7,8 @@ with proper percent-of-stroke-width normalization.
 Reference: ECMA-376 DrawingML dash patterns
 """
 
-from typing import List, Tuple, Optional
 from dataclasses import dataclass
-
+from typing import List, Optional, Tuple
 
 # PowerPoint preset dash patterns (common cases)
 # Maps normalized pattern signatures to preset names
@@ -39,16 +38,16 @@ class DashPattern:
     """Represents a converted dash pattern for PowerPoint."""
 
     # List of (dash_pct, space_pct) tuples in 1/1000% units
-    stops: List[Tuple[int, int]]
+    stops: list[tuple[int, int]]
 
     # Optional preset name if pattern matches a standard preset
-    preset: Optional[str] = None
+    preset: str | None = None
 
     # Original SVG pattern for reference
-    svg_pattern: Optional[List[float]] = None
+    svg_pattern: list[float] | None = None
 
 
-def normalize_dasharray(dasharray: List[float]) -> List[float]:
+def normalize_dasharray(dasharray: list[float]) -> list[float]:
     """
     Normalize SVG dasharray.
 
@@ -78,9 +77,9 @@ def normalize_dasharray(dasharray: List[float]) -> List[float]:
 
 
 def phase_rotate_pattern(
-    dasharray: List[float],
-    dashoffset: float
-) -> List[float]:
+    dasharray: list[float],
+    dashoffset: float,
+) -> list[float]:
     """
     Apply SVG stroke-dashoffset by rotating and trimming the pattern.
 
@@ -147,7 +146,7 @@ def phase_rotate_pattern(
     return new_pattern if new_pattern else dasharray
 
 
-def to_dash_space_pairs(pattern: List[float]) -> List[Tuple[float, float]]:
+def to_dash_space_pairs(pattern: list[float]) -> list[tuple[float, float]]:
     """
     Convert flat dasharray to (dash, space) pairs.
 
@@ -172,7 +171,7 @@ def to_percent_units(
     value: float,
     stroke_width: float,
     min_value: int = 1,  # Changed from 1000 - let caller decide clamping
-    max_value: int = 100000000  # 100000% - allows dashes up to 1000x stroke width
+    max_value: int = 100000000,  # 100000% - allows dashes up to 1000x stroke width
 ) -> int:
     """
     Convert user unit to percent-of-stroke-width in DrawingML units.
@@ -204,7 +203,7 @@ def to_percent_units(
     return max(min_value, min(max_value, units))
 
 
-def detect_preset_pattern(pairs: List[Tuple[int, int]]) -> Optional[str]:
+def detect_preset_pattern(pairs: list[tuple[int, int]]) -> str | None:
     """
     Detect if dash pattern matches a PowerPoint preset.
 
@@ -221,7 +220,7 @@ def detect_preset_pattern(pairs: List[Tuple[int, int]]) -> Optional[str]:
 
     # Convert to ratio signatures for fuzzy matching
     # (allows some tolerance for rounding)
-    def to_signature(pattern: List[Tuple[int, int]]) -> Tuple[float, ...]:
+    def to_signature(pattern: list[tuple[int, int]]) -> tuple[float, ...]:
         """Convert pattern to normalized ratios"""
         if not pattern:
             return tuple()
@@ -260,9 +259,9 @@ def detect_preset_pattern(pairs: List[Tuple[int, int]]) -> Optional[str]:
 
 
 def svg_dasharray_to_custdash(
-    dasharray: List[float],
+    dasharray: list[float],
     stroke_width: float,
-    dashoffset: float = 0.0
+    dashoffset: float = 0.0,
 ) -> DashPattern:
     """
     Convert SVG stroke-dasharray to PowerPoint custDash pattern.
@@ -309,7 +308,7 @@ def svg_dasharray_to_custdash(
     percent_pairs = [
         (
             max(1000, to_percent_units(d, stroke_width)),
-            max(1000, to_percent_units(s, stroke_width))
+            max(1000, to_percent_units(s, stroke_width)),
         )
         for d, s in raw_pairs
     ]
@@ -320,7 +319,7 @@ def svg_dasharray_to_custdash(
     return DashPattern(
         stops=percent_pairs,
         preset=preset,
-        svg_pattern=dasharray
+        svg_pattern=dasharray,
     )
 
 

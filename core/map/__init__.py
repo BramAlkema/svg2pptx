@@ -13,10 +13,10 @@ Key principles:
 """
 
 from .base import *
-from .path_mapper import *
-from .text_mapper import *
 from .group_mapper import *
 from .image_mapper import *
+from .path_mapper import *
+from .text_mapper import *
 
 __all__ = [
     # Base mapper interface

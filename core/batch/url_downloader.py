@@ -7,11 +7,11 @@ Downloads SVG files from URLs to temporary storage for batch conversion.
 
 import logging
 import tempfile
-import requests
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +25,16 @@ class DownloadError(Exception):
 class DownloadResult:
     """Result of downloading SVG URLs"""
     success: bool
-    file_paths: List[str]
-    errors: List[Dict[str, Any]]
-    temp_dir: Optional[str] = None
+    file_paths: list[str]
+    errors: list[dict[str, Any]]
+    temp_dir: str | None = None
 
 
 def download_svgs_to_temp(
-    urls: List[str],
+    urls: list[str],
     timeout: int = 30,
     max_size_mb: int = 10,
-    job_id: Optional[str] = None
+    job_id: str | None = None,
 ) -> DownloadResult:
     """
     Download SVG files from URLs to temporary directory.
@@ -77,7 +77,7 @@ def download_svgs_to_temp(
                     url,
                     timeout=timeout,
                     stream=True,
-                    headers={'User-Agent': 'svg2pptx/1.0'}
+                    headers={'User-Agent': 'svg2pptx/1.0'},
                 )
                 response.raise_for_status()
 
@@ -116,7 +116,7 @@ def download_svgs_to_temp(
                 errors.append({
                     'url': url,
                     'error_type': 'http_error',
-                    'error_message': str(e)
+                    'error_message': str(e),
                 })
 
             except DownloadError as e:
@@ -125,7 +125,7 @@ def download_svgs_to_temp(
                 errors.append({
                     'url': url,
                     'error_type': 'download_error',
-                    'error_message': str(e)
+                    'error_message': str(e),
                 })
 
             except Exception as e:
@@ -134,7 +134,7 @@ def download_svgs_to_temp(
                 errors.append({
                     'url': url,
                     'error_type': 'unexpected_error',
-                    'error_message': str(e)
+                    'error_message': str(e),
                 })
 
         # Check if any downloads succeeded
@@ -154,7 +154,7 @@ def download_svgs_to_temp(
             success=True,
             file_paths=file_paths,
             errors=errors,
-            temp_dir=temp_dir
+            temp_dir=temp_dir,
         )
 
     except Exception as e:
@@ -167,9 +167,9 @@ def download_svgs_to_temp(
             file_paths=[],
             errors=errors or [{
                 'error_type': 'batch_failure',
-                'error_message': str(e)
+                'error_message': str(e),
             }],
-            temp_dir=None
+            temp_dir=None,
         )
 
 
@@ -238,8 +238,8 @@ def _get_safe_filename(url: str, index: int) -> str:
     Returns:
         Safe filename like 'file_0.svg' or 'logo_1.svg'
     """
-    from urllib.parse import urlparse
     import re
+    from urllib.parse import urlparse
 
     try:
         # Try to extract filename from URL
@@ -257,7 +257,7 @@ def _get_safe_filename(url: str, index: int) -> str:
         return f"file_{index}.svg"
 
 
-def get_downloader_info() -> Dict[str, Any]:
+def get_downloader_info() -> dict[str, Any]:
     """
     Get information about the URL downloader.
 
@@ -273,16 +273,16 @@ def get_downloader_info() -> Dict[str, Any]:
             'content_validation': True,
             'size_limiting': True,
             'batch_download': True,
-            'error_recovery': True
+            'error_recovery': True,
         },
         'defaults': {
             'timeout_seconds': 30,
-            'max_size_mb': 10
+            'max_size_mb': 10,
         },
         'supported_content_types': [
             'image/svg+xml',
             'text/xml',
             'application/xml',
-            'text/plain'
-        ]
+            'text/plain',
+        ],
     }

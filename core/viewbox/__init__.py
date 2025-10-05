@@ -7,8 +7,12 @@ Eliminates confusing NumPy naming while maintaining performance benefits.
 
 # Import core classes for performance
 from .core import (
-    ViewportEngine, ViewBoxArray, ViewportArray, ViewportMappingArray,
-    AspectAlign, MeetOrSlice
+    AspectAlign,
+    MeetOrSlice,
+    ViewBoxArray,
+    ViewportArray,
+    ViewportEngine,
+    ViewportMappingArray,
 )
 
 # Modern imports - no aliases needed
@@ -16,5 +20,5 @@ from .core import (
 __all__ = [
     # Core classes
     'ViewportEngine', 'ViewBoxArray', 'ViewportArray', 'ViewportMappingArray',
-    'AspectAlign', 'MeetOrSlice'
+    'AspectAlign', 'MeetOrSlice',
 ]

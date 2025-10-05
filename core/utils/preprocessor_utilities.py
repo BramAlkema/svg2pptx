@@ -14,16 +14,17 @@ Consolidates:
 - Common preprocessing patterns and validations
 """
 
-import re
 import math
-from typing import List, Tuple, Dict, Any, Optional, Union
+import re
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from .input_validator import InputValidator
 
 # Integration with existing utility services
 try:
-    from .style_parser import StyleParser, style_parser
     from .coordinate_transformer import CoordinateTransformer, coordinate_transformer
+    from .style_parser import StyleParser, style_parser
     UTILITY_SERVICES_AVAILABLE = True
 except ImportError:
     UTILITY_SERVICES_AVAILABLE = False
@@ -37,8 +38,8 @@ class ProcessingResult:
     success: bool
     value: Any
     original_value: Any = None
-    errors: List[str] = None
-    modifications: List[str] = None
+    errors: list[str] = None
+    modifications: list[str] = None
 
     def __post_init__(self):
         if self.errors is None:
@@ -70,10 +71,10 @@ class PreprocessorUtilities:
             'scale': re.compile(r'scale\s*\(\s*([-\d.]+)(?:\s*,\s*([-\d.]+))?\s*\)'),
             'rotate': re.compile(r'rotate\s*\(\s*([-\d.]+)(?:\s+([-\d.]+)\s+([-\d.]+))?\s*\)'),
             'skewX': re.compile(r'skewX\s*\(\s*([-\d.]+)\s*\)'),
-            'skewY': re.compile(r'skewY\s*\(\s*([-\d.]+)\s*\)')
+            'skewY': re.compile(r'skewY\s*\(\s*([-\d.]+)\s*\)'),
         }
 
-    def format_number(self, num: Union[float, int], precision: int = 3) -> str:
+    def format_number(self, num: float | int, precision: int = 3) -> str:
         """
         Format number with specified precision, removing unnecessary decimals.
 
@@ -119,7 +120,7 @@ class PreprocessorUtilities:
         formatted = f"{num:.{precision}f}".rstrip('0').rstrip('.')
         return formatted if formatted else "0"
 
-    def format_number_pair(self, x: Union[float, int], y: Union[float, int],
+    def format_number_pair(self, x: float | int, y: float | int,
                           precision: int = 3, separator: str = ",") -> str:
         """
         Format coordinate pair with consistent precision.
@@ -186,7 +187,7 @@ class PreprocessorUtilities:
                     success=True,
                     value=result.coordinates,
                     original_value=points_str,
-                    errors=result.parsing_errors
+                    errors=result.parsing_errors,
                 )
 
         except Exception as e:
@@ -208,7 +209,7 @@ class PreprocessorUtilities:
             return ProcessingResult(
                 success=True,
                 value=coordinates,
-                original_value=points_str
+                original_value=points_str,
             )
 
         except Exception as e:
@@ -216,10 +217,10 @@ class PreprocessorUtilities:
                 success=False,
                 value=[],
                 original_value=points_str,
-                errors=[f"Points parsing failed: {str(e)}"]
+                errors=[f"Points parsing failed: {str(e)}"],
             )
 
-    def format_points_string(self, coordinates: List[Tuple[float, float]],
+    def format_points_string(self, coordinates: list[tuple[float, float]],
                            precision: int = 3) -> str:
         """
         Format coordinate list back to SVG points string.
@@ -269,7 +270,7 @@ class PreprocessorUtilities:
                     success=True,
                     value=properties,
                     original_value=style_str,
-                    errors=style_result.errors
+                    errors=style_result.errors,
                 )
 
         except Exception as e:
@@ -290,7 +291,7 @@ class PreprocessorUtilities:
             return ProcessingResult(
                 success=True,
                 value=properties,
-                original_value=style_str
+                original_value=style_str,
             )
 
         except Exception as e:
@@ -298,10 +299,10 @@ class PreprocessorUtilities:
                 success=False,
                 value={},
                 original_value=style_str,
-                errors=[f"Style parsing failed: {str(e)}"]
+                errors=[f"Style parsing failed: {str(e)}"],
             )
 
-    def format_style_attribute(self, properties: Dict[str, str]) -> str:
+    def format_style_attribute(self, properties: dict[str, str]) -> str:
         """
         Format property dictionary back to CSS style string.
 
@@ -356,7 +357,7 @@ class PreprocessorUtilities:
                 success=True,
                 value=transforms,
                 original_value=transform_str,
-                errors=errors
+                errors=errors,
             )
 
         except Exception as e:
@@ -364,10 +365,10 @@ class PreprocessorUtilities:
                 success=False,
                 value=[],
                 original_value=transform_str,
-                errors=[f"Transform parsing failed: {str(e)}"]
+                errors=[f"Transform parsing failed: {str(e)}"],
             )
 
-    def _parse_transform_match(self, func_name: str, match) -> Optional[Dict]:
+    def _parse_transform_match(self, func_name: str, match) -> dict | None:
         """Parse individual transform function match into dictionary."""
         if func_name == 'matrix':
             values = [float(x.strip()) for x in match.group(1).split(',')]
@@ -375,7 +376,7 @@ class PreprocessorUtilities:
                 return {
                     'type': 'matrix',
                     'a': values[0], 'b': values[1], 'c': values[2],
-                    'd': values[3], 'e': values[4], 'f': values[5]
+                    'd': values[3], 'e': values[4], 'f': values[5],
                 }
 
         elif func_name == 'translate':
@@ -404,7 +405,7 @@ class PreprocessorUtilities:
 
         return None
 
-    def format_transform_attribute(self, transforms: List[Dict], precision: int = 3) -> str:
+    def format_transform_attribute(self, transforms: list[dict], precision: int = 3) -> str:
         """
         Format transform list back to SVG transform string.
 
@@ -425,7 +426,7 @@ class PreprocessorUtilities:
             if transform_type == 'matrix':
                 values = [
                     transform.get('a', 1), transform.get('b', 0), transform.get('c', 0),
-                    transform.get('d', 1), transform.get('e', 0), transform.get('f', 0)
+                    transform.get('d', 1), transform.get('e', 0), transform.get('f', 0),
                 ]
                 formatted_values = [self.format_number(v, precision) for v in values]
                 transform_strings.append(f"matrix({','.join(formatted_values)})")
@@ -495,7 +496,7 @@ class PreprocessorUtilities:
                     success=True,
                     value=num,
                     original_value=dimension_str,
-                    modifications=[f"Parsed percentage: {num}%"]
+                    modifications=[f"Parsed percentage: {num}%"],
                 )
 
             # Handle other units
@@ -506,7 +507,7 @@ class PreprocessorUtilities:
                         success=True,
                         value=num,
                         original_value=dimension_str,
-                        modifications=[f"Parsed {unit} value: {num}"]
+                        modifications=[f"Parsed {unit} value: {num}"],
                     )
 
             # No unit, parse as number
@@ -514,7 +515,7 @@ class PreprocessorUtilities:
             return ProcessingResult(
                 success=True,
                 value=num,
-                original_value=dimension_str
+                original_value=dimension_str,
             )
 
         except Exception as e:
@@ -522,7 +523,7 @@ class PreprocessorUtilities:
                 success=False,
                 value=0.0,
                 original_value=dimension_str,
-                errors=[f"Dimension parsing failed: {str(e)}"]
+                errors=[f"Dimension parsing failed: {str(e)}"],
             )
 
     def optimize_numeric_precision(self, text: str, precision: int = 3) -> str:
@@ -570,7 +571,7 @@ class PreprocessorUtilities:
                 success=False,
                 value=None,
                 original_value=None,
-                errors=[f"Attribute '{attr_name}' not found"]
+                errors=[f"Attribute '{attr_name}' not found"],
             )
 
         try:
@@ -584,7 +585,7 @@ class PreprocessorUtilities:
             return ProcessingResult(
                 success=True,
                 value=value,
-                original_value=attr_value
+                original_value=attr_value,
             )
 
         except Exception as e:
@@ -592,7 +593,7 @@ class PreprocessorUtilities:
                 success=False,
                 value=None,
                 original_value=attr_value,
-                errors=[f"Type conversion failed: {str(e)}"]
+                errors=[f"Type conversion failed: {str(e)}"],
             )
 
 
@@ -601,18 +602,18 @@ preprocessor_utilities = PreprocessorUtilities()
 
 
 # Convenience functions for common operations
-def format_number(num: Union[float, int], precision: int = 3) -> str:
+def format_number(num: float | int, precision: int = 3) -> str:
     """Convenience function for number formatting."""
     return preprocessor_utilities.format_number(num, precision)
 
 
-def parse_points(points_str: str) -> List[Tuple[float, float]]:
+def parse_points(points_str: str) -> list[tuple[float, float]]:
     """Convenience function for points parsing."""
     result = preprocessor_utilities.parse_points_string(points_str)
     return result.value if result.success else []
 
 
-def parse_style(style_str: str) -> Dict[str, str]:
+def parse_style(style_str: str) -> dict[str, str]:
     """Convenience function for style parsing."""
     result = preprocessor_utilities.parse_style_attribute(style_str)
     return result.value if result.success else {}

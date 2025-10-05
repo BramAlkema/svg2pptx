@@ -7,10 +7,10 @@ Implements the documented text fixes for proper alignment and positioning.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
 from enum import Enum
-# Use shared numpy compatibility
+from typing import Any, Dict, List, Optional
 
+# Use shared numpy compatibility
 from .geometry import Point, Rect
 
 
@@ -77,12 +77,12 @@ class EnhancedRun:
 
     # Enhanced properties
     font_metadata: Optional['FontMetadata'] = None  # Forward reference
-    text_decorations: List[str] = field(default_factory=list)
-    style_inheritance: Dict[str, Any] = field(default_factory=dict)
+    text_decorations: list[str] = field(default_factory=list)
+    style_inheritance: dict[str, Any] = field(default_factory=dict)
 
     # Advanced typography
-    letter_spacing: Optional[float] = None  # Letter spacing in points
-    word_spacing: Optional[float] = None    # Word spacing multiplier
+    letter_spacing: float | None = None  # Letter spacing in points
+    word_spacing: float | None = None    # Word spacing multiplier
     text_transform: str = "none"            # none|uppercase|lowercase|capitalize
 
     # Positioning hints (for advanced layout)
@@ -138,7 +138,7 @@ class EnhancedRun:
             italic=self.italic,
             underline=self.underline,
             strike=self.strike,
-            rgb=self.rgb
+            rgb=self.rgb,
         )
 
     @classmethod
@@ -153,7 +153,7 @@ class EnhancedRun:
             underline=run.underline,
             strike=run.strike,
             rgb=run.rgb,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -168,10 +168,10 @@ class TextFrame:
     - Per-run styling preserved
     """
     origin: Point                    # Already transformed coordinates (EMU)
-    runs: List[Run]                  # Per-tspan runs with inherited styling
+    runs: list[Run]                  # Per-tspan runs with inherited styling
     anchor: TextAnchor               # Raw SVG anchor (start|middle|end)
     bbox: Rect                       # Calculated text bounding box
-    line_height: Optional[float] = None  # Line height multiplier
+    line_height: float | None = None  # Line height multiplier
     baseline_shift: float = 0.0      # Conservative baseline adjustment
 
     def __post_init__(self):
@@ -214,7 +214,7 @@ class TextFrame:
             score += 2  # Mixed fonts
         return score
 
-    def lines(self) -> List[List[Run]]:
+    def lines(self) -> list[list[Run]]:
         """Split runs into lines based on newline characters
 
         Returns list of run lists, one per line.
@@ -240,7 +240,7 @@ class TextFrame:
                             italic=run.italic,
                             underline=run.underline,
                             strike=run.strike,
-                            rgb=run.rgb
+                            rgb=run.rgb,
                         ))
                     if i < len(parts) - 1:  # Not the last part
                         if current_line:
@@ -262,9 +262,9 @@ class TextLine:
     Represents one logical line that may contain multiple styled runs.
     Used for enhanced multi-line text processing with per-line properties.
     """
-    runs: List[Run]
+    runs: list[Run]
     anchor: TextAnchor = TextAnchor.START
-    line_height: Optional[float] = None
+    line_height: float | None = None
     spacing_before: float = 0.0  # Space before this line (EMU)
     spacing_after: float = 0.0   # Space after this line (EMU)
 
@@ -312,10 +312,10 @@ class RichTextFrame:
     Complements the existing TextFrame with enhanced structure for
     precise multi-line and multi-run text processing.
     """
-    lines: List[TextLine]
+    lines: list[TextLine]
     position: Point  # Already transformed coordinates (EMU)
-    bounds: Optional[Rect] = None
-    transform: Optional[str] = None  # SVG transform attribute
+    bounds: Rect | None = None
+    transform: str | None = None  # SVG transform attribute
     baseline_adjust: bool = True     # Apply baseline corrections
 
     def __post_init__(self):
@@ -323,7 +323,7 @@ class RichTextFrame:
             raise ValueError("RichTextFrame must have at least one line")
 
     @property
-    def all_runs(self) -> List[Run]:
+    def all_runs(self) -> list[Run]:
         """Get all runs from all lines"""
         return [run for line in self.lines for run in line.runs]
 
@@ -387,7 +387,7 @@ class RichTextFrame:
                         italic=run.italic,
                         underline=run.underline,
                         strike=run.strike,
-                        rgb=run.rgb
+                        rgb=run.rgb,
                     ))
                 else:
                     combined_runs.append(run)
@@ -397,12 +397,12 @@ class RichTextFrame:
             x=self.position.x,
             y=self.position.y,
             width=100.0,  # Minimal fallback
-            height=20.0 * self.line_count
+            height=20.0 * self.line_count,
         )
 
         return TextFrame(
             origin=self.position,
             runs=combined_runs,
             anchor=self.primary_anchor,
-            bbox=bbox
+            bbox=bbox,
         )

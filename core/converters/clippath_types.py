@@ -7,10 +7,12 @@ to avoid circular imports between analyzer and converter modules.
 """
 
 from __future__ import annotations
-from typing import List, Optional
-from lxml import etree as ET
-from enum import Enum
+
 from dataclasses import dataclass
+from enum import Enum
+from typing import List, Optional
+
+from lxml import etree as ET
 
 
 class ClipPathComplexity(Enum):
@@ -34,17 +36,17 @@ class ClipPathDefinition:
     id: str
     units: str  # userSpaceOnUse or objectBoundingBox
     clip_rule: str  # nonzero or evenodd
-    path_data: Optional[str] = None
-    shapes: Optional[List[ET.Element]] = None
+    path_data: str | None = None
+    shapes: list[ET.Element] | None = None
     clipping_type: ClippingType = ClippingType.PATH_BASED
-    transform: Optional[str] = None
+    transform: str | None = None
 
 
 @dataclass
 class ClipPathAnalysis:
     """Complete analysis result for a clipPath element."""
     complexity: ClipPathComplexity
-    clip_chain: List[ClipPathDefinition]
+    clip_chain: list[ClipPathDefinition]
     can_flatten: bool
     requires_emf: bool
     reason: str

@@ -11,16 +11,21 @@ Unified font handling service implementing the 3-tier font strategy:
 This service replaces all legacy font handling with modern Clean Slate architecture.
 """
 
+import hashlib
 import logging
 import time
-from typing import Dict, List, Optional, Set, Any, Tuple
 from dataclasses import dataclass
 from pathlib import Path
-import hashlib
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ..ir.font_metadata import (
-    FontMetadata, FontStrategy, FontAvailability, FontAnalysisResult,
-    create_font_metadata, parse_font_weight, normalize_font_style
+    FontAnalysisResult,
+    FontAvailability,
+    FontMetadata,
+    FontStrategy,
+    create_font_metadata,
+    normalize_font_style,
+    parse_font_weight,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +45,7 @@ class FontSystemConfig:
     analysis_timeout_ms: float = 100.0
 
     # Fallback settings
-    default_fallback_chain: List[str] = None
+    default_fallback_chain: list[str] = None
     enable_path_conversion: bool = True
     path_conversion_threshold: float = 0.5
 
@@ -54,11 +59,11 @@ class FontAvailabilityCache:
     """Cache for font availability analysis results."""
 
     def __init__(self, max_size: int = 256):
-        self._cache: Dict[str, FontAnalysisResult] = {}
-        self._access_order: List[str] = []
+        self._cache: dict[str, FontAnalysisResult] = {}
+        self._access_order: list[str] = []
         self._max_size = max_size
 
-    def get(self, font_key: str) -> Optional[FontAnalysisResult]:
+    def get(self, font_key: str) -> FontAnalysisResult | None:
         """Get cached analysis result."""
         if font_key in self._cache:
             # Move to end for LRU
@@ -105,7 +110,7 @@ class FontSystem:
     - Integration with text processing pipeline
     """
 
-    def __init__(self, config: Optional[FontSystemConfig] = None):
+    def __init__(self, config: FontSystemConfig | None = None):
         """
         Initialize font system.
 
@@ -120,8 +125,8 @@ class FontSystem:
         self._font_embedder = None
 
         # System font registry
-        self._system_fonts: Optional[Set[str]] = None
-        self._embedded_fonts: Set[str] = set()
+        self._system_fonts: set[str] | None = None
+        self._embedded_fonts: set[str] = set()
 
         logger.info(f"FontSystem initialized with config: {self._config}")
 
@@ -154,7 +159,7 @@ class FontSystem:
             # Update metadata with strategy
             updated_metadata = font_metadata.with_strategy(strategy)
             updated_metadata = updated_metadata.with_availability(
-                self._strategy_to_availability(strategy)
+                self._strategy_to_availability(strategy),
             )
 
             # Create result
@@ -164,7 +169,7 @@ class FontSystem:
                 recommended_strategy=strategy,
                 confidence=confidence,
                 analysis_time_ms=analysis_time,
-                notes=notes
+                notes=notes,
             )
 
             # Cache result
@@ -185,10 +190,10 @@ class FontSystem:
                 recommended_strategy=FontStrategy.FALLBACK,
                 confidence=0.0,
                 analysis_time_ms=analysis_time,
-                notes=[f"Analysis failed: {str(e)}"]
+                notes=[f"Analysis failed: {str(e)}"],
             )
 
-    def _determine_font_strategy(self, font_metadata: FontMetadata) -> Tuple[FontStrategy, float, List[str]]:
+    def _determine_font_strategy(self, font_metadata: FontMetadata) -> tuple[FontStrategy, float, list[str]]:
         """
         Determine optimal font strategy using 3-tier system.
 
@@ -241,7 +246,7 @@ class FontSystem:
                 font_path = self._font_detector.find_font_file(
                     font_metadata.family,
                     font_metadata.weight,
-                    font_metadata.is_italic
+                    font_metadata.is_italic,
                 )
 
                 if font_path and Path(font_path).exists():
@@ -275,7 +280,7 @@ class FontSystem:
             logger.debug(f"System font availability check failed: {e}")
             return False
 
-    def _discover_system_fonts(self) -> Set[str]:
+    def _discover_system_fonts(self) -> set[str]:
         """Discover available system fonts."""
         system_fonts = set()
 
@@ -293,7 +298,7 @@ class FontSystem:
                     'Courier New', 'Courier', 'Verdana', 'Georgia',
                     'Comic Sans MS', 'Trebuchet MS', 'Arial Black',
                     'Impact', 'Palatino', 'Garamond', 'Bookman',
-                    'Avant Garde', 'sans-serif', 'serif', 'monospace'
+                    'Avant Garde', 'sans-serif', 'serif', 'monospace',
                 }
 
             logger.info(f"Discovered {len(system_fonts)} system fonts")
@@ -310,6 +315,7 @@ class FontSystem:
             # Try to import font detection libraries
             try:
                 from fontTools.ttLib import TTFont
+
                 from .font_detector import FontDetector
                 return FontDetector()
             except ImportError:
@@ -317,6 +323,7 @@ class FontSystem:
 
             try:
                 import matplotlib.font_manager as fm
+
                 from .matplotlib_font_detector import MatplotlibFontDetector
                 return MatplotlibFontDetector()
             except ImportError:
@@ -341,7 +348,7 @@ class FontSystem:
             FontStrategy.EMBEDDED: FontAvailability.EMBEDDED,
             FontStrategy.SYSTEM: FontAvailability.AVAILABLE,
             FontStrategy.PATH: FontAvailability.UNAVAILABLE,
-            FontStrategy.FALLBACK: FontAvailability.SYSTEM_FALLBACK
+            FontStrategy.FALLBACK: FontAvailability.SYSTEM_FALLBACK,
         }
         return mapping.get(strategy, FontAvailability.UNKNOWN)
 
@@ -350,7 +357,7 @@ class FontSystem:
         self._embedded_fonts.add(font_family)
         logger.debug(f"Registered embedded font: {font_family}")
 
-    def get_system_fonts(self) -> Set[str]:
+    def get_system_fonts(self) -> set[str]:
         """Get set of available system fonts."""
         if self._system_fonts is None:
             self._system_fonts = self._discover_system_fonts()
@@ -362,7 +369,7 @@ class FontSystem:
             self._cache.clear()
             logger.debug("Font analysis cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         if not self._cache:
             return {"caching_enabled": False}
@@ -371,7 +378,7 @@ class FontSystem:
             "caching_enabled": True,
             "cache_size": self._cache.size(),
             "max_size": self._config.cache_size_limit,
-            "hit_rate": "Not tracked"  # Could be enhanced
+            "hit_rate": "Not tracked",  # Could be enhanced
         }
 
     # Utility methods for legacy compatibility
@@ -388,16 +395,16 @@ class FontSystem:
     @staticmethod
     def create_font_metadata_from_css(
         family: str,
-        weight: Optional[str] = None,
-        style: Optional[str] = None,
-        size_pt: float = 12.0
+        weight: str | None = None,
+        style: str | None = None,
+        size_pt: float = 12.0,
     ) -> FontMetadata:
         """Create FontMetadata from CSS values."""
         return create_font_metadata(family, weight, style, size_pt)
 
 
 # Factory function for service creation
-def create_font_system(config: Optional[FontSystemConfig] = None) -> FontSystem:
+def create_font_system(config: FontSystemConfig | None = None) -> FontSystem:
     """
     Create FontSystem with configuration.
 
@@ -420,13 +427,13 @@ class BasicFontDetector:
             'Courier New', 'Courier', 'Verdana', 'Georgia',
             'Comic Sans MS', 'Trebuchet MS', 'Arial Black',
             'Impact', 'Palatino', 'Garamond', 'sans-serif',
-            'serif', 'monospace'
+            'serif', 'monospace',
         }
 
-    def find_font_file(self, family: str, weight: int, italic: bool) -> Optional[str]:
+    def find_font_file(self, family: str, weight: int, italic: bool) -> str | None:
         """Basic font file detection (returns None - no embedding support)."""
         return None
 
-    def list_system_fonts(self) -> List[str]:
+    def list_system_fonts(self) -> list[str]:
         """Return list of commonly available fonts."""
         return list(self._common_fonts)

@@ -12,8 +12,8 @@ Key principles:
 - Extensible for new output targets
 """
 
-from .engine import *
 from .config import *
+from .engine import *
 from .targets import *
 
 __all__ = [

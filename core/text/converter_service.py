@@ -13,12 +13,13 @@ Features:
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from lxml import etree as ET
 
 from ..pre.text_layout_prep import TextLayoutPrepPreprocessor
-from .layout_engine import TextLayoutEngine
 from ..services.conversion_services import ConversionServices
+from .layout_engine import TextLayoutEngine
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class TextConverterService:
             'raw_anchor_handling': True,
             'per_tspan_styling': True,
             'conservative_baseline': True,
-            'coordinate_pipeline': True
+            'coordinate_pipeline': True,
         }
 
     def convert_text_element(self, element: ET.Element, context: Any,
@@ -110,7 +111,7 @@ class TextConverterService:
             self.logger.warning("Preprocessing failed to return text element")
             return cloned_element
 
-    def _generate_single_run_drawingml(self, layout_info: Dict[str, Any], context: Any) -> str:
+    def _generate_single_run_drawingml(self, layout_info: dict[str, Any], context: Any) -> str:
         """Generate DrawingML for single-run text."""
         # Extract layout information
         content = layout_info['content']
@@ -125,7 +126,7 @@ class TextConverterService:
         position_emu = self._apply_coordinate_pipeline_fix(position, context)
         anchor_alignment = self._apply_raw_anchor_handling_fix(anchor)
         baseline_adjusted_y = self._apply_conservative_baseline_fix(
-            position_emu['y'], font_info['size']
+            position_emu['y'], font_info['size'],
         ) if layout_info.get('baseline_adjusted', False) else position_emu['y']
 
         # Calculate text dimensions
@@ -141,13 +142,13 @@ class TextConverterService:
             font_family=font_info['family'],
             font_size=font_info['size'],
             alignment=anchor_alignment,
-            context=context
+            context=context,
         )
 
         self.logger.debug(f"Generated single-run DrawingML for '{content[:20]}...'")
         return drawingml
 
-    def _generate_multi_run_drawingml(self, layout_info: Dict[str, Any], context: Any) -> str:
+    def _generate_multi_run_drawingml(self, layout_info: dict[str, Any], context: Any) -> str:
         """Generate DrawingML for multi-run text with per-tspan styling."""
         runs = layout_info['runs']
         if not runs:
@@ -165,13 +166,13 @@ class TextConverterService:
             bounds=overall_bounds,
             base_font=layout_info['font'],
             alignment=self._apply_raw_anchor_handling_fix(layout_info['anchor']),
-            context=context
+            context=context,
         )
 
         self.logger.debug(f"Generated multi-run DrawingML with {len(styled_runs)} runs")
         return drawingml
 
-    def _generate_fallback_drawingml(self, layout_info: Dict[str, Any], context: Any) -> str:
+    def _generate_fallback_drawingml(self, layout_info: dict[str, Any], context: Any) -> str:
         """Generate fallback DrawingML for non-preprocessed text."""
         self.logger.debug("Using fallback DrawingML generation")
         return self._generate_single_run_drawingml(layout_info, context)
@@ -195,7 +196,7 @@ class TextConverterService:
             font_family="Arial",
             font_size=12,
             alignment="l",
-            context=context
+            context=context,
         )
 
     # Documented Fixes Implementation
@@ -205,11 +206,11 @@ class TextConverterService:
         anchor_map = {
             'start': 'l',     # left
             'middle': 'ctr',  # center
-            'end': 'r'        # right
+            'end': 'r',        # right
         }
         return anchor_map.get(anchor, 'l')
 
-    def _apply_per_tspan_styling_fix(self, runs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _apply_per_tspan_styling_fix(self, runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Apply Fix #2: Per-tspan styling."""
         styled_runs = []
 
@@ -243,7 +244,7 @@ class TextConverterService:
         baseline_adjustment = int(font_size * 0.05 * 9525)
         return y_emu + baseline_adjustment
 
-    def _apply_coordinate_pipeline_fix(self, position: Dict[str, float], context: Any) -> Dict[str, int]:
+    def _apply_coordinate_pipeline_fix(self, position: dict[str, float], context: Any) -> dict[str, int]:
         """Apply Fix #4: Coordinate pipeline integration."""
         x, y = position['x'], position['y']
 
@@ -319,8 +320,8 @@ class TextConverterService:
 
         return xml
 
-    def _create_multi_run_text_shape_xml(self, runs: List[Dict[str, Any]], bounds: Dict[str, int],
-                                        base_font: Dict[str, Any], alignment: str, context: Any) -> str:
+    def _create_multi_run_text_shape_xml(self, runs: list[dict[str, Any]], bounds: dict[str, int],
+                                        base_font: dict[str, Any], alignment: str, context: Any) -> str:
         """Create DrawingML text shape with multiple runs."""
         shape_id = getattr(context, 'next_shape_id', 1)
         if hasattr(context, 'get_next_shape_id'):
@@ -365,7 +366,7 @@ class TextConverterService:
 
         return xml
 
-    def _create_text_run_xml(self, run: Dict[str, Any]) -> str:
+    def _create_text_run_xml(self, run: dict[str, Any]) -> str:
         """Create XML for a single text run."""
         content = self._escape_xml(run.get('text', ''))
         font_family = run.get('font_family', 'Arial')
@@ -390,7 +391,7 @@ class TextConverterService:
 
     # Utility Methods
 
-    def _calculate_text_dimensions(self, content: str, font_info: Dict[str, Any]) -> Dict[str, int]:
+    def _calculate_text_dimensions(self, content: str, font_info: dict[str, Any]) -> dict[str, int]:
         """Calculate text dimensions in EMU."""
         font_size = font_info['size']
 
@@ -404,10 +405,10 @@ class TextConverterService:
 
         return {
             'width': int(text_width * 9525),
-            'height': int(text_height * 9525)
+            'height': int(text_height * 9525),
         }
 
-    def _calculate_multi_run_bounds(self, runs: List[Dict[str, Any]], layout_info: Dict[str, Any]) -> Dict[str, int]:
+    def _calculate_multi_run_bounds(self, runs: list[dict[str, Any]], layout_info: dict[str, Any]) -> dict[str, int]:
         """Calculate bounding box for multi-run text."""
         if not runs:
             return {'x': 0, 'y': 0, 'width': 100 * 9525, 'height': 100 * 9525}
@@ -435,20 +436,20 @@ class TextConverterService:
             'x': int(min_x * 9525),
             'y': int(min_y * 9525),
             'width': int(width * 9525),
-            'height': int(height * 9525)
+            'height': int(height * 9525),
         }
 
-    def _extract_bold_from_styles(self, styles: Dict[str, str]) -> bool:
+    def _extract_bold_from_styles(self, styles: dict[str, str]) -> bool:
         """Extract bold flag from styles."""
         font_weight = styles.get('font-weight', 'normal')
         return font_weight in ['bold', '700', '800', '900']
 
-    def _extract_italic_from_styles(self, styles: Dict[str, str]) -> bool:
+    def _extract_italic_from_styles(self, styles: dict[str, str]) -> bool:
         """Extract italic flag from styles."""
         font_style = styles.get('font-style', 'normal')
         return font_style in ['italic', 'oblique']
 
-    def _extract_color_from_styles(self, styles: Dict[str, str]) -> str:
+    def _extract_color_from_styles(self, styles: dict[str, str]) -> str:
         """Extract color value from styles."""
         fill = styles.get('fill', '#000000')
         if fill.startswith('#'):
@@ -456,7 +457,7 @@ class TextConverterService:
         # Handle named colors
         color_map = {
             'black': '000000', 'white': 'FFFFFF', 'red': 'FF0000',
-            'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00'
+            'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00',
         }
         return color_map.get(fill.lower(), '000000')
 

@@ -6,13 +6,14 @@ Provides base classes for creating complex benchmarks with setup/teardown,
 data generation, and multi-phase execution patterns.
 """
 
-import time
 import logging
+import time
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Any, Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
-from .benchmark import BenchmarkResult, BenchmarkEngine
+from .benchmark import BenchmarkEngine, BenchmarkResult
 from .config import PerformanceConfig, get_config
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class BenchmarkContext:
     name: str
     category: str
     config: PerformanceConfig
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     iterations: int = 0
     current_iteration: int = 0
 
@@ -55,8 +56,8 @@ class Benchmark(ABC):
     def __init__(self,
                  name: str,
                  category: str = "benchmark",
-                 description: Optional[str] = None,
-                 target_ops_per_sec: Optional[float] = None):
+                 description: str | None = None,
+                 target_ops_per_sec: float | None = None):
         """
         Initialize benchmark.
 
@@ -130,19 +131,19 @@ class Benchmark(ABC):
         """
         return result is not None
 
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         """Get benchmark metadata."""
         return {
             "name": self.name,
             "category": self.category,
             "description": self.description,
             "target_ops_per_sec": self.target_ops_per_sec,
-            "class": self.__class__.__name__
+            "class": self.__class__.__name__,
         }
 
     def run(self,
-            engine: Optional[BenchmarkEngine] = None,
-            config: Optional[PerformanceConfig] = None,
+            engine: BenchmarkEngine | None = None,
+            config: PerformanceConfig | None = None,
             **kwargs) -> BenchmarkResult:
         """
         Run the complete benchmark lifecycle.
@@ -163,7 +164,7 @@ class Benchmark(ABC):
             name=self.name,
             category=self.category,
             config=config,
-            metadata=kwargs
+            metadata=kwargs,
         )
 
         def benchmark_wrapper():
@@ -203,7 +204,7 @@ class Benchmark(ABC):
             benchmark_function=benchmark_wrapper,
             benchmark_name=self.name,
             category=self.category,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -266,11 +267,11 @@ class MultiPhaseBenchmark(Benchmark):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.phases: List[str] = []
-        self.phase_results: Dict[str, List[float]] = {}
+        self.phases: list[str] = []
+        self.phase_results: dict[str, list[float]] = {}
 
     @abstractmethod
-    def get_phases(self) -> List[str]:
+    def get_phases(self) -> list[str]:
         """
         Get list of phase names.
 
@@ -293,7 +294,7 @@ class MultiPhaseBenchmark(Benchmark):
         """
         pass
 
-    def execute(self, context: BenchmarkContext) -> Dict[str, Any]:
+    def execute(self, context: BenchmarkContext) -> dict[str, Any]:
         """Execute all phases and collect results."""
         if not self.phases:
             self.phases = self.get_phases()
@@ -313,7 +314,7 @@ class MultiPhaseBenchmark(Benchmark):
 
             results[phase_name] = {
                 'result': phase_result,
-                'time_ms': phase_time
+                'time_ms': phase_time,
             }
 
             # Track phase times
@@ -339,7 +340,7 @@ class ComparisonBenchmark(Benchmark):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.implementations: Dict[str, Callable] = {}
+        self.implementations: dict[str, Callable] = {}
 
     def add_implementation(self, name: str, func: Callable) -> None:
         """
@@ -365,7 +366,7 @@ class ComparisonBenchmark(Benchmark):
         """
         pass
 
-    def execute(self, context: BenchmarkContext) -> Dict[str, Any]:
+    def execute(self, context: BenchmarkContext) -> dict[str, Any]:
         """Execute all implementations and compare results."""
         if not self.implementations:
             raise RuntimeError("No implementations to compare")
@@ -385,7 +386,7 @@ class ComparisonBenchmark(Benchmark):
             results[impl_name] = {
                 'result': impl_result,
                 'time_ms': execution_time,
-                'ops_per_sec': 1000 / execution_time if execution_time > 0 else float('inf')
+                'ops_per_sec': 1000 / execution_time if execution_time > 0 else float('inf'),
             }
 
         # Calculate relative performance
@@ -404,7 +405,7 @@ class ComparisonBenchmark(Benchmark):
             'fastest_implementation': fastest_impl,
             'slowest_implementation': slowest_impl,
             'speedup_ratio': results[slowest_impl]['time_ms'] / results[fastest_impl]['time_ms'],
-            'total_implementations': len(self.implementations)
+            'total_implementations': len(self.implementations),
         }
 
         return results
@@ -420,9 +421,9 @@ class ParameterizedBenchmark(Benchmark):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parameters: Dict[str, List[Any]] = {}
+        self.parameters: dict[str, list[Any]] = {}
 
-    def add_parameter(self, name: str, values: List[Any]) -> None:
+    def add_parameter(self, name: str, values: list[Any]) -> None:
         """
         Add a parameter with possible values.
 
@@ -433,7 +434,7 @@ class ParameterizedBenchmark(Benchmark):
         self.parameters[name] = values
 
     @abstractmethod
-    def execute_with_params(self, params: Dict[str, Any], context: BenchmarkContext) -> Any:
+    def execute_with_params(self, params: dict[str, Any], context: BenchmarkContext) -> Any:
         """
         Execute benchmark with specific parameters.
 
@@ -446,7 +447,7 @@ class ParameterizedBenchmark(Benchmark):
         """
         pass
 
-    def execute(self, context: BenchmarkContext) -> Dict[str, Any]:
+    def execute(self, context: BenchmarkContext) -> dict[str, Any]:
         """Execute benchmark with all parameter combinations."""
         import itertools
 
@@ -475,7 +476,7 @@ class ParameterizedBenchmark(Benchmark):
                 'parameters': params,
                 'result': result,
                 'time_ms': execution_time,
-                'ops_per_sec': 1000 / execution_time if execution_time > 0 else float('inf')
+                'ops_per_sec': 1000 / execution_time if execution_time > 0 else float('inf'),
             }
 
         return results
@@ -488,5 +489,5 @@ __all__ = [
     'DataGeneratorBenchmark',
     'MultiPhaseBenchmark',
     'ComparisonBenchmark',
-    'ParameterizedBenchmark'
+    'ParameterizedBenchmark',
 ]

@@ -7,9 +7,12 @@ using NumPy vectorization for performance improvements.
 """
 
 from __future__ import annotations
-import numpy as np
-import colorspacious
+
 from typing import List, Union
+
+import colorspacious
+import numpy as np
+
 from .core import Color
 
 
@@ -26,7 +29,7 @@ class ColorBatch:
         >>> darkened = batch.darken(0.2).to_colors()
     """
 
-    def __init__(self, colors: Union[List[Union[Color, str]], np.ndarray]):
+    def __init__(self, colors: list[Color | str] | np.ndarray):
         """
         Initialize ColorBatch from list of Color objects/strings or NumPy array.
 
@@ -170,7 +173,7 @@ class ColorBatch:
         new_batch._alpha_array = self._alpha_array.copy()
         return new_batch
 
-    def to_colors(self) -> List[Color]:
+    def to_colors(self) -> list[Color]:
         """
         Convert batch back to list of Color objects.
 
@@ -302,7 +305,7 @@ class ColorBatch:
                 raise AttributeError(f"ColorBatch has no method '{method_name}'")
         return result
 
-    def apply_to_indices(self, indices: List[int], operation: callable) -> ColorBatch:
+    def apply_to_indices(self, indices: list[int], operation: callable) -> ColorBatch:
         """
         Apply operation only to specific indices in the batch.
 
@@ -344,7 +347,7 @@ class ColorBatch:
         return new_batch
 
     @classmethod
-    def from_hex_list(cls, hex_colors: List[str]) -> ColorBatch:
+    def from_hex_list(cls, hex_colors: list[str]) -> ColorBatch:
         """
         Create ColorBatch from list of hex color strings.
 

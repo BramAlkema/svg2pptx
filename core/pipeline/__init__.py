@@ -5,9 +5,10 @@ Clean Slate Pipeline Module
 Provides end-to-end SVG to PPTX conversion pipeline using the clean slate architecture.
 """
 
-from .converter import CleanSlateConverter, ConversionResult, ConversionError
+from .config import OutputFormat as PipelineOutputFormat
+from .config import PipelineConfig
+from .converter import CleanSlateConverter, ConversionError, ConversionResult
 from .factory import PipelineFactory, create_default_pipeline
-from .config import PipelineConfig, OutputFormat as PipelineOutputFormat
 
 __all__ = [
     "CleanSlateConverter",

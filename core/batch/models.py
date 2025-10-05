@@ -6,12 +6,12 @@ Provides SQLite-based persistence for batch job tracking, Google Drive metadata,
 and individual file processing status with comprehensive error handling.
 """
 
-import sqlite3
 import logging
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, List
+import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +48,9 @@ class BatchJob:
     def __init__(self, job_id: str, status: str, total_files: int,
                  drive_integration_enabled: bool = False,
                  drive_upload_status: str = "not_requested",
-                 drive_folder_pattern: Optional[str] = None,
-                 created_at: Optional[datetime] = None,
-                 updated_at: Optional[datetime] = None):
+                 drive_folder_pattern: str | None = None,
+                 created_at: datetime | None = None,
+                 updated_at: datetime | None = None):
         """Initialize BatchJob model."""
         self.job_id = job_id
         self.status = status
@@ -89,7 +89,7 @@ class BatchJob:
                     self.drive_upload_status,
                     self.drive_folder_pattern,
                     self.updated_at.isoformat(),
-                    self.job_id
+                    self.job_id,
                 ))
             else:
                 cursor.execute("""
@@ -105,7 +105,7 @@ class BatchJob:
                     self.drive_upload_status,
                     self.drive_folder_pattern,
                     self.created_at.isoformat(),
-                    self.updated_at.isoformat()
+                    self.updated_at.isoformat(),
                 ))
             
             conn.commit()
@@ -130,17 +130,17 @@ class BatchJob:
                 drive_upload_status=row['drive_upload_status'],
                 drive_folder_pattern=row['drive_folder_pattern'],
                 created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
-                updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None
+                updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None,
             )
 
 
 class BatchDriveMetadata:
     """Model for Google Drive folder metadata per batch job."""
     
-    def __init__(self, batch_job_id: str, drive_folder_id: Optional[str] = None,
-                 drive_folder_url: Optional[str] = None,
-                 created_at: Optional[datetime] = None,
-                 updated_at: Optional[datetime] = None):
+    def __init__(self, batch_job_id: str, drive_folder_id: str | None = None,
+                 drive_folder_url: str | None = None,
+                 created_at: datetime | None = None,
+                 updated_at: datetime | None = None):
         """Initialize BatchDriveMetadata model."""
         self.batch_job_id = batch_job_id
         self.drive_folder_id = drive_folder_id
@@ -175,7 +175,7 @@ class BatchDriveMetadata:
                     self.drive_folder_id,
                     self.drive_folder_url,
                     self.updated_at.isoformat(),
-                    self.batch_job_id
+                    self.batch_job_id,
                 ))
             else:
                 cursor.execute("""
@@ -187,7 +187,7 @@ class BatchDriveMetadata:
                     self.drive_folder_id,
                     self.drive_folder_url,
                     self.created_at.isoformat(),
-                    self.updated_at.isoformat()
+                    self.updated_at.isoformat(),
                 ))
             
             conn.commit()
@@ -209,7 +209,7 @@ class BatchDriveMetadata:
                 drive_folder_id=row['drive_folder_id'],
                 drive_folder_url=row['drive_folder_url'],
                 created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
-                updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None
+                updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None,
             )
 
 
@@ -217,13 +217,13 @@ class BatchFileDriveMetadata:
     """Model for individual file Google Drive metadata within batch jobs."""
     
     def __init__(self, batch_job_id: str, original_filename: str,
-                 drive_file_id: Optional[str] = None,
-                 drive_file_url: Optional[str] = None,
-                 preview_url: Optional[str] = None,
+                 drive_file_id: str | None = None,
+                 drive_file_url: str | None = None,
+                 preview_url: str | None = None,
                  upload_status: str = "pending",
-                 upload_error: Optional[str] = None,
-                 created_at: Optional[datetime] = None,
-                 updated_at: Optional[datetime] = None):
+                 upload_error: str | None = None,
+                 created_at: datetime | None = None,
+                 updated_at: datetime | None = None):
         """Initialize BatchFileDriveMetadata model."""
         self.batch_job_id = batch_job_id
         self.original_filename = original_filename
@@ -272,7 +272,7 @@ class BatchFileDriveMetadata:
                     self.upload_error,
                     self.updated_at.isoformat(),
                     self.batch_job_id,
-                    self.original_filename
+                    self.original_filename,
                 ))
             else:
                 cursor.execute("""
@@ -289,14 +289,14 @@ class BatchFileDriveMetadata:
                     self.upload_status,
                     self.upload_error,
                     self.created_at.isoformat(),
-                    self.updated_at.isoformat()
+                    self.updated_at.isoformat(),
                 ))
             
             conn.commit()
             logger.debug(f"Saved file metadata for {self.original_filename} in batch {self.batch_job_id}")
     
     @classmethod
-    def get_by_job_id(cls, db_path: str, batch_job_id: str) -> List['BatchFileDriveMetadata']:
+    def get_by_job_id(cls, db_path: str, batch_job_id: str) -> list['BatchFileDriveMetadata']:
         """Retrieve all file metadata for a batch job."""
         with DatabaseManager(db_path).get_connection() as conn:
             cursor = conn.cursor()
@@ -317,7 +317,7 @@ class BatchFileDriveMetadata:
                     upload_status=row['upload_status'],
                     upload_error=row['upload_error'],
                     created_at=datetime.fromisoformat(row['created_at']) if row['created_at'] else None,
-                    updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None
+                    updated_at=datetime.fromisoformat(row['updated_at']) if row['updated_at'] else None,
                 )
                 for row in rows
             ]

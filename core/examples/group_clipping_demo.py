@@ -8,15 +8,17 @@ system with preprocessing integration.
 This demonstrates Phase 2.3 completion: Group handling and clipping preprocessor.
 """
 
-import sys
 import os
+import sys
+
 from lxml import etree as ET
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from core.pre import create_standard_chain
 from core.groups import create_group_converter_service
+from core.pre import create_standard_chain
+
 from ..services.conversion_services import ConversionServices
 
 
@@ -399,21 +401,21 @@ def demonstrate_powerpoint_compatibility():
             'svg': '''<g clip-path="url(#rect-clip)">
                 <rect x="0" y="0" width="100" height="100" fill="blue"/>
             </g>''',
-            'expected_compatibility': True
+            'expected_compatibility': True,
         },
         {
             'name': 'Simple Circle Clip',
             'svg': '''<g clip-path="url(#circle-clip)">
                 <rect x="0" y="0" width="100" height="100" fill="red"/>
             </g>''',
-            'expected_compatibility': True
+            'expected_compatibility': True,
         },
         {
             'name': 'Complex Path Clip',
             'svg': '''<g clip-path="url(#complex-clip)">
                 <rect x="0" y="0" width="100" height="100" fill="green"/>
             </g>''',
-            'expected_compatibility': False
+            'expected_compatibility': False,
         },
         {
             'name': 'Multiple Clips',
@@ -422,8 +424,8 @@ def demonstrate_powerpoint_compatibility():
                     <rect x="0" y="0" width="100" height="100" fill="yellow"/>
                 </g>
             </g>''',
-            'expected_compatibility': False
-        }
+            'expected_compatibility': False,
+        },
     ]
 
     print("Testing PowerPoint compatibility:")

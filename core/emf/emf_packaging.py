@@ -6,11 +6,12 @@ managing relationships, and generating proper OOXML markup.
 """
 
 import hashlib
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 import zipfile
-from lxml import etree as ET
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 from xml.dom import minidom
+
+from lxml import etree as ET
 
 from .emf_blob import EMFBlob
 from .emf_tiles import get_pattern_tile
@@ -26,11 +27,11 @@ class EMFRelationshipManager:
 
     def __init__(self):
         """Initialize relationship manager."""
-        self._emf_blobs: Dict[str, bytes] = {}
-        self._relationships: Dict[str, str] = {}
+        self._emf_blobs: dict[str, bytes] = {}
+        self._relationships: dict[str, str] = {}
         self._next_id = 1
 
-    def add_emf_blob(self, emf_data: bytes, name: Optional[str] = None) -> str:
+    def add_emf_blob(self, emf_data: bytes, name: str | None = None) -> str:
         """Add an EMF blob and return its relationship ID.
 
         Args:
@@ -55,7 +56,7 @@ class EMFRelationshipManager:
 
         return rel_id
 
-    def get_emf_data(self, rel_id: str) -> Optional[bytes]:
+    def get_emf_data(self, rel_id: str) -> bytes | None:
         """Get EMF data by relationship ID.
 
         Args:
@@ -69,7 +70,7 @@ class EMFRelationshipManager:
             return None
         return self._emf_blobs.get(name)
 
-    def get_emf_filename(self, rel_id: str) -> Optional[str]:
+    def get_emf_filename(self, rel_id: str) -> str | None:
         """Get EMF filename by relationship ID.
 
         Args:
@@ -80,7 +81,7 @@ class EMFRelationshipManager:
         """
         return self._relationships.get(rel_id)
 
-    def list_relationships(self) -> List[Tuple[str, str]]:
+    def list_relationships(self) -> list[tuple[str, str]]:
         """List all EMF relationships.
 
         Returns:
@@ -108,7 +109,7 @@ class EMFRelationshipManager:
             relationships.append(
                 f'<Relationship Id="{rel_id}" '
                 f'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" '
-                f'Target="../media/{filename}"/>'
+                f'Target="../media/{filename}"/>',
             )
 
         if not relationships:
@@ -251,7 +252,7 @@ class PPTXEMFIntegrator:
             </a:stretch>
         </a:blipFill>'''
 
-    def export_to_pptx_media(self, media_dir: Path) -> Dict[str, str]:
+    def export_to_pptx_media(self, media_dir: Path) -> dict[str, str]:
         """Export all EMF blobs to a PPTX media directory.
 
         Args:
@@ -458,7 +459,7 @@ def create_shape_generator(integrator: PPTXEMFIntegrator = None) -> EMFShapeGene
 # Utility functions for common operations
 
 def create_pattern_rectangle_xml(x: int, y: int, width: int, height: int,
-                                pattern_name: str, tile_mode: str = 'tile') -> Tuple[str, PPTXEMFIntegrator]:
+                                pattern_name: str, tile_mode: str = 'tile') -> tuple[str, PPTXEMFIntegrator]:
     """Create XML for a rectangle with pattern fill.
 
     Args:
@@ -476,13 +477,13 @@ def create_pattern_rectangle_xml(x: int, y: int, width: int, height: int,
     generator = create_shape_generator(integrator)
 
     shape_xml = generator.create_rectangle_with_pattern(
-        x, y, width, height, pattern_name, tile_mode
+        x, y, width, height, pattern_name, tile_mode,
     )
 
     return shape_xml, integrator
 
 
-def extract_emf_blobs_from_pptx(pptx_path: Path) -> Dict[str, bytes]:
+def extract_emf_blobs_from_pptx(pptx_path: Path) -> dict[str, bytes]:
     """Extract all EMF blobs from an existing PPTX file.
 
     Args:
@@ -511,7 +512,7 @@ def extract_emf_blobs_from_pptx(pptx_path: Path) -> Dict[str, bytes]:
         raise EMFPackagingError(f"Failed to extract EMF blobs from PPTX: {e}")
 
 
-def validate_emf_packaging(integrator: PPTXEMFIntegrator) -> List[str]:
+def validate_emf_packaging(integrator: PPTXEMFIntegrator) -> list[str]:
     """Validate EMF packaging for common issues.
 
     Args:

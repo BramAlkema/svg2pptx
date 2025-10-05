@@ -7,7 +7,7 @@ Essential converters migrated from legacy src/converters/ for self-contained ope
 
 # Import only what's actually available
 try:
-    from .masking import MaskingConverter, MaskDefinition
+    from .masking import MaskDefinition, MaskingConverter
     _MASKING_AVAILABLE = True
 except ImportError:
     _MASKING_AVAILABLE = False
@@ -18,16 +18,15 @@ try:
 except ImportError:
     _CUSTGEOM_AVAILABLE = False
 
-from .clippath_types import ClipPathComplexity, ClipPathDefinition, ClipPathAnalysis
-
 # Re-export ClippingAnalyzer from groups for backward compatibility
 from ..groups.clipping_analyzer import ClippingAnalyzer
+from .clippath_types import ClipPathAnalysis, ClipPathComplexity, ClipPathDefinition
 
 __all__ = [
     'ClippingAnalyzer',
     'ClipPathComplexity',
     'ClipPathDefinition',
-    'ClipPathAnalysis'
+    'ClipPathAnalysis',
 ]
 
 if _MASKING_AVAILABLE:

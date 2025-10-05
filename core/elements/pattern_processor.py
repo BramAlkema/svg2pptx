@@ -13,12 +13,13 @@ Features:
 - Performance optimization and caching
 """
 
-import logging
 import hashlib
-from typing import Dict, List, Optional, Any, Tuple
-from lxml import etree as ET
-from enum import Enum
+import logging
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices
 
@@ -60,7 +61,7 @@ class PatternGeometry:
     tile_height: float
     aspect_ratio: float
     units: str
-    transform_matrix: Optional[List[float]]
+    transform_matrix: list[float] | None
     content_units: str
 
 
@@ -73,10 +74,10 @@ class PatternAnalysis:
     geometry: PatternGeometry
     has_transforms: bool
     child_count: int
-    colors_used: List[str]
+    colors_used: list[str]
     powerpoint_compatible: bool
-    preset_candidate: Optional[str]
-    optimization_opportunities: List[PatternOptimization]
+    preset_candidate: str | None
+    optimization_opportunities: list[PatternOptimization]
     estimated_performance_impact: str
     requires_preprocessing: bool
     emf_fallback_recommended: bool
@@ -101,7 +102,7 @@ class PatternProcessor:
         self.logger = logging.getLogger(__name__)
 
         # Analysis cache
-        self.analysis_cache: Dict[str, PatternAnalysis] = {}
+        self.analysis_cache: dict[str, PatternAnalysis] = {}
 
         # Statistics
         self.stats = {
@@ -111,7 +112,7 @@ class PatternProcessor:
             'preset_matches': 0,
             'emf_fallbacks': 0,
             'cache_hits': 0,
-            'optimizations_identified': 0
+            'optimizations_identified': 0,
         }
 
         # PowerPoint preset mapping
@@ -121,7 +122,7 @@ class PatternProcessor:
             'vertical': ['ltVert', 'vert', 'dkVert'],
             'diagonal_up': ['ltUpDiag', 'upDiag', 'dkUpDiag'],
             'diagonal_down': ['ltDnDiag', 'dnDiag', 'dkDnDiag'],
-            'cross': ['ltCross', 'cross', 'dkCross']
+            'cross': ['ltCross', 'cross', 'dkCross'],
         }
 
     def analyze_pattern_element(self, element: ET.Element, context: Any) -> PatternAnalysis:
@@ -183,7 +184,7 @@ class PatternProcessor:
 
         # Check PowerPoint compatibility
         powerpoint_compatible = self._assess_powerpoint_compatibility(
-            pattern_type, complexity, has_transforms
+            pattern_type, complexity, has_transforms,
         )
 
         # Find preset candidate
@@ -191,7 +192,7 @@ class PatternProcessor:
 
         # Identify optimization opportunities
         optimizations = self._identify_pattern_optimizations(
-            element, pattern_type, complexity, has_transforms
+            element, pattern_type, complexity, has_transforms,
         )
 
         # Estimate performance impact
@@ -199,12 +200,12 @@ class PatternProcessor:
 
         # Check if preprocessing would help
         requires_preprocessing = self._requires_preprocessing(
-            element, pattern_type, optimizations
+            element, pattern_type, optimizations,
         )
 
         # Determine EMF fallback recommendation
         emf_fallback_recommended = self._should_use_emf_fallback(
-            pattern_type, complexity, has_transforms, preset_candidate
+            pattern_type, complexity, has_transforms, preset_candidate,
         )
 
         return PatternAnalysis(
@@ -220,7 +221,7 @@ class PatternProcessor:
             optimization_opportunities=optimizations,
             estimated_performance_impact=performance_impact,
             requires_preprocessing=requires_preprocessing,
-            emf_fallback_recommended=emf_fallback_recommended
+            emf_fallback_recommended=emf_fallback_recommended,
         )
 
     def _extract_pattern_geometry(self, element: ET.Element) -> PatternGeometry:
@@ -252,7 +253,7 @@ class PatternProcessor:
             aspect_ratio=aspect_ratio,
             units=units,
             transform_matrix=transform_matrix,
-            content_units=content_units
+            content_units=content_units,
         )
 
     def _parse_dimension(self, dim_str: str) -> float:
@@ -276,7 +277,7 @@ class PatternProcessor:
         except (ValueError, TypeError):
             return 10.0  # Default value
 
-    def _parse_transform_matrix(self, transform_str: str) -> Optional[List[float]]:
+    def _parse_transform_matrix(self, transform_str: str) -> list[float] | None:
         """Parse transform string to matrix values."""
         try:
             import re
@@ -302,7 +303,7 @@ class PatternProcessor:
 
         return None
 
-    def _analyze_pattern_content(self, element: ET.Element) -> Tuple[PatternType, int, List[str]]:
+    def _analyze_pattern_content(self, element: ET.Element) -> tuple[PatternType, int, list[str]]:
         """Analyze pattern content to determine type and complexity."""
         children = list(element)
         child_count = len(children)
@@ -334,7 +335,7 @@ class PatternProcessor:
 
         return pattern_type, child_count, colors_used
 
-    def _classify_pattern_type(self, shapes: Dict[str, int], children: List[ET.Element]) -> PatternType:
+    def _classify_pattern_type(self, shapes: dict[str, int], children: list[ET.Element]) -> PatternType:
         """Classify pattern type based on shape analysis."""
         total_shapes = sum(shapes.values())
 
@@ -377,7 +378,7 @@ class PatternProcessor:
 
         return PatternType.CUSTOM
 
-    def _analyze_rectangles(self, children: List[ET.Element]) -> Dict[str, bool]:
+    def _analyze_rectangles(self, children: list[ET.Element]) -> dict[str, bool]:
         """Analyze rectangles to determine line patterns."""
         horizontal_lines = 0
         vertical_lines = 0
@@ -405,10 +406,10 @@ class PatternProcessor:
         return {
             'horizontal_lines': horizontal_lines > total_rects * 0.7,
             'vertical_lines': vertical_lines > total_rects * 0.7,
-            'grid': squares > 0 or (horizontal_lines > 0 and vertical_lines > 0)
+            'grid': squares > 0 or (horizontal_lines > 0 and vertical_lines > 0),
         }
 
-    def _analyze_paths(self, children: List[ET.Element]) -> Dict[str, bool]:
+    def _analyze_paths(self, children: list[ET.Element]) -> dict[str, bool]:
         """Analyze paths to determine pattern type."""
         diagonal_paths = 0
         grid_paths = 0
@@ -431,7 +432,7 @@ class PatternProcessor:
 
         return {
             'diagonal': diagonal_paths > total_paths * 0.7,
-            'grid': grid_paths > total_paths * 0.5
+            'grid': grid_paths > total_paths * 0.5,
         }
 
     def _assess_pattern_complexity(self, pattern_type: PatternType, child_count: int,
@@ -445,7 +446,7 @@ class PatternProcessor:
             PatternType.GRID: PatternComplexity.MODERATE,
             PatternType.CROSS: PatternComplexity.MODERATE,
             PatternType.CUSTOM: PatternComplexity.COMPLEX,
-            PatternType.UNSUPPORTED: PatternComplexity.UNSUPPORTED
+            PatternType.UNSUPPORTED: PatternComplexity.UNSUPPORTED,
         }.get(pattern_type, PatternComplexity.COMPLEX)
 
         # Adjust for child count
@@ -477,11 +478,11 @@ class PatternProcessor:
         # Simple patterns are usually compatible
         return pattern_type in [
             PatternType.DOTS, PatternType.LINES, PatternType.DIAGONAL,
-            PatternType.GRID, PatternType.CROSS
+            PatternType.GRID, PatternType.CROSS,
         ]
 
     def _find_preset_candidate(self, pattern_type: PatternType, element: ET.Element,
-                             geometry: PatternGeometry) -> Optional[str]:
+                             geometry: PatternGeometry) -> str | None:
         """Find PowerPoint preset candidate for pattern."""
         if pattern_type == PatternType.DOTS:
             # Estimate dot density for percentage patterns
@@ -582,7 +583,7 @@ class PatternProcessor:
 
     def _identify_pattern_optimizations(self, element: ET.Element, pattern_type: PatternType,
                                       complexity: PatternComplexity,
-                                      has_transforms: bool) -> List[PatternOptimization]:
+                                      has_transforms: bool) -> list[PatternOptimization]:
         """Identify optimization opportunities."""
         optimizations = []
 
@@ -630,7 +631,7 @@ class PatternProcessor:
             return 'very_high'
 
     def _requires_preprocessing(self, element: ET.Element, pattern_type: PatternType,
-                              optimizations: List[PatternOptimization]) -> bool:
+                              optimizations: list[PatternOptimization]) -> bool:
         """Check if pattern would benefit from preprocessing."""
         # Already has preprocessing metadata
         if element.get('data-pattern-optimized'):
@@ -651,7 +652,7 @@ class PatternProcessor:
         return False
 
     def _should_use_emf_fallback(self, pattern_type: PatternType, complexity: PatternComplexity,
-                               has_transforms: bool, preset_candidate: Optional[str]) -> bool:
+                               has_transforms: bool, preset_candidate: str | None) -> bool:
         """Determine if EMF fallback is recommended."""
         # Complex patterns should use EMF
         if complexity in [PatternComplexity.COMPLEX, PatternComplexity.UNSUPPORTED]:
@@ -682,7 +683,7 @@ class PatternProcessor:
         key_data = f"{element.tag}:{attrs}:{children_count}:{':'.join(children_info)}"
         return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
-    def get_processing_statistics(self) -> Dict[str, int]:
+    def get_processing_statistics(self) -> dict[str, int]:
         """Get processing statistics."""
         return self.stats.copy()
 
@@ -699,7 +700,7 @@ class PatternProcessor:
             'preset_matches': 0,
             'emf_fallbacks': 0,
             'cache_hits': 0,
-            'optimizations_identified': 0
+            'optimizations_identified': 0,
         }
 
 

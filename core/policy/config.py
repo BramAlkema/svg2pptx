@@ -7,8 +7,8 @@ Allows tuning for different output quality vs performance trade-offs.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any
 from enum import Enum
+from typing import Any, Dict
 
 
 class OutputTarget(Enum):
@@ -151,7 +151,7 @@ class PolicyConfig:
                 max_text_runs=10,
                 max_text_complexity_score=8,
                 max_group_elements=200,
-                max_gradient_stops=5
+                max_gradient_stops=5,
             )
 
         elif self.target == OutputTarget.QUALITY:
@@ -162,7 +162,7 @@ class PolicyConfig:
                 max_text_runs=50,
                 max_text_complexity_score=30,
                 max_group_elements=1000,
-                max_gradient_stops=20
+                max_gradient_stops=20,
             )
 
         elif self.target == OutputTarget.COMPATIBILITY:
@@ -175,7 +175,7 @@ class PolicyConfig:
                 max_group_elements=100,
                 max_gradient_stops=3,
                 max_stroke_width=50.0,
-                max_miter_limit=4.0
+                max_miter_limit=4.0,
             )
 
         else:  # BALANCED
@@ -195,7 +195,7 @@ class PolicyConfig:
 
         return config
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize configuration to dictionary"""
         return {
             "target": self.target.value,
@@ -214,11 +214,11 @@ class PolicyConfig:
                 "conservative_clipping": self.conservative_clipping,
                 "conservative_gradients": self.conservative_gradients,
                 "conservative_text": self.conservative_text,
-            }
+            },
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PolicyConfig':
+    def from_dict(cls, data: dict[str, Any]) -> 'PolicyConfig':
         """Deserialize configuration from dictionary"""
         target = OutputTarget(data.get("target", "balanced"))
         config = cls.for_target(target)

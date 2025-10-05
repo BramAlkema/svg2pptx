@@ -13,7 +13,8 @@ Use:
 - `is_element(node)` when you must branch on node type.
 """
 
-from typing import Iterator
+from collections.abc import Iterator
+
 from lxml import etree as ET
 
 # lxml internal node classes we want to exclude during "element-only" iteration

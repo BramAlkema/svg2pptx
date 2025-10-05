@@ -12,8 +12,8 @@ Components:
 - PatternProcessor: Pattern support with optimization
 """
 
-from .image_processor import ImageProcessor, create_image_processor
 from .gradient_processor import GradientProcessor, create_gradient_processor
+from .image_processor import ImageProcessor, create_image_processor
 from .pattern_processor import PatternProcessor, create_pattern_processor
 
 __all__ = [

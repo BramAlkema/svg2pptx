@@ -7,8 +7,8 @@ Provides clear reasoning for all policy decisions.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Union, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 
 class DecisionReason(Enum):
@@ -78,7 +78,7 @@ class DecisionReason(Enum):
 class PolicyDecision:
     """Base policy decision"""
     use_native: bool
-    reasons: List[DecisionReason]
+    reasons: list[DecisionReason]
     confidence: float = 1.0  # 0.0 to 1.0
     fallback_available: bool = True
     estimated_quality: float = 1.0  # 0.0 to 1.0
@@ -118,7 +118,7 @@ class PolicyDecision:
 
         return explanation
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize decision to dictionary for tracing"""
         return {
             'use_native': self.use_native,
@@ -128,7 +128,7 @@ class PolicyDecision:
             'fallback_available': self.fallback_available,
             'estimated_quality': self.estimated_quality,
             'estimated_performance': self.estimated_performance,
-            'primary_reason': self.primary_reason.value
+            'primary_reason': self.primary_reason.value,
         }
 
 
@@ -142,16 +142,16 @@ class PathDecision(PolicyDecision):
     has_complex_fill: bool = False
 
     @classmethod
-    def native(cls, reasons: List[DecisionReason], **kwargs) -> 'PathDecision':
+    def native(cls, reasons: list[DecisionReason], **kwargs) -> 'PathDecision':
         """Create decision for native DrawingML"""
         return cls(use_native=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, reasons: List[DecisionReason], **kwargs) -> 'PathDecision':
+    def emf(cls, reasons: list[DecisionReason], **kwargs) -> 'PathDecision':
         """Create decision for EMF fallback"""
         return cls(use_native=False, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize PathDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -159,7 +159,7 @@ class PathDecision(PolicyDecision):
             'complexity_score': self.complexity_score,
             'has_clipping': self.has_clipping,
             'has_complex_stroke': self.has_complex_stroke,
-            'has_complex_fill': self.has_complex_fill
+            'has_complex_fill': self.has_complex_fill,
         })
         return base_dict
 
@@ -174,30 +174,30 @@ class TextDecision(PolicyDecision):
     has_multiline: bool = False
 
     # WordArt detection
-    wordart_preset: Optional[str] = None
-    wordart_parameters: Optional[Dict[str, Any]] = None
+    wordart_preset: str | None = None
+    wordart_parameters: dict[str, Any] | None = None
     wordart_confidence: float = 0.0
-    transform_complexity: Optional[Dict[str, Any]] = None
+    transform_complexity: dict[str, Any] | None = None
 
     # Font strategy (Three-Tier: ADR-003)
-    font_strategy: Optional[str] = None  # 'embedded' | 'system' | 'text_to_path'
+    font_strategy: str | None = None  # 'embedded' | 'system' | 'text_to_path'
     font_match_confidence: float = 0.0   # Confidence in font matching (Tier 2)
-    embedded_font_name: Optional[str] = None  # Name of embedded font (Tier 1)
-    system_font_fallback: Optional[str] = None  # System font used (Tier 2)
+    embedded_font_name: str | None = None  # Name of embedded font (Tier 1)
+    system_font_fallback: str | None = None  # System font used (Tier 2)
 
     @classmethod
-    def native(cls, reasons: List[DecisionReason], **kwargs) -> 'TextDecision':
+    def native(cls, reasons: list[DecisionReason], **kwargs) -> 'TextDecision':
         """Create decision for native DrawingML"""
         return cls(use_native=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, reasons: List[DecisionReason], **kwargs) -> 'TextDecision':
+    def emf(cls, reasons: list[DecisionReason], **kwargs) -> 'TextDecision':
         """Create decision for EMF fallback"""
         return cls(use_native=False, reasons=reasons, **kwargs)
 
     @classmethod
-    def wordart(cls, preset: str, parameters: Dict[str, Any], confidence: float,
-                reasons: List[DecisionReason] = None, **kwargs) -> 'TextDecision':
+    def wordart(cls, preset: str, parameters: dict[str, Any], confidence: float,
+                reasons: list[DecisionReason] = None, **kwargs) -> 'TextDecision':
         """Create decision for WordArt preset"""
         if reasons is None:
             reasons = [DecisionReason.WORDART_PATTERN_DETECTED, DecisionReason.NATIVE_PRESET_AVAILABLE]
@@ -208,7 +208,7 @@ class TextDecision(PolicyDecision):
             wordart_preset=preset,
             wordart_parameters=parameters,
             wordart_confidence=confidence,
-            **kwargs
+            **kwargs,
         )
 
     @property
@@ -223,7 +223,7 @@ class TextDecision(PolicyDecision):
             return f"WordArt({self.wordart_preset})"
         return "DrawingML" if self.use_native else "EMF"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize TextDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -240,7 +240,7 @@ class TextDecision(PolicyDecision):
             'font_strategy': self.font_strategy,
             'font_match_confidence': self.font_match_confidence,
             'embedded_font_name': self.embedded_font_name,
-            'system_font_fallback': self.system_font_fallback
+            'system_font_fallback': self.system_font_fallback,
         })
         return base_dict
 
@@ -254,23 +254,23 @@ class GroupDecision(PolicyDecision):
     has_complex_clipping: bool = False
 
     @classmethod
-    def native(cls, reasons: List[DecisionReason], **kwargs) -> 'GroupDecision':
+    def native(cls, reasons: list[DecisionReason], **kwargs) -> 'GroupDecision':
         """Create decision for native DrawingML"""
         return cls(use_native=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, reasons: List[DecisionReason], **kwargs) -> 'GroupDecision':
+    def emf(cls, reasons: list[DecisionReason], **kwargs) -> 'GroupDecision':
         """Create decision for EMF fallback"""
         return cls(use_native=False, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize GroupDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
             'element_count': self.element_count,
             'nesting_depth': self.nesting_depth,
             'should_flatten': self.should_flatten,
-            'has_complex_clipping': self.has_complex_clipping
+            'has_complex_clipping': self.has_complex_clipping,
         })
         return base_dict
 
@@ -283,22 +283,22 @@ class ImageDecision(PolicyDecision):
     has_transparency: bool = False
 
     @classmethod
-    def native(cls, reasons: List[DecisionReason], **kwargs) -> 'ImageDecision':
+    def native(cls, reasons: list[DecisionReason], **kwargs) -> 'ImageDecision':
         """Create decision for native DrawingML"""
         return cls(use_native=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, reasons: List[DecisionReason], **kwargs) -> 'ImageDecision':
+    def emf(cls, reasons: list[DecisionReason], **kwargs) -> 'ImageDecision':
         """Create decision for EMF fallback"""
         return cls(use_native=False, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize ImageDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
             'format': self.format,
             'size_bytes': self.size_bytes,
-            'has_transparency': self.has_transparency
+            'has_transparency': self.has_transparency,
         })
         return base_dict
 
@@ -310,7 +310,7 @@ class FilterDecision(PolicyDecision):
     primitive_count: int = 0        # Number of filter primitives in chain
     complexity_score: int = 0       # Calculated complexity (0-100)
     has_unsupported_primitives: bool = False
-    native_approximation: Optional[str] = None  # DrawingML equivalent if available
+    native_approximation: str | None = None  # DrawingML equivalent if available
 
     # Rendering strategy
     use_native_effects: bool = False   # Use DrawingML effects
@@ -318,7 +318,7 @@ class FilterDecision(PolicyDecision):
     use_rasterization: bool = False    # Rasterize to image
 
     @classmethod
-    def native(cls, filter_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'FilterDecision':
+    def native(cls, filter_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'FilterDecision':
         """Create decision for native DrawingML effects"""
         if reasons is None:
             reasons = [DecisionReason.NATIVE_FILTER_AVAILABLE]
@@ -326,7 +326,7 @@ class FilterDecision(PolicyDecision):
                    use_native_effects=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, filter_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'FilterDecision':
+    def emf(cls, filter_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'FilterDecision':
         """Create decision for EMF fallback"""
         if reasons is None:
             reasons = [DecisionReason.FILTER_CHAIN_COMPLEX]
@@ -334,14 +334,14 @@ class FilterDecision(PolicyDecision):
                    use_emf_fallback=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def rasterize(cls, filter_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'FilterDecision':
+    def rasterize(cls, filter_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'FilterDecision':
         """Create decision for rasterization"""
         if reasons is None:
             reasons = [DecisionReason.FILTER_RASTERIZED]
         return cls(use_native=False, filter_type=filter_type,
                    use_rasterization=True, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize FilterDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -352,7 +352,7 @@ class FilterDecision(PolicyDecision):
             'native_approximation': self.native_approximation,
             'use_native_effects': self.use_native_effects,
             'use_emf_fallback': self.use_emf_fallback,
-            'use_rasterization': self.use_rasterization
+            'use_rasterization': self.use_rasterization,
         })
         return base_dict
 
@@ -376,21 +376,21 @@ class GradientDecision(PolicyDecision):
     use_approximation: bool = False        # Approximate complex gradients
 
     @classmethod
-    def native(cls, gradient_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'GradientDecision':
+    def native(cls, gradient_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'GradientDecision':
         """Create decision for native DrawingML gradient"""
         if reasons is None:
             reasons = [DecisionReason.SIMPLE_GRADIENT]
         return cls(use_native=True, gradient_type=gradient_type, reasons=reasons, **kwargs)
 
     @classmethod
-    def simplified(cls, gradient_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'GradientDecision':
+    def simplified(cls, gradient_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'GradientDecision':
         """Create decision for simplified gradient (reduce stops)"""
         if reasons is None:
             reasons = [DecisionReason.GRADIENT_SIMPLIFIED, DecisionReason.TOO_MANY_GRADIENT_STOPS]
         return cls(use_native=True, gradient_type=gradient_type,
                    use_simplified_gradient=True, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize GradientDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -403,7 +403,7 @@ class GradientDecision(PolicyDecision):
             'mesh_cols': self.mesh_cols,
             'mesh_patch_count': self.mesh_patch_count,
             'use_simplified_gradient': self.use_simplified_gradient,
-            'use_approximation': self.use_approximation
+            'use_approximation': self.use_approximation,
         })
         return base_dict
 
@@ -414,15 +414,15 @@ class MultiPageDecision(PolicyDecision):
     page_count: int = 1
     detection_method: str = "none"  # 'markers' | 'grouped' | 'size_split' | 'none'
     total_size_bytes: int = 0
-    elements_per_page: Optional[List[int]] = None
-    page_titles: Optional[List[Optional[str]]] = None
+    elements_per_page: list[int] | None = None
+    page_titles: list[str | None] | None = None
 
     # Split decision
     should_split: bool = False
     split_threshold_exceeded: bool = False
 
     @classmethod
-    def single_page(cls, reasons: List[DecisionReason] = None, **kwargs) -> 'MultiPageDecision':
+    def single_page(cls, reasons: list[DecisionReason] = None, **kwargs) -> 'MultiPageDecision':
         """Create decision for no splitting needed"""
         if reasons is None:
             reasons = [DecisionReason.SINGLE_PAGE_ONLY]
@@ -430,14 +430,14 @@ class MultiPageDecision(PolicyDecision):
                    detection_method="none", reasons=reasons, **kwargs)
 
     @classmethod
-    def multi_page(cls, page_count: int, method: str, reasons: List[DecisionReason] = None, **kwargs) -> 'MultiPageDecision':
+    def multi_page(cls, page_count: int, method: str, reasons: list[DecisionReason] = None, **kwargs) -> 'MultiPageDecision':
         """Create decision for split into multiple pages"""
         if reasons is None:
             reasons = [DecisionReason.EXPLICIT_PAGE_MARKERS]
         return cls(use_native=True, page_count=page_count,
                    detection_method=method, should_split=True, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize MultiPageDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -447,7 +447,7 @@ class MultiPageDecision(PolicyDecision):
             'elements_per_page': self.elements_per_page,
             'page_titles': self.page_titles,
             'should_split': self.should_split,
-            'split_threshold_exceeded': self.split_threshold_exceeded
+            'split_threshold_exceeded': self.split_threshold_exceeded,
         })
         return base_dict
 
@@ -467,7 +467,7 @@ class AnimationDecision(PolicyDecision):
     skip_animation: bool = False
 
     @classmethod
-    def native(cls, animation_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'AnimationDecision':
+    def native(cls, animation_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'AnimationDecision':
         """Create decision for converting to PowerPoint animation"""
         if reasons is None:
             reasons = [DecisionReason.SIMPLE_ANIMATION]
@@ -475,14 +475,14 @@ class AnimationDecision(PolicyDecision):
                    convert_to_pptx_animation=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def skip(cls, animation_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'AnimationDecision':
+    def skip(cls, animation_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'AnimationDecision':
         """Create decision for skipping animation"""
         if reasons is None:
             reasons = [DecisionReason.ANIMATION_SKIPPED]
         return cls(use_native=False, animation_type=animation_type,
                    skip_animation=True, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize AnimationDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -493,7 +493,7 @@ class AnimationDecision(PolicyDecision):
             'interpolation': self.interpolation,
             'convert_to_pptx_animation': self.convert_to_pptx_animation,
             'export_as_video': self.export_as_video,
-            'skip_animation': self.skip_animation
+            'skip_animation': self.skip_animation,
         })
         return base_dict
 
@@ -505,14 +505,14 @@ class ClipPathDecision(PolicyDecision):
     path_complexity: int = 0        # Path segment count
     nesting_level: int = 0          # Nested clip depth
     has_boolean_ops: bool = False   # Union, intersection, etc.
-    boolean_op_type: Optional[str] = None  # 'union' | 'intersect' | 'subtract'
+    boolean_op_type: str | None = None  # 'union' | 'intersect' | 'subtract'
 
     # Rendering strategy
     use_native_clipping: bool = False
     use_boolean_approximation: bool = False
 
     @classmethod
-    def native(cls, clip_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'ClipPathDecision':
+    def native(cls, clip_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'ClipPathDecision':
         """Create decision for native DrawingML clipping"""
         if reasons is None:
             reasons = [DecisionReason.SIMPLE_CLIP_PATH]
@@ -520,13 +520,13 @@ class ClipPathDecision(PolicyDecision):
                    use_native_clipping=True, reasons=reasons, **kwargs)
 
     @classmethod
-    def emf(cls, clip_type: str, reasons: List[DecisionReason] = None, **kwargs) -> 'ClipPathDecision':
+    def emf(cls, clip_type: str, reasons: list[DecisionReason] = None, **kwargs) -> 'ClipPathDecision':
         """Create decision for EMF fallback"""
         if reasons is None:
             reasons = [DecisionReason.CLIP_PATH_COMPLEX]
         return cls(use_native=False, clip_type=clip_type, reasons=reasons, **kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize ClipPathDecision to dictionary for tracing"""
         base_dict = super().to_dict()
         base_dict.update({
@@ -536,7 +536,7 @@ class ClipPathDecision(PolicyDecision):
             'has_boolean_ops': self.has_boolean_ops,
             'boolean_op_type': self.boolean_op_type,
             'use_native_clipping': self.use_native_clipping,
-            'use_boolean_approximation': self.use_boolean_approximation
+            'use_boolean_approximation': self.use_boolean_approximation,
         })
         return base_dict
 
@@ -652,5 +652,5 @@ class PolicyMetrics:
                 "animations": self.animation_decisions,
                 "clippaths": self.clippath_decisions,
             },
-            "by_reason": self.reason_counts
+            "by_reason": self.reason_counts,
         }

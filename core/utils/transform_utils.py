@@ -7,10 +7,11 @@ preventing cython crashes and handling malformed data gracefully.
 """
 
 from typing import Optional
+
 from lxml import etree as ET
 
 
-def get_transform_safe(element: ET.Element) -> Optional[str]:
+def get_transform_safe(element: ET.Element) -> str | None:
     """
     Safely get transform attribute from element.
 
@@ -52,7 +53,7 @@ def has_transform_safe(element: ET.Element) -> bool:
     return get_transform_safe(element) is not None
 
 
-def parse_transform_safe(transform_str: Optional[str]) -> Optional[str]:
+def parse_transform_safe(transform_str: str | None) -> str | None:
     """
     Safely parse and validate transform string.
 

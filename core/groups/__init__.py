@@ -23,12 +23,16 @@ Usage:
     drawingml = group_service.convert_clipped_element(clipped_element, context)
 """
 
-from .group_processor import GroupProcessor, create_group_processor
 from .clipping_analyzer import (
-    ClippingAnalyzer, ClippingComplexity, ClippingStrategy,
-    ClippingPath, ClippingAnalysis, create_clipping_analyzer
+    ClippingAnalysis,
+    ClippingAnalyzer,
+    ClippingComplexity,
+    ClippingPath,
+    ClippingStrategy,
+    create_clipping_analyzer,
 )
 from .converter_service import GroupConverterService, create_group_converter_service
+from .group_processor import GroupProcessor, create_group_processor
 
 __all__ = [
     # Core classes

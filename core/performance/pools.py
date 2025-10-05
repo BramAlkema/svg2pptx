@@ -8,12 +8,13 @@ This module provides pooling mechanisms to reuse heavy objects like:
 - Processing contexts
 """
 
-import threading
-from typing import Dict, Optional, Type, TypeVar, Generic, Callable, Any
-from queue import Queue, Empty
-from contextlib import contextmanager
-import time
 import logging
+import threading
+import time
+from collections.abc import Callable
+from contextlib import contextmanager
+from queue import Empty, Queue
+from typing import Any, Dict, Generic, Optional, Type, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class ObjectPool(Generic[T]):
         self.cleanup_interval = cleanup_interval
         
         self._pool: Queue[T] = Queue(maxsize=max_size)
-        self._pool_times: Dict[int, float] = {}  # Track when objects were returned
+        self._pool_times: dict[int, float] = {}  # Track when objects were returned
         self._created_count = 0
         self._borrowed_count = 0
         self._returned_count = 0
@@ -61,7 +62,7 @@ class ObjectPool(Generic[T]):
         self._cleanup_thread = threading.Thread(target=self._cleanup_worker, daemon=True)
         self._cleanup_thread.start()
     
-    def _create_instance(self) -> Optional[T]:
+    def _create_instance(self) -> T | None:
         """Create a new instance using the factory."""
         try:
             instance = self.factory()
@@ -72,7 +73,7 @@ class ObjectPool(Generic[T]):
             logger.error(f"Failed to create pool instance: {e}")
             return None
     
-    def borrow(self) -> Optional[T]:
+    def borrow(self) -> T | None:
         """Borrow an object from the pool."""
         with self._lock:
             try:
@@ -161,7 +162,7 @@ class ObjectPool(Generic[T]):
             for obj_id in objects_to_remove:
                 self._pool_times.pop(obj_id, None)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics."""
         with self._lock:
             return {
@@ -170,7 +171,7 @@ class ObjectPool(Generic[T]):
                 'returned_count': self._returned_count,
                 'current_pool_size': self._pool.qsize(),
                 'max_size': self.max_size,
-                'utilization': (self._created_count - self._pool.qsize()) / max(self.max_size, 1)
+                'utilization': (self._created_count - self._pool.qsize()) / max(self.max_size, 1),
             }
     
     @contextmanager
@@ -188,7 +189,7 @@ class UtilityPool:
     """Pool manager for utility classes like parsers and converters."""
     
     def __init__(self):
-        self._pools: Dict[str, ObjectPool] = {}
+        self._pools: dict[str, ObjectPool] = {}
         self._lock = threading.RLock()
     
     def register_pool(self, 
@@ -204,13 +205,13 @@ class UtilityPool:
             pool = ObjectPool(
                 factory=factory,
                 max_size=max_size,
-                init_size=init_size
+                init_size=init_size,
             )
             self._pools[name] = pool
             logger.info(f"Registered utility pool '{name}' with max_size={max_size}")
             return pool
     
-    def get_pool(self, name: str) -> Optional[ObjectPool]:
+    def get_pool(self, name: str) -> ObjectPool | None:
         """Get a utility pool by name."""
         with self._lock:
             return self._pools.get(name)
@@ -225,7 +226,7 @@ class UtilityPool:
         with pool.get_object() as obj:
             yield obj
     
-    def get_all_stats(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all pools."""
         with self._lock:
             return {name: pool.get_stats() for name, pool in self._pools.items()}
@@ -236,7 +237,7 @@ class ConverterPool:
     
     def __init__(self):
         self.utility_pool = UtilityPool()
-        self._converter_pools: Dict[Type, ObjectPool] = {}
+        self._converter_pools: dict[type, ObjectPool] = {}
         self._lock = threading.RLock()
         
         # Pre-register common utility pools
@@ -257,7 +258,7 @@ class ConverterPool:
         pass
     
     def register_converter_pool(self, 
-                              converter_class: Type,
+                              converter_class: type,
                               max_size: int = 5,
                               init_size: int = 2) -> ObjectPool:
         """Register a pool for a specific converter class."""
@@ -276,7 +277,7 @@ class ConverterPool:
             pool = ObjectPool(
                 factory=factory,
                 max_size=max_size,
-                init_size=init_size
+                init_size=init_size,
             )
             
             self._converter_pools[converter_class] = pool
@@ -291,7 +292,7 @@ class ConverterPool:
             'unit_converter': 'unit_converter',
             'color_parser': 'color_parser', 
             'transform_engine': 'transform_engine',
-            'viewport_handler': 'viewport_handler'
+            'viewport_handler': 'viewport_handler',
         }
         
         for pool_name, attr_name in utility_mappings.items():
@@ -301,7 +302,7 @@ class ConverterPool:
                 pass
     
     @contextmanager
-    def get_converter(self, converter_class: Type):
+    def get_converter(self, converter_class: type):
         """Get a converter instance from the pool."""
         with self._lock:
             if converter_class not in self._converter_pools:
@@ -318,11 +319,11 @@ class ConverterPool:
         with self.utility_pool.borrow(utility_name) as utility:
             yield utility
     
-    def get_all_stats(self) -> Dict[str, Any]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all pools."""
         stats = {
             'utilities': self.utility_pool.get_all_stats(),
-            'converters': {}
+            'converters': {},
         }
         
         with self._lock:

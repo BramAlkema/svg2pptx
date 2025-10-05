@@ -7,18 +7,19 @@ that cannot be efficiently represented in vector format. Uses EMF's add_raster_3
 function to embed high-quality raster representations.
 """
 
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass
-from lxml import etree as ET
 import time
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+from lxml import etree as ET
 
 try:
     from src.emf_blob import EMFBlob
     from src.performance.cache import ConversionCache
 except ImportError:
     # Handle import for testing
-    import sys
     import os
+    import sys
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
     from emf_blob import EMFBlob
     from performance.cache import ConversionCache
@@ -44,9 +45,9 @@ class RasterRenderer:
         self.config = config or RasterFallbackConfig()
 
     def render_filter_to_bitmap(self,
-                              filter_chain: List[ET.Element],
-                              input_data: Dict[str, Any],
-                              context: Dict[str, Any]) -> bytes:
+                              filter_chain: list[ET.Element],
+                              input_data: dict[str, Any],
+                              context: dict[str, Any]) -> bytes:
         """
         Render filter chain to 32-bit RGBA bitmap.
 
@@ -68,8 +69,8 @@ class RasterRenderer:
         return bitmap_data
 
     def _calculate_render_dimensions(self,
-                                   input_data: Dict[str, Any],
-                                   context: Dict[str, Any]) -> Tuple[int, int]:
+                                   input_data: dict[str, Any],
+                                   context: dict[str, Any]) -> tuple[int, int]:
         """Calculate optimal render dimensions."""
         # Get base dimensions from input or context
         base_width = input_data.get('width', context.get('viewport', {}).get('width', 100))
@@ -96,7 +97,7 @@ class RasterRenderer:
     def _create_mock_bitmap(self,
                           width: int,
                           height: int,
-                          filter_chain: List[ET.Element]) -> bytes:
+                          filter_chain: list[ET.Element]) -> bytes:
         """
         Create mock bitmap data for demonstration.
 
@@ -174,12 +175,12 @@ class RasterFallbackManager:
             'fallbacks_created': 0,
             'cache_hits': 0,
             'total_render_time': 0.0,
-            'average_complexity': 0.0
+            'average_complexity': 0.0,
         }
 
     def should_use_raster_fallback(self,
-                                 filter_chain: List[ET.Element],
-                                 context: Dict[str, Any]) -> bool:
+                                 filter_chain: list[ET.Element],
+                                 context: dict[str, Any]) -> bool:
         """
         Determine if raster fallback should be used for filter chain.
 
@@ -203,7 +204,7 @@ class RasterFallbackManager:
             'feTurbulence',
             'feDisplacementMap',
             'feDiffuseLighting',
-            'feSpecularLighting'
+            'feSpecularLighting',
         }
 
         for element in filter_chain:
@@ -218,9 +219,9 @@ class RasterFallbackManager:
         return False
 
     def create_raster_fallback(self,
-                             filter_chain: List[ET.Element],
-                             input_data: Dict[str, Any],
-                             context: Dict[str, Any]) -> Dict[str, Any]:
+                             filter_chain: list[ET.Element],
+                             input_data: dict[str, Any],
+                             context: dict[str, Any]) -> dict[str, Any]:
         """
         Create raster fallback for filter chain.
 
@@ -244,7 +245,7 @@ class RasterFallbackManager:
 
         # Render filter to bitmap
         bitmap_data = self.renderer.render_filter_to_bitmap(
-            filter_chain, input_data, context
+            filter_chain, input_data, context,
         )
 
         # Calculate dimensions
@@ -266,7 +267,7 @@ class RasterFallbackManager:
             'render_time': render_time,
             'bitmap_size': len(bitmap_data),
             'filter_types': [self._get_filter_type(f) for f in filter_chain],
-            'created_at': time.time()
+            'created_at': time.time(),
         }
 
         # Cache result
@@ -309,7 +310,7 @@ class RasterFallbackManager:
 
         return emf_blob
 
-    def _calculate_filter_complexity(self, filter_chain: List[ET.Element]) -> float:
+    def _calculate_filter_complexity(self, filter_chain: list[ET.Element]) -> float:
         """Calculate complexity score for filter chain."""
         complexity = 0.0
 
@@ -325,7 +326,7 @@ class RasterFallbackManager:
             'feDisplacementMap': 6.0,
             'feDiffuseLighting': 4.5,
             'feSpecularLighting': 4.5,
-            'feComponentTransfer': 3.0
+            'feComponentTransfer': 3.0,
         }
 
         for element in filter_chain:
@@ -360,9 +361,9 @@ class RasterFallbackManager:
         return tag
 
     def _generate_cache_key(self,
-                          filter_chain: List[ET.Element],
-                          input_data: Dict[str, Any],
-                          context: Dict[str, Any]) -> str:
+                          filter_chain: list[ET.Element],
+                          input_data: dict[str, Any],
+                          context: dict[str, Any]) -> str:
         """Generate cache key for raster fallback."""
         # Use the cache system's filter cache key generation
         if self.cache and hasattr(self.cache, 'filter_cache'):
@@ -374,12 +375,12 @@ class RasterFallbackManager:
             key_data = {
                 'filters': [self._get_filter_type(f) for f in filter_chain],
                 'input': str(input_data),
-                'context': str(context)
+                'context': str(context),
             }
             key_str = json.dumps(key_data, sort_keys=True)
             return hashlib.md5(key_str.encode()).hexdigest()
 
-    def _get_cached_fallback(self, cache_key: str) -> Optional[Dict[str, Any]]:
+    def _get_cached_fallback(self, cache_key: str) -> dict[str, Any] | None:
         """Get cached raster fallback result."""
         if not self.cache:
             return None
@@ -392,14 +393,14 @@ class RasterFallbackManager:
                     return {
                         'emf_blob': emf_blob,
                         'fallback_type': 'raster_32bpp',
-                        'cached': True
+                        'cached': True,
                     }
             except:
                 pass
 
         return None
 
-    def _cache_fallback(self, cache_key: str, result: Dict[str, Any]):
+    def _cache_fallback(self, cache_key: str, result: dict[str, Any]):
         """Cache raster fallback result."""
         if not self.cache:
             return
@@ -411,15 +412,15 @@ class RasterFallbackManager:
                     'fallback_type': result['fallback_type'],
                     'complexity_score': result['complexity_score'],
                     'render_time': result['render_time'],
-                    'filter_types': result['filter_types']
+                    'filter_types': result['filter_types'],
                 }
                 self.cache.emf_filter_cache.emf_cache.cache_emf_result(
-                    cache_key, result['emf_blob'], metadata
+                    cache_key, result['emf_blob'], metadata,
                 )
             except Exception as e:
                 print(f"Warning: Failed to cache raster fallback: {e}")
 
-    def get_fallback_stats(self) -> Dict[str, Any]:
+    def get_fallback_stats(self) -> dict[str, Any]:
         """Get raster fallback statistics."""
         return {
             **self.stats,
@@ -427,8 +428,8 @@ class RasterFallbackManager:
                 'default_dpi': self.config.default_dpi,
                 'max_dimensions': f"{self.config.max_width}x{self.config.max_height}",
                 'complexity_threshold': self.config.complexity_threshold,
-                'caching_enabled': self.config.enable_caching
-            }
+                'caching_enabled': self.config.enable_caching,
+            },
         }
 
     def clear_fallback_cache(self):

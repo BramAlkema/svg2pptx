@@ -13,7 +13,8 @@ Features:
 """
 
 import logging
-from typing import Dict, Set, Optional
+from typing import Dict, Optional, Set
+
 from lxml import etree as ET
 
 from .base import BasePreprocessor
@@ -30,8 +31,8 @@ class ExpandUsePreprocessor(BasePreprocessor):
     def __init__(self):
         super().__init__()
         self.logger = logging.getLogger(__name__)
-        self.id_map: Dict[str, ET.Element] = {}
-        self.expanded_uses: Set[str] = set()
+        self.id_map: dict[str, ET.Element] = {}
+        self.expanded_uses: set[str] = set()
 
     def process(self, svg_root: ET.Element) -> ET.Element:
         """
@@ -122,7 +123,7 @@ class ExpandUsePreprocessor(BasePreprocessor):
         finally:
             self.expanded_uses.discard(ref_id)
 
-    def _get_href(self, use_elem: ET.Element) -> Optional[str]:
+    def _get_href(self, use_elem: ET.Element) -> str | None:
         """Get href attribute from use element (handles both href and xlink:href)."""
         # Try standard href first
         href = use_elem.get('href')

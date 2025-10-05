@@ -8,8 +8,10 @@ Calculates SVG complexity scores for conversion strategy decisions.
 import logging
 import math
 from typing import Dict
+
 from lxml import etree as ET
-from ..xml.safe_iter import walk, children
+
+from ..xml.safe_iter import children, walk
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class ComplexityCalculator:
             'pattern': 0.8,
             'animate': 1.0,
             'animateTransform': 1.1,
-            'animateMotion': 1.2
+            'animateMotion': 1.2,
         }
 
         # Feature complexity multipliers
@@ -61,13 +63,13 @@ class ComplexityCalculator:
             'has_animations': 1.5,
             'has_gradients': 1.1,
             'has_filters': 1.4,
-            'has_masks': 1.35
+            'has_masks': 1.35,
         }
 
         self.logger = logging.getLogger(__name__)
 
     def calculate_overall_complexity(self, svg_root: ET.Element,
-                                   element_counts: Dict[str, int]) -> float:
+                                   element_counts: dict[str, int]) -> float:
         """
         Calculate overall complexity score for SVG.
 
@@ -111,7 +113,7 @@ class ComplexityCalculator:
             self.logger.error(f"Complexity calculation failed: {e}")
             return 0.5  # Default to moderate complexity
 
-    def _calculate_base_complexity(self, element_counts: Dict[str, int]) -> float:
+    def _calculate_base_complexity(self, element_counts: dict[str, int]) -> float:
         """Calculate base complexity from element counts and weights"""
         total_weighted_elements = 0.0
 

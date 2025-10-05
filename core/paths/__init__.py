@@ -24,17 +24,24 @@ Example Usage:
 """
 
 # Modular architecture components
-from .coordinate_system import CoordinateSystem
-from .parser import PathParser
 from .arc_converter import ArcConverter
-from .drawingml_generator import DrawingMLGenerator
-from .path_system import PathSystem, PathProcessingResult, create_path_system
 from .architecture import (
-    PathCommand, CoordinatePoint, BezierSegment, PathBounds,
-    PathSystemError, PathParseError, CoordinateTransformError,
-    ArcConversionError, XMLGenerationError, PathSystemContext,
-    PathCommandType
+    ArcConversionError,
+    BezierSegment,
+    CoordinatePoint,
+    CoordinateTransformError,
+    PathBounds,
+    PathCommand,
+    PathCommandType,
+    PathParseError,
+    PathSystemContext,
+    PathSystemError,
+    XMLGenerationError,
 )
+from .coordinate_system import CoordinateSystem
+from .drawingml_generator import DrawingMLGenerator
+from .parser import PathParser
+from .path_system import PathProcessingResult, PathSystem, create_path_system
 
 # Export main public API
 __all__ = [
@@ -62,7 +69,7 @@ __all__ = [
     'PathParseError',
     'CoordinateTransformError',
     'ArcConversionError',
-    'XMLGenerationError'
+    'XMLGenerationError',
 ]
 
 # Version info

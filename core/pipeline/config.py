@@ -7,11 +7,11 @@ Integrates with core.policy.PolicyConfig for unified policy decisions.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, Optional
 
 # Import comprehensive policy configuration
-from ..policy.config import PolicyConfig, OutputTarget
+from ..policy.config import OutputTarget, PolicyConfig
 
 
 class OutputFormat(Enum):
@@ -58,13 +58,13 @@ class PipelineConfig:
     output_format: OutputFormat = OutputFormat.PPTX
 
     # Policy configuration (unified with core.policy)
-    policy_config: Optional[PolicyConfig] = None
+    policy_config: PolicyConfig | None = None
 
     # Slide configuration
-    slide_config: Optional[SlideConfig] = None
+    slide_config: SlideConfig | None = None
 
     # Performance settings
-    performance_config: Optional[PerformanceConfig] = None
+    performance_config: PerformanceConfig | None = None
 
     # Debug and logging
     enable_debug: bool = False
@@ -104,10 +104,10 @@ class PipelineConfig:
                 enable_caching=True,
                 parallel_processing=True,
                 max_workers=8,
-                memory_limit_mb=256
+                memory_limit_mb=256,
             ),
             enable_group_flattening=True,
-            enable_path_optimization=True
+            enable_path_optimization=True,
         )
 
     @classmethod
@@ -120,12 +120,12 @@ class PipelineConfig:
                 enable_caching=True,
                 parallel_processing=False,
                 max_workers=2,
-                memory_limit_mb=1024
+                memory_limit_mb=1024,
             ),
             enable_text_fixes=True,
             enable_group_flattening=False,  # Preserve structure
             enable_path_optimization=False,  # Preserve original paths
-            enable_image_conversion=True
+            enable_image_conversion=True,
         )
 
     @classmethod
@@ -140,11 +140,11 @@ class PipelineConfig:
                 enable_caching=False,
                 parallel_processing=False,
                 max_workers=1,
-                memory_limit_mb=1024
-            )
+                memory_limit_mb=1024,
+            ),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary"""
         result = {
             'quality_level': self.quality_level.value,
@@ -153,20 +153,20 @@ class PipelineConfig:
                 'width_emu': self.slide_config.width_emu,
                 'height_emu': self.slide_config.height_emu,
                 'template': self.slide_config.template,
-                'preserve_aspect_ratio': self.slide_config.preserve_aspect_ratio
+                'preserve_aspect_ratio': self.slide_config.preserve_aspect_ratio,
             },
             'performance_config': {
                 'enable_caching': self.performance_config.enable_caching,
                 'parallel_processing': self.performance_config.parallel_processing,
                 'max_workers': self.performance_config.max_workers,
-                'memory_limit_mb': self.performance_config.memory_limit_mb
+                'memory_limit_mb': self.performance_config.memory_limit_mb,
             },
             'enable_debug': self.enable_debug,
             'verbose_logging': self.verbose_logging,
             'enable_text_fixes': self.enable_text_fixes,
             'enable_group_flattening': self.enable_group_flattening,
             'enable_path_optimization': self.enable_path_optimization,
-            'enable_image_conversion': self.enable_image_conversion
+            'enable_image_conversion': self.enable_image_conversion,
         }
 
         # Add policy config if present
@@ -176,7 +176,7 @@ class PipelineConfig:
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PipelineConfig':
+    def from_dict(cls, data: dict[str, Any]) -> 'PipelineConfig':
         """Create configuration from dictionary"""
         config = cls()
 

@@ -15,7 +15,7 @@ Key Features:
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Add lxml imports for safe XML generation
 try:
@@ -25,11 +25,14 @@ try:
 except ImportError:
     LXML_AVAILABLE = False
 
-from .interfaces import DrawingMLGenerator as BaseDrawingMLGenerator
 from .architecture import (
-    PathCommand, PathBounds, PathCommandType, CoordinatePoint,
-    XMLGenerationError
+    CoordinatePoint,
+    PathBounds,
+    PathCommand,
+    PathCommandType,
+    XMLGenerationError,
 )
+from .interfaces import DrawingMLGenerator as BaseDrawingMLGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +123,7 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
         qualified_tag = f"{{{self.A_NS}}}{tag_name}"
         return E(qualified_tag, **attributes)
 
-    def generate_path_xml(self, commands: List[PathCommand], bounds: PathBounds,
+    def generate_path_xml(self, commands: list[PathCommand], bounds: PathBounds,
                          coordinate_system, arc_converter, shape_id: int = None) -> str:
         """
         Generate DrawingML path XML for a series of path commands.
@@ -173,7 +176,7 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
                         continue
                     else:
                         element_xml = self._generate_command_xml(
-                            command, coordinate_system, bounds, current_point
+                            command, coordinate_system, bounds, current_point,
                         )
                         # Check for None explicitly (handles both Element and string)
                         if element_xml is not None:
@@ -215,7 +218,7 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
             raise XMLGenerationError(f"Failed to generate path XML: {e}")
 
     def generate_shape_xml(self, path_xml: str, bounds: PathBounds,
-                          style_attributes: Dict[str, Any]) -> str:
+                          style_attributes: dict[str, Any]) -> str:
         """
         Generate complete PowerPoint shape XML with path and styling.
 
@@ -590,7 +593,7 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
         else:
             return current_point
 
-    def _generate_fill_xml(self, style_attributes: Dict[str, Any]) -> str:
+    def _generate_fill_xml(self, style_attributes: dict[str, Any]) -> str:
         """Generate fill XML from style attributes."""
         fill = style_attributes.get('fill', 'black')
         opacity = style_attributes.get('fill-opacity') or style_attributes.get('opacity')
@@ -607,7 +610,7 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
             alpha_xml = self._alpha_xml(opacity)
             return f'<a:solidFill><a:srgbClr val="000000">{alpha_xml}</a:srgbClr></a:solidFill>'
 
-    def _generate_stroke_xml(self, style_attributes: Dict[str, Any]) -> str:
+    def _generate_stroke_xml(self, style_attributes: dict[str, Any]) -> str:
         """Generate stroke/line XML from style attributes."""
         stroke = style_attributes.get('stroke', 'none')
         stroke_width = style_attributes.get('stroke-width', '1')

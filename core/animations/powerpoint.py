@@ -15,12 +15,15 @@ Key Features:
 - Integration with existing PowerPoint generation
 """
 
-from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 from .core import (
-    AnimationDefinition, AnimationScene, AnimationType,
-    TransformType, CalcMode
+    AnimationDefinition,
+    AnimationScene,
+    AnimationType,
+    CalcMode,
+    TransformType,
 )
 
 
@@ -28,7 +31,7 @@ from .core import (
 class PowerPointAnimationSequence:
     """PowerPoint animation sequence containing timing and animations."""
     sequence_id: int
-    animations: List[str]
+    animations: list[str]
     total_duration_ms: int
     timing_root: str
 
@@ -48,8 +51,8 @@ class PowerPointAnimationGenerator:
 
     def generate_animation_sequence(
         self,
-        animations: List[AnimationDefinition],
-        timeline_scenes: List[AnimationScene]
+        animations: list[AnimationDefinition],
+        timeline_scenes: list[AnimationScene],
     ) -> str:
         """
         Generate complete PowerPoint animation sequence.
@@ -78,7 +81,7 @@ class PowerPointAnimationGenerator:
         sequence = self._create_animation_sequence(pptx_animations, timeline_scenes)
         return self._generate_timing_root(sequence)
 
-    def _convert_animation_to_powerpoint(self, animation: AnimationDefinition) -> Optional[str]:
+    def _convert_animation_to_powerpoint(self, animation: AnimationDefinition) -> str | None:
         """Convert single animation definition to PowerPoint XML."""
         # Map SMIL animation types to PowerPoint equivalents
         if animation.animation_type == AnimationType.ANIMATE:
@@ -342,7 +345,7 @@ class PowerPointAnimationGenerator:
 
         return attrs
 
-    def _map_bezier_to_powerpoint_easing(self, spline: List[float]) -> Tuple[int, int]:
+    def _map_bezier_to_powerpoint_easing(self, spline: list[float]) -> tuple[int, int]:
         """Map Bezier keySpline to PowerPoint acceleration/deceleration values."""
         x1, y1, x2, y2 = spline
 
@@ -373,8 +376,8 @@ class PowerPointAnimationGenerator:
 
     def _create_animation_sequence(
         self,
-        animations: List[str],
-        timeline_scenes: List[AnimationScene]
+        animations: list[str],
+        timeline_scenes: list[AnimationScene],
     ) -> PowerPointAnimationSequence:
         """Create PowerPoint animation sequence from individual animations."""
         sequence_id = self._get_next_sequence_id()
@@ -388,7 +391,7 @@ class PowerPointAnimationGenerator:
             sequence_id=sequence_id,
             animations=animations,
             total_duration_ms=total_duration_ms,
-            timing_root=""
+            timing_root="",
         )
 
     def _generate_timing_root(self, sequence: PowerPointAnimationSequence) -> str:
@@ -485,7 +488,7 @@ class PowerPointAnimationGenerator:
         self.animation_id_counter = 1
         self.sequence_id_counter = 1
 
-    def generate_slide_animation_info(self, animations: List[AnimationDefinition]) -> Dict[str, Any]:
+    def generate_slide_animation_info(self, animations: list[AnimationDefinition]) -> dict[str, Any]:
         """Generate metadata about slide animations for PowerPoint integration."""
         return {
             'has_animations': len(animations) > 0,
@@ -494,7 +497,7 @@ class PowerPointAnimationGenerator:
             'animation_types': list(set(anim.animation_type.value for anim in animations)),
             'total_duration': max(
                 (anim.timing.get_end_time() for anim in animations if anim.timing.get_end_time() != float('inf')),
-                default=0.0
+                default=0.0,
             ),
-            'requires_timing_root': True
+            'requires_timing_root': True,
         }

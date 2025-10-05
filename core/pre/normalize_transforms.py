@@ -13,9 +13,10 @@ Features:
 """
 
 import logging
-import re
 import math
+import re
 from typing import List
+
 import numpy as np
 from lxml import etree as ET
 
@@ -179,7 +180,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
 
         return matrix
 
-    def _parse_transform_function(self, func_name: str, params: List[float]) -> np.ndarray:
+    def _parse_transform_function(self, func_name: str, params: list[float]) -> np.ndarray:
         """Parse individual transform function into matrix."""
         func_name = func_name.lower()
 
@@ -189,7 +190,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
             return np.array([
                 [1, 0, tx],
                 [0, 1, ty],
-                [0, 0, 1]
+                [0, 0, 1],
             ])
 
         elif func_name == 'scale':
@@ -198,7 +199,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
             return np.array([
                 [sx, 0, 0],
                 [0, sy, 0],
-                [0, 0, 1]
+                [0, 0, 1],
             ])
 
         elif func_name == 'rotate':
@@ -213,7 +214,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
                 return np.array([
                     [cos_a, -sin_a, 0],
                     [sin_a, cos_a, 0],
-                    [0, 0, 1]
+                    [0, 0, 1],
                 ])
             else:
                 # Rotate around center point
@@ -221,7 +222,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
                 return np.array([
                     [cos_a, -sin_a, cx - cx * cos_a + cy * sin_a],
                     [sin_a, cos_a, cy - cx * sin_a - cy * cos_a],
-                    [0, 0, 1]
+                    [0, 0, 1],
                 ])
 
         elif func_name == 'skewx':
@@ -229,7 +230,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
             return np.array([
                 [1, math.tan(angle), 0],
                 [0, 1, 0],
-                [0, 0, 1]
+                [0, 0, 1],
             ])
 
         elif func_name == 'skewy':
@@ -237,7 +238,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
             return np.array([
                 [1, 0, 0],
                 [math.tan(angle), 1, 0],
-                [0, 0, 1]
+                [0, 0, 1],
             ])
 
         elif func_name == 'matrix':
@@ -246,7 +247,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
                 return np.array([
                     [a, c, e],
                     [b, d, f],
-                    [0, 0, 1]
+                    [0, 0, 1],
                 ])
 
         # Default to identity matrix for unknown functions
@@ -302,7 +303,7 @@ class NormalizeTransformsPreprocessor(BasePreprocessor):
             [x, y, 1],
             [x + width, y, 1],
             [x, y + height, 1],
-            [x + width, y + height, 1]
+            [x + width, y + height, 1],
         ]).T
 
         transformed_corners = matrix @ corners

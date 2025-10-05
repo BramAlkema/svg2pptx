@@ -8,6 +8,7 @@ This is a minimal implementation focused on the core functionality needed by con
 
 import re
 from typing import Optional
+
 from .core import Matrix
 
 
@@ -18,7 +19,7 @@ class TransformParser:
         """Initialize the transform parser."""
         pass
 
-    def parse_to_matrix(self, transform_str: str, viewport_context=None) -> Optional[Matrix]:
+    def parse_to_matrix(self, transform_str: str, viewport_context=None) -> Matrix | None:
         """
         Parse SVG transform string to Matrix object.
 
@@ -74,7 +75,7 @@ class TransformParser:
 
         return args
 
-    def _create_transform(self, func_name: str, args: list) -> Optional[Matrix]:
+    def _create_transform(self, func_name: str, args: list) -> Matrix | None:
         """Create a Matrix for a specific transform function."""
         func_name = func_name.lower()
 

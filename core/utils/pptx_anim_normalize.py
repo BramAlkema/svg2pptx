@@ -1,5 +1,6 @@
-from lxml import etree as ET
 import re
+
+from lxml import etree as ET
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 NSMAP = {"a": A}

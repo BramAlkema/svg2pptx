@@ -7,17 +7,17 @@ storage, aggregation functions, and historical data querying capabilities.
 """
 
 import json
+import logging
 import sqlite3
 import statistics
 import time
-import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, field
 from contextlib import contextmanager
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from .config import PerformanceConfig, get_config
 from .benchmark import BenchmarkResult
+from .config import PerformanceConfig, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ class MetricPoint:
     benchmark_name: str
     category: str
     metric_name: str
-    value: Union[float, int, str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    value: float | int | str
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Ensure timestamp is properly set."""
@@ -52,7 +52,7 @@ class AggregatedMetric:
     mean_value: float
     median_value: float
     std_dev: float = 0.0
-    percentiles: Dict[int, float] = field(default_factory=dict)
+    percentiles: dict[int, float] = field(default_factory=dict)
 
 
 class TimeSeriesStorage:
@@ -121,11 +121,11 @@ class TimeSeriesStorage:
                 metric.metric_name,
                 numeric_value,
                 string_value,
-                json.dumps(metric.metadata) if metric.metadata else None
+                json.dumps(metric.metadata) if metric.metadata else None,
             ))
             conn.commit()
 
-    def store_metrics(self, metrics: List[MetricPoint]) -> None:
+    def store_metrics(self, metrics: list[MetricPoint]) -> None:
         """Store multiple metric points efficiently."""
         if not metrics:
             return
@@ -148,7 +148,7 @@ class TimeSeriesStorage:
                     metric.metric_name,
                     numeric_value,
                     string_value,
-                    json.dumps(metric.metadata) if metric.metadata else None
+                    json.dumps(metric.metadata) if metric.metadata else None,
                 ))
 
             conn.executemany("""
@@ -159,12 +159,12 @@ class TimeSeriesStorage:
             conn.commit()
 
     def query_metrics(self,
-                     benchmark_name: Optional[str] = None,
-                     metric_name: Optional[str] = None,
-                     category: Optional[str] = None,
-                     start_time: Optional[float] = None,
-                     end_time: Optional[float] = None,
-                     limit: Optional[int] = None) -> List[MetricPoint]:
+                     benchmark_name: str | None = None,
+                     metric_name: str | None = None,
+                     category: str | None = None,
+                     start_time: float | None = None,
+                     end_time: float | None = None,
+                     limit: int | None = None) -> list[MetricPoint]:
         """Query metrics with flexible filtering."""
         query = "SELECT * FROM metrics WHERE 1=1"
         params = []
@@ -217,7 +217,7 @@ class TimeSeriesStorage:
                     category=row['category'],
                     metric_name=row['metric_name'],
                     value=value,
-                    metadata=metadata
+                    metadata=metadata,
                 )
                 results.append(metric)
 
@@ -244,17 +244,17 @@ class MetricsAggregator:
 
     def aggregate_metric(self,
                         metric_name: str,
-                        benchmark_name: Optional[str] = None,
-                        category: Optional[str] = None,
-                        start_time: Optional[float] = None,
-                        end_time: Optional[float] = None) -> Optional[AggregatedMetric]:
+                        benchmark_name: str | None = None,
+                        category: str | None = None,
+                        start_time: float | None = None,
+                        end_time: float | None = None) -> AggregatedMetric | None:
         """Aggregate a single metric over a time period."""
         metrics = self.storage.query_metrics(
             benchmark_name=benchmark_name,
             metric_name=metric_name,
             category=category,
             start_time=start_time,
-            end_time=end_time
+            end_time=end_time,
         )
 
         # Filter to numeric values only
@@ -275,7 +275,7 @@ class MetricsAggregator:
             min_value=min(numeric_values),
             max_value=max(numeric_values),
             mean_value=statistics.mean(numeric_values),
-            median_value=statistics.median(numeric_values)
+            median_value=statistics.median(numeric_values),
         )
 
         # Calculate standard deviation if we have enough samples
@@ -296,14 +296,14 @@ class MetricsAggregator:
 
     def aggregate_benchmark_metrics(self,
                                    benchmark_name: str,
-                                   start_time: Optional[float] = None,
-                                   end_time: Optional[float] = None) -> Dict[str, AggregatedMetric]:
+                                   start_time: float | None = None,
+                                   end_time: float | None = None) -> dict[str, AggregatedMetric]:
         """Aggregate all metrics for a specific benchmark."""
         # Get all unique metric names for this benchmark
         all_metrics = self.storage.query_metrics(
             benchmark_name=benchmark_name,
             start_time=start_time,
-            end_time=end_time
+            end_time=end_time,
         )
 
         unique_metrics = set(m.metric_name for m in all_metrics)
@@ -314,7 +314,7 @@ class MetricsAggregator:
                 metric_name=metric_name,
                 benchmark_name=benchmark_name,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
             )
             if agg:
                 aggregated[metric_name] = agg
@@ -330,7 +330,7 @@ class MetricsCollector:
     for comprehensive performance analysis and trend tracking.
     """
 
-    def __init__(self, config: Optional[PerformanceConfig] = None):
+    def __init__(self, config: PerformanceConfig | None = None):
         """
         Initialize metrics collector.
 
@@ -394,8 +394,8 @@ class MetricsCollector:
                              benchmark_name: str,
                              category: str,
                              metric_name: str,
-                             value: Union[float, int, str],
-                             metadata: Optional[Dict[str, Any]] = None) -> None:
+                             value: float | int | str,
+                             metadata: dict[str, Any] | None = None) -> None:
         """
         Collect a custom metric.
 
@@ -412,7 +412,7 @@ class MetricsCollector:
             category=category,
             metric_name=metric_name,
             value=value,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self.storage.store_metric(metric)
@@ -420,7 +420,7 @@ class MetricsCollector:
 
     def get_benchmark_summary(self,
                              benchmark_name: str,
-                             days: int = 30) -> Dict[str, Any]:
+                             days: int = 30) -> dict[str, Any]:
         """
         Get comprehensive summary for a benchmark over specified days.
 
@@ -436,7 +436,7 @@ class MetricsCollector:
         # Get aggregated metrics
         aggregated_metrics = self.aggregator.aggregate_benchmark_metrics(
             benchmark_name=benchmark_name,
-            start_time=start_time
+            start_time=start_time,
         )
 
         if not aggregated_metrics:
@@ -446,7 +446,7 @@ class MetricsCollector:
         recent_metrics = self.storage.query_metrics(
             benchmark_name=benchmark_name,
             start_time=start_time,
-            limit=100
+            limit=100,
         )
 
         summary = {
@@ -455,7 +455,7 @@ class MetricsCollector:
             "data_points": len(recent_metrics),
             "metrics": {},
             "trends": {},
-            "categories": set(m.category for m in recent_metrics)
+            "categories": set(m.category for m in recent_metrics),
         }
 
         # Convert aggregated metrics to dict format
@@ -467,7 +467,7 @@ class MetricsCollector:
                 "mean": agg.mean_value,
                 "median": agg.median_value,
                 "std_dev": agg.std_dev,
-                "percentiles": agg.percentiles
+                "percentiles": agg.percentiles,
             }
 
         # Simple trend analysis for key metrics
@@ -483,12 +483,12 @@ class MetricsCollector:
     def _calculate_trend(self,
                         benchmark_name: str,
                         metric_name: str,
-                        start_time: float) -> Optional[Dict[str, Any]]:
+                        start_time: float) -> dict[str, Any] | None:
         """Calculate trend for a specific metric."""
         metrics = self.storage.query_metrics(
             benchmark_name=benchmark_name,
             metric_name=metric_name,
-            start_time=start_time
+            start_time=start_time,
         )
 
         # Filter to numeric values and sort by timestamp
@@ -528,13 +528,13 @@ class MetricsCollector:
                 "correlation": correlation,
                 "recent_average": recent_avg,
                 "overall_average": overall_avg,
-                "change_percent": ((recent_avg - overall_avg) / overall_avg) * 100 if overall_avg > 0 else 0
+                "change_percent": ((recent_avg - overall_avg) / overall_avg) * 100 if overall_avg > 0 else 0,
             }
 
         except (statistics.StatisticsError, ZeroDivisionError):
             return None
 
-    def get_category_summary(self, category: str, days: int = 30) -> Dict[str, Any]:
+    def get_category_summary(self, category: str, days: int = 30) -> dict[str, Any]:
         """
         Get summary for all benchmarks in a category.
 
@@ -550,7 +550,7 @@ class MetricsCollector:
         # Get all benchmarks in this category
         all_metrics = self.storage.query_metrics(
             category=category,
-            start_time=start_time
+            start_time=start_time,
         )
 
         if not all_metrics:
@@ -567,21 +567,21 @@ class MetricsCollector:
             "category": category,
             "analysis_period_days": days,
             "benchmark_count": len(benchmarks),
-            "benchmarks": {}
+            "benchmarks": {},
         }
 
         # Analyze each benchmark
         for benchmark_name in benchmarks.keys():
             benchmark_agg = self.aggregator.aggregate_benchmark_metrics(
                 benchmark_name=benchmark_name,
-                start_time=start_time
+                start_time=start_time,
             )
 
             if "mean_time_ms" in benchmark_agg:
                 summary["benchmarks"][benchmark_name] = {
                     "mean_time_ms": benchmark_agg["mean_time_ms"].mean_value,
                     "sample_count": benchmark_agg["mean_time_ms"].sample_count,
-                    "ops_per_sec": benchmark_agg.get("ops_per_sec", {}).mean_value if "ops_per_sec" in benchmark_agg else None
+                    "ops_per_sec": benchmark_agg.get("ops_per_sec", {}).mean_value if "ops_per_sec" in benchmark_agg else None,
                 }
 
         # Add category-level statistics
@@ -591,7 +591,7 @@ class MetricsCollector:
                 "fastest_benchmark": min(summary["benchmarks"].items(), key=lambda x: x[1]["mean_time_ms"])[0],
                 "slowest_benchmark": max(summary["benchmarks"].items(), key=lambda x: x[1]["mean_time_ms"])[0],
                 "average_time_ms": statistics.mean(all_times),
-                "median_time_ms": statistics.median(all_times)
+                "median_time_ms": statistics.median(all_times),
             }
 
         return summary
@@ -611,7 +611,7 @@ class MetricsCollector:
 
 # Convenience functions for quick metric collection
 
-def collect_benchmark_metrics(result: BenchmarkResult, config: Optional[PerformanceConfig] = None) -> None:
+def collect_benchmark_metrics(result: BenchmarkResult, config: PerformanceConfig | None = None) -> None:
     """
     Quick function to collect metrics from a benchmark result.
 
@@ -625,7 +625,7 @@ def collect_benchmark_metrics(result: BenchmarkResult, config: Optional[Performa
 
 def get_benchmark_trends(benchmark_name: str,
                         days: int = 30,
-                        config: Optional[PerformanceConfig] = None) -> Dict[str, Any]:
+                        config: PerformanceConfig | None = None) -> dict[str, Any]:
     """
     Quick function to get benchmark trends.
 
@@ -649,5 +649,5 @@ __all__ = [
     'MetricsAggregator',
     'MetricsCollector',
     'collect_benchmark_metrics',
-    'get_benchmark_trends'
+    'get_benchmark_trends',
 ]

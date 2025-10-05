@@ -15,11 +15,12 @@ Features:
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from lxml import etree as ET
 
-from ..services.conversion_services import ConversionServices
 from ..pre.resolve_clips import ResolveClipsPreprocessor
+from ..services.conversion_services import ConversionServices
 from ..xml.safe_iter import children
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,11 @@ class GroupProcessor:
             'groups_processed': 0,
             'groups_flattened': 0,
             'groups_with_clipping': 0,
-            'nested_groups_resolved': 0
+            'nested_groups_resolved': 0,
         }
 
     def process_group_element(self, group_element: ET.Element, context: Any,
-                            apply_optimizations: bool = True) -> Dict[str, Any]:
+                            apply_optimizations: bool = True) -> dict[str, Any]:
         """
         Process a group element with preprocessing integration.
 
@@ -89,7 +90,7 @@ class GroupProcessor:
         self.logger.debug(f"Processed group with {len(group_info['children'])} children")
         return group_info
 
-    def _analyze_group_structure(self, group_element: ET.Element) -> Dict[str, Any]:
+    def _analyze_group_structure(self, group_element: ET.Element) -> dict[str, Any]:
         """Analyze group structure and metadata."""
         # Basic group information
         group_info = {
@@ -101,7 +102,7 @@ class GroupProcessor:
             'children': [],
             'clipping_info': None,
             'optimization_opportunities': [],
-            'structure_complexity': 'simple'
+            'structure_complexity': 'simple',
         }
 
         # Check for clipping
@@ -110,7 +111,7 @@ class GroupProcessor:
             group_info['has_clipping'] = True
             group_info['clipping_info'] = {
                 'clip_path_ref': clip_path,
-                'from_preprocessing': group_element.get('data-clip-operation') is not None
+                'from_preprocessing': group_element.get('data-clip-operation') is not None,
             }
 
         # Check for preprocessing metadata
@@ -119,7 +120,7 @@ class GroupProcessor:
             group_info['clipping_info'] = {
                 'operation': group_element.get('data-clip-operation'),
                 'source': group_element.get('data-clip-source', ''),
-                'from_preprocessing': True
+                'from_preprocessing': True,
             }
 
         # Analyze children
@@ -131,7 +132,7 @@ class GroupProcessor:
 
         return group_info
 
-    def _analyze_group_children(self, group_element: ET.Element) -> Dict[str, Any]:
+    def _analyze_group_children(self, group_element: ET.Element) -> dict[str, Any]:
         """Analyze group children and structure."""
         child_nodes = []
         has_nested_groups = False
@@ -151,7 +152,7 @@ class GroupProcessor:
                 'has_transform': child.get('transform') is not None,
                 'has_clipping': child.get('clip-path') is not None or child.get('data-clip-operation') is not None,
                 'is_group': child_tag == 'g',
-                'is_clipping_mask': child.get('data-clip-role') == 'mask'
+                'is_clipping_mask': child.get('data-clip-role') == 'mask',
             }
 
             child_nodes.append(child_info)
@@ -171,10 +172,10 @@ class GroupProcessor:
             'has_nested_groups': has_nested_groups,
             'transform_count': transform_count,
             'clipping_count': clipping_count,
-            'child_count': len(child_nodes)
+            'child_count': len(child_nodes),
         }
 
-    def _assess_group_complexity(self, group_info: Dict[str, Any]) -> str:
+    def _assess_group_complexity(self, group_info: dict[str, Any]) -> str:
         """Assess the complexity of a group structure."""
         child_count = group_info['child_count']
         transform_count = group_info['transform_count']
@@ -193,7 +194,7 @@ class GroupProcessor:
         return 'moderate'
 
     def _apply_group_optimizations(self, group_element: ET.Element,
-                                 group_info: Dict[str, Any], context: Any) -> Dict[str, Any]:
+                                 group_info: dict[str, Any], context: Any) -> dict[str, Any]:
         """Apply group optimizations based on structure analysis."""
         optimizations = []
 
@@ -216,28 +217,28 @@ class GroupProcessor:
         group_info['applied_optimizations'] = optimizations
         return group_info
 
-    def _can_flatten_transforms(self, group_info: Dict[str, Any]) -> bool:
+    def _can_flatten_transforms(self, group_info: dict[str, Any]) -> bool:
         """Check if transforms can be flattened."""
         # Can flatten if transforms are simple and no clipping
         return (group_info['transform_count'] > 1 and
                 not group_info['has_clipping'] and
                 group_info['structure_complexity'] != 'complex')
 
-    def _can_unwrap_group(self, group_info: Dict[str, Any]) -> bool:
+    def _can_unwrap_group(self, group_info: dict[str, Any]) -> bool:
         """Check if group can be unwrapped (single child, no group-specific attributes)."""
         return (group_info['child_count'] == 1 and
                 not group_info['has_clipping'] and
                 not group_info['transform'] and
                 not group_info['has_preprocessing_metadata'])
 
-    def _can_flatten_nested_groups(self, group_info: Dict[str, Any]) -> bool:
+    def _can_flatten_nested_groups(self, group_info: dict[str, Any]) -> bool:
         """Check if nested groups can be flattened."""
         return (group_info['has_nested_groups'] and
                 group_info['structure_complexity'] != 'complex' and
                 not group_info['has_clipping'])
 
     def _apply_transform_flattening(self, group_element: ET.Element,
-                                  group_info: Dict[str, Any]) -> Dict[str, Any]:
+                                  group_info: dict[str, Any]) -> dict[str, Any]:
         """Apply transform flattening optimization."""
         # Mark for transform flattening during conversion
         group_info['transform_flattening'] = {
@@ -246,14 +247,14 @@ class GroupProcessor:
             'child_transforms': [
                 child['element'].get('transform') for child in group_info['children']
                 if child['has_transform']
-            ]
+            ],
         }
 
         self.logger.debug(f"Applied transform flattening to group {group_info['id']}")
         return group_info
 
     def _apply_nested_flattening(self, group_element: ET.Element,
-                               group_info: Dict[str, Any]) -> Dict[str, Any]:
+                               group_info: dict[str, Any]) -> dict[str, Any]:
         """Apply nested group flattening."""
         flattened_children = []
 
@@ -272,7 +273,7 @@ class GroupProcessor:
 
         return group_info
 
-    def _extract_nested_children(self, nested_group: ET.Element) -> List[Dict[str, Any]]:
+    def _extract_nested_children(self, nested_group: ET.Element) -> list[dict[str, Any]]:
         """Extract children from a nested group for flattening."""
         extracted = []
 
@@ -300,7 +301,7 @@ class GroupProcessor:
                 'has_clipping': child.get('clip-path') is not None,
                 'is_group': child_tag == 'g',
                 'is_clipping_mask': child.get('data-clip-role') == 'mask',
-                'flattened_from_nested': True
+                'flattened_from_nested': True,
             }
 
             extracted.append(child_info)
@@ -308,25 +309,25 @@ class GroupProcessor:
         return extracted
 
     def _process_group_clipping(self, group_element: ET.Element,
-                              group_info: Dict[str, Any], context: Any) -> Dict[str, Any]:
+                              group_info: dict[str, Any], context: Any) -> dict[str, Any]:
         """Process group clipping with preprocessing integration."""
         clipping_info = group_info['clipping_info']
 
         if clipping_info.get('from_preprocessing'):
             # Use preprocessing metadata
             group_info['clipping_strategy'] = self._determine_preprocessing_clip_strategy(
-                group_element, clipping_info
+                group_element, clipping_info,
             )
         else:
             # Apply clipping preprocessor
             group_info['clipping_strategy'] = self._apply_clipping_preprocessor(
-                group_element, clipping_info, context
+                group_element, clipping_info, context,
             )
 
         return group_info
 
     def _determine_preprocessing_clip_strategy(self, group_element: ET.Element,
-                                             clipping_info: Dict[str, Any]) -> Dict[str, Any]:
+                                             clipping_info: dict[str, Any]) -> dict[str, Any]:
         """Determine clipping strategy from preprocessing metadata."""
         operation = clipping_info.get('operation', 'intersect')
         source = clipping_info.get('source', '')
@@ -347,14 +348,14 @@ class GroupProcessor:
             'source': source,
             'mask_elements': mask_elements,
             'content_elements': content_elements,
-            'powerpoint_compatible': len(mask_elements) == 1 and operation == 'intersect'
+            'powerpoint_compatible': len(mask_elements) == 1 and operation == 'intersect',
         }
 
         self.logger.debug(f"Preprocessing clip strategy: {operation} with {len(mask_elements)} masks")
         return strategy
 
     def _apply_clipping_preprocessor(self, group_element: ET.Element,
-                                   clipping_info: Dict[str, Any], context: Any) -> Dict[str, Any]:
+                                   clipping_info: dict[str, Any], context: Any) -> dict[str, Any]:
         """Apply clipping preprocessor to resolve clip-path references."""
         # Create temporary SVG for preprocessing
         temp_svg = ET.Element('{http://www.w3.org/2000/svg}svg')
@@ -376,7 +377,7 @@ class GroupProcessor:
             self.logger.warning(f"Clipping preprocessing failed: {e}")
             return {'type': 'fallback', 'powerpoint_compatible': False}
 
-    def _extract_resolved_clipping_info(self, processed_group: ET.Element) -> Dict[str, Any]:
+    def _extract_resolved_clipping_info(self, processed_group: ET.Element) -> dict[str, Any]:
         """Extract clipping information from preprocessed group."""
         operation = processed_group.get('data-clip-operation', 'unknown')
         source = processed_group.get('data-clip-source', '')
@@ -396,11 +397,11 @@ class GroupProcessor:
             'source': source,
             'mask_elements': mask_elements,
             'content_elements': content_elements,
-            'powerpoint_compatible': len(mask_elements) <= 2 and operation in ['intersect', 'union']
+            'powerpoint_compatible': len(mask_elements) <= 2 and operation in ['intersect', 'union'],
         }
 
     def _process_nested_groups(self, group_element: ET.Element,
-                             group_info: Dict[str, Any], context: Any) -> Dict[str, Any]:
+                             group_info: dict[str, Any], context: Any) -> dict[str, Any]:
         """Process nested groups recursively."""
         processed_children = []
 
@@ -408,7 +409,7 @@ class GroupProcessor:
             if child_info['is_group']:
                 # Recursively process nested group
                 nested_info = self.process_group_element(
-                    child_info['element'], context, apply_optimizations=True
+                    child_info['element'], context, apply_optimizations=True,
                 )
                 child_info['nested_group_info'] = nested_info
 
@@ -417,7 +418,7 @@ class GroupProcessor:
         group_info['children'] = processed_children
         return group_info
 
-    def generate_drawingml_structure(self, group_info: Dict[str, Any], context: Any) -> str:
+    def generate_drawingml_structure(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate DrawingML structure from processed group information."""
         # Check if group should be unwrapped
         if group_info.get('should_unwrap', False):
@@ -430,7 +431,7 @@ class GroupProcessor:
         # Standard group conversion
         return self._generate_standard_group_drawingml(group_info, context)
 
-    def _generate_unwrapped_content(self, group_info: Dict[str, Any], context: Any) -> str:
+    def _generate_unwrapped_content(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate DrawingML for unwrapped group (single child)."""
         child_info = group_info['children'][0]
         element = child_info['element']
@@ -442,7 +443,7 @@ class GroupProcessor:
 
         return ""
 
-    def _generate_clipped_group_drawingml(self, group_info: Dict[str, Any], context: Any) -> str:
+    def _generate_clipped_group_drawingml(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate DrawingML for group with clipping."""
         clipping_strategy = group_info['clipping_strategy']
 
@@ -451,7 +452,7 @@ class GroupProcessor:
         else:
             return self._generate_emf_clipped_group(group_info, context)
 
-    def _generate_standard_group_drawingml(self, group_info: Dict[str, Any], context: Any) -> str:
+    def _generate_standard_group_drawingml(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate standard DrawingML group."""
         group_id = group_info['id']
         children_xml = []
@@ -491,7 +492,7 @@ class GroupProcessor:
     {children_content}
 </a:grpSp>'''
 
-    def _generate_powerpoint_clipped_group(self, group_info: Dict[str, Any], context: Any) -> str:
+    def _generate_powerpoint_clipped_group(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate PowerPoint-compatible clipped group."""
         clipping_strategy = group_info['clipping_strategy']
         mask_elements = clipping_strategy.get('mask_elements', [])
@@ -525,7 +526,7 @@ class GroupProcessor:
     {content}
 </a:grpSp>'''
 
-    def _generate_emf_clipped_group(self, group_info: Dict[str, Any], context: Any) -> str:
+    def _generate_emf_clipped_group(self, group_info: dict[str, Any], context: Any) -> str:
         """Generate EMF-based clipped group for complex clipping."""
         clipping_strategy = group_info['clipping_strategy']
 
@@ -560,7 +561,7 @@ class GroupProcessor:
             return context.converter_registry.get_converter(element)
         return None
 
-    def get_processing_statistics(self) -> Dict[str, int]:
+    def get_processing_statistics(self) -> dict[str, int]:
         """Get group processing statistics."""
         return self.stats.copy()
 
@@ -570,7 +571,7 @@ class GroupProcessor:
             'groups_processed': 0,
             'groups_flattened': 0,
             'groups_with_clipping': 0,
-            'nested_groups_resolved': 0
+            'nested_groups_resolved': 0,
         }
 
 

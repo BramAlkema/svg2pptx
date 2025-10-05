@@ -14,10 +14,11 @@ Features:
 
 import logging
 import time
-from typing import List, Dict, Any
-from lxml import etree as ET
-from ..xml.safe_iter import walk
+from typing import Any, Dict, List
 
+from lxml import etree as ET
+
+from ..xml.safe_iter import walk
 from .base import BasePreprocessor
 from .expand_use import ExpandUsePreprocessor
 from .normalize_transforms import NormalizeTransformsPreprocessor
@@ -33,7 +34,7 @@ class PreprocessorChain:
     for maximum effectiveness and minimal conflicts.
     """
 
-    def __init__(self, processors: List[BasePreprocessor] = None):
+    def __init__(self, processors: list[BasePreprocessor] = None):
         """
         Initialize preprocessor chain.
 
@@ -42,7 +43,7 @@ class PreprocessorChain:
         """
         self.processors = processors or self._create_default_chain()
         self.logger = logging.getLogger(__name__)
-        self.metrics: Dict[str, Any] = {}
+        self.metrics: dict[str, Any] = {}
 
     def process(self, svg_root: ET.Element, validate: bool = True) -> ET.Element:
         """
@@ -78,7 +79,7 @@ class PreprocessorChain:
                 processor_metrics[processor_name] = {
                     'duration_sec': processor_duration,
                     'success': True,
-                    'index': i
+                    'index': i,
                 }
 
                 # Validate after each processor if requested
@@ -91,7 +92,7 @@ class PreprocessorChain:
                     'duration_sec': 0,
                     'success': False,
                     'error': str(e),
-                    'index': i
+                    'index': i,
                 }
 
                 # Decide whether to continue or abort
@@ -107,17 +108,17 @@ class PreprocessorChain:
             'processor_count': len(self.processors),
             'successful_processors': sum(1 for m in processor_metrics.values() if m.get('success', False)),
             'failed_processors': sum(1 for m in processor_metrics.values() if not m.get('success', True)),
-            'processors': processor_metrics
+            'processors': processor_metrics,
         }
 
         self.logger.info(f"Preprocessor chain completed in {total_duration:.3f}s")
         return current_svg
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get preprocessing metrics."""
         return self.metrics.copy()
 
-    def _create_default_chain(self) -> List[BasePreprocessor]:
+    def _create_default_chain(self) -> list[BasePreprocessor]:
         """Create the default preprocessor chain in optimal order."""
         return [
             # 1. Expand USE elements first (creates new content)
@@ -243,7 +244,7 @@ def preprocess_svg(svg_root: ET.Element, chain_type: str = "standard") -> ET.Ele
     return chain.process(svg_root)
 
 
-def validate_preprocessed_svg(svg_root: ET.Element) -> Dict[str, Any]:
+def validate_preprocessed_svg(svg_root: ET.Element) -> dict[str, Any]:
     """
     Validate preprocessed SVG and return analysis.
 
@@ -257,7 +258,7 @@ def validate_preprocessed_svg(svg_root: ET.Element) -> Dict[str, Any]:
         'valid': True,
         'issues': [],
         'metrics': {},
-        'recommendations': []
+        'recommendations': [],
     }
 
     try:

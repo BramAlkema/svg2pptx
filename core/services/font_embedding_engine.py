@@ -10,12 +10,16 @@ This module provides font subsetting and embedding capabilities using fonttools.
 
 import os
 import tempfile
-from typing import Set, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
+
 from fontTools import subset
 from fontTools.ttLib import TTFont
 
 from ..data.embedded_font import (
-    EmbeddedFont, FontSubsetRequest, FontEmbeddingStats, EmbeddingPermission
+    EmbeddedFont,
+    EmbeddingPermission,
+    FontEmbeddingStats,
+    FontSubsetRequest,
 )
 from .font_service import FontService
 
@@ -31,7 +35,7 @@ class FontEmbeddingEngine:
     - Performance tracking and statistics
     """
 
-    def __init__(self, font_service: Optional[FontService] = None):
+    def __init__(self, font_service: FontService | None = None):
         """
         Initialize FontEmbeddingEngine.
 
@@ -40,9 +44,9 @@ class FontEmbeddingEngine:
         """
         self._font_service = font_service or FontService()
         self._embedding_stats = FontEmbeddingStats()
-        self._subset_cache: Dict[str, EmbeddedFont] = {}
+        self._subset_cache: dict[str, EmbeddedFont] = {}
 
-    def extract_characters_from_text(self, text_content: Union[str, List[str]]) -> Set[str]:
+    def extract_characters_from_text(self, text_content: str | list[str]) -> set[str]:
         """
         Extract unique characters from text content.
 
@@ -111,7 +115,7 @@ class FontEmbeddingEngine:
         # Only restricted fonts cannot be embedded
         return permission != EmbeddingPermission.RESTRICTED
 
-    def create_font_subset(self, subset_request: FontSubsetRequest) -> Optional[EmbeddedFont]:
+    def create_font_subset(self, subset_request: FontSubsetRequest) -> EmbeddedFont | None:
         """
         Create font subset based on character requirements.
 
@@ -149,7 +153,7 @@ class FontEmbeddingEngine:
                 subset_request.characters,
                 subset_request.optimization_level,
                 subset_request.preserve_hinting,
-                subset_request.preserve_layout_tables
+                subset_request.preserve_layout_tables,
             )
 
             if not subset_data:
@@ -167,7 +171,7 @@ class FontEmbeddingEngine:
                 original_size=original_size,
                 embedding_permission=embedding_permission,
                 embedding_allowed=True,
-                file_format=subset_request.target_format
+                file_format=subset_request.target_format,
             )
 
             # Cache result
@@ -183,9 +187,9 @@ class FontEmbeddingEngine:
             self._embedding_stats.add_failed_embedding(error_msg)
             return None
 
-    def _perform_font_subsetting(self, font: TTFont, characters: Set[str],
+    def _perform_font_subsetting(self, font: TTFont, characters: set[str],
                                 optimization_level: str, preserve_hinting: bool,
-                                preserve_layout_tables: bool) -> Optional[bytes]:
+                                preserve_layout_tables: bool) -> bytes | None:
         """
         Perform actual font subsetting using fonttools.subset.
 
@@ -250,9 +254,9 @@ class FontEmbeddingEngine:
         except Exception as e:
             return None
 
-    def create_embedding_for_text(self, font_path: str, text_content: Union[str, List[str]],
-                                 font_name: Optional[str] = None,
-                                 optimization_level: str = "basic") -> Optional[EmbeddedFont]:
+    def create_embedding_for_text(self, font_path: str, text_content: str | list[str],
+                                 font_name: str | None = None,
+                                 optimization_level: str = "basic") -> EmbeddedFont | None:
         """
         Create font embedding optimized for specific text content.
 
@@ -276,13 +280,13 @@ class FontEmbeddingEngine:
             font_path=font_path,
             characters=characters,
             font_name=font_name or os.path.basename(font_path),
-            optimization_level=optimization_level
+            optimization_level=optimization_level,
         )
 
         return self.create_font_subset(subset_request)
 
-    def batch_create_embeddings(self, text_font_mappings: List[Dict[str, str]],
-                               optimization_level: str = "basic") -> List[Optional[EmbeddedFont]]:
+    def batch_create_embeddings(self, text_font_mappings: list[dict[str, str]],
+                               optimization_level: str = "basic") -> list[EmbeddedFont | None]:
         """
         Create multiple font embeddings in batch.
 
@@ -308,7 +312,7 @@ class FontEmbeddingEngine:
                 font_path=font_path,
                 text_content=text_content,
                 font_name=font_name,
-                optimization_level=optimization_level
+                optimization_level=optimization_level,
             )
 
             results.append(embedded_font)
@@ -329,7 +333,7 @@ class FontEmbeddingEngine:
         self._subset_cache.clear()
         self._embedding_stats = FontEmbeddingStats()
 
-    def get_cache_stats(self) -> Dict[str, int]:
+    def get_cache_stats(self) -> dict[str, int]:
         """
         Get cache statistics.
 
@@ -340,11 +344,11 @@ class FontEmbeddingEngine:
             'cached_subsets': len(self._subset_cache),
             'total_fonts_processed': self._embedding_stats.total_fonts_processed,
             'successful_embeddings': self._embedding_stats.total_fonts_embedded,
-            'failed_embeddings': self._embedding_stats.total_fonts_failed
+            'failed_embeddings': self._embedding_stats.total_fonts_failed,
         }
 
     def estimate_subset_size_reduction(self, font_path: str,
-                                     characters: Set[str]) -> Dict[str, float]:
+                                     characters: set[str]) -> dict[str, float]:
         """
         Estimate size reduction from font subsetting without creating the subset.
 
@@ -384,7 +388,7 @@ class FontEmbeddingEngine:
                 'original_size_bytes': original_size,
                 'estimated_subset_size_bytes': int(original_size * (1 - estimated_reduction)),
                 'total_glyphs': total_chars,
-                'subset_glyphs': subset_chars
+                'subset_glyphs': subset_chars,
             }
 
         except Exception as e:
@@ -392,7 +396,7 @@ class FontEmbeddingEngine:
 
     def create_intelligent_pptx_package(self, svg_content: str, output_path: str,
                                        optimization_level: str = "basic",
-                                       force_embedding: bool = False) -> Dict[str, any]:
+                                       force_embedding: bool = False) -> dict[str, any]:
         """
         Create PPTX package with intelligent font embedding based on SVG analysis.
 
@@ -415,7 +419,7 @@ class FontEmbeddingEngine:
         result = {
             'font_analysis': font_analysis,
             'embedding_performed': False,
-            'embedded_fonts_count': 0
+            'embedded_fonts_count': 0,
         }
 
         # Determine if we should embed fonts
@@ -430,13 +434,13 @@ class FontEmbeddingEngine:
                     'success': True,
                     'output_path': output_path,
                     'message': 'PPTX created without font embedding (not needed)',
-                    'package_statistics': builder.get_package_statistics()
+                    'package_statistics': builder.get_package_statistics(),
                 })
                 return result
             except Exception as e:
                 result.update({
                     'success': False,
-                    'error': f'PPTX creation failed: {str(e)}'
+                    'error': f'PPTX creation failed: {str(e)}',
                 })
                 return result
 
@@ -447,7 +451,7 @@ class FontEmbeddingEngine:
             result.update({
                 'success': False,
                 'error': 'No suitable fonts found for embedding',
-                'message': 'Required fonts not found in system'
+                'message': 'Required fonts not found in system',
             })
             return result
 
@@ -462,7 +466,7 @@ class FontEmbeddingEngine:
             result.update({
                 'success': False,
                 'error': 'Font subsetting failed for all fonts',
-                'embedded_fonts_count': 0
+                'embedded_fonts_count': 0,
             })
             return result
 
@@ -488,21 +492,21 @@ class FontEmbeddingEngine:
                 'embedded_fonts_count': len(embedded_fonts),
                 'package_statistics': package_stats,
                 'embedding_statistics': embedding_stats,
-                'embedded_fonts': [font.get_metadata() for font in embedded_fonts]
+                'embedded_fonts': [font.get_metadata() for font in embedded_fonts],
             })
 
         except Exception as e:
             result.update({
                 'success': False,
                 'error': f'PPTX creation failed: {str(e)}',
-                'embedded_fonts_count': len(embedded_fonts)
+                'embedded_fonts_count': len(embedded_fonts),
             })
 
         return result
 
-    def create_pptx_embedding_package(self, text_font_mappings: List[Dict[str, str]],
+    def create_pptx_embedding_package(self, text_font_mappings: list[dict[str, str]],
                                      svg_content: str, output_path: str,
-                                     optimization_level: str = "basic") -> Dict[str, any]:
+                                     optimization_level: str = "basic") -> dict[str, any]:
         """
         Create PPTX package with embedded fonts optimized for specific text content.
 
@@ -523,7 +527,7 @@ class FontEmbeddingEngine:
         # Create embedded fonts for the text content
         embedded_fonts = self.batch_create_embeddings(
             text_font_mappings=text_font_mappings,
-            optimization_level=optimization_level
+            optimization_level=optimization_level,
         )
 
         # Filter out failed embeddings
@@ -533,7 +537,7 @@ class FontEmbeddingEngine:
             return {
                 'success': False,
                 'error': 'No fonts could be embedded successfully',
-                'embedded_fonts_count': 0
+                'embedded_fonts_count': 0,
             }
 
         # Create PPTX package with embedded fonts
@@ -556,17 +560,17 @@ class FontEmbeddingEngine:
                 'output_path': output_path,
                 'package_statistics': package_stats,
                 'embedding_statistics': embedding_stats,
-                'embedded_fonts': [font.get_metadata() for font in successful_fonts]
+                'embedded_fonts': [font.get_metadata() for font in successful_fonts],
             }
 
         except Exception as e:
             return {
                 'success': False,
                 'error': f'PPTX creation failed: {str(e)}',
-                'embedded_fonts_count': len(successful_fonts)
+                'embedded_fonts_count': len(successful_fonts),
             }
 
-    def validate_pptx_compatibility(self, embedded_fonts: List[EmbeddedFont]) -> Dict[str, any]:
+    def validate_pptx_compatibility(self, embedded_fonts: list[EmbeddedFont]) -> dict[str, any]:
         """
         Validate that embedded fonts are compatible with PPTX format.
 
@@ -581,7 +585,7 @@ class FontEmbeddingEngine:
             'incompatible_fonts': [],
             'warnings': [],
             'total_size_mb': 0.0,
-            'compatibility_score': 0.0
+            'compatibility_score': 0.0,
         }
 
         total_size = 0
@@ -592,7 +596,7 @@ class FontEmbeddingEngine:
                 'font_name': font.font_name,
                 'size_mb': font.embedded_size / (1024 * 1024),
                 'compatible': True,
-                'issues': []
+                'issues': [],
             }
 
             # Check font size limits (PowerPoint has practical limits)
@@ -609,13 +613,13 @@ class FontEmbeddingEngine:
             if font.file_format.lower() not in ['ttf', 'otf']:
                 font_result['issues'].append(f'Font format {font.file_format} may have limited PowerPoint support')
                 validation_results['warnings'].append(
-                    f'{font.font_name}: {font.file_format} format may not be fully supported'
+                    f'{font.font_name}: {font.file_format} format may not be fully supported',
                 )
 
             # Check character subset size
             if font.character_count > 10000:
                 validation_results['warnings'].append(
-                    f'{font.font_name}: Large character subset ({font.character_count} chars) may impact performance'
+                    f'{font.font_name}: Large character subset ({font.character_count} chars) may impact performance',
                 )
 
             total_size += font.embedded_size
@@ -634,7 +638,7 @@ class FontEmbeddingEngine:
         # Add overall warnings
         if total_size > 100 * 1024 * 1024:  # 100MB total
             validation_results['warnings'].append(
-                f'Total embedded font size ({validation_results["total_size_mb"]:.1f}MB) is very large'
+                f'Total embedded font size ({validation_results["total_size_mb"]:.1f}MB) is very large',
             )
 
         return validation_results

@@ -8,8 +8,10 @@ to generate namespace-aware, validated PowerPoint OOXML documents.
 
 import logging
 from typing import Dict, List, Optional
+
 from lxml import etree as ET
 from lxml.etree import Element, QName, SubElement
+
 from ..io.template_loader import TemplateLoader, get_template_loader
 
 logger = logging.getLogger(__name__)
@@ -25,15 +27,15 @@ RELATIONSHIPS_URI = "http://schemas.openxmlformats.org/package/2006/relationship
 NSMAP = {
     'p': P_URI,
     'a': A_URI,
-    'r': R_URI
+    'r': R_URI,
 }
 
 CONTENT_NSMAP = {
-    None: CONTENT_TYPES_URI  # Default namespace
+    None: CONTENT_TYPES_URI,  # Default namespace
 }
 
 RELATIONSHIPS_NSMAP = {
-    None: RELATIONSHIPS_URI  # Default namespace
+    None: RELATIONSHIPS_URI,  # Default namespace
 }
 
 
@@ -45,7 +47,7 @@ class EnhancedXMLBuilder:
     DOM operations for namespace-aware, validated PowerPoint OOXML documents.
     """
 
-    def __init__(self, template_loader: Optional[TemplateLoader] = None):
+    def __init__(self, template_loader: TemplateLoader | None = None):
         """Initialize enhanced XML builder.
 
         Args:
@@ -79,7 +81,7 @@ class EnhancedXMLBuilder:
             "text_shape.xml",
             "text_emf_picture.xml",
             "text_paragraph.xml",
-            "text_run.xml"
+            "text_run.xml",
         ]
 
         for template_name in critical_templates:
@@ -253,7 +255,7 @@ class EnhancedXMLBuilder:
 
         spPr.append(geometry_element)
 
-    def create_content_types_element(self, additional_overrides: Optional[List[Dict[str, str]]] = None) -> Element:
+    def create_content_types_element(self, additional_overrides: list[dict[str, str]] | None = None) -> Element:
         """
         Create [Content_Types].xml element using template-based generation.
 
@@ -275,7 +277,7 @@ class EnhancedXMLBuilder:
 
         return types
 
-    def create_relationships_element(self, relationships: List[Dict[str, str]]) -> Element:
+    def create_relationships_element(self, relationships: list[dict[str, str]]) -> Element:
         """
         Create relationships element using proper DOM manipulation.
 
@@ -362,7 +364,7 @@ class EnhancedXMLBuilder:
         return ET.tostring(element, xml_declaration=True, encoding='UTF-8',
                           pretty_print=pretty_print).decode('utf-8')
 
-    def validate_element(self, element: Element, schema_path: Optional[str] = None) -> bool:
+    def validate_element(self, element: Element, schema_path: str | None = None) -> bool:
         """
         Validate XML element structure.
 
@@ -407,9 +409,9 @@ class EnhancedXMLBuilder:
 
     def generate_group_shape(self, group_id: int, x_emu: int, y_emu: int,
                            width_emu: int, height_emu: int,
-                           child_elements: List[Element],
-                           opacity: Optional[float] = None,
-                           clip_xml: Optional[str] = None) -> Element:
+                           child_elements: list[Element],
+                           opacity: float | None = None,
+                           clip_xml: str | None = None) -> Element:
         """
         Generate group shape using template-based generation.
 
@@ -493,8 +495,8 @@ class EnhancedXMLBuilder:
     def generate_group_picture(self, group_id: int, x_emu: int, y_emu: int,
                              width_emu: int, height_emu: int,
                              embed_id: str,
-                             opacity: Optional[float] = None,
-                             clip_xml: Optional[str] = None) -> Element:
+                             opacity: float | None = None,
+                             clip_xml: str | None = None) -> Element:
         """
         Generate group picture using template-based generation.
 
@@ -576,9 +578,9 @@ class EnhancedXMLBuilder:
     def generate_path_shape(self, path_id: int, x_emu: int, y_emu: int,
                            width_emu: int, height_emu: int,
                            path_data: str,
-                           fill_xml: Optional[str] = None,
-                           stroke_xml: Optional[str] = None,
-                           clip_xml: Optional[str] = None) -> Element:
+                           fill_xml: str | None = None,
+                           stroke_xml: str | None = None,
+                           clip_xml: str | None = None) -> Element:
         """
         Generate path shape using template-based generation.
 
@@ -721,9 +723,9 @@ class EnhancedXMLBuilder:
     def generate_path_emf_placeholder(self, path_id: int, x_emu: int, y_emu: int,
                                     width_emu: int, height_emu: int,
                                     embed_id: str,
-                                    fill_xml: Optional[str] = None,
-                                    stroke_xml: Optional[str] = None,
-                                    clip_xml: Optional[str] = None) -> Element:
+                                    fill_xml: str | None = None,
+                                    stroke_xml: str | None = None,
+                                    clip_xml: str | None = None) -> Element:
         """
         Generate path EMF placeholder using template-based generation.
 
@@ -802,7 +804,7 @@ class EnhancedXMLBuilder:
     def generate_text_shape(self, text_id: int, x_emu: int, y_emu: int,
                            width_emu: int, height_emu: int,
                            paragraphs_xml: str,
-                           effects_xml: Optional[str] = None) -> Element:
+                           effects_xml: str | None = None) -> Element:
         """
         Generate text shape using template-based generation.
 
@@ -870,7 +872,7 @@ class EnhancedXMLBuilder:
     def generate_text_emf_picture(self, text_id: int, x_emu: int, y_emu: int,
                                  width_emu: int, height_emu: int,
                                  embed_id: str,
-                                 effects_xml: Optional[str] = None) -> Element:
+                                 effects_xml: str | None = None) -> Element:
         """
         Generate text EMF picture using template-based generation.
 
@@ -955,7 +957,7 @@ class EnhancedXMLBuilder:
     def generate_text_run(self, text_content: str, font_family: str = "Arial",
                          font_size: int = 1200, bold: bool = False,
                          italic: bool = False, color: str = "000000",
-                         formatting_xml: Optional[str] = None) -> Element:
+                         formatting_xml: str | None = None) -> Element:
         """
         Generate text run using template-based generation.
 
@@ -1012,7 +1014,7 @@ class EnhancedXMLBuilder:
     def generate_image_raster_picture(self, image_id: int, x_emu: int, y_emu: int,
                                      width_emu: int, height_emu: int,
                                      rel_id: str,
-                                     effects_xml: Optional[str] = None) -> Element:
+                                     effects_xml: str | None = None) -> Element:
         """
         Generate raster image picture element from template.
 
@@ -1071,7 +1073,7 @@ class EnhancedXMLBuilder:
     def generate_image_vector_picture(self, image_id: int, x_emu: int, y_emu: int,
                                      width_emu: int, height_emu: int,
                                      rel_id: str,
-                                     effects_xml: Optional[str] = None) -> Element:
+                                     effects_xml: str | None = None) -> Element:
         """
         Generate vector image picture element from template.
 
@@ -1172,8 +1174,8 @@ class EnhancedXMLBuilder:
 
         return lighting_element
 
-    def generate_diffuse_lighting_for_filter(self, light_type: Optional[str],
-                                           light_params: Dict[str, float],
+    def generate_diffuse_lighting_for_filter(self, light_type: str | None,
+                                           light_params: dict[str, float],
                                            surface_scale: float,
                                            diffuse_constant: float) -> str:
         """
@@ -1222,7 +1224,7 @@ class EnhancedXMLBuilder:
             bevel_height=bevel_height,
             with_shadow=with_shadow,
             shadow_blur=shadow_blur,
-            shadow_alpha=shadow_alpha
+            shadow_alpha=shadow_alpha,
         )
 
         return self.element_to_string(lighting_element)
@@ -1317,8 +1319,8 @@ class EnhancedXMLBuilder:
 
         return reflection_element
 
-    def generate_specular_lighting_for_filter(self, light_type: Optional[str],
-                                            light_params: Dict[str, float],
+    def generate_specular_lighting_for_filter(self, light_type: str | None,
+                                            light_params: dict[str, float],
                                             surface_scale: float,
                                             specular_constant: float,
                                             specular_exponent: float,
@@ -1381,7 +1383,7 @@ class EnhancedXMLBuilder:
                 bevel_height=bevel_height,
                 material=material,
                 reflection_blur=highlight_blur // 4,
-                reflection_alpha=highlight_alpha
+                reflection_alpha=highlight_alpha,
             )
         else:
             lighting_element = self.generate_specular_highlight_3d(
@@ -1391,7 +1393,7 @@ class EnhancedXMLBuilder:
                 material=material,
                 highlight_blur=highlight_blur,
                 highlight_alpha=highlight_alpha,
-                highlight_color=lighting_color
+                highlight_color=lighting_color,
             )
 
         return self.element_to_string(lighting_element)
@@ -1502,6 +1504,6 @@ def create_content_types(**kwargs) -> Element:
     return enhanced_xml_builder.create_content_types_element(**kwargs)
 
 
-def create_relationships(relationships: List[Dict[str, str]]) -> Element:
+def create_relationships(relationships: list[dict[str, str]]) -> Element:
     """Create relationships element with enhanced builder."""
     return enhanced_xml_builder.create_relationships_element(relationships)

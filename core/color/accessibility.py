@@ -7,10 +7,13 @@ and automatic accessible color generation following WCAG 2.1 guidelines.
 """
 
 from __future__ import annotations
-import numpy as np
-import colorspacious
-from typing import List, Optional, Dict
+
 from enum import Enum
+from typing import Dict, List, Optional
+
+import colorspacious
+import numpy as np
+
 from .core import Color
 
 
@@ -53,33 +56,33 @@ class ColorAccessibility:
             ColorBlindnessType.PROTANOPIA: np.array([
                 [0.567, 0.433, 0.000],
                 [0.558, 0.442, 0.000],
-                [0.000, 0.242, 0.758]
+                [0.000, 0.242, 0.758],
             ]),
             ColorBlindnessType.DEUTERANOPIA: np.array([
                 [0.625, 0.375, 0.000],
                 [0.700, 0.300, 0.000],
-                [0.000, 0.300, 0.700]
+                [0.000, 0.300, 0.700],
             ]),
             ColorBlindnessType.TRITANOPIA: np.array([
                 [0.950, 0.050, 0.000],
                 [0.000, 0.433, 0.567],
-                [0.000, 0.475, 0.525]
+                [0.000, 0.475, 0.525],
             ]),
             ColorBlindnessType.PROTANOMALY: np.array([
                 [0.817, 0.183, 0.000],
                 [0.333, 0.667, 0.000],
-                [0.000, 0.125, 0.875]
+                [0.000, 0.125, 0.875],
             ]),
             ColorBlindnessType.DEUTERANOMALY: np.array([
                 [0.800, 0.200, 0.000],
                 [0.258, 0.742, 0.000],
-                [0.000, 0.142, 0.858]
+                [0.000, 0.142, 0.858],
             ]),
             ColorBlindnessType.TRITANOMALY: np.array([
                 [0.967, 0.033, 0.000],
                 [0.000, 0.733, 0.267],
-                [0.000, 0.183, 0.817]
-            ])
+                [0.000, 0.183, 0.817],
+            ]),
         }
 
     def contrast_ratio(self, foreground: Color, background: Color) -> float:
@@ -254,9 +257,9 @@ class ColorAccessibility:
         simulated_color._alpha = getattr(color, '_alpha', 1.0)
         return simulated_color
 
-    def get_accessible_palette(self, base_colors: List[Color],
+    def get_accessible_palette(self, base_colors: list[Color],
                               background: Color,
-                              level: ContrastLevel = ContrastLevel.AA_NORMAL) -> List[Color]:
+                              level: ContrastLevel = ContrastLevel.AA_NORMAL) -> list[Color]:
         """
         Generate accessible palette from base colors.
 
@@ -276,8 +279,8 @@ class ColorAccessibility:
 
         return accessible_colors
 
-    def analyze_palette_accessibility(self, colors: List[Color],
-                                    background: Color) -> Dict[str, any]:
+    def analyze_palette_accessibility(self, colors: list[Color],
+                                    background: Color) -> dict[str, any]:
         """
         Analyze accessibility of a color palette.
 
@@ -296,7 +299,7 @@ class ColorAccessibility:
             'aaa_large_compliant': 0,
             'contrast_ratios': [],
             'non_compliant_colors': [],
-            'recommendations': []
+            'recommendations': [],
         }
 
         for i, color in enumerate(colors):
@@ -318,24 +321,24 @@ class ColorAccessibility:
                 analysis['non_compliant_colors'].append({
                     'index': i,
                     'color': color.hex(),
-                    'contrast_ratio': ratio
+                    'contrast_ratio': ratio,
                 })
 
         # Generate recommendations
         if analysis['aa_normal_compliant'] < len(colors):
             analysis['recommendations'].append(
-                f"{len(colors) - analysis['aa_normal_compliant']} colors need adjustment for AA normal text compliance"
+                f"{len(colors) - analysis['aa_normal_compliant']} colors need adjustment for AA normal text compliance",
             )
 
         if analysis['aaa_normal_compliant'] < len(colors):
             analysis['recommendations'].append(
-                f"Consider adjusting {len(colors) - analysis['aaa_normal_compliant']} colors for AAA compliance"
+                f"Consider adjusting {len(colors) - analysis['aaa_normal_compliant']} colors for AAA compliance",
             )
 
         return analysis
 
-    def simulate_palette_for_color_blindness(self, colors: List[Color],
-                                           blindness_types: Optional[List[ColorBlindnessType]] = None) -> Dict[ColorBlindnessType, List[Color]]:
+    def simulate_palette_for_color_blindness(self, colors: list[Color],
+                                           blindness_types: list[ColorBlindnessType] | None = None) -> dict[ColorBlindnessType, list[Color]]:
         """
         Simulate entire palette for different types of color blindness.
 
@@ -351,7 +354,7 @@ class ColorAccessibility:
             blindness_types = [
                 ColorBlindnessType.PROTANOPIA,
                 ColorBlindnessType.DEUTERANOPIA,
-                ColorBlindnessType.DEUTERANOMALY
+                ColorBlindnessType.DEUTERANOMALY,
             ]
 
         simulated_palettes = {}

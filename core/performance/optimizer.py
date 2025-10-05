@@ -6,18 +6,19 @@ This module integrates caching, pooling, batching, and profiling to provide
 maximum performance for SVG conversion operations.
 """
 
-import time
-import threading
-from typing import List, Dict, Any, Optional, Type
-from lxml import etree as ET
 import logging
+import threading
+import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Type
 
-from .cache import get_global_cache, ConversionCache
-from .pools import get_converter_pool, ConverterPool
-from .batch import get_batch_processor, BatchProcessor, BatchStrategy
-from .profiler import get_profiler, PerformanceProfiler
+from lxml import etree as ET
+
+from .batch import BatchProcessor, BatchStrategy, get_batch_processor
+from .cache import ConversionCache, get_global_cache
+from .pools import ConverterPool, get_converter_pool
+from .profiler import PerformanceProfiler, get_profiler
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class OptimizationConfig:
     
     # Caching configuration
     enable_caching: bool = True
-    cache_ttl: Optional[float] = 300.0  # 5 minutes
+    cache_ttl: float | None = 300.0  # 5 minutes
     
     # Pooling configuration
     enable_pooling: bool = True
@@ -69,7 +70,7 @@ class OptimizationConfig:
                 enable_pooling=False,
                 enable_batching=False,
                 enable_profiling=False,
-                enable_auto_optimization=False
+                enable_auto_optimization=False,
             )
         elif level == OptimizationLevel.BASIC:
             return cls(
@@ -77,7 +78,7 @@ class OptimizationConfig:
                 enable_caching=True,
                 enable_pooling=False,
                 enable_batching=False,
-                enable_profiling=False
+                enable_profiling=False,
             )
         elif level == OptimizationLevel.STANDARD:
             return cls(
@@ -85,7 +86,7 @@ class OptimizationConfig:
                 enable_caching=True,
                 enable_pooling=True,
                 enable_batching=False,
-                enable_profiling=False
+                enable_profiling=False,
             )
         elif level == OptimizationLevel.AGGRESSIVE:
             return cls(
@@ -93,7 +94,7 @@ class OptimizationConfig:
                 enable_caching=True,
                 enable_pooling=True,
                 enable_batching=True,
-                enable_profiling=False
+                enable_profiling=False,
             )
         elif level == OptimizationLevel.MAXIMUM:
             return cls(
@@ -102,7 +103,7 @@ class OptimizationConfig:
                 enable_pooling=True,
                 enable_batching=True,
                 enable_profiling=True,
-                enable_auto_optimization=True
+                enable_auto_optimization=True,
             )
         else:
             return cls()
@@ -117,10 +118,10 @@ class PerformanceOptimizer:
         self.lock = threading.RLock()
         
         # Initialize optimization components
-        self.cache: Optional[ConversionCache] = None
-        self.pool: Optional[ConverterPool] = None
-        self.batch_processor: Optional[BatchProcessor] = None
-        self.profiler: Optional[PerformanceProfiler] = None
+        self.cache: ConversionCache | None = None
+        self.pool: ConverterPool | None = None
+        self.batch_processor: BatchProcessor | None = None
+        self.profiler: PerformanceProfiler | None = None
         
         self._setup_components()
         
@@ -162,7 +163,7 @@ class PerformanceOptimizer:
     def convert_element(self, 
                        element: ET.Element,
                        context: Any,
-                       converter_class: Type) -> str:
+                       converter_class: type) -> str:
         """Convert a single element with optimization."""
         start_time = time.time()
         
@@ -171,7 +172,7 @@ class PerformanceOptimizer:
         if self.profiler:
             profile_context = self.profiler.profile_operation(
                 f"convert_{element.tag.split('}')[-1] if '}' in element.tag else element.tag}",
-                metadata={'converter': converter_class.__name__}
+                metadata={'converter': converter_class.__name__},
             )
             profile_context.__enter__()
         
@@ -210,10 +211,10 @@ class PerformanceOptimizer:
                 self.total_conversion_time += time.time() - start_time
     
     def convert_elements(self,
-                        elements: List[ET.Element],
-                        contexts: List[Any],
-                        converter_classes: List[Type],
-                        use_batching: Optional[bool] = None) -> List[str]:
+                        elements: list[ET.Element],
+                        contexts: list[Any],
+                        converter_classes: list[type],
+                        use_batching: bool | None = None) -> list[str]:
         """Convert multiple elements with optimization."""
         if not elements:
             return []
@@ -241,7 +242,7 @@ class PerformanceOptimizer:
                     contexts=contexts,
                     converter_classes=converter_classes,
                     strategy=self.config.batch_strategy,
-                    parallel=True
+                    parallel=True,
                 )
             else:
                 logger.debug(f"Using sequential processing for {len(elements)} elements")
@@ -298,7 +299,7 @@ class PerformanceOptimizer:
         
         return optimized_config
     
-    def _analyze_document(self, svg_root: ET.Element, element_count: int) -> Dict[str, float]:
+    def _analyze_document(self, svg_root: ET.Element, element_count: int) -> dict[str, float]:
         """Analyze document characteristics for optimization."""
         # Element type distribution
         element_types = {}
@@ -326,7 +327,7 @@ class PerformanceOptimizer:
             'complexity_score': min(complexity_score, 1.0),
             'repetition_score': min(repetition_score, 1.0),
             'element_types': element_types,
-            'unique_types': len(element_types)
+            'unique_types': len(element_types),
         }
     
     def _hash_context(self, context: Any) -> str:
@@ -334,7 +335,7 @@ class PerformanceOptimizer:
         # Simplified hash - in practice you'd want more robust implementation
         return str(hash(str(context)))
     
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report."""
         with self.lock:
             report = {
@@ -343,7 +344,7 @@ class PerformanceOptimizer:
                     'caching_enabled': self.config.enable_caching,
                     'pooling_enabled': self.config.enable_pooling,
                     'batching_enabled': self.config.enable_batching,
-                    'profiling_enabled': self.config.enable_profiling
+                    'profiling_enabled': self.config.enable_profiling,
                 },
                 'statistics': {
                     'total_conversions': self.conversion_count,
@@ -353,8 +354,8 @@ class PerformanceOptimizer:
                     ),
                     'conversions_per_second': (
                         self.conversion_count / max(self.total_conversion_time, 0.001)
-                    )
-                }
+                    ),
+                },
             }
         
         # Add component-specific statistics
@@ -367,7 +368,7 @@ class PerformanceOptimizer:
                 'total_requests': total_requests,
                 'total_hits': total_hits,
                 'hit_rate': total_hits / max(total_requests, 1),
-                'memory_usage': self.cache.get_memory_usage()
+                'memory_usage': self.cache.get_memory_usage(),
             }
         
         if self.pool:
@@ -381,7 +382,7 @@ class PerformanceOptimizer:
         
         return report
     
-    def get_optimization_recommendations(self) -> List[str]:
+    def get_optimization_recommendations(self) -> list[str]:
         """Get optimization recommendations."""
         recommendations = []
         
@@ -391,7 +392,7 @@ class PerformanceOptimizer:
             
             if avg_time > 0.1:  # Slower than 100ms per element
                 recommendations.append(
-                    f"Average conversion time is high ({avg_time:.3f}s) - consider enabling more optimizations"
+                    f"Average conversion time is high ({avg_time:.3f}s) - consider enabling more optimizations",
                 )
         
         # Cache recommendations
@@ -404,7 +405,7 @@ class PerformanceOptimizer:
                 hit_rate = total_hits / total_requests
                 if hit_rate < 0.3:
                     recommendations.append(
-                        f"Cache hit rate is low ({hit_rate:.1%}) - consider optimizing cache keys or increasing cache size"
+                        f"Cache hit rate is low ({hit_rate:.1%}) - consider optimizing cache keys or increasing cache size",
                     )
         
         # Pooling recommendations
@@ -413,13 +414,13 @@ class PerformanceOptimizer:
             for pool_name, stats in pool_stats.get('converters', {}).items():
                 if stats.get('utilization', 0) > 0.8:
                     recommendations.append(
-                        f"High utilization in {pool_name} pool ({stats['utilization']:.1%}) - consider increasing pool size"
+                        f"High utilization in {pool_name} pool ({stats['utilization']:.1%}) - consider increasing pool size",
                     )
         
         # Batching recommendations
         if not self.config.enable_batching and self.conversion_count > 50:
             recommendations.append(
-                "High conversion volume detected - consider enabling batch processing"
+                "High conversion volume detected - consider enabling batch processing",
             )
         
         # Get profiler recommendations if available
@@ -449,7 +450,7 @@ class PerformanceOptimizer:
         
         self._auto_optimization_thread = threading.Thread(
             target=auto_optimize, 
-            daemon=True
+            daemon=True,
         )
         self._auto_optimization_thread.start()
         logger.info("Started auto-optimization thread")

@@ -6,20 +6,21 @@ Handles folder creation, file uploads, preview generation, and error recovery
 for Google Drive integration in the SVG2PPTX batch processing system.
 """
 
-import logging
 import concurrent.futures
-from pathlib import Path
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from dataclasses import dataclass
+import logging
 import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from api.services.google_drive import GoogleDriveService
 from api.services.google_slides import GoogleSlidesService
-from .models import BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
+
+from .models import DEFAULT_DB_PATH, BatchDriveMetadata, BatchFileDriveMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 class BatchDriveError(Exception):
     """Custom exception for batch Drive operations."""
     
-    def __init__(self, message: str, error_code: Optional[int] = None):
+    def __init__(self, message: str, error_code: int | None = None):
         self.message = message
         self.error_code = error_code
         super().__init__(self.message)
@@ -37,20 +38,20 @@ class BatchDriveError(Exception):
 class DriveOperationResult:
     """Result of a Drive operation."""
     success: bool
-    folder_id: Optional[str] = None
-    folder_url: Optional[str] = None
-    error_message: Optional[str] = None
+    folder_id: str | None = None
+    folder_url: str | None = None
+    error_message: str | None = None
 
 
 @dataclass
 class FileUploadResult:
     """Result of a file upload operation."""
     success: bool
-    file_id: Optional[str] = None
-    file_url: Optional[str] = None
-    preview_url: Optional[str] = None
+    file_id: str | None = None
+    file_url: str | None = None
+    preview_url: str | None = None
     original_filename: str = ""
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 @dataclass
@@ -58,9 +59,9 @@ class PreviewResult:
     """Result of preview generation."""
     success: bool
     file_id: str
-    preview_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
-    error_message: Optional[str] = None
+    preview_url: str | None = None
+    thumbnail_url: str | None = None
+    error_message: str | None = None
 
 
 @dataclass
@@ -68,8 +69,8 @@ class FolderStructure:
     """Represents a hierarchical folder structure."""
     root_folder_id: str
     root_folder_name: str
-    date_folder_id: Optional[str] = None
-    batch_folder_id: Optional[str] = None
+    date_folder_id: str | None = None
+    batch_folder_id: str | None = None
     full_path: str = ""
 
 
@@ -77,11 +78,11 @@ class FolderStructure:
 class BatchWorkflowResult:
     """Result of complete batch workflow execution."""
     success: bool
-    folder_id: Optional[str] = None
-    folder_url: Optional[str] = None
-    uploaded_files: List[FileUploadResult] = None
-    generated_previews: List[PreviewResult] = None
-    error_message: Optional[str] = None
+    folder_id: str | None = None
+    folder_url: str | None = None
+    uploaded_files: list[FileUploadResult] = None
+    generated_previews: list[PreviewResult] = None
+    error_message: str | None = None
     
     def __post_init__(self):
         if self.uploaded_files is None:
@@ -96,8 +97,8 @@ class BatchDriveController:
     DEFAULT_FOLDER_PATTERN = "SVG2PPTX-Batches/{date}/batch-{job_id}/"
     
     def __init__(self, 
-                 drive_service: Optional[GoogleDriveService] = None,
-                 slides_service: Optional[GoogleSlidesService] = None,
+                 drive_service: GoogleDriveService | None = None,
+                 slides_service: GoogleSlidesService | None = None,
                  db_path: str = DEFAULT_DB_PATH):
         """
         Initialize BatchDriveController.
@@ -115,7 +116,7 @@ class BatchDriveController:
     
     def create_batch_folder(self, 
                           batch_job_id: str, 
-                          folder_pattern: Optional[str] = None) -> DriveOperationResult:
+                          folder_pattern: str | None = None) -> DriveOperationResult:
         """
         Create hierarchical folder structure for batch job.
         
@@ -143,14 +144,14 @@ class BatchDriveController:
             drive_metadata = BatchDriveMetadata(
                 batch_job_id=batch_job_id,
                 drive_folder_id=folder_structure.batch_folder_id,
-                drive_folder_url=f"https://drive.google.com/drive/folders/{folder_structure.batch_folder_id}"
+                drive_folder_url=f"https://drive.google.com/drive/folders/{folder_structure.batch_folder_id}",
             )
             drive_metadata.save(self.db_path)
             
             return DriveOperationResult(
                 success=True,
                 folder_id=folder_structure.batch_folder_id,
-                folder_url=f"https://drive.google.com/drive/folders/{folder_structure.batch_folder_id}"
+                folder_url=f"https://drive.google.com/drive/folders/{folder_structure.batch_folder_id}",
             )
             
         except Exception as e:
@@ -194,10 +195,10 @@ class BatchDriveController:
             root_folder_name=path_parts[0],
             date_folder_id=folder_ids.get(1) if len(path_parts) > 1 else None,
             batch_folder_id=folder_ids.get(len(path_parts) - 1),
-            full_path=folder_path
+            full_path=folder_path,
         )
     
-    def _create_single_folder(self, folder_name: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
+    def _create_single_folder(self, folder_name: str, parent_id: str | None = None) -> dict[str, Any]:
         """
         Create a single folder in Google Drive.
         
@@ -216,7 +217,7 @@ class BatchDriveController:
                 # Fallback to direct API call
                 folder_metadata = {
                     'name': folder_name,
-                    'mimeType': 'application/vnd.google-apps.folder'
+                    'mimeType': 'application/vnd.google-apps.folder',
                 }
                 
                 if parent_id:
@@ -224,14 +225,14 @@ class BatchDriveController:
                 
                 folder = self.drive_service.service.files().create(
                     body=folder_metadata,
-                    fields='id,name,webViewLink'
+                    fields='id,name,webViewLink',
                 ).execute()
                 
                 return {
                     'success': True,
                     'folderId': folder['id'],
                     'folderName': folder['name'],
-                    'folderUrl': folder.get('webViewLink')
+                    'folderUrl': folder.get('webViewLink'),
                 }
                 
         except Exception as e:
@@ -240,8 +241,8 @@ class BatchDriveController:
     
     def upload_batch_files(self, 
                           batch_job_id: str,
-                          files: List[Dict[str, str]],
-                          folder_id: str) -> List[FileUploadResult]:
+                          files: list[dict[str, str]],
+                          folder_id: str) -> list[FileUploadResult]:
         """
         Upload multiple files to Google Drive.
         
@@ -261,7 +262,7 @@ class BatchDriveController:
                 upload_result = self.drive_service.upload_file(
                     file_path=file_info['file_path'],
                     file_name=file_info.get('converted_name', file_info['original_filename']),
-                    folder_id=folder_id
+                    folder_id=folder_id,
                 )
                 
                 # Create file metadata record
@@ -270,7 +271,7 @@ class BatchDriveController:
                     original_filename=file_info['original_filename'],
                     drive_file_id=upload_result['fileId'],
                     drive_file_url=upload_result.get('shareableLink'),
-                    upload_status="completed"
+                    upload_status="completed",
                 )
                 file_metadata.save(self.db_path)
                 
@@ -278,7 +279,7 @@ class BatchDriveController:
                     success=True,
                     file_id=upload_result['fileId'],
                     file_url=upload_result.get('shareableLink'),
-                    original_filename=file_info['original_filename']
+                    original_filename=file_info['original_filename'],
                 ))
                 
                 logger.info(f"Successfully uploaded {file_info.get('converted_name', file_info['original_filename'])}")
@@ -292,23 +293,23 @@ class BatchDriveController:
                     batch_job_id=batch_job_id,
                     original_filename=file_info['original_filename'],
                     upload_status="failed",
-                    upload_error=str(e)
+                    upload_error=str(e),
                 )
                 file_metadata.save(self.db_path)
                 
                 results.append(FileUploadResult(
                     success=False,
                     original_filename=file_info['original_filename'],
-                    error_message=error_msg
+                    error_message=error_msg,
                 ))
         
         return results
     
     def upload_batch_files_parallel(self, 
                                    batch_job_id: str,
-                                   files: List[Dict[str, str]],
+                                   files: list[dict[str, str]],
                                    folder_id: str,
-                                   max_workers: int = 3) -> List[FileUploadResult]:
+                                   max_workers: int = 3) -> list[FileUploadResult]:
         """
         Upload multiple files in parallel to Google Drive.
         
@@ -328,7 +329,7 @@ class BatchDriveController:
                 upload_result = self.drive_service.upload_file(
                     file_path=file_info['file_path'],
                     file_name=file_info.get('converted_name', file_info['original_filename']),
-                    folder_id=folder_id
+                    folder_id=folder_id,
                 )
                 
                 # Save to database
@@ -337,7 +338,7 @@ class BatchDriveController:
                     original_filename=file_info['original_filename'],
                     drive_file_id=upload_result['fileId'],
                     drive_file_url=upload_result.get('shareableLink'),
-                    upload_status="completed"
+                    upload_status="completed",
                 )
                 file_metadata.save(self.db_path)
                 
@@ -345,7 +346,7 @@ class BatchDriveController:
                     success=True,
                     file_id=upload_result['fileId'],
                     file_url=upload_result.get('shareableLink'),
-                    original_filename=file_info['original_filename']
+                    original_filename=file_info['original_filename'],
                 )
                 
             except Exception as e:
@@ -356,14 +357,14 @@ class BatchDriveController:
                     batch_job_id=batch_job_id,
                     original_filename=file_info['original_filename'],
                     upload_status="failed",
-                    upload_error=error_msg
+                    upload_error=error_msg,
                 )
                 file_metadata.save(self.db_path)
                 
                 return FileUploadResult(
                     success=False,
                     original_filename=file_info['original_filename'],
-                    error_message=error_msg
+                    error_message=error_msg,
                 )
         
         # Execute parallel uploads
@@ -379,7 +380,7 @@ class BatchDriveController:
     
     def generate_batch_previews(self, 
                               batch_job_id: str,
-                              file_ids: List[str]) -> List[PreviewResult]:
+                              file_ids: list[str]) -> list[PreviewResult]:
         """
         Generate PNG previews for batch of PowerPoint files.
         
@@ -409,7 +410,7 @@ class BatchDriveController:
                     success=True,
                     file_id=file_id,
                     preview_url=preview_result.get('previewUrl'),
-                    thumbnail_url=preview_result.get('thumbnailUrl')
+                    thumbnail_url=preview_result.get('thumbnailUrl'),
                 ))
                 
                 logger.info(f"Generated preview for file: {file_id}")
@@ -421,14 +422,14 @@ class BatchDriveController:
                 results.append(PreviewResult(
                     success=False,
                     file_id=file_id,
-                    error_message=error_msg
+                    error_message=error_msg,
                 ))
         
         return results
     
     def create_batch_folder_with_retry(self, 
                                      batch_job_id: str,
-                                     folder_pattern: Optional[str] = None,
+                                     folder_pattern: str | None = None,
                                      max_retries: int = 3) -> DriveOperationResult:
         """
         Create batch folder with retry logic for resilient operation.
@@ -463,8 +464,8 @@ class BatchDriveController:
     
     def execute_complete_batch_workflow(self, 
                                       batch_job_id: str,
-                                      files: List[Dict[str, str]],
-                                      folder_pattern: Optional[str] = None,
+                                      files: list[dict[str, str]],
+                                      folder_pattern: str | None = None,
                                       generate_previews: bool = True) -> BatchWorkflowResult:
         """
         Execute complete batch Drive workflow: folder creation, file uploads, and preview generation.
@@ -486,14 +487,14 @@ class BatchDriveController:
             if not folder_result.success:
                 return BatchWorkflowResult(
                     success=False,
-                    error_message=f"Folder creation failed: {folder_result.error_message}"
+                    error_message=f"Folder creation failed: {folder_result.error_message}",
                 )
             
             # Step 2: Upload all files
             upload_results = self.upload_batch_files(
                 batch_job_id,
                 files,
-                folder_result.folder_id
+                folder_result.folder_id,
             )
             
             # Step 3: Generate previews if requested
@@ -518,7 +519,7 @@ class BatchDriveController:
                 folder_id=folder_result.folder_id,
                 folder_url=folder_result.folder_url,
                 uploaded_files=upload_results,
-                generated_previews=preview_results
+                generated_previews=preview_results,
             )
             
         except Exception as e:
@@ -527,5 +528,5 @@ class BatchDriveController:
             
             return BatchWorkflowResult(
                 success=False,
-                error_message=error_msg
+                error_message=error_msg,
             )

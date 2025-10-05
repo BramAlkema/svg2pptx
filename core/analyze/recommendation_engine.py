@@ -6,9 +6,9 @@ Generates conversion strategy recommendations based on complexity analysis.
 """
 
 import logging
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class RecommendationContext:
     has_animations: bool
     has_filters: bool
     quality_preference: QualityLevel = QualityLevel.BALANCED
-    performance_target_ms: Optional[float] = None
+    performance_target_ms: float | None = None
 
 
 @dataclass
@@ -53,10 +53,10 @@ class Recommendation:
     confidence: float  # 0.0 to 1.0
     estimated_quality: float  # 0.0 to 1.0
     estimated_performance: float  # 0.0 to 1.0 (higher = faster)
-    reasoning: List[str]
-    optimizations: List[str]
-    warnings: List[str]
-    prerequisites: List[str]
+    reasoning: list[str]
+    optimizations: list[str]
+    warnings: list[str]
+    prerequisites: list[str]
 
 
 class RecommendationEngine:
@@ -72,7 +72,7 @@ class RecommendationEngine:
         self.complexity_thresholds = {
             'simple': 0.2,
             'moderate': 0.5,
-            'complex': 0.8
+            'complex': 0.8,
         }
 
         # Strategy selection weights
@@ -86,7 +86,7 @@ class RecommendationEngine:
                 'supports_clipping': False,
                 'supports_patterns': False,
                 'supports_animations': False,
-                'supports_filters': False
+                'supports_filters': False,
             },
             ConversionStrategy.HYBRID_APPROACH: {
                 'max_complexity': 0.7,
@@ -97,7 +97,7 @@ class RecommendationEngine:
                 'supports_clipping': True,
                 'supports_patterns': True,
                 'supports_animations': False,
-                'supports_filters': True
+                'supports_filters': True,
             },
             ConversionStrategy.EMF_HEAVY: {
                 'max_complexity': 1.0,
@@ -108,7 +108,7 @@ class RecommendationEngine:
                 'supports_clipping': True,
                 'supports_patterns': True,
                 'supports_animations': True,
-                'supports_filters': True
+                'supports_filters': True,
             },
             ConversionStrategy.PREPROCESSING_FIRST: {
                 'max_complexity': 0.9,
@@ -119,13 +119,13 @@ class RecommendationEngine:
                 'supports_clipping': True,
                 'supports_patterns': True,
                 'supports_animations': False,
-                'supports_filters': True
-            }
+                'supports_filters': True,
+            },
         }
 
         self.logger = logging.getLogger(__name__)
 
-    def generate_recommendations(self, context: RecommendationContext) -> List[Recommendation]:
+    def generate_recommendations(self, context: RecommendationContext) -> list[Recommendation]:
         """
         Generate ranked list of strategy recommendations.
 
@@ -230,12 +230,12 @@ class RecommendationEngine:
             reasoning=reasoning,
             optimizations=optimizations,
             warnings=warnings,
-            prerequisites=prerequisites
+            prerequisites=prerequisites,
         )
 
     def _calculate_feature_support(self, strategy: ConversionStrategy, context: RecommendationContext,
-                                 weights: Dict[str, Any], reasoning: List[str],
-                                 warnings: List[str], prerequisites: List[str]) -> float:
+                                 weights: dict[str, Any], reasoning: list[str],
+                                 warnings: list[str], prerequisites: list[str]) -> float:
         """Calculate feature support score for strategy"""
         feature_scores = []
 
@@ -244,7 +244,7 @@ class RecommendationEngine:
             ('clipping', context.has_clipping, weights['supports_clipping']),
             ('patterns', context.has_patterns, weights['supports_patterns']),
             ('animations', context.has_animations, weights['supports_animations']),
-            ('filters', context.has_filters, weights['supports_filters'])
+            ('filters', context.has_filters, weights['supports_filters']),
         ]
 
         for feature_name, has_feature, supports_feature in features:
@@ -269,23 +269,23 @@ class RecommendationEngine:
             ConversionStrategy.NATIVE_DRAWINGML: {
                 QualityLevel.SPEED_OPTIMIZED: 1.2,
                 QualityLevel.BALANCED: 1.0,
-                QualityLevel.QUALITY_OPTIMIZED: 0.8
+                QualityLevel.QUALITY_OPTIMIZED: 0.8,
             },
             ConversionStrategy.HYBRID_APPROACH: {
                 QualityLevel.SPEED_OPTIMIZED: 1.0,
                 QualityLevel.BALANCED: 1.2,
-                QualityLevel.QUALITY_OPTIMIZED: 1.0
+                QualityLevel.QUALITY_OPTIMIZED: 1.0,
             },
             ConversionStrategy.EMF_HEAVY: {
                 QualityLevel.SPEED_OPTIMIZED: 0.7,
                 QualityLevel.BALANCED: 0.9,
-                QualityLevel.QUALITY_OPTIMIZED: 1.3
+                QualityLevel.QUALITY_OPTIMIZED: 1.3,
             },
             ConversionStrategy.PREPROCESSING_FIRST: {
                 QualityLevel.SPEED_OPTIMIZED: 0.8,
                 QualityLevel.BALANCED: 1.1,
-                QualityLevel.QUALITY_OPTIMIZED: 1.2
-            }
+                QualityLevel.QUALITY_OPTIMIZED: 1.2,
+            },
         }
 
         return quality_rankings.get(strategy, {}).get(quality_preference, 1.0)
@@ -297,7 +297,7 @@ class RecommendationEngine:
             ConversionStrategy.HYBRID_APPROACH: 0.90,
             ConversionStrategy.EMF_HEAVY: 0.95,
             ConversionStrategy.PREPROCESSING_FIRST: 0.88,
-            ConversionStrategy.FALLBACK_MODE: 0.70
+            ConversionStrategy.FALLBACK_MODE: 0.70,
         }
 
         quality = base_quality.get(strategy, 0.75)
@@ -322,7 +322,7 @@ class RecommendationEngine:
             ConversionStrategy.HYBRID_APPROACH: 0.75,
             ConversionStrategy.EMF_HEAVY: 0.60,
             ConversionStrategy.PREPROCESSING_FIRST: 0.70,
-            ConversionStrategy.FALLBACK_MODE: 0.80
+            ConversionStrategy.FALLBACK_MODE: 0.80,
         }
 
         performance = base_performance.get(strategy, 0.70)
@@ -345,7 +345,7 @@ class RecommendationEngine:
             reasoning=["Using fallback strategy due to high complexity or unsupported features"],
             optimizations=["comprehensive_preprocessing", "element_reduction"],
             warnings=["This SVG may require manual review", "Consider simplifying the SVG structure"],
-            prerequisites=["Review SVG complexity", "Consider alternative approaches"]
+            prerequisites=["Review SVG complexity", "Consider alternative approaches"],
         )
 
     def get_strategy_description(self, strategy: ConversionStrategy) -> str:
@@ -360,7 +360,7 @@ class RecommendationEngine:
             ConversionStrategy.PREPROCESSING_FIRST:
                 "Apply aggressive preprocessing before conversion",
             ConversionStrategy.FALLBACK_MODE:
-                "Use existing conversion system as fallback"
+                "Use existing conversion system as fallback",
         }
         return descriptions.get(strategy, "Unknown strategy")
 

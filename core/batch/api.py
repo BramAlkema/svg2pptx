@@ -4,16 +4,16 @@ FastAPI endpoints for Huey-based batch SVG to PowerPoint conversion.
 """
 
 import logging
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from .tasks import process_svg_batch, extract_and_process_zip, cleanup_temp_files
 from .huey_app import huey
 from .simple_api import convert_single_svg_sync, merge_presentations_sync
+from .tasks import cleanup_temp_files, extract_and_process_zip, process_svg_batch
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +31,12 @@ class JobStatusResponse(BaseModel):
     batch_id: str
     status: str
     progress: float
-    current_step: Optional[str] = None
+    current_step: str | None = None
     completed_files: int = 0
     failed_files: int = 0
     total_files: int = 0
-    result: Optional[dict] = None
-    error_message: Optional[str] = None
+    result: dict | None = None
+    error_message: str | None = None
 
 
 class ConversionOptions(BaseModel):
@@ -54,11 +54,11 @@ def create_batch_router() -> APIRouter:
     # Add simple mode endpoints (synchronous processing without Huey)
     @router.post("/simple/convert-files")
     async def simple_convert_files(
-        files: List[UploadFile] = File(...),
+        files: list[UploadFile] = File(...),
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),
-        quality: str = Form("high")
+        quality: str = Form("high"),
     ):
         """Convert multiple SVG files synchronously (no queueing)."""
         try:
@@ -77,7 +77,7 @@ def create_batch_router() -> APIRouter:
                 if not uploaded_file.filename.lower().endswith('.svg'):
                     raise HTTPException(
                         status_code=400, 
-                        detail=f"Invalid file type: {uploaded_file.filename}"
+                        detail=f"Invalid file type: {uploaded_file.filename}",
                     )
                 
                 content = await uploaded_file.read()
@@ -86,26 +86,26 @@ def create_batch_router() -> APIRouter:
                 if file_size == 0:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Empty file: {uploaded_file.filename}"
+                        detail=f"Empty file: {uploaded_file.filename}",
                     )
                 
                 if file_size > 10 * 1024 * 1024:  # 10MB limit per file
                     raise HTTPException(
                         status_code=400,
-                        detail=f"File too large: {uploaded_file.filename} (max 10MB)"
+                        detail=f"File too large: {uploaded_file.filename} (max 10MB)",
                     )
                 
                 total_size += file_size
                 
                 file_list.append({
                     'filename': uploaded_file.filename,
-                    'content': content
+                    'content': content,
                 })
             
             if total_size > 50 * 1024 * 1024:  # 50MB total limit for sync processing
                 raise HTTPException(
                     status_code=400,
-                    detail="Total upload size too large for synchronous processing (max 50MB)"
+                    detail="Total upload size too large for synchronous processing (max 50MB)",
                 )
             
             # Prepare conversion options
@@ -113,7 +113,7 @@ def create_batch_router() -> APIRouter:
                 'slide_width': slide_width,
                 'slide_height': slide_height,
                 'output_format': output_format,
-                'quality': quality
+                'quality': quality,
             }
             
             # Process files immediately (synchronously)
@@ -136,7 +136,7 @@ def create_batch_router() -> APIRouter:
                 "message": "Files processed successfully",
                 "total_files": len(file_list),
                 "result": final_result,
-                "mode": "simple"
+                "mode": "simple",
             }
             
         except HTTPException:
@@ -158,7 +158,7 @@ def create_batch_router() -> APIRouter:
             "failed_files": 0,     # Unknown in simple mode
             "total_files": 0,      # Unknown in simple mode
             "result": {"message": "Job completed synchronously"},
-            "mode": "simple"
+            "mode": "simple",
         }
 
     @router.get("/simple/download/{job_id}")
@@ -190,7 +190,7 @@ def create_batch_router() -> APIRouter:
             return FileResponse(
                 path=str(output_file),
                 media_type=media_type,
-                filename=output_file.name
+                filename=output_file.name,
             )
             
         except HTTPException:
@@ -206,12 +206,12 @@ def create_batch_router() -> APIRouter:
             "status": "healthy",
             "modes": {
                 "batch": "Available (requires Huey worker)",
-                "simple": "Available (synchronous processing)"
+                "simple": "Available (synchronous processing)",
             },
             "endpoints": {
                 "batch_mode": "/batch/convert-files, /batch/status/{id}, /batch/download/{id}",
-                "simple_mode": "/batch/simple/convert-files, /batch/simple/status/{id}, /batch/simple/download/{id}"
-            }
+                "simple_mode": "/batch/simple/convert-files, /batch/simple/status/{id}, /batch/simple/download/{id}",
+            },
         }
         
         # Check Huey status
@@ -226,11 +226,11 @@ def create_batch_router() -> APIRouter:
 
     @router.post("/convert-files", response_model=BatchJobResponse)
     async def convert_multiple_files(
-        files: List[UploadFile] = File(...),
+        files: list[UploadFile] = File(...),
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),
-        quality: str = Form("high")
+        quality: str = Form("high"),
     ):
         """
         Convert multiple SVG files to PowerPoint.
@@ -251,7 +251,7 @@ def create_batch_router() -> APIRouter:
                 if not uploaded_file.filename.lower().endswith('.svg'):
                     raise HTTPException(
                         status_code=400, 
-                        detail=f"Invalid file type: {uploaded_file.filename}"
+                        detail=f"Invalid file type: {uploaded_file.filename}",
                     )
                 
                 content = await uploaded_file.read()
@@ -260,26 +260,26 @@ def create_batch_router() -> APIRouter:
                 if file_size == 0:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Empty file: {uploaded_file.filename}"
+                        detail=f"Empty file: {uploaded_file.filename}",
                     )
                 
                 if file_size > 10 * 1024 * 1024:  # 10MB limit per file
                     raise HTTPException(
                         status_code=400,
-                        detail=f"File too large: {uploaded_file.filename} (max 10MB)"
+                        detail=f"File too large: {uploaded_file.filename} (max 10MB)",
                     )
                 
                 total_size += file_size
                 
                 file_list.append({
                     'filename': uploaded_file.filename,
-                    'content': content
+                    'content': content,
                 })
             
             if total_size > 100 * 1024 * 1024:  # 100MB total limit
                 raise HTTPException(
                     status_code=400,
-                    detail="Total upload size too large (max 100MB)"
+                    detail="Total upload size too large (max 100MB)",
                 )
             
             # Prepare conversion options
@@ -287,7 +287,7 @@ def create_batch_router() -> APIRouter:
                 'slide_width': slide_width,
                 'slide_height': slide_height,
                 'output_format': output_format,
-                'quality': quality
+                'quality': quality,
             }
             
             # Start batch processing with Huey
@@ -300,7 +300,7 @@ def create_batch_router() -> APIRouter:
                 batch_id=batch_id,
                 status="PENDING",
                 message="Batch processing started",
-                total_files=len(file_list)
+                total_files=len(file_list),
             )
             
         except HTTPException:
@@ -315,7 +315,7 @@ def create_batch_router() -> APIRouter:
         slide_width: float = Form(10.0),
         slide_height: float = Form(7.5),
         output_format: str = Form("single_pptx"),
-        quality: str = Form("high")
+        quality: str = Form("high"),
     ):
         """
         Convert SVG files from a ZIP archive to PowerPoint.
@@ -337,7 +337,7 @@ def create_batch_router() -> APIRouter:
                 'slide_width': slide_width,
                 'slide_height': slide_height,
                 'output_format': output_format,
-                'quality': quality
+                'quality': quality,
             }
             
             # Start ZIP processing with Huey
@@ -350,7 +350,7 @@ def create_batch_router() -> APIRouter:
                 batch_id=batch_id,
                 status="PENDING",
                 message="ZIP processing started",
-                total_files=0  # Will be determined after extraction
+                total_files=0,  # Will be determined after extraction
             )
             
         except HTTPException:
@@ -436,7 +436,7 @@ def create_batch_router() -> APIRouter:
                 failed_files=failed_files,
                 total_files=total_files,
                 result=result_data,
-                error_message=error_message
+                error_message=error_message,
             )
             
         except HTTPException:
@@ -460,21 +460,21 @@ def create_batch_router() -> APIRouter:
             if not task.is_complete():
                 raise HTTPException(
                     status_code=400, 
-                    detail="Batch job not completed yet"
+                    detail="Batch job not completed yet",
                 )
             
             result_data = task()  # Get the result
             if not result_data or not result_data.get('success', False):
                 raise HTTPException(
                     status_code=400,
-                    detail="Batch job failed or has no result"
+                    detail="Batch job failed or has no result",
                 )
             
             output_path = result_data.get('output_path')
             if not output_path or not Path(output_path).exists():
                 raise HTTPException(
                     status_code=404,
-                    detail="Output file not found"
+                    detail="Output file not found",
                 )
             
             # Determine media type and filename
@@ -499,7 +499,7 @@ def create_batch_router() -> APIRouter:
             return FileResponse(
                 path=output_path,
                 media_type=media_type,
-                filename=output_file.name
+                filename=output_file.name,
             )
             
         except HTTPException:
@@ -523,7 +523,7 @@ def create_batch_router() -> APIRouter:
             if task.is_complete():
                 raise HTTPException(
                     status_code=400,
-                    detail="Cannot cancel completed job"
+                    detail="Cannot cancel completed job",
                 )
             
             # Revoke the task
@@ -549,14 +549,15 @@ def create_batch_router() -> APIRouter:
             # Note: Huey doesn't have built-in worker introspection like Celery
             # We'll provide basic information about the database
             
-            from .huey_app import DB_PATH
             import sqlite3
+
+            from .huey_app import DB_PATH
             
             stats = {
                 "database_path": str(DB_PATH),
                 "database_exists": DB_PATH.exists(),
                 "total_tasks": 0,
-                "pending_tasks": 0
+                "pending_tasks": 0,
             }
             
             if DB_PATH.exists():
@@ -582,7 +583,7 @@ def create_batch_router() -> APIRouter:
             
             return {
                 "huey_stats": stats,
-                "message": "Huey uses SQLite backend - no separate workers to inspect"
+                "message": "Huey uses SQLite backend - no separate workers to inspect",
             }
             
         except Exception as e:
@@ -590,7 +591,7 @@ def create_batch_router() -> APIRouter:
             return {
                 "workers_online": 0,
                 "active_tasks": 0,
-                "error": str(e)
+                "error": str(e),
             }
 
     return router

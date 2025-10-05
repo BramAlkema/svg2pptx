@@ -12,11 +12,16 @@ Key principles:
 - Normalize common patterns
 """
 
+from .chain import (
+    PreprocessorChain,
+    create_standard_chain,
+    preprocess_svg,
+    validate_preprocessed_svg,
+)
 from .expand_use import *
 from .normalize_transforms import *
 from .resolve_clips import *
 from .text_layout_prep import *
-from .chain import PreprocessorChain, create_standard_chain, preprocess_svg, validate_preprocessed_svg
 
 __all__ = [
     # Core preprocessors

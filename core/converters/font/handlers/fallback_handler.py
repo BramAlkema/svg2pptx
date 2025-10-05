@@ -11,7 +11,7 @@ to ensure text conversion never completely fails.
 """
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from ....ir import TextFrame
 from ....services.conversion_services import ConversionServices
@@ -49,7 +49,7 @@ class FallbackHandler(BaseStrategyHandler):
             'Times New Roman', # Default serif
             'Calibri',        # Modern PowerPoint default
             'sans-serif',     # CSS generic fallback
-            'serif'           # CSS generic fallback
+            'serif',           # CSS generic fallback
         ]
 
         # Safe color palette (high contrast, compatible)
@@ -57,7 +57,7 @@ class FallbackHandler(BaseStrategyHandler):
             'black': '000000',
             'white': 'FFFFFF',
             'dark_gray': '404040',
-            'light_gray': '808080'
+            'light_gray': '808080',
         }
 
     def _to_emu(self, value: float) -> int:
@@ -76,7 +76,7 @@ class FallbackHandler(BaseStrategyHandler):
                     .replace('"', '&quot;')
                     .replace("'", '&apos;'))
 
-    def can_handle(self, text_frame: TextFrame, context: Dict[str, Any]) -> bool:
+    def can_handle(self, text_frame: TextFrame, context: dict[str, Any]) -> bool:
         """
         Check if this handler can process the text frame.
 
@@ -106,7 +106,7 @@ class FallbackHandler(BaseStrategyHandler):
             self.logger.error(f"Exception in fallback can_handle, but still accepting: {e}")
             return True
 
-    def convert(self, text_frame: TextFrame, context: Dict[str, Any]) -> HandlerResult:
+    def convert(self, text_frame: TextFrame, context: dict[str, Any]) -> HandlerResult:
         """
         Convert text frame using guaranteed fallback approach.
 
@@ -136,7 +136,7 @@ class FallbackHandler(BaseStrategyHandler):
 
             # Generate basic text shape XML
             xml_content = self._generate_safe_text_shape(
-                text_content, safe_font, safe_size, safe_color, bounds, context
+                text_content, safe_font, safe_size, safe_color, bounds, context,
             )
 
             # Fallback always has moderate confidence - it works but isn't optimal
@@ -150,7 +150,7 @@ class FallbackHandler(BaseStrategyHandler):
                 'text_content': text_content[:50],  # First 50 chars for debugging
                 'bounds': bounds,
                 'run_count': len(text_frame.runs) if text_frame.runs else 0,
-                'safety_measures_applied': True
+                'safety_measures_applied': True,
             }
 
             self.logger.debug(f"Fallback conversion successful for text: {text_content[:30]}")
@@ -160,7 +160,7 @@ class FallbackHandler(BaseStrategyHandler):
                 xml_content=xml_content,
                 confidence=confidence,
                 metadata=metadata,
-                warnings=["Using fallback text strategy - original styling may be simplified"]
+                warnings=["Using fallback text strategy - original styling may be simplified"],
             )
 
         except Exception as e:
@@ -297,7 +297,7 @@ class FallbackHandler(BaseStrategyHandler):
         # Default to black for maximum compatibility
         return self.safe_colors['black']
 
-    def _calculate_safe_bounds(self, text_frame: TextFrame) -> Dict[str, float]:
+    def _calculate_safe_bounds(self, text_frame: TextFrame) -> dict[str, float]:
         """
         Calculate safe bounds for text positioning.
 
@@ -329,7 +329,7 @@ class FallbackHandler(BaseStrategyHandler):
                 'x': x,
                 'y': y,
                 'width': max(50.0, float(width)),
-                'height': max(20.0, float(height))
+                'height': max(20.0, float(height)),
             }
 
         except Exception as e:
@@ -337,8 +337,8 @@ class FallbackHandler(BaseStrategyHandler):
             return {'x': 100.0, 'y': 100.0, 'width': 200.0, 'height': 50.0}
 
     def _generate_safe_text_shape(self, text_content: str, font_family: str,
-                                 font_size: float, color: str, bounds: Dict[str, float],
-                                 context: Dict[str, Any]) -> str:
+                                 font_size: float, color: str, bounds: dict[str, float],
+                                 context: dict[str, Any]) -> str:
         """
         Generate a guaranteed-safe text shape.
 
@@ -465,12 +465,12 @@ class FallbackHandler(BaseStrategyHandler):
             metadata={
                 'strategy': 'emergency_fallback',
                 'error': error_message,
-                'emergency_content': True
+                'emergency_content': True,
             },
-            warnings=[f"Emergency fallback used due to error: {error_message}"]
+            warnings=[f"Emergency fallback used due to error: {error_message}"],
         )
 
-    def get_supported_features(self) -> Dict[str, bool]:
+    def get_supported_features(self) -> dict[str, bool]:
         """
         Get dictionary of features supported by this handler.
 
@@ -489,7 +489,7 @@ class FallbackHandler(BaseStrategyHandler):
             'wordart_effects': False,       # No WordArt
             'high_fidelity': False,         # Safety over fidelity
             'editability': True,            # Remains editable text
-            'guaranteed_success': True      # Always works
+            'guaranteed_success': True,      # Always works
         }
 
     def clear_cache(self):

@@ -5,9 +5,10 @@ PatternService for handling SVG pattern definitions and conversions.
 Provides pattern resolution, caching, and conversion to DrawingML patterns.
 """
 
-from typing import Dict, Optional, Any
-from lxml import etree as ET
 import logging
+from typing import Any, Dict, Optional
+
+from lxml import etree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -16,14 +17,14 @@ class PatternService:
     """Service for managing SVG pattern definitions and conversions."""
 
     def __init__(self):
-        self._pattern_cache: Dict[str, ET.Element] = {}
-        self._conversion_cache: Dict[str, str] = {}
+        self._pattern_cache: dict[str, ET.Element] = {}
+        self._conversion_cache: dict[str, str] = {}
 
     def register_pattern(self, pattern_id: str, pattern_element: ET.Element) -> None:
         """Register a pattern definition for later resolution."""
         self._pattern_cache[pattern_id] = pattern_element
 
-    def get_pattern_content(self, pattern_id: str, context: Any = None) -> Optional[str]:
+    def get_pattern_content(self, pattern_id: str, context: Any = None) -> str | None:
         """
         Get pattern content by ID.
 

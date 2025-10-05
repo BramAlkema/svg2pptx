@@ -6,15 +6,15 @@ Integrates Clean Slate ImageMapper with the comprehensive existing image process
 Leverages proven ImageService and ImageConverter for complete image handling capabilities.
 """
 
-import logging
 import base64
+import logging
 import os
-from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, Optional, Tuple
 
 # Import existing image processing system
 try:
-    from ..services.image_service import ImageService, ImageInfo
+    from ..services.image_service import ImageInfo, ImageService
     IMAGE_SYSTEM_AVAILABLE = True
 except ImportError:
     IMAGE_SYSTEM_AVAILABLE = False
@@ -28,8 +28,8 @@ except ImportError:
         height: int
         format: str
         file_size: int
-        content: Optional[bytes] = None
-        temp_path: Optional[str] = None
+        content: bytes | None = None
+        temp_path: str | None = None
 
     logging.warning("Image service not available - image adapter will use fallback")
 
@@ -45,7 +45,7 @@ class ImageProcessingResult:
     height: int
     relationship_id: str
     embed_id: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class ImageProcessingAdapter:
@@ -87,7 +87,7 @@ class ImageProcessingAdapter:
             )
         )
 
-    def process_image(self, image: Image, base_path: Optional[str] = None) -> ImageProcessingResult:
+    def process_image(self, image: Image, base_path: str | None = None) -> ImageProcessingResult:
         """
         Process IR.Image element using existing comprehensive image system.
 
@@ -112,7 +112,7 @@ class ImageProcessingAdapter:
             self.logger.warning(f"Existing image system failed, using fallback: {e}")
             return self._process_fallback_image(image, base_path)
 
-    def _process_with_existing_system(self, image: Image, base_path: Optional[str]) -> ImageProcessingResult:
+    def _process_with_existing_system(self, image: Image, base_path: str | None) -> ImageProcessingResult:
         """Process image using existing comprehensive image system"""
 
         # Handle both href and direct data cases
@@ -150,8 +150,8 @@ class ImageProcessingAdapter:
                             'processing_method': 'existing_system',
                             'file_size': image_info.file_size,
                             'temp_path': image_info.temp_path,
-                            'image_service_used': True
-                        }
+                            'image_service_used': True,
+                        },
                     )
 
                 except Exception as e:
@@ -182,8 +182,8 @@ class ImageProcessingAdapter:
                     'href': None,
                     'processing_method': 'direct_data',
                     'file_size': len(image.data),
-                    'image_service_used': False
-                }
+                    'image_service_used': False,
+                },
             )
 
         # Fallback to basic processing if neither href nor data processing succeeded
@@ -209,10 +209,10 @@ class ImageProcessingAdapter:
             # Fallback to placeholder
             return ImageInfo(
                 width=100, height=100, format='png',
-                file_size=0, content=b''
+                file_size=0, content=b'',
             )
 
-    def _process_file_path(self, file_path: str, base_path: Optional[str]) -> ImageInfo:
+    def _process_file_path(self, file_path: str, base_path: str | None) -> ImageInfo:
         """Process file path using ImageService"""
         try:
             # Resolve relative paths
@@ -228,7 +228,7 @@ class ImageProcessingAdapter:
             # Fallback to placeholder
             return ImageInfo(
                 width=100, height=100, format='png',
-                file_size=0, content=b''
+                file_size=0, content=b'',
             )
 
     def _manual_data_url_processing(self, data_url: str) -> ImageInfo:
@@ -257,14 +257,14 @@ class ImageProcessingAdapter:
                 height=100,  # Placeholder - real implementation would extract from image data
                 format=format,
                 file_size=len(image_data),
-                content=image_data
+                content=image_data,
             )
 
         except Exception as e:
             self.logger.error(f"Manual data URL processing failed: {e}")
             raise ValueError(f"Failed to process data URL: {e}")
 
-    def _process_basic_image(self, image: Image, base_path: Optional[str]) -> ImageProcessingResult:
+    def _process_basic_image(self, image: Image, base_path: str | None) -> ImageProcessingResult:
         """Basic image processing when ImageService unavailable"""
         href = image.href
 
@@ -291,11 +291,11 @@ class ImageProcessingAdapter:
             metadata={
                 'href': href,
                 'processing_method': 'basic_fallback',
-                'file_size': image_info.file_size
-            }
+                'file_size': image_info.file_size,
+            },
         )
 
-    def _process_fallback_image(self, image: Image, base_path: Optional[str]) -> ImageProcessingResult:
+    def _process_fallback_image(self, image: Image, base_path: str | None) -> ImageProcessingResult:
         """Ultimate fallback when all processing fails"""
         href = image.href or "placeholder"
 
@@ -309,8 +309,8 @@ class ImageProcessingAdapter:
             metadata={
                 'href': href,
                 'processing_method': 'fallback_placeholder',
-                'reason': 'image_system_unavailable'
-            }
+                'reason': 'image_system_unavailable',
+            },
         )
 
     def validate_image_format(self, format: str) -> bool:
@@ -318,8 +318,8 @@ class ImageProcessingAdapter:
         powerpoint_formats = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
         return format.lower() in powerpoint_formats
 
-    def calculate_scaling(self, original_size: Tuple[int, int], target_size: Tuple[int, int],
-                         preserve_aspect: bool = True) -> Tuple[int, int]:
+    def calculate_scaling(self, original_size: tuple[int, int], target_size: tuple[int, int],
+                         preserve_aspect: bool = True) -> tuple[int, int]:
         """Calculate optimal image scaling"""
         orig_width, orig_height = original_size
         target_width, target_height = target_size
@@ -342,13 +342,13 @@ class ImageProcessingAdapter:
 
         return final_width, final_height
 
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """Get statistics about image processing system usage"""
         return {
             'image_system_available': self._image_system_available,
             'components_initialized': {
                 'image_service': self.image_service is not None,
-                'image_converter': self.image_converter is not None
+                'image_converter': self.image_converter is not None,
             },
             'features_available': {
                 'data_url_processing': self._image_system_available,
@@ -356,8 +356,8 @@ class ImageProcessingAdapter:
                 'external_url_processing': self._image_system_available,
                 'format_validation': True,
                 'scaling_calculation': True,
-                'metadata_extraction': self._image_system_available
-            }
+                'metadata_extraction': self._image_system_available,
+            },
         }
 
 

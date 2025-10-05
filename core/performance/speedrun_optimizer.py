@@ -7,20 +7,21 @@ existing performance infrastructure to achieve 10x+ speed improvements for
 cached conversions.
 """
 
-import time
 import asyncio
 import concurrent.futures
-from typing import List, Dict, Any, Optional, Tuple
-from lxml import etree as ET
+import logging
+import time
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from typing import Any, Dict, List, Optional, Tuple
 
-from .optimizer import PerformanceOptimizer, OptimizationConfig, OptimizationLevel
-from .speedrun_cache import get_speedrun_cache
+from lxml import etree as ET
+
 from .batch import BatchProcessor, BatchStrategy
-from .profiler import get_profiler
+from .optimizer import OptimizationConfig, OptimizationLevel, PerformanceOptimizer
 from .pools import get_converter_pool
+from .profiler import get_profiler
+from .speedrun_cache import get_speedrun_cache
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class SVGSpeedrunOptimizer:
         
         return base_config
     
-    def warmup_cache(self, sample_svgs: List[str] = None) -> None:
+    def warmup_cache(self, sample_svgs: list[str] = None) -> None:
         """Warm up caches with common SVG patterns."""
         logger.info("Starting speedrun cache warmup")
         
@@ -127,7 +128,7 @@ class SVGSpeedrunOptimizer:
             ('path', {'d', 'fill', 'stroke'}),
             ('text', {'font-family', 'font-size', 'fill'}),
             ('g', {'transform'}),
-            ('line', {'x1', 'y1', 'x2', 'y2', 'stroke'})
+            ('line', {'x1', 'y1', 'x2', 'y2', 'stroke'}),
         ]
         
         for element_type, common_attrs in hot_patterns:
@@ -137,7 +138,7 @@ class SVGSpeedrunOptimizer:
     
     async def convert_svg_speedrun(self, 
                                   svg_content: str,
-                                  conversion_context: Dict[str, Any] = None) -> Tuple[str, SpeedrunMetrics]:
+                                  conversion_context: dict[str, Any] = None) -> tuple[str, SpeedrunMetrics]:
         """
         Convert SVG with maximum speedrun optimizations.
         
@@ -165,11 +166,11 @@ class SVGSpeedrunOptimizer:
         with self.profiler.profile_session(f"speedrun_conversion") as session:
             # Check for full document cache hit first
             full_doc_hash = self.speedrun_cache.put_with_content_addressing(
-                svg_content, None, context, persist_to_disk=False
+                svg_content, None, context, persist_to_disk=False,
             )
             
             cached_result = self.speedrun_cache.get_with_content_addressing(
-                svg_content, context
+                svg_content, context,
             )
             
             if cached_result is not None:
@@ -181,7 +182,7 @@ class SVGSpeedrunOptimizer:
                     avg_processing_time_ms=(end_time - start_time) * 1000,
                     peak_memory_mb=session.get_peak_memory_mb(),
                     total_time_seconds=end_time - start_time,
-                    speedup_factor=self._calculate_speedup(end_time - start_time)
+                    speedup_factor=self._calculate_speedup(end_time - start_time),
                 )
                 
                 logger.info(f"Full document cache hit: {metrics}")
@@ -189,14 +190,14 @@ class SVGSpeedrunOptimizer:
             
             # Process elements with speedrun optimizations
             result, elements_processed, cache_hits = await self._process_elements_speedrun(
-                svg_root, context
+                svg_root, context,
             )
             
             # Cache the full result
             self.speedrun_cache.put_with_content_addressing(
                 svg_content, result, context,
                 tags={'full_document', 'speedrun'},
-                persist_to_disk=True
+                persist_to_disk=True,
             )
         
         end_time = time.perf_counter()
@@ -212,7 +213,7 @@ class SVGSpeedrunOptimizer:
             avg_processing_time_ms=avg_time_ms,
             peak_memory_mb=session.get_peak_memory_mb(),
             total_time_seconds=total_time,
-            speedup_factor=self._calculate_speedup(total_time)
+            speedup_factor=self._calculate_speedup(total_time),
         )
         
         self._speedrun_metrics.append(metrics)
@@ -222,7 +223,7 @@ class SVGSpeedrunOptimizer:
     
     async def _process_elements_speedrun(self, 
                                         svg_root: ET.Element,
-                                        context: Dict[str, Any]) -> Tuple[str, int, int]:
+                                        context: dict[str, Any]) -> tuple[str, int, int]:
         """Process SVG elements with speedrun optimizations."""
         elements = list(svg_root.iter())
         elements_processed = 0
@@ -243,7 +244,7 @@ class SVGSpeedrunOptimizer:
         # Process hot path elements with aggressive caching
         if hot_elements:
             hot_results, hot_processed, hot_hits = await self._process_hot_path_elements(
-                hot_elements, context
+                hot_elements, context,
             )
             results.extend(hot_results)
             elements_processed += hot_processed
@@ -252,7 +253,7 @@ class SVGSpeedrunOptimizer:
         # Process cold path elements with standard optimization
         if cold_elements:
             cold_results, cold_processed, cold_hits = await self._process_cold_path_elements(
-                cold_elements, context
+                cold_elements, context,
             )
             results.extend(cold_results)
             elements_processed += cold_processed
@@ -264,8 +265,8 @@ class SVGSpeedrunOptimizer:
         return final_result, elements_processed, cache_hits
     
     async def _process_hot_path_elements(self, 
-                                       elements: List[ET.Element],
-                                       context: Dict[str, Any]) -> Tuple[List[str], int, int]:
+                                       elements: list[ET.Element],
+                                       context: dict[str, Any]) -> tuple[list[str], int, int]:
         """Process hot path elements with maximum caching."""
         results = []
         cache_hits = 0
@@ -273,14 +274,14 @@ class SVGSpeedrunOptimizer:
         # Use concurrent processing for hot path elements
         semaphore = asyncio.Semaphore(8)  # Limit concurrency
         
-        async def process_hot_element(element: ET.Element) -> Tuple[str, bool]:
+        async def process_hot_element(element: ET.Element) -> tuple[str, bool]:
             async with semaphore:
                 # Generate element-specific context
                 element_context = self._create_element_context(element, context)
                 
                 # Try cache first
                 cached_result = self.speedrun_cache.get_with_content_addressing(
-                    element, element_context, tags={'hot_path'}
+                    element, element_context, tags={'hot_path'},
                 )
                 
                 if cached_result is not None:
@@ -293,7 +294,7 @@ class SVGSpeedrunOptimizer:
                 self.speedrun_cache.put_with_content_addressing(
                     element, result, element_context,
                     tags={'hot_path', element.tag.split('}')[-1]},
-                    persist_to_disk=(self.mode != SpeedrunMode.CONSERVATIVE)
+                    persist_to_disk=(self.mode != SpeedrunMode.CONSERVATIVE),
                 )
                 
                 return result, False
@@ -315,8 +316,8 @@ class SVGSpeedrunOptimizer:
         return results, len(elements), cache_hits
     
     async def _process_cold_path_elements(self,
-                                        elements: List[ET.Element],
-                                        context: Dict[str, Any]) -> Tuple[List[str], int, int]:
+                                        elements: list[ET.Element],
+                                        context: dict[str, Any]) -> tuple[list[str], int, int]:
         """Process cold path elements with standard optimization."""
         results = []
         cache_hits = 0
@@ -325,7 +326,7 @@ class SVGSpeedrunOptimizer:
         batch_processor = BatchProcessor(
             max_workers=self.optimization_config.max_batch_workers,
             default_strategy=self.optimization_config.batch_strategy,
-            enable_caching=True
+            enable_caching=True,
         )
         
         # Create batch contexts
@@ -336,7 +337,7 @@ class SVGSpeedrunOptimizer:
         batch_results = batch_processor.process_elements(
             elements, contexts, converter_classes,
             strategy=self.optimization_config.batch_strategy,
-            parallel=True
+            parallel=True,
         )
         
         # Calculate cache statistics from batch results
@@ -347,7 +348,7 @@ class SVGSpeedrunOptimizer:
     
     async def _convert_element_async(self, 
                                    element: ET.Element,
-                                   context: Dict[str, Any]) -> str:
+                                   context: dict[str, Any]) -> str:
         """Convert single element asynchronously."""
         loop = asyncio.get_event_loop()
         
@@ -357,7 +358,7 @@ class SVGSpeedrunOptimizer:
             result = await loop.run_in_executor(None, future.result)
             return result
     
-    def _convert_element_sync(self, element: ET.Element, context: Dict[str, Any]) -> str:
+    def _convert_element_sync(self, element: ET.Element, context: dict[str, Any]) -> str:
         """Synchronous element conversion."""
         # Get converter from pool
         converter_class = self._get_converter_class(element)
@@ -371,7 +372,7 @@ class SVGSpeedrunOptimizer:
         tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
         return f"<{tag}_converted/>"
     
-    def _create_element_context(self, element: ET.Element, base_context: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_element_context(self, element: ET.Element, base_context: dict[str, Any]) -> dict[str, Any]:
         """Create element-specific context for caching."""
         context = base_context.copy()
         
@@ -387,7 +388,7 @@ class SVGSpeedrunOptimizer:
         
         return context
     
-    def _get_converter_class(self, element: ET.Element) -> Optional[type]:
+    def _get_converter_class(self, element: ET.Element) -> type | None:
         """Get appropriate converter class for element."""
         # This would integrate with the existing converter registry
         # For now, return a placeholder
@@ -404,7 +405,7 @@ class SVGSpeedrunOptimizer:
         
         return converter_mapping.get(tag)
     
-    def _combine_conversion_results(self, results: List[str]) -> str:
+    def _combine_conversion_results(self, results: list[str]) -> str:
         """Combine individual conversion results into final output."""
         # Simple concatenation for now - in practice this would be more sophisticated
         return '\n'.join(filter(None, results))
@@ -421,7 +422,7 @@ class SVGSpeedrunOptimizer:
         """Set baseline time for speedup calculations."""
         self._baseline_times[operation] = time_seconds
     
-    def get_speedrun_statistics(self) -> Dict[str, Any]:
+    def get_speedrun_statistics(self) -> dict[str, Any]:
         """Get comprehensive speedrun statistics."""
         if not self._speedrun_metrics:
             return {'no_data': True}
@@ -443,10 +444,10 @@ class SVGSpeedrunOptimizer:
             'hot_paths_count': len(self._hot_paths),
             'element_patterns_count': len(self._element_patterns),
             'cache_statistics': cache_stats,
-            'recent_metrics': [str(m) for m in recent_metrics[-3:]]
+            'recent_metrics': [str(m) for m in recent_metrics[-3:]],
         }
     
-    def optimize_for_workload(self, svg_samples: List[str]):
+    def optimize_for_workload(self, svg_samples: list[str]):
         """Optimize configuration based on workload analysis."""
         logger.info(f"Analyzing workload with {len(svg_samples)} samples")
         
@@ -516,7 +517,7 @@ def get_speedrun_optimizer(mode: SpeedrunMode = SpeedrunMode.AGGRESSIVE) -> SVGS
 
 
 def enable_speedrun_mode(mode: SpeedrunMode = SpeedrunMode.AGGRESSIVE,
-                        warmup_samples: List[str] = None) -> SVGSpeedrunOptimizer:
+                        warmup_samples: list[str] = None) -> SVGSpeedrunOptimizer:
     """Enable speedrun mode for maximum SVG conversion performance."""
     optimizer = get_speedrun_optimizer(mode)
     

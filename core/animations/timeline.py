@@ -14,8 +14,8 @@ Key Features:
 - Conflict resolution for overlapping animations
 """
 
-from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 from .core import AnimationDefinition, AnimationScene, CalcMode
 from .interpolation import InterpolationEngine
@@ -25,7 +25,7 @@ from .interpolation import InterpolationEngine
 class TimelineConfig:
     """Configuration for timeline generation."""
     sample_rate: float = 30.0  # Samples per second
-    max_duration: Optional[float] = None  # Maximum timeline duration
+    max_duration: float | None = None  # Maximum timeline duration
     min_keyframes: int = 2  # Minimum keyframes per animation
     max_keyframes: int = 100  # Maximum keyframes per animation
     precision: float = 0.001  # Time precision in seconds
@@ -35,16 +35,16 @@ class TimelineConfig:
 class TimelineGenerator:
     """Generates animation timelines and scenes from animation definitions."""
 
-    def __init__(self, config: Optional[TimelineConfig] = None):
+    def __init__(self, config: TimelineConfig | None = None):
         """Initialize timeline generator with configuration."""
         self.config = config or TimelineConfig()
         self.interpolation_engine = InterpolationEngine()
 
     def generate_timeline(
         self,
-        animations: List[AnimationDefinition],
-        target_duration: Optional[float] = None
-    ) -> List[AnimationScene]:
+        animations: list[AnimationDefinition],
+        target_duration: float | None = None,
+    ) -> list[AnimationScene]:
         """
         Generate timeline scenes from animation definitions.
 
@@ -79,8 +79,8 @@ class TimelineGenerator:
 
     def _calculate_timeline_duration(
         self,
-        animations: List[AnimationDefinition],
-        target_duration: Optional[float]
+        animations: list[AnimationDefinition],
+        target_duration: float | None,
     ) -> float:
         """Calculate the total duration of the timeline."""
         max_end_time = 0.0
@@ -101,9 +101,9 @@ class TimelineGenerator:
 
     def _generate_time_samples(
         self,
-        animations: List[AnimationDefinition],
-        duration: float
-    ) -> List[float]:
+        animations: list[AnimationDefinition],
+        duration: float,
+    ) -> list[float]:
         """Generate time sample points for timeline."""
         time_samples = set()
 
@@ -148,8 +148,8 @@ class TimelineGenerator:
 
     def _generate_scene_at_time(
         self,
-        animations: List[AnimationDefinition],
-        time: float
+        animations: list[AnimationDefinition],
+        time: float,
     ) -> AnimationScene:
         """Generate animation scene at specific time."""
         scene = AnimationScene(time=time)
@@ -171,7 +171,7 @@ class TimelineGenerator:
                 if active_animations:
                     # Resolve conflicts and calculate final value
                     final_value = self._resolve_animation_conflicts(
-                        active_animations, time, attribute
+                        active_animations, time, attribute,
                     )
                     if final_value:
                         scene.set_element_property(element_id, attribute, final_value)
@@ -180,8 +180,8 @@ class TimelineGenerator:
 
     def _group_animations_by_element(
         self,
-        animations: List[AnimationDefinition]
-    ) -> Dict[str, List[AnimationDefinition]]:
+        animations: list[AnimationDefinition],
+    ) -> dict[str, list[AnimationDefinition]]:
         """Group animations by target element ID."""
         groups = {}
         for animation in animations:
@@ -193,8 +193,8 @@ class TimelineGenerator:
 
     def _group_animations_by_attribute(
         self,
-        animations: List[AnimationDefinition]
-    ) -> Dict[str, List[AnimationDefinition]]:
+        animations: list[AnimationDefinition],
+    ) -> dict[str, list[AnimationDefinition]]:
         """Group animations by target attribute."""
         groups = {}
         for animation in animations:
@@ -206,10 +206,10 @@ class TimelineGenerator:
 
     def _resolve_animation_conflicts(
         self,
-        animations: List[AnimationDefinition],
+        animations: list[AnimationDefinition],
         time: float,
-        attribute: str
-    ) -> Optional[str]:
+        attribute: str,
+    ) -> str | None:
         """
         Resolve conflicts when multiple animations target the same attribute.
 
@@ -259,8 +259,8 @@ class TimelineGenerator:
     def _calculate_animation_value(
         self,
         animation: AnimationDefinition,
-        time: float
-    ) -> Optional[str]:
+        time: float,
+    ) -> str | None:
         """Calculate the value of a single animation at given time."""
         if not animation.timing.is_active_at_time(time):
             return None
@@ -278,8 +278,8 @@ class TimelineGenerator:
     def _calculate_discrete_value(
         self,
         animation: AnimationDefinition,
-        local_time: float
-    ) -> Optional[str]:
+        local_time: float,
+    ) -> str | None:
         """Calculate value for discrete animation mode."""
         if not animation.values:
             return None
@@ -304,8 +304,8 @@ class TimelineGenerator:
     def _calculate_interpolated_value(
         self,
         animation: AnimationDefinition,
-        local_time: float
-    ) -> Optional[str]:
+        local_time: float,
+    ) -> str | None:
         """Calculate value using interpolation."""
         if not animation.values:
             return None
@@ -317,7 +317,7 @@ class TimelineGenerator:
             key_splines=animation.key_splines,
             progress=local_time,
             attribute_name=animation.target_attribute,
-            transform_type=animation.transform_type
+            transform_type=animation.transform_type,
         )
 
         return result.value
@@ -328,11 +328,11 @@ class TimelineGenerator:
             'opacity', 'fill-opacity', 'stroke-opacity',
             'stroke-width', 'font-size', 'r', 'rx', 'ry',
             'x', 'y', 'cx', 'cy', 'width', 'height',
-            'dx', 'dy', 'offset'
+            'dx', 'dy', 'offset',
         }
         return attribute.lower() in summable_attributes
 
-    def _sum_numeric_values(self, base_value: str, additive_values: List[str]) -> str:
+    def _sum_numeric_values(self, base_value: str, additive_values: list[str]) -> str:
         """Sum numeric values for additive animations."""
         try:
             # Parse base value
@@ -357,7 +357,7 @@ class TimelineGenerator:
             # Fallback to base value on any error
             return base_value
 
-    def _parse_numeric_with_unit(self, value: str) -> Tuple[Optional[float], Optional[str]]:
+    def _parse_numeric_with_unit(self, value: str) -> tuple[float | None, str | None]:
         """Parse numeric value with optional unit."""
         import re
         if not value:
@@ -374,7 +374,7 @@ class TimelineGenerator:
 
         return None, None
 
-    def _optimize_timeline(self, scenes: List[AnimationScene]) -> List[AnimationScene]:
+    def _optimize_timeline(self, scenes: list[AnimationScene]) -> list[AnimationScene]:
         """Optimize timeline by removing redundant scenes."""
         if len(scenes) <= 2:
             return scenes
@@ -400,7 +400,7 @@ class TimelineGenerator:
         self,
         prev_scene: AnimationScene,
         current_scene: AnimationScene,
-        next_scene: AnimationScene
+        next_scene: AnimationScene,
     ) -> bool:
         """Check if a scene represents a significant change worth keeping."""
         # Check for new or removed elements
@@ -433,9 +433,9 @@ class TimelineGenerator:
 
     def _is_non_linear_change(
         self,
-        prev_value: Optional[str],
-        current_value: Optional[str],
-        next_value: Optional[str]
+        prev_value: str | None,
+        current_value: str | None,
+        next_value: str | None,
     ) -> bool:
         """Check if value change is non-linear (indicating keyframe importance)."""
         if not all([prev_value, current_value, next_value]):
@@ -457,7 +457,7 @@ class TimelineGenerator:
             # For non-numeric values, any change is significant
             return current_value != prev_value or current_value != next_value
 
-    def generate_keyframe_summary(self, animations: List[AnimationDefinition]) -> Dict[str, Any]:
+    def generate_keyframe_summary(self, animations: list[AnimationDefinition]) -> dict[str, Any]:
         """Generate summary of keyframe requirements for animations."""
         summary = {
             'total_animations': len(animations),
@@ -465,7 +465,7 @@ class TimelineGenerator:
             'attributes': set(),
             'duration': 0.0,
             'keyframe_density': 0.0,
-            'complexity_factors': []
+            'complexity_factors': [],
         }
 
         for animation in animations:

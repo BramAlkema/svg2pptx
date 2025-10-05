@@ -7,12 +7,15 @@ mixing, gradients, and professional color adjustment tools.
 """
 
 from __future__ import annotations
-import numpy as np
-import colorspacious
-from typing import List, Optional
+
 from enum import Enum
-from .core import Color
+from typing import List, Optional
+
+import colorspacious
+import numpy as np
+
 from .batch import ColorBatch
+from .core import Color
 
 
 class BlendMode(Enum):
@@ -112,7 +115,7 @@ class ColorManipulation:
 
         return self._blend_colors(color, gray, amount, BlendMode.NORMAL)
 
-    def mix_colors(self, colors: List[Color], weights: Optional[List[float]] = None) -> Color:
+    def mix_colors(self, colors: list[Color], weights: list[float] | None = None) -> Color:
         """
         Mix multiple colors with optional weights.
 
@@ -290,7 +293,7 @@ class ColorManipulation:
             return color.saturate(amount * 0.5)
 
     def create_gradient(self, start: Color, end: Color, steps: int,
-                       easing: str = 'linear') -> List[Color]:
+                       easing: str = 'linear') -> list[Color]:
         """
         Create smooth gradient between colors with easing functions.
 
@@ -351,8 +354,8 @@ class ColorManipulation:
             # Fallback to RGB interpolation
             return ColorBatch.gradient(start, end, steps).to_colors()
 
-    def create_palette_from_image_colors(self, dominant_colors: List[Color],
-                                       target_size: int = 5) -> List[Color]:
+    def create_palette_from_image_colors(self, dominant_colors: list[Color],
+                                       target_size: int = 5) -> list[Color]:
         """
         Create harmonious palette from dominant image colors.
 
@@ -372,7 +375,7 @@ class ColorManipulation:
         # Use k-means-like clustering to reduce colors
         return self._cluster_colors(dominant_colors, target_size)
 
-    def _cluster_colors(self, colors: List[Color], k: int) -> List[Color]:
+    def _cluster_colors(self, colors: list[Color], k: int) -> list[Color]:
         """Cluster colors using Lab color space for perceptual accuracy."""
         try:
             # Convert colors to Lab space

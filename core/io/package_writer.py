@@ -5,13 +5,13 @@ Package Writer
 Handles final PPTX package assembly from slide XML and relationships.
 """
 
-import time
+import io
 import logging
+import time
 import zipfile
-from typing import Dict, Any, Optional, List, BinaryIO
 from dataclasses import dataclass
 from pathlib import Path
-import io
+from typing import Any, BinaryIO, Dict, List, Optional
 
 from .embedder import EmbedderResult
 
@@ -28,15 +28,15 @@ class PackageError(Exception):
 @dataclass
 class PackageManifest:
     """Manifest of PPTX package contents"""
-    slides: List[str]
-    relationships: List[Dict[str, Any]]
-    media_files: List[Dict[str, Any]]
-    content_types: List[Dict[str, str]]
+    slides: list[str]
+    relationships: list[dict[str, Any]]
+    media_files: list[dict[str, Any]]
+    content_types: list[dict[str, str]]
 
     # Package metadata
-    title: Optional[str] = None
-    author: Optional[str] = None
-    created_date: Optional[str] = None
+    title: str | None = None
+    author: str | None = None
+    created_date: str | None = None
 
 
 class PackageWriter:
@@ -78,11 +78,11 @@ class PackageWriter:
             'theme': 'application/vnd.openxmlformats-officedocument.theme+xml',
             'image_png': 'image/png',
             'image_jpeg': 'image/jpeg',
-            'image_emf': 'application/emf'
+            'image_emf': 'application/emf',
         }
 
-    def write_package(self, embedder_results: List[EmbedderResult],
-                     output_path: str, manifest: PackageManifest = None) -> Dict[str, Any]:
+    def write_package(self, embedder_results: list[EmbedderResult],
+                     output_path: str, manifest: PackageManifest = None) -> dict[str, Any]:
         """
         Write complete PPTX package from embedder results.
 
@@ -127,7 +127,7 @@ class PackageWriter:
                     'slides': len(embedder_results),
                     'relationships': len(manifest.relationships),
                     'media_files': len(manifest.media_files),
-                    'content_types': len(manifest.content_types)
+                    'content_types': len(manifest.content_types),
                 }
 
             # Track file write timing
@@ -157,7 +157,7 @@ class PackageWriter:
                 'processing_time_ms': processing_time,
                 'media_files': len(manifest.media_files),
                 'relationships': len(manifest.relationships),
-                'compression_ratio': compression_ratio
+                'compression_ratio': compression_ratio,
             }
 
             # Include debug data when enabled
@@ -169,8 +169,8 @@ class PackageWriter:
         except Exception as e:
             raise PackageError(f"Failed to write PPTX package: {e}", cause=e)
 
-    def write_package_stream(self, embedder_results: List[EmbedderResult],
-                           stream: BinaryIO, manifest: PackageManifest = None) -> Dict[str, Any]:
+    def write_package_stream(self, embedder_results: list[EmbedderResult],
+                           stream: BinaryIO, manifest: PackageManifest = None) -> dict[str, Any]:
         """
         Write PPTX package to stream.
 
@@ -197,13 +197,13 @@ class PackageWriter:
                 'package_size_bytes': len(package_data),
                 'slide_count': len(embedder_results),
                 'media_files': len(manifest.media_files),
-                'relationships': len(manifest.relationships)
+                'relationships': len(manifest.relationships),
             }
 
         except Exception as e:
             raise PackageError(f"Failed to write PPTX to stream: {e}", cause=e)
 
-    def _create_package_data(self, embedder_results: List[EmbedderResult],
+    def _create_package_data(self, embedder_results: list[EmbedderResult],
                            manifest: PackageManifest) -> bytes:
         """Create complete PPTX package data in memory"""
         try:
@@ -258,7 +258,7 @@ class PackageWriter:
         except Exception as e:
             raise PackageError(f"Failed to write package file: {e}", cause=e)
 
-    def _create_default_manifest(self, embedder_results: List[EmbedderResult]) -> PackageManifest:
+    def _create_default_manifest(self, embedder_results: list[EmbedderResult]) -> PackageManifest:
         """Create default package manifest from embedder results"""
         all_relationships = []
         all_media_files = []
@@ -273,7 +273,7 @@ class PackageWriter:
             media_files=all_media_files,
             content_types=self._generate_content_type_list(embedder_results),
             title="SVG2PPTX Generated Presentation",
-            author="SVG2PPTX Clean Slate Architecture"
+            author="SVG2PPTX Clean Slate Architecture",
         )
 
     def _write_core_structure(self, zip_file: zipfile.ZipFile) -> None:
@@ -321,7 +321,7 @@ class PackageWriter:
     <p:notesSz cx="6858000" cy="9144000"/>
 </p:presentation>'''
 
-    def _generate_slide_relationships(self, relationship_data: List[Dict[str, Any]]) -> str:
+    def _generate_slide_relationships(self, relationship_data: list[dict[str, Any]]) -> str:
         """Generate slide relationship XML"""
         if not relationship_data:
             return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -339,7 +339,7 @@ class PackageWriter:
     {chr(10).join(relationships)}
 </Relationships>'''
 
-    def _write_media_files(self, zip_file: zipfile.ZipFile, media_files: List[Dict[str, Any]]) -> None:
+    def _write_media_files(self, zip_file: zipfile.ZipFile, media_files: list[dict[str, Any]]) -> None:
         """Write media files to package"""
         for media in media_files:
             filename = media['filename']
@@ -355,14 +355,14 @@ class PackageWriter:
             '<Default Extension="xml" ContentType="application/xml"/>',
             '<Default Extension="png" ContentType="image/png"/>',
             '<Default Extension="jpeg" ContentType="image/jpeg"/>',
-            '<Default Extension="emf" ContentType="application/emf"/>'
+            '<Default Extension="emf" ContentType="application/emf"/>',
         ]
 
         overrides = [
             '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>',
             '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>',
             '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>',
-            '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
+            '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>',
         ]
 
         # Add slide overrides
@@ -386,7 +386,7 @@ class PackageWriter:
         """Generate presentation relationships"""
         relationships = [
             '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>',
-            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>',
         ]
 
         for i in range(1, slide_count + 1):
@@ -503,7 +503,7 @@ class PackageWriter:
     </p:clrMapOvr>
 </p:sldLayout>'''
 
-    def _generate_content_type_list(self, embedder_results: List[EmbedderResult]) -> List[Dict[str, str]]:
+    def _generate_content_type_list(self, embedder_results: list[EmbedderResult]) -> list[dict[str, str]]:
         """Generate content type list from embedder results"""
         content_types = []
 
@@ -515,12 +515,12 @@ class PackageWriter:
 
                 content_types.append({
                     'extension': extension,
-                    'content_type': content_type
+                    'content_type': content_type,
                 })
 
         return content_types
 
-    def _estimate_compression_ratio(self, embedder_results: List[EmbedderResult],
+    def _estimate_compression_ratio(self, embedder_results: list[EmbedderResult],
                                   package_size: int) -> float:
         """Estimate compression ratio"""
         try:

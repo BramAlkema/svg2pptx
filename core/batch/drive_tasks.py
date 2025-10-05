@@ -28,22 +28,24 @@ For new projects, use:
 """
 
 import logging
-import warnings
-import time
 import sys
-from pathlib import Path
+import time
+import warnings
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import requests
 
 # Add path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from .huey_app import huey
-from .models import BatchJob, BatchFileDriveMetadata, DEFAULT_DB_PATH
-from .drive_controller import BatchDriveController, BatchDriveError
-from api.services.google_drive import GoogleDriveService, GoogleDriveError
+from api.services.google_drive import GoogleDriveError, GoogleDriveService
 from api.services.google_slides import GoogleSlidesService
+
+from .drive_controller import BatchDriveController, BatchDriveError
+from .huey_app import huey
+from .models import DEFAULT_DB_PATH, BatchFileDriveMetadata, BatchJob
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +55,10 @@ logger = logging.getLogger(__name__)
 @huey.task(retries=3, retry_delay=60)
 def upload_batch_files_to_drive(
     job_id: str, 
-    files: List[Dict[str, str]], 
-    folder_pattern: Optional[str] = None,
-    generate_previews: bool = True
-) -> Dict[str, Any]:
+    files: list[dict[str, str]], 
+    folder_pattern: str | None = None,
+    generate_previews: bool = True,
+) -> dict[str, Any]:
     """
     Upload batch of converted files to Google Drive.
     
@@ -78,14 +80,14 @@ def upload_batch_files_to_drive(
             return {
                 'success': False,
                 'error_message': f'Batch job {job_id} not found',
-                'error_type': 'job_not_found'
+                'error_type': 'job_not_found',
             }
         
         if not batch_job.drive_integration_enabled:
             return {
                 'success': False,
                 'error_message': f'Drive integration is not enabled for job {job_id}',
-                'error_type': 'drive_not_enabled'
+                'error_type': 'drive_not_enabled',
             }
         
         # Update job status
@@ -101,7 +103,7 @@ def upload_batch_files_to_drive(
             job_id,
             files,
             folder_pattern,
-            generate_previews
+            generate_previews,
         )
         
         # Process results
@@ -127,7 +129,7 @@ def upload_batch_files_to_drive(
                 'failed_files': failed_uploads,
                 'total_files': len(files),
                 'errors': errors[:5],  # Limit to 5 errors
-                'completed_at': datetime.utcnow().isoformat()
+                'completed_at': datetime.utcnow().isoformat(),
             }
             
             logger.info(f"Drive upload completed for job {job_id}: {successful_uploads}/{len(files)} files uploaded")
@@ -142,7 +144,7 @@ def upload_batch_files_to_drive(
                 'job_id': job_id,
                 'error_message': workflow_result.error_message or "Drive upload workflow failed",
                 'error_type': 'workflow_error',
-                'failed_at': datetime.utcnow().isoformat()
+                'failed_at': datetime.utcnow().isoformat(),
             }
             
     except BatchDriveError as e:
@@ -163,7 +165,7 @@ def upload_batch_files_to_drive(
             'error_message': str(e),
             'error_type': 'drive_service_error',
             'error_code': getattr(e, 'error_code', None),
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -186,15 +188,15 @@ def upload_batch_files_to_drive(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': error_type,
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task(retries=2, retry_delay=30)
 def create_batch_drive_folder(
     job_id: str, 
-    folder_pattern: Optional[str] = None
-) -> Dict[str, Any]:
+    folder_pattern: str | None = None,
+) -> dict[str, Any]:
     """
     Create Google Drive folder structure for batch job.
     
@@ -215,7 +217,7 @@ def create_batch_drive_folder(
         folder_result = drive_controller.create_batch_folder_with_retry(
             job_id, 
             folder_pattern,
-            max_retries=2
+            max_retries=2,
         )
         
         if folder_result.success:
@@ -224,7 +226,7 @@ def create_batch_drive_folder(
                 'job_id': job_id,
                 'folder_id': folder_result.folder_id,
                 'folder_url': folder_result.folder_url,
-                'created_at': datetime.utcnow().isoformat()
+                'created_at': datetime.utcnow().isoformat(),
             }
         else:
             return {
@@ -232,7 +234,7 @@ def create_batch_drive_folder(
                 'job_id': job_id,
                 'error_message': folder_result.error_message,
                 'error_type': 'folder_creation_error',
-                'failed_at': datetime.utcnow().isoformat()
+                'failed_at': datetime.utcnow().isoformat(),
             }
             
     except Exception as e:
@@ -243,15 +245,15 @@ def create_batch_drive_folder(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'unexpected_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task(retries=2, retry_delay=45)
 def generate_batch_previews(
     job_id: str, 
-    file_ids: List[str]
-) -> Dict[str, Any]:
+    file_ids: list[str],
+) -> dict[str, Any]:
     """
     Generate PNG previews for batch of PowerPoint files.
     
@@ -282,7 +284,7 @@ def generate_batch_previews(
                 preview_urls.append({
                     'file_id': result.file_id,
                     'preview_url': result.preview_url,
-                    'thumbnail_url': result.thumbnail_url
+                    'thumbnail_url': result.thumbnail_url,
                 })
         
         # Collect errors
@@ -296,7 +298,7 @@ def generate_batch_previews(
             'total_files': len(file_ids),
             'preview_urls': preview_urls,
             'errors': errors[:3],  # Limit to 3 errors
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
         logger.info(f"Preview generation completed for job {job_id}: {successful_previews}/{len(file_ids)} previews generated")
@@ -310,7 +312,7 @@ def generate_batch_previews(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'preview_generation_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
@@ -319,9 +321,9 @@ def generate_batch_previews(
 @huey.task()
 def coordinate_batch_workflow(
     job_id: str,
-    svg_urls: List[str],
-    conversion_options: Dict[str, Any] = None
-) -> Dict[str, Any]:
+    svg_urls: list[str],
+    conversion_options: dict[str, Any] = None,
+) -> dict[str, Any]:
     """
     Coordinate complete batch workflow: conversion + Drive upload.
 
@@ -344,7 +346,7 @@ def coordinate_batch_workflow(
         "Please migrate to core.batch.coordinator.coordinate_batch_workflow_clean_slate(). "
         "See migration guide: docs/guides/batch-migration-guide.md",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
 
     try:
@@ -360,7 +362,7 @@ def coordinate_batch_workflow(
                 'conversion_success': False,
                 'error_message': conversion_result.get('error_message', 'SVG conversion failed'),
                 'error_type': 'conversion_error',
-                'failed_at': datetime.utcnow().isoformat()
+                'failed_at': datetime.utcnow().isoformat(),
             }
         
         # Step 2: Upload to Drive (if integration enabled)
@@ -379,7 +381,7 @@ def coordinate_batch_workflow(
                     'converted_files': len(converted_files),
                     'uploaded_files': upload_result.get('uploaded_files', 0),
                     'folder_url': upload_result.get('folder_url'),
-                    'completed_at': datetime.utcnow().isoformat()
+                    'completed_at': datetime.utcnow().isoformat(),
                 }
         
         # No Drive integration or no converted files
@@ -389,7 +391,7 @@ def coordinate_batch_workflow(
             'conversion_success': True,
             'upload_success': None,  # No upload attempted
             'converted_files': len(conversion_result.get('converted_files', [])),
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -400,17 +402,17 @@ def coordinate_batch_workflow(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'workflow_coordination_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task()
 def coordinate_upload_only_workflow(
     job_id: str, 
-    converted_files: List[Dict[str, str]], 
-    folder_pattern: Optional[str] = None,
-    generate_previews: bool = True
-) -> Dict[str, Any]:
+    converted_files: list[dict[str, str]], 
+    folder_pattern: str | None = None,
+    generate_previews: bool = True,
+) -> dict[str, Any]:
     """
     Coordinate upload-only workflow for pre-converted files.
     
@@ -436,7 +438,7 @@ def coordinate_upload_only_workflow(
             'uploaded_files': upload_result.get('uploaded_files', 0),
             'failed_files': upload_result.get('failed_files', 0),
             'folder_url': upload_result.get('folder_url'),
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -447,7 +449,7 @@ def coordinate_upload_only_workflow(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'upload_workflow_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
@@ -457,8 +459,8 @@ def coordinate_upload_only_workflow(
 def update_batch_job_status(
     job_id: str, 
     status: str, 
-    drive_upload_status: Optional[str] = None
-) -> Dict[str, Any]:
+    drive_upload_status: str | None = None,
+) -> dict[str, Any]:
     """
     Update batch job status in database.
     
@@ -475,7 +477,7 @@ def update_batch_job_status(
         if not batch_job:
             return {
                 'success': False,
-                'error_message': f'Job {job_id} not found'
+                'error_message': f'Job {job_id} not found',
             }
         
         batch_job.status = status
@@ -489,7 +491,7 @@ def update_batch_job_status(
             'job_id': job_id,
             'status': status,
             'drive_upload_status': drive_upload_status,
-            'updated_at': datetime.utcnow().isoformat()
+            'updated_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -498,12 +500,12 @@ def update_batch_job_status(
         return {
             'success': False,
             'job_id': job_id,
-            'error_message': str(e)
+            'error_message': str(e),
         }
 
 
 @huey.task()
-def track_upload_progress(job_id: str) -> Dict[str, Any]:
+def track_upload_progress(job_id: str) -> dict[str, Any]:
     """
     Track upload progress for a batch job.
     
@@ -524,7 +526,7 @@ def track_upload_progress(job_id: str) -> Dict[str, Any]:
                 'uploaded_files': 0,
                 'pending_files': 0,
                 'failed_files': 0,
-                'progress_percentage': 0.0
+                'progress_percentage': 0.0,
             }
         
         total_files = len(file_metadata_list)
@@ -540,7 +542,7 @@ def track_upload_progress(job_id: str) -> Dict[str, Any]:
             'uploaded_files': uploaded_files,
             'pending_files': pending_files,
             'failed_files': failed_files,
-            'progress_percentage': round(progress_percentage, 2)
+            'progress_percentage': round(progress_percentage, 2),
         }
         
     except Exception as e:
@@ -548,12 +550,12 @@ def track_upload_progress(job_id: str) -> Dict[str, Any]:
         
         return {
             'job_id': job_id,
-            'error_message': str(e)
+            'error_message': str(e),
         }
 
 
 @huey.task()
-def get_task_status(task_id: str) -> Dict[str, Any]:
+def get_task_status(task_id: str) -> dict[str, Any]:
     """
     Get status of a Huey task.
     
@@ -569,7 +571,7 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
         return {
             'task_id': task_id,
             'status': 'completed',  # In immediate mode
-            'checked_at': datetime.utcnow().isoformat()
+            'checked_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -578,14 +580,14 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
         return {
             'task_id': task_id,
             'status': 'error',
-            'error_message': str(e)
+            'error_message': str(e),
         }
 
 
 # Error Recovery and Retry Logic
 
 @huey.task(retries=2, retry_delay=120)  # Longer delay for retry operations
-def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
+def retry_failed_drive_uploads(job_id: str) -> dict[str, Any]:
     """
     Retry failed Drive uploads for a batch job.
     
@@ -611,7 +613,7 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
                 'job_id': job_id,
                 'message': 'No failed uploads to retry',
                 'retried_files': 0,
-                'completed_at': datetime.utcnow().isoformat()
+                'completed_at': datetime.utcnow().isoformat(),
             }
         
         logger.info(f"Found {len(failed_files)} failed uploads to retry for job {job_id}")
@@ -629,7 +631,7 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
                 file_info = {
                     'path': f'/tmp/{job_id}_{file_meta.original_filename}.pptx',  # Reconstructed path
                     'original_name': file_meta.original_filename,
-                    'converted_name': f'{job_id}_{file_meta.original_filename}.pptx'
+                    'converted_name': f'{job_id}_{file_meta.original_filename}.pptx',
                 }
                 
                 # Attempt single file upload with increased timeout
@@ -654,7 +656,7 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
                 retry_results.append({
                     'filename': file_meta.original_filename,
                     'success': single_file_result['success'],
-                    'error_message': single_file_result.get('error_message')
+                    'error_message': single_file_result.get('error_message'),
                 })
                 
                 # Add delay between retries to avoid rate limiting
@@ -670,7 +672,7 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
                 retry_results.append({
                     'filename': file_meta.original_filename,
                     'success': False,
-                    'error_message': str(e)
+                    'error_message': str(e),
                 })
         
         # Update job status if all files are now uploaded
@@ -690,7 +692,7 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
             'successful_retries': successful_retries,
             'remaining_failures': remaining_failed,
             'retry_results': retry_results,
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -701,15 +703,15 @@ def retry_failed_drive_uploads(job_id: str) -> Dict[str, Any]:
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'retry_operation_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 def _retry_single_file_upload(
     file_meta: BatchFileDriveMetadata, 
-    file_info: Dict[str, str], 
-    drive_controller: BatchDriveController
-) -> Dict[str, Any]:
+    file_info: dict[str, str], 
+    drive_controller: BatchDriveController,
+) -> dict[str, Any]:
     """
     Retry upload for a single file with adaptive error handling.
     
@@ -748,7 +750,7 @@ def _retry_single_file_upload(
             single_upload_result = drive_controller.upload_batch_files(
                 file_meta.batch_job_id, 
                 [file_info], 
-                None  # Use existing folder
+                None,  # Use existing folder
             )
             
             if single_upload_result and len(single_upload_result) > 0 and single_upload_result[0].success:
@@ -756,7 +758,7 @@ def _retry_single_file_upload(
                     'success': True,
                     'file_id': single_upload_result[0].file_id,
                     'file_url': single_upload_result[0].file_url,
-                    'attempt': attempt + 1
+                    'attempt': attempt + 1,
                 }
                 
         except Exception as e:
@@ -766,18 +768,18 @@ def _retry_single_file_upload(
                 return {
                     'success': False,
                     'error_message': f"All {max_attempts} retry attempts failed: {str(e)}",
-                    'final_attempt': True
+                    'final_attempt': True,
                 }
     
     return {
         'success': False,
         'error_message': f"Exhausted {max_attempts} retry attempts",
-        'exhausted': True
+        'exhausted': True,
     }
 
 
 @huey.task()
-def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
+def recover_batch_job_from_failure(job_id: str) -> dict[str, Any]:
     """
     Attempt to recover a failed batch job by analyzing and fixing issues.
     
@@ -794,13 +796,13 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
         if not batch_job:
             return {
                 'success': False,
-                'error_message': f'Job {job_id} not found'
+                'error_message': f'Job {job_id} not found',
             }
         
         if batch_job.status != "failed":
             return {
                 'success': False,
-                'error_message': f'Job {job_id} is not in failed state (current: {batch_job.status})'
+                'error_message': f'Job {job_id} is not in failed state (current: {batch_job.status})',
             }
         
         recovery_actions = []
@@ -812,7 +814,7 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
                 recovery_actions.append({
                     'action': 'drive_connection_test',
                     'success': False,
-                    'message': 'Drive connection failed - authentication may need renewal'
+                    'message': 'Drive connection failed - authentication may need renewal',
                 })
                 
                 # Can't proceed with Drive recovery if connection is bad
@@ -820,19 +822,19 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
                     'success': False,
                     'job_id': job_id,
                     'error_message': 'Drive connection test failed during recovery',
-                    'recovery_actions': recovery_actions
+                    'recovery_actions': recovery_actions,
                 }
             else:
                 recovery_actions.append({
                     'action': 'drive_connection_test',
                     'success': True,
-                    'message': 'Drive connection is healthy'
+                    'message': 'Drive connection is healthy',
                 })
         except Exception as e:
             recovery_actions.append({
                 'action': 'drive_connection_test',
                 'success': False,
-                'message': f'Connection test failed: {e}'
+                'message': f'Connection test failed: {e}',
             })
         
         # 2. Retry failed uploads if any
@@ -842,13 +844,13 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
                 recovery_actions.append({
                     'action': 'retry_failed_uploads',
                     'success': retry_result.get('success', False),
-                    'message': f"Retried {retry_result.get('total_retried', 0)} files, {retry_result.get('successful_retries', 0)} succeeded"
+                    'message': f"Retried {retry_result.get('total_retried', 0)} files, {retry_result.get('successful_retries', 0)} succeeded",
                 })
             except Exception as e:
                 recovery_actions.append({
                     'action': 'retry_failed_uploads',
                     'success': False,
-                    'message': f'Upload retry failed: {e}'
+                    'message': f'Upload retry failed: {e}',
                 })
         
         # 3. Update job status if recovery was successful
@@ -860,7 +862,7 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
             recovery_actions.append({
                 'action': 'job_status_update',
                 'success': True,
-                'message': 'Job status reset to processing'
+                'message': 'Job status reset to processing',
             })
             
             recovery_success = True
@@ -871,7 +873,7 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
             'success': recovery_success,
             'job_id': job_id,
             'recovery_actions': recovery_actions,
-            'recovered_at': datetime.utcnow().isoformat()
+            'recovered_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -882,12 +884,12 @@ def recover_batch_job_from_failure(job_id: str) -> Dict[str, Any]:
             'job_id': job_id,
             'error_message': str(e),
             'error_type': 'recovery_operation_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task()
-def handle_drive_quota_exceeded(job_id: str, wait_minutes: int = 60) -> Dict[str, Any]:
+def handle_drive_quota_exceeded(job_id: str, wait_minutes: int = 60) -> dict[str, Any]:
     """
     Handle Drive quota exceeded errors with intelligent waiting and retry.
     
@@ -920,7 +922,7 @@ def handle_drive_quota_exceeded(job_id: str, wait_minutes: int = 60) -> Dict[str
             'action': 'quota_wait_scheduled',
             'wait_minutes': wait_minutes,
             'scheduled_retry_at': (datetime.utcnow() + timedelta(minutes=wait_minutes)).isoformat(),
-            'message': f'Quota wait scheduled for {wait_minutes} minutes'
+            'message': f'Quota wait scheduled for {wait_minutes} minutes',
         }
         
     except Exception as e:
@@ -930,7 +932,7 @@ def handle_drive_quota_exceeded(job_id: str, wait_minutes: int = 60) -> Dict[str
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'quota_handling_error'
+            'error_type': 'quota_handling_error',
         }
 
 
@@ -938,7 +940,7 @@ def handle_drive_quota_exceeded(job_id: str, wait_minutes: int = 60) -> Dict[str
 
 @huey.task()
 def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100, 
-                           max_concurrent_uploads: int = 10) -> Dict[str, Any]:
+                           max_concurrent_uploads: int = 10) -> dict[str, Any]:
     """
     Initialize rate limiting configuration for a batch job.
     
@@ -951,8 +953,8 @@ def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100,
         Dictionary with rate limiter initialization results
     """
     try:
-        from datetime import datetime
         import json
+        from datetime import datetime
         
         # Rate limiter state
         rate_limiter_config = {
@@ -963,7 +965,7 @@ def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100,
             'active_uploads': [],
             'quota_reset_time': None,
             'quota_exceeded': False,
-            'last_updated': datetime.utcnow().isoformat()
+            'last_updated': datetime.utcnow().isoformat(),
         }
         
         # Store in job metadata
@@ -983,7 +985,7 @@ def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100,
                 'success': True,
                 'job_id': job_id,
                 'rate_limiter_config': rate_limiter_config,
-                'status': 'rate_limiter_initialized'
+                'status': 'rate_limiter_initialized',
             }
         else:
             raise ValueError(f"Batch job {job_id} not found")
@@ -995,12 +997,12 @@ def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100,
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'rate_limiter_init_error'
+            'error_type': 'rate_limiter_init_error',
         }
 
 
 @huey.task()
-def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, Any]:
+def check_rate_limit(job_id: str, operation_type: str = 'upload') -> dict[str, Any]:
     """
     Check if current operation can proceed based on rate limits.
     
@@ -1012,8 +1014,8 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
         Dictionary with rate limit check results
     """
     try:
-        from datetime import datetime, timedelta
         import json
+        from datetime import datetime, timedelta
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
@@ -1041,7 +1043,7 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
                     'can_proceed': False,
                     'reason': 'quota_exceeded',
                     'wait_until': quota_reset_time,
-                    'error_type': 'quota_wait_required'
+                    'error_type': 'quota_wait_required',
                 }
             else:
                 # Reset quota exceeded flag
@@ -1065,7 +1067,7 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
                 'reason': 'rate_limit_exceeded',
                 'current_requests': len(request_timestamps),
                 'max_requests_per_minute': max_requests,
-                'error_type': 'rate_limit_wait_required'
+                'error_type': 'rate_limit_wait_required',
             }
         
         # Check concurrent uploads limit
@@ -1079,7 +1081,7 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
                 'reason': 'concurrent_limit_exceeded',
                 'active_uploads': len(active_uploads),
                 'max_concurrent_uploads': max_concurrent,
-                'error_type': 'concurrent_wait_required'
+                'error_type': 'concurrent_wait_required',
             }
         
         # Update rate limiter state
@@ -1087,7 +1089,7 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
         if operation_type == 'upload':
             active_uploads.append({
                 'started_at': current_time.isoformat(),
-                'operation_id': f"{job_id}_{current_time.timestamp()}"
+                'operation_id': f"{job_id}_{current_time.timestamp()}",
             })
         
         rate_limiter['request_timestamps'] = request_timestamps
@@ -1105,7 +1107,7 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
             'can_proceed': True,
             'current_requests': len(request_timestamps),
             'active_uploads': len(active_uploads),
-            'status': 'rate_limit_ok'
+            'status': 'rate_limit_ok',
         }
         
     except Exception as e:
@@ -1116,13 +1118,13 @@ def check_rate_limit(job_id: str, operation_type: str = 'upload') -> Dict[str, A
             'job_id': job_id,
             'can_proceed': False,
             'error_message': str(e),
-            'error_type': 'rate_limit_check_error'
+            'error_type': 'rate_limit_check_error',
         }
 
 
 @huey.task()
 def release_rate_limit_slot(job_id: str, operation_type: str = 'upload', 
-                           operation_id: str = None) -> Dict[str, Any]:
+                           operation_id: str = None) -> dict[str, Any]:
     """
     Release a rate limit slot after operation completion.
     
@@ -1135,8 +1137,8 @@ def release_rate_limit_slot(job_id: str, operation_type: str = 'upload',
         Dictionary with slot release results
     """
     try:
-        from datetime import datetime
         import json
+        from datetime import datetime
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
@@ -1149,7 +1151,7 @@ def release_rate_limit_slot(job_id: str, operation_type: str = 'upload',
             return {
                 'success': True,
                 'job_id': job_id,
-                'message': 'No rate limiter found, nothing to release'
+                'message': 'No rate limiter found, nothing to release',
             }
         
         # Release upload slot
@@ -1180,7 +1182,7 @@ def release_rate_limit_slot(job_id: str, operation_type: str = 'upload',
             'job_id': job_id,
             'operation_type': operation_type,
             'remaining_active_uploads': len(rate_limiter.get('active_uploads', [])),
-            'status': 'rate_limit_slot_released'
+            'status': 'rate_limit_slot_released',
         }
         
     except Exception as e:
@@ -1190,12 +1192,12 @@ def release_rate_limit_slot(job_id: str, operation_type: str = 'upload',
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'rate_limit_release_error'
+            'error_type': 'rate_limit_release_error',
         }
 
 
 @huey.task()
-def handle_quota_exceeded_with_backoff(job_id: str, error_details: Dict[str, Any] = None) -> Dict[str, Any]:
+def handle_quota_exceeded_with_backoff(job_id: str, error_details: dict[str, Any] = None) -> dict[str, Any]:
     """
     Handle Drive API quota exceeded with intelligent backoff.
     
@@ -1207,8 +1209,8 @@ def handle_quota_exceeded_with_backoff(job_id: str, error_details: Dict[str, Any
         Dictionary with quota handling results
     """
     try:
-        from datetime import datetime, timedelta
         import json
+        from datetime import datetime, timedelta
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
@@ -1268,7 +1270,7 @@ def handle_quota_exceeded_with_backoff(job_id: str, error_details: Dict[str, Any
             'backoff_hours': backoff_hours,
             'reset_time': reset_time.isoformat(),
             'retry_scheduled': True,
-            'status': 'quota_backoff_applied'
+            'status': 'quota_backoff_applied',
         }
         
     except Exception as e:
@@ -1278,12 +1280,12 @@ def handle_quota_exceeded_with_backoff(job_id: str, error_details: Dict[str, Any
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'quota_backoff_error'
+            'error_type': 'quota_backoff_error',
         }
 
 
 @huey.task()
-def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
+def monitor_drive_api_usage(job_id: str) -> dict[str, Any]:
     """
     Monitor Drive API usage and adjust rate limits dynamically.
     
@@ -1294,8 +1296,8 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
         Dictionary with usage monitoring results
     """
     try:
-        from datetime import datetime, timedelta
         import json
+        from datetime import datetime, timedelta
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
@@ -1332,7 +1334,7 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
             adjustment_needed = True
             new_limits = {
                 'max_concurrent_uploads': new_concurrent,
-                'max_requests_per_minute': new_requests
+                'max_requests_per_minute': new_requests,
             }
         
         # Increase limits if low utilization and good performance
@@ -1343,7 +1345,7 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
             adjustment_needed = True
             new_limits = {
                 'max_concurrent_uploads': new_concurrent,
-                'max_requests_per_minute': new_requests
+                'max_requests_per_minute': new_requests,
             }
         
         # Apply adjustments
@@ -1360,10 +1362,10 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
             'request_utilization_pct': round(request_utilization, 1),
             'current_limits': {
                 'max_concurrent_uploads': rate_limiter.get('max_concurrent_uploads', 10),
-                'max_requests_per_minute': rate_limiter.get('max_requests_per_minute', 100)
+                'max_requests_per_minute': rate_limiter.get('max_requests_per_minute', 100),
             },
             'adjustment_applied': adjustment_needed,
-            'new_limits': new_limits if adjustment_needed else None
+            'new_limits': new_limits if adjustment_needed else None,
         }
         
         # Store monitoring history (keep last 24 hours)
@@ -1386,7 +1388,7 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
             'success': True,
             'job_id': job_id,
             'monitoring_data': monitoring_data,
-            'status': 'usage_monitored'
+            'status': 'usage_monitored',
         }
         
     except Exception as e:
@@ -1396,16 +1398,16 @@ def monitor_drive_api_usage(job_id: str) -> Dict[str, Any]:
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'usage_monitoring_error'
+            'error_type': 'usage_monitoring_error',
         }
 
 
 # Pipeline Coordination Tasks
 
 @huey.task()
-def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]], 
-                                   conversion_options: Dict[str, Any] = None,
-                                   upload_options: Dict[str, Any] = None) -> Dict[str, Any]:
+def coordinate_conversion_and_upload(job_id: str, files: list[dict[str, str]], 
+                                   conversion_options: dict[str, Any] = None,
+                                   upload_options: dict[str, Any] = None) -> dict[str, Any]:
     """
     Coordinate SVG conversion and Drive upload in a single pipeline.
     
@@ -1427,7 +1429,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
         conversion_options = conversion_options or {}
         upload_options = upload_options or {
             'folder_pattern': None,
-            'generate_previews': True
+            'generate_previews': True,
         }
         
         # Verify job exists
@@ -1436,7 +1438,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
             return {
                 'success': False,
                 'error_message': f'Batch job {job_id} not found',
-                'error_type': 'job_not_found'
+                'error_type': 'job_not_found',
             }
         
         # Check rate limits before starting
@@ -1446,13 +1448,13 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
             # Schedule for later
             coordinate_conversion_and_upload.schedule(
                 args=(job_id, files, conversion_options, upload_options),
-                delay=300  # 5 minutes
+                delay=300,  # 5 minutes
             )
             return {
                 'success': True,
                 'job_id': job_id,
                 'status': 'scheduled_for_later',
-                'reason': rate_check.get('reason', 'rate_limit')
+                'reason': rate_check.get('reason', 'rate_limit'),
             }
         
         # Update job status
@@ -1481,7 +1483,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 # Note: This assumes the BatchJobManager has conversion capabilities
                 # In a real implementation, this might call a separate conversion service
                 convert_result = job_manager.process_single_file(
-                    job_id, input_path, output_path, conversion_options
+                    job_id, input_path, output_path, conversion_options,
                 )
                 
                 conversion_results.append(convert_result)
@@ -1492,7 +1494,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                         'input_path': input_path,
                         'output_path': output_path,
                         'file_size': convert_result.get('file_size', 0),
-                        'conversion_time': convert_result.get('processing_time', 0)
+                        'conversion_time': convert_result.get('processing_time', 0),
                     })
                 
             except Exception as e:
@@ -1500,7 +1502,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 conversion_results.append({
                     'success': False,
                     'input_path': file_info.get('input_path', ''),
-                    'error_message': str(e)
+                    'error_message': str(e),
                 })
         
         # Update job status after conversion
@@ -1515,7 +1517,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 'job_id': job_id,
                 'error_message': 'All conversions failed',
                 'error_type': 'conversion_failure',
-                'conversion_results': conversion_results[:5]  # Limit results
+                'conversion_results': conversion_results[:5],  # Limit results
             }
         
         # Proceed with Drive upload if we have successful conversions
@@ -1527,7 +1529,7 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
             upload_result = upload_batch_files_to_drive.schedule(
                 args=(job_id, converted_files, 
                       upload_options.get('folder_pattern'),
-                      upload_options.get('generate_previews', True))
+                      upload_options.get('generate_previews', True)),
             )
             
             return {
@@ -1536,11 +1538,11 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 'conversion_results': {
                     'successful': successful_conversions,
                     'failed': len(conversion_results) - successful_conversions,
-                    'total': len(conversion_results)
+                    'total': len(conversion_results),
                 },
                 'upload_scheduled': True,
                 'upload_task_id': str(upload_result) if upload_result else None,
-                'status': 'conversion_complete_upload_scheduled'
+                'status': 'conversion_complete_upload_scheduled',
             }
         else:
             # No Drive upload needed or enabled
@@ -1553,10 +1555,10 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
                 'conversion_results': {
                     'successful': successful_conversions,
                     'failed': len(conversion_results) - successful_conversions,
-                    'total': len(conversion_results)
+                    'total': len(conversion_results),
                 },
                 'upload_scheduled': False,
-                'status': 'conversion_complete_no_upload'
+                'status': 'conversion_complete_no_upload',
             }
         
     except Exception as e:
@@ -1576,12 +1578,12 @@ def coordinate_conversion_and_upload(job_id: str, files: List[Dict[str, str]],
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'pipeline_coordination_error'
+            'error_type': 'pipeline_coordination_error',
         }
 
 
 @huey.task()
-def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
+def monitor_pipeline_progress(job_id: str) -> dict[str, Any]:
     """
     Monitor progress of conversion and upload pipeline.
     
@@ -1592,15 +1594,15 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
         Dictionary with pipeline progress information
     """
     try:
-        from datetime import datetime
         import json
+        from datetime import datetime
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
         if not batch_job:
             return {
                 'success': False,
                 'error_message': f'Batch job {job_id} not found',
-                'error_type': 'job_not_found'
+                'error_type': 'job_not_found',
             }
         
         # Get job metadata
@@ -1624,12 +1626,12 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
             'completed': metadata.get('completed_conversions', 0),
             'failed': metadata.get('failed_conversions', 0),
             'total': total_files,
-            'percentage': 0
+            'percentage': 0,
         }
         
         if total_files > 0:
             conversion_progress['percentage'] = round(
-                (conversion_progress['completed'] / total_files) * 100, 1
+                (conversion_progress['completed'] / total_files) * 100, 1,
             )
         
         # Upload progress
@@ -1637,7 +1639,7 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
             'completed': 0,
             'failed': 0,
             'total': conversion_progress['completed'],
-            'percentage': 0
+            'percentage': 0,
         }
         
         if drive_metadata:
@@ -1648,7 +1650,7 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
             
             if upload_progress['total'] > 0:
                 upload_progress['percentage'] = round(
-                    (upload_progress['completed'] / upload_progress['total']) * 100, 1
+                    (upload_progress['completed'] / upload_progress['total']) * 100, 1,
                 )
         
         # Overall pipeline progress
@@ -1691,14 +1693,14 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
                 'overall_percentage': overall_percentage,
                 'current_stage': current_stage,
                 'stages': pipeline_stages,
-                'completed_stages': completed_stages
+                'completed_stages': completed_stages,
             },
             'conversion_progress': conversion_progress,
             'upload_progress': upload_progress,
             'job_status': batch_job.status,
             'drive_upload_status': batch_job.drive_upload_status,
             'estimated_completion': estimated_completion.isoformat() if estimated_completion else None,
-            'last_updated': datetime.utcnow().isoformat()
+            'last_updated': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -1708,12 +1710,12 @@ def monitor_pipeline_progress(job_id: str) -> Dict[str, Any]:
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'progress_monitoring_error'
+            'error_type': 'progress_monitoring_error',
         }
 
 
 @huey.task()
-def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = None) -> Dict[str, Any]:
+def cleanup_completed_pipeline(job_id: str, cleanup_options: dict[str, Any] = None) -> dict[str, Any]:
     """
     Clean up resources after pipeline completion.
     
@@ -1725,14 +1727,14 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
         Dictionary with cleanup results
     """
     try:
+        import json
         import os
         import shutil
-        import json
         
         cleanup_options = cleanup_options or {
             'remove_temp_files': True,
             'keep_logs': True,
-            'archive_metadata': True
+            'archive_metadata': True,
         }
         
         batch_job = BatchJob.get_by_id(job_id, DEFAULT_DB_PATH)
@@ -1740,14 +1742,14 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
             return {
                 'success': False,
                 'error_message': f'Batch job {job_id} not found',
-                'error_type': 'job_not_found'
+                'error_type': 'job_not_found',
             }
         
         cleanup_results = {
             'temp_files_removed': 0,
             'temp_dirs_removed': 0,
             'logs_archived': False,
-            'metadata_archived': False
+            'metadata_archived': False,
         }
         
         # Get job metadata to find temp paths
@@ -1776,7 +1778,7 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
                     'completed_at': datetime.utcnow().isoformat(),
                     'final_status': batch_job.status,
                     'drive_status': batch_job.drive_upload_status,
-                    'metadata': metadata
+                    'metadata': metadata,
                 }
                 
                 # Store in archived logs (implementation depends on log storage system)
@@ -1811,7 +1813,7 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
             'success': True,
             'job_id': job_id,
             'cleanup_results': cleanup_results,
-            'status': 'cleanup_completed'
+            'status': 'cleanup_completed',
         }
         
     except Exception as e:
@@ -1821,14 +1823,14 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
             'success': False,
             'job_id': job_id,
             'error_message': str(e),
-            'error_type': 'cleanup_error'
+            'error_type': 'cleanup_error',
         }
 
 
 # Utility and Testing Tasks
 
 @huey.task()
-def test_drive_connection() -> Dict[str, Any]:
+def test_drive_connection() -> dict[str, Any]:
     """
     Test Google Drive connection and authentication.
     
@@ -1851,7 +1853,7 @@ def test_drive_connection() -> Dict[str, Any]:
             'drive_connection': drive_connection,
             'slides_connection': slides_connection,
             'status': 'connected',
-            'tested_at': datetime.utcnow().isoformat()
+            'tested_at': datetime.utcnow().isoformat(),
         }
         
     except GoogleDriveError as e:
@@ -1863,7 +1865,7 @@ def test_drive_connection() -> Dict[str, Any]:
             'error_type': 'authentication_error',
             'error_code': getattr(e, 'error_code', None),
             'status': 'disconnected',
-            'tested_at': datetime.utcnow().isoformat()
+            'tested_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -1874,7 +1876,7 @@ def test_drive_connection() -> Dict[str, Any]:
             'error_message': str(e),
             'error_type': 'connection_error',
             'status': 'error',
-            'tested_at': datetime.utcnow().isoformat()
+            'tested_at': datetime.utcnow().isoformat(),
         }
 
 
@@ -1905,7 +1907,7 @@ def cleanup_old_batch_data():
             'cleaned_jobs': cleaned_jobs,
             'cleaned_files': cleaned_files,
             'cleanup_threshold': old_data_threshold.isoformat(),
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -1914,12 +1916,12 @@ def cleanup_old_batch_data():
         return {
             'success': False,
             'error_message': str(e),
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 # Placeholder for SVG conversion task (would be implemented separately)
-def convert_svg_batch(job_id: str, svg_urls: List[str], options: Dict[str, Any]) -> Dict[str, Any]:
+def convert_svg_batch(job_id: str, svg_urls: list[str], options: dict[str, Any]) -> dict[str, Any]:
     """
     Placeholder for SVG batch conversion task.
     
@@ -1948,7 +1950,7 @@ def convert_svg_batch(job_id: str, svg_urls: List[str], options: Dict[str, Any])
         converted_files.append({
             'path': f'/tmp/{job_id}_file_{i+1}.pptx',
             'original_name': f'file_{i+1}.svg',
-            'converted_name': f'{job_id}_file_{i+1}.pptx'
+            'converted_name': f'{job_id}_file_{i+1}.pptx',
         })
     
     return {
@@ -1956,5 +1958,5 @@ def convert_svg_batch(job_id: str, svg_urls: List[str], options: Dict[str, Any])
         'job_id': job_id,
         'converted_files': converted_files,
         'conversion_time': 5.0,  # Mock conversion time
-        'completed_at': datetime.utcnow().isoformat()
+        'completed_at': datetime.utcnow().isoformat(),
     }

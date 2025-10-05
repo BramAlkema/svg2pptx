@@ -20,9 +20,13 @@ Usage:
     drawingml = text_service.convert_text_element(text_element, context)
 """
 
-from .layout_engine import TextLayoutEngine, create_text_layout_engine
 from .converter_service import TextConverterService, create_text_converter_service
-from .integration_adapter import TextIntegrationAdapter, create_text_integration_adapter, patch_existing_text_converter
+from .integration_adapter import (
+    TextIntegrationAdapter,
+    create_text_integration_adapter,
+    patch_existing_text_converter,
+)
+from .layout_engine import TextLayoutEngine, create_text_layout_engine
 
 __all__ = [
     # Core classes

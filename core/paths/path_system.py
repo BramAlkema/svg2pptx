@@ -16,17 +16,23 @@ Key Features:
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
-from .parser import PathParser
-from .coordinate_system import CoordinateSystem
 from .arc_converter import ArcConverter
-from .drawingml_generator import DrawingMLGenerator
 from .architecture import (
-    PathCommand, PathBounds, PathSystemError, PathSystemContext,
-    PathParseError, CoordinateTransformError, ArcConversionError, XMLGenerationError
+    ArcConversionError,
+    CoordinateTransformError,
+    PathBounds,
+    PathCommand,
+    PathParseError,
+    PathSystemContext,
+    PathSystemError,
+    XMLGenerationError,
 )
+from .coordinate_system import CoordinateSystem
+from .drawingml_generator import DrawingMLGenerator
+from .parser import PathParser
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +43,8 @@ class PathProcessingResult:
     path_xml: str
     shape_xml: str
     bounds: PathBounds
-    commands: List[PathCommand]
-    processing_stats: Dict[str, Any]
+    commands: list[PathCommand]
+    processing_stats: dict[str, Any]
 
 
 class PathSystem:
@@ -92,13 +98,13 @@ class PathSystem:
             'paths_processed': 0,
             'commands_processed': 0,
             'arcs_converted': 0,
-            'errors_encountered': 0
+            'errors_encountered': 0,
         }
 
         self.log_debug("PathSystem initialized with all components")
 
     def configure_viewport(self, viewport_width: float, viewport_height: float,
-                          viewbox: Optional[Tuple[float, float, float, float]] = None,
+                          viewbox: tuple[float, float, float, float] | None = None,
                           dpi: float = 96.0):
         """
         Configure the viewport and coordinate system for path processing.
@@ -116,7 +122,7 @@ class PathSystem:
                 viewport_width=viewport_width,
                 viewport_height=viewport_height,
                 viewbox=viewbox,
-                dpi=dpi
+                dpi=dpi,
             )
             self._viewport_configured = True
 
@@ -127,7 +133,7 @@ class PathSystem:
         except Exception as e:
             raise CoordinateTransformError(f"Failed to configure viewport: {e}")
 
-    def process_path(self, path_data: str, style_attributes: Optional[Dict[str, Any]] = None) -> PathProcessingResult:
+    def process_path(self, path_data: str, style_attributes: dict[str, Any] | None = None) -> PathProcessingResult:
         """
         Process a complete SVG path from string to PowerPoint XML.
 
@@ -173,7 +179,7 @@ class PathSystem:
                 commands=commands,
                 bounds=bounds,
                 coordinate_system=self._coordinate_system,
-                arc_converter=self._arc_converter
+                arc_converter=self._arc_converter,
             )
 
             # Step 4: Generate complete shape XML
@@ -181,7 +187,7 @@ class PathSystem:
             shape_xml = self._xml_generator.generate_shape_xml(
                 path_xml=path_xml,
                 bounds=bounds,
-                style_attributes=style_attributes
+                style_attributes=style_attributes,
             )
 
             # Step 5: Create processing result
@@ -203,8 +209,8 @@ class PathSystem:
                     'width': bounds.width,
                     'height': bounds.height,
                     'min_x': bounds.min_x,
-                    'min_y': bounds.min_y
-                }
+                    'min_y': bounds.min_y,
+                },
             }
 
             result = PathProcessingResult(
@@ -212,7 +218,7 @@ class PathSystem:
                 shape_xml=shape_xml,
                 bounds=bounds,
                 commands=commands,
-                processing_stats=processing_stats
+                processing_stats=processing_stats,
             )
 
             self.log_debug(f"Path processing completed in {processing_time*1000:.2f}ms")
@@ -226,7 +232,7 @@ class PathSystem:
             self._processing_stats['errors_encountered'] += 1
             raise PathSystemError(f"Unexpected error during path processing: {e}")
 
-    def process_multiple_paths(self, path_specs: List[Dict[str, Any]]) -> List[PathProcessingResult]:
+    def process_multiple_paths(self, path_specs: list[dict[str, Any]]) -> list[PathProcessingResult]:
         """
         Process multiple SVG paths in batch.
 
@@ -254,7 +260,7 @@ class PathSystem:
 
                 result = self.process_path(
                     path_data=spec['path_data'],
-                    style_attributes=spec.get('style_attributes', {})
+                    style_attributes=spec.get('style_attributes', {}),
                 )
                 results.append(result)
 
@@ -262,7 +268,7 @@ class PathSystem:
                 error_info = {
                     'index': i,
                     'path_data': spec.get('path_data', ''),
-                    'error': str(e)
+                    'error': str(e),
                 }
                 errors.append(error_info)
                 self.log_error(f"Failed to process path {i}: {e}")
@@ -287,7 +293,7 @@ class PathSystem:
         except Exception:
             return False
 
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """Get processing statistics for performance monitoring."""
         return self._processing_stats.copy()
 
@@ -297,7 +303,7 @@ class PathSystem:
             'paths_processed': 0,
             'commands_processed': 0,
             'arcs_converted': 0,
-            'errors_encountered': 0
+            'errors_encountered': 0,
         }
         self.log_debug("Processing statistics reset")
 
@@ -312,7 +318,7 @@ class PathSystem:
             parser=self._parser,
             coordinate_system=self._coordinate_system,
             arc_converter=self._arc_converter,
-            xml_generator=self._xml_generator
+            xml_generator=self._xml_generator,
         )
 
     def configure_arc_quality(self, max_segment_angle: float = 90.0, error_tolerance: float = 0.01):
@@ -330,7 +336,7 @@ class PathSystem:
         """Check if the system is properly configured for processing."""
         return self._viewport_configured
 
-    def get_supported_commands(self) -> List[str]:
+    def get_supported_commands(self) -> list[str]:
         """Get list of supported SVG path commands."""
         return self._parser.get_supported_commands()
 
@@ -352,7 +358,7 @@ class PathSystem:
 
 # Factory function for easy system creation
 def create_path_system(viewport_width: float = None, viewport_height: float = None,
-                      viewbox: Optional[Tuple[float, float, float, float]] = None,
+                      viewbox: tuple[float, float, float, float] | None = None,
                       enable_logging: bool = True) -> PathSystem:
     """
     Factory function to create and optionally configure a PathSystem.

@@ -7,8 +7,9 @@ Adapts the proven color system from src/color/
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Union
 from enum import Enum
+from typing import List, Optional, Union
+
 # Use shared numpy compatibility
 from .numpy_compat import np
 
@@ -37,10 +38,10 @@ class GradientStop:
 @dataclass(frozen=True)
 class LinearGradientPaint:
     """Linear gradient fill"""
-    stops: List[GradientStop]
+    stops: list[GradientStop]
     start: tuple  # (x, y) coordinates
     end: tuple    # (x, y) coordinates
-    transform: Optional[np.ndarray] = None  # 3x3 matrix
+    transform: np.ndarray | None = None  # 3x3 matrix
 
     def __post_init__(self):
         if len(self.stops) < 2:
@@ -50,18 +51,18 @@ class LinearGradientPaint:
 @dataclass(frozen=True)
 class RadialGradientPaint:
     """Radial gradient fill"""
-    stops: List[GradientStop]
+    stops: list[GradientStop]
     center: tuple  # (x, y) coordinates
     radius: float
-    focal_point: Optional[tuple] = None  # (x, y) coordinates, defaults to center
-    transform: Optional[np.ndarray] = None
+    focal_point: tuple | None = None  # (x, y) coordinates, defaults to center
+    transform: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
 class PatternPaint:
     """Pattern fill (fallback to EMF typically)"""
     pattern_id: str
-    transform: Optional[np.ndarray] = None
+    transform: np.ndarray | None = None
 
 
 # Union type for all paint types
@@ -90,7 +91,7 @@ class Stroke:
     join: StrokeJoin = StrokeJoin.MITER
     cap: StrokeCap = StrokeCap.BUTT
     miter_limit: float = 4.0
-    dash_array: Optional[List[float]] = None
+    dash_array: list[float] | None = None
     dash_offset: float = 0.0
     opacity: float = 1.0
 

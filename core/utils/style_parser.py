@@ -7,8 +7,9 @@ eliminating duplicate style processing implementations across the codebase.
 """
 
 import re
-from typing import Dict, List, Optional
 from dataclasses import dataclass
+from typing import Dict, List, Optional
+
 # Removed circular import - StyleParser is now a standalone service
 
 
@@ -23,9 +24,9 @@ class StyleDeclaration:
 @dataclass
 class StyleResult:
     """Result of style parsing operation."""
-    declarations: Dict[str, StyleDeclaration]
+    declarations: dict[str, StyleDeclaration]
     raw_text: str
-    parsing_errors: List[str]
+    parsing_errors: list[str]
 
 
 class StyleParser:
@@ -49,7 +50,7 @@ class StyleParser:
             'stroke-width', 'opacity', 'font-family', 'font-size', 'font-weight',
             'font-style', 'text-decoration', 'text-align', 'width', 'height',
             'margin', 'padding', 'border', 'display', 'position', 'top', 'left',
-            'right', 'bottom', 'z-index', 'transform', 'visibility'
+            'right', 'bottom', 'z-index', 'transform', 'visibility',
         }
 
     def parse_style_string(self, style_string: str) -> StyleResult:
@@ -66,7 +67,7 @@ class StyleParser:
             return StyleResult(
                 declarations={},
                 raw_text=style_string,
-                parsing_errors=[]
+                parsing_errors=[],
             )
 
         declarations = {}
@@ -90,10 +91,10 @@ class StyleParser:
         return StyleResult(
             declarations=declarations,
             raw_text=style_string,
-            parsing_errors=errors
+            parsing_errors=errors,
         )
 
-    def _parse_declaration(self, declaration_text: str) -> Optional[StyleDeclaration]:
+    def _parse_declaration(self, declaration_text: str) -> StyleDeclaration | None:
         """Parse a single CSS declaration."""
         match = self._declaration_pattern.match(declaration_text.strip())
         if not match:
@@ -111,10 +112,10 @@ class StyleParser:
         return StyleDeclaration(
             property=property_name,
             value=value_text,
-            priority=priority
+            priority=priority,
         )
 
-    def parse_style_to_dict(self, style_string: str) -> Dict[str, str]:
+    def parse_style_to_dict(self, style_string: str) -> dict[str, str]:
         """
         Parse style string to simple property:value dictionary.
 
@@ -218,7 +219,7 @@ class StyleParser:
 
         return ";".join(parts)
 
-    def validate_style(self, style_string: str) -> List[str]:
+    def validate_style(self, style_string: str) -> list[str]:
         """
         Validate CSS style string and return list of issues.
 
@@ -238,7 +239,7 @@ class StyleParser:
 
         return issues
 
-    def parse_style_attribute(self, style_attr: str) -> Dict[str, str]:
+    def parse_style_attribute(self, style_attr: str) -> dict[str, str]:
         """
         Parse style attribute to dictionary - adapter compatibility alias.
 
@@ -269,7 +270,7 @@ def get_style_parser():
     return _style_parser_instance
 
 
-def parse_style_string(style_string: str) -> Dict[str, str]:
+def parse_style_string(style_string: str) -> dict[str, str]:
     """Convenience function for simple style parsing."""
     return get_style_parser().parse_style_to_dict(style_string)
 

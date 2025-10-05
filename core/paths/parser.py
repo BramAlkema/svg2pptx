@@ -13,15 +13,13 @@ Key Features:
 - Clean separation of concerns
 """
 
-import re
 import logging
-from typing import List, Optional, Tuple
+import re
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
+from .architecture import PathCommand, PathCommandType, PathParseError
 from .interfaces import PathParser as PathParserInterface
-from .architecture import (
-    PathCommand, PathCommandType, PathParseError
-)
 
 logger = logging.getLogger(__name__)
 
@@ -77,19 +75,19 @@ class PathParser(PathParserInterface):
 
         # Compile regex patterns for efficient parsing
         self._number_pattern = re.compile(
-            r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?'
+            r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?',
         )
         self._command_pattern = re.compile(r'[MmLlHhVvCcSsQqTtAaZz]')
 
         # Combined pattern for tokenization
         self._token_pattern = re.compile(
             r'([MmLlHhVvCcSsQqTtAaZz])|'  # Commands
-            r'([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)'  # Numbers
+            r'([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)',  # Numbers
         )
 
         self.log_debug("PathParser initialized with compiled regex patterns")
 
-    def parse_path_data(self, path_data: str) -> List[PathCommand]:
+    def parse_path_data(self, path_data: str) -> list[PathCommand]:
         """
         Parse SVG path data string into structured path commands.
 
@@ -169,7 +167,7 @@ class PathParser(PathParserInterface):
 
         return normalized
 
-    def _tokenize_path_data(self, path_data: str) -> List[ParsedToken]:
+    def _tokenize_path_data(self, path_data: str) -> list[ParsedToken]:
         """
         Tokenize normalized path data into commands and numbers.
 
@@ -194,7 +192,7 @@ class PathParser(PathParserInterface):
 
         return tokens
 
-    def _parse_tokens(self, tokens: List[ParsedToken]) -> List[PathCommand]:
+    def _parse_tokens(self, tokens: list[ParsedToken]) -> list[PathCommand]:
         """
         Parse tokens into PathCommand objects.
 
@@ -230,7 +228,7 @@ class PathParser(PathParserInterface):
                 if i >= len(tokens) or tokens[i].token_type != 'number':
                     raise PathParseError(
                         f"Command '{command_letter}' requires {expected_params} parameters, "
-                        f"but only {len(parameters)} were found"
+                        f"but only {len(parameters)} were found",
                     )
 
                 try:
@@ -246,7 +244,7 @@ class PathParser(PathParserInterface):
                 command_type=command_type,
                 is_relative=is_relative,
                 parameters=parameters,
-                original_command=command_letter
+                original_command=command_letter,
             )
 
             commands.append(path_command)
@@ -257,8 +255,8 @@ class PathParser(PathParserInterface):
 
         return commands
 
-    def _handle_implicit_commands(self, base_command: PathCommand, tokens: List[ParsedToken],
-                                 start_index: int) -> Tuple[List[PathCommand], int]:
+    def _handle_implicit_commands(self, base_command: PathCommand, tokens: list[ParsedToken],
+                                 start_index: int) -> tuple[list[PathCommand], int]:
         """
         Handle implicit commands that follow certain base commands.
 
@@ -301,7 +299,7 @@ class PathParser(PathParserInterface):
                         command_type=line_command_type,
                         is_relative=base_command.is_relative,  # Same relativity as MOVE_TO
                         parameters=parameters,
-                        original_command='l' if base_command.is_relative else 'L'
+                        original_command='l' if base_command.is_relative else 'L',
                     )
                     implicit_commands.append(implicit_command)
                     i += expected_params
@@ -312,7 +310,7 @@ class PathParser(PathParserInterface):
 
         return implicit_commands, i
 
-    def _validate_commands(self, commands: List[PathCommand]) -> None:
+    def _validate_commands(self, commands: list[PathCommand]) -> None:
         """
         Validate the parsed commands for logical consistency.
 
@@ -328,7 +326,7 @@ class PathParser(PathParserInterface):
         # First command should be MOVE_TO
         if commands[0].command_type != PathCommandType.MOVE_TO:
             raise PathParseError(
-                f"Path must start with MOVE_TO command, got {commands[0].command_type}"
+                f"Path must start with MOVE_TO command, got {commands[0].command_type}",
             )
 
         # Validate parameter counts
@@ -337,16 +335,16 @@ class PathParser(PathParserInterface):
             if len(command.parameters) != expected_count:
                 raise PathParseError(
                     f"Command {i} ({command.original_command}) has {len(command.parameters)} "
-                    f"parameters, expected {expected_count}"
+                    f"parameters, expected {expected_count}",
                 )
 
         self.log_debug(f"Validated {len(commands)} commands successfully")
 
-    def get_supported_commands(self) -> List[str]:
+    def get_supported_commands(self) -> list[str]:
         """Get list of supported SVG path commands."""
         return list(self.COMMAND_MAPPING.keys())
 
-    def get_command_info(self, command_letter: str) -> Optional[Tuple[PathCommandType, int, bool]]:
+    def get_command_info(self, command_letter: str) -> tuple[PathCommandType, int, bool] | None:
         """
         Get information about a specific command.
 

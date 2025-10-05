@@ -10,19 +10,20 @@ This module extends the existing cache system with:
 - Cache warming and preloading
 """
 
-import pickle
-import pyzstd as zstd
 import hashlib
+import json
+import logging
+import pickle
 import sqlite3
 import threading
-from pathlib import Path
-from typing import Any, Dict, Optional, List, Set
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+
+import pyzstd as zstd
 from lxml import etree as ET
-import logging
-import json
-import time
 
 from .cache import ConversionCache
 
@@ -39,8 +40,8 @@ class SpeedrunCacheEntry:
     access_count: int = 0
     size_bytes: int = 0
     compression_ratio: float = 1.0
-    dependencies: Set[str] = field(default_factory=set)
-    tags: Set[str] = field(default_factory=set)
+    dependencies: set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     
     def bump_access(self):
         """Update access statistics."""
@@ -53,10 +54,10 @@ class ContentAddressableCache:
     
     def __init__(self, name: str = "default"):
         self.name = name
-        self._cache: Dict[str, SpeedrunCacheEntry] = {}
+        self._cache: dict[str, SpeedrunCacheEntry] = {}
         self._lock = threading.RLock()
         
-    def generate_content_hash(self, content: Any, context: Dict[str, Any] = None) -> str:
+    def generate_content_hash(self, content: Any, context: dict[str, Any] = None) -> str:
         """Generate deterministic hash for content + context."""
         hasher = hashlib.blake2b(digest_size=16)  # 128-bit hash
         
@@ -78,7 +79,7 @@ class ContentAddressableCache:
         return hasher.hexdigest()
     
     def put(self, content_hash: str, data: Any, 
-            dependencies: Set[str] = None, tags: Set[str] = None) -> None:
+            dependencies: set[str] = None, tags: set[str] = None) -> None:
         """Store data with content hash key."""
         with self._lock:
             # Serialize and measure size
@@ -92,12 +93,12 @@ class ContentAddressableCache:
                 last_accessed=datetime.now(),
                 size_bytes=size_bytes,
                 dependencies=dependencies or set(),
-                tags=tags or set()
+                tags=tags or set(),
             )
             
             self._cache[content_hash] = entry
     
-    def get(self, content_hash: str) -> Optional[Any]:
+    def get(self, content_hash: str) -> Any | None:
         """Retrieve data by content hash."""
         with self._lock:
             entry = self._cache.get(content_hash)
@@ -110,7 +111,7 @@ class ContentAddressableCache:
         """Check if content hash exists in cache."""
         return content_hash in self._cache
     
-    def invalidate_by_tags(self, tags: Set[str]) -> int:
+    def invalidate_by_tags(self, tags: set[str]) -> int:
         """Invalidate all entries with any of the given tags."""
         with self._lock:
             to_remove = []
@@ -123,7 +124,7 @@ class ContentAddressableCache:
             
             return len(to_remove)
     
-    def invalidate_by_dependencies(self, dependency_hashes: Set[str]) -> int:
+    def invalidate_by_dependencies(self, dependency_hashes: set[str]) -> int:
         """Invalidate all entries that depend on given hashes."""
         with self._lock:
             to_remove = []
@@ -136,7 +137,7 @@ class ContentAddressableCache:
             
             return len(to_remove)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         with self._lock:
             total_size = sum(entry.size_bytes for entry in self._cache.values())
@@ -148,7 +149,7 @@ class ContentAddressableCache:
                 'total_size_bytes': total_size,
                 'total_size_mb': total_size / (1024 * 1024),
                 'total_accesses': total_accesses,
-                'avg_accesses_per_entry': total_accesses / max(len(self._cache), 1)
+                'avg_accesses_per_entry': total_accesses / max(len(self._cache), 1),
             }
 
 
@@ -208,7 +209,7 @@ class DiskCache:
         return cache_subdir / f"{content_hash[2:]}.zst"
     
     def put(self, content_hash: str, data: Any, 
-            tags: Set[str] = None, dependencies: Set[str] = None) -> bool:
+            tags: set[str] = None, dependencies: set[str] = None) -> bool:
         """Store data to disk with compression."""
         try:
             with self._lock:
@@ -247,7 +248,7 @@ class DiskCache:
             logger.error(f"Failed to store to disk cache: {e}")
             return False
     
-    def get(self, content_hash: str) -> Optional[Any]:
+    def get(self, content_hash: str) -> Any | None:
         """Retrieve data from disk cache."""
         try:
             with self._lock:
@@ -350,7 +351,7 @@ class DiskCache:
                 conn.execute("DELETE FROM cache_entries WHERE content_hash = ?", 
                            (content_hash,))
     
-    def invalidate_by_tags(self, tags: Set[str]) -> int:
+    def invalidate_by_tags(self, tags: set[str]) -> int:
         """Invalidate entries by tags."""
         if not tags:
             return 0
@@ -374,7 +375,7 @@ class DiskCache:
         
         return removed_count
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get disk cache statistics."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
@@ -397,7 +398,7 @@ class DiskCache:
                 'avg_size_bytes': avg_size or 0,
                 'avg_compression_ratio': avg_compression or 1.0,
                 'total_accesses': total_accesses or 0,
-                'max_size_gb': self.max_size_bytes / (1024 * 1024 * 1024)
+                'max_size_gb': self.max_size_bytes / (1024 * 1024 * 1024),
             }
     
     def clear(self):
@@ -419,7 +420,7 @@ class SpeedrunCache(ConversionCache):
     """Enhanced conversion cache with speedrun optimizations."""
     
     def __init__(self, 
-                 cache_dir: Optional[Path] = None,
+                 cache_dir: Path | None = None,
                  enable_disk_cache: bool = True,
                  disk_cache_size_gb: float = 2.0,
                  enable_content_addressing: bool = True,
@@ -457,8 +458,8 @@ class SpeedrunCache(ConversionCache):
         logger.info(f"SpeedrunCache initialized with cache_dir={self.cache_dir}")
     
     def get_with_content_addressing(self, content: Any, 
-                                   context: Dict[str, Any] = None,
-                                   tags: Set[str] = None) -> Optional[Any]:
+                                   context: dict[str, Any] = None,
+                                   tags: set[str] = None) -> Any | None:
         """Get data using content-addressable caching."""
         if not self.enable_content_addressing:
             return None
@@ -481,9 +482,9 @@ class SpeedrunCache(ConversionCache):
         return None
     
     def put_with_content_addressing(self, content: Any, data: Any,
-                                   context: Dict[str, Any] = None,
-                                   tags: Set[str] = None,
-                                   dependencies: Set[str] = None,
+                                   context: dict[str, Any] = None,
+                                   tags: set[str] = None,
+                                   dependencies: set[str] = None,
                                    persist_to_disk: bool = True) -> str:
         """Store data using content-addressable caching."""
         if not self.enable_content_addressing:
@@ -500,7 +501,7 @@ class SpeedrunCache(ConversionCache):
         
         return content_hash
     
-    def invalidate_by_tags(self, tags: Set[str]) -> Dict[str, int]:
+    def invalidate_by_tags(self, tags: set[str]) -> dict[str, int]:
         """Invalidate entries across all cache layers by tags."""
         results = {}
         
@@ -512,11 +513,11 @@ class SpeedrunCache(ConversionCache):
         
         return results
     
-    def get_enhanced_stats(self) -> Dict[str, Any]:
+    def get_enhanced_stats(self) -> dict[str, Any]:
         """Get comprehensive cache statistics."""
         stats = {
             'base_cache': super().get_total_stats(),
-            'memory_usage': super().get_memory_usage()
+            'memory_usage': super().get_memory_usage(),
         }
         
         if self.enable_content_addressing:
@@ -527,7 +528,7 @@ class SpeedrunCache(ConversionCache):
         
         return stats
     
-    def start_cache_warming(self, svg_patterns: List[str] = None):
+    def start_cache_warming(self, svg_patterns: list[str] = None):
         """Start background cache warming process."""
         if self._warming_enabled:
             return
@@ -546,7 +547,7 @@ class SpeedrunCache(ConversionCache):
                 '<text>',
                 '<g>',
                 '<line>',
-                '<polygon>'
+                '<polygon>',
             ]
             
             # Pre-warm with common geometric operations
@@ -563,7 +564,7 @@ class SpeedrunCache(ConversionCache):
                         "translate(10,10)",
                         "scale(2,2)",
                         "rotate(45)",
-                        "matrix(1,0,0,1,0,0)"
+                        "matrix(1,0,0,1,0,0)",
                     ]
                     
                     for transform in common_transforms:
@@ -572,7 +573,7 @@ class SpeedrunCache(ConversionCache):
                         
                         context = {'transform': transform}
                         content_hash = self.content_cache.generate_content_hash(
-                            element, context
+                            element, context,
                         ) if self.enable_content_addressing else None
                         
                         # Only warm if not already cached
@@ -581,7 +582,7 @@ class SpeedrunCache(ConversionCache):
                             result = f"cached_{pattern}_{transform}"
                             self.put_with_content_addressing(
                                 element, result, context,
-                                tags={'warmup'}, persist_to_disk=False
+                                tags={'warmup'}, persist_to_disk=False,
                             )
                     
                     time.sleep(0.01)  # Small delay to avoid overwhelming
@@ -623,7 +624,7 @@ def get_speedrun_cache() -> SpeedrunCache:
     return _global_speedrun_cache
 
 
-def enable_speedrun_mode(cache_dir: Optional[Path] = None,
+def enable_speedrun_mode(cache_dir: Path | None = None,
                         disk_cache_size_gb: float = 2.0,
                         start_warming: bool = True) -> SpeedrunCache:
     """Enable speedrun cache mode for maximum performance."""
@@ -633,7 +634,7 @@ def enable_speedrun_mode(cache_dir: Optional[Path] = None,
         cache_dir=cache_dir,
         enable_disk_cache=True,
         disk_cache_size_gb=disk_cache_size_gb,
-        enable_content_addressing=True
+        enable_content_addressing=True,
     )
     
     if start_warming:

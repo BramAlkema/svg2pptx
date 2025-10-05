@@ -15,14 +15,18 @@ Key Features:
 """
 
 from __future__ import annotations
-from typing import List, Dict, Optional, Tuple, Any
-from lxml import etree as ET
-import logging
 
-from .base import PreprocessingPlugin, PreprocessingContext
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+from lxml import etree as ET
+
+from .base import PreprocessingContext, PreprocessingPlugin
 from .geometry import (
-    create_boolean_engine, create_service_adapters,
-    create_path_spec, normalize_fill_rule
+    create_boolean_engine,
+    create_path_spec,
+    create_service_adapters,
+    normalize_fill_rule,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +51,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
     name = "resolve_clippath"
     description = "Resolves clipPath elements into boolean path intersections"
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize clipPath resolution plugin.
 
@@ -144,7 +148,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         # Resolve clipping for this element
         try:
             intersection_result = self._resolve_element_clipping(
-                element, clippath_definitions, self._svg_root
+                element, clippath_definitions, self._svg_root,
             )
             return intersection_result
         except Exception as e:
@@ -205,7 +209,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
             logger.error(f"Failed to initialize boolean engine: {e}")
             return False
 
-    def _catalog_clippath_definitions(self, svg_root: ET.Element) -> Dict[str, ET.Element]:
+    def _catalog_clippath_definitions(self, svg_root: ET.Element) -> dict[str, ET.Element]:
         """
         Catalog all clipPath definitions in the document.
 
@@ -225,7 +229,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
 
         return definitions
 
-    def _find_clipped_elements(self, svg_root: ET.Element) -> List[ET.Element]:
+    def _find_clipped_elements(self, svg_root: ET.Element) -> list[ET.Element]:
         """
         Find all elements with clip-path attributes.
 
@@ -238,7 +242,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         return svg_root.findall(".//*[@clip-path]")
 
     def _resolve_element_clipping(self, element: ET.Element,
-                                 clippath_definitions: Dict[str, ET.Element],
+                                 clippath_definitions: dict[str, ET.Element],
                                  svg_root: ET.Element) -> bool:
         """
         Resolve clipping for a single element by replacing it with intersection result.
@@ -270,7 +274,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
 
             # Resolve clipPath to path specifications
             clippath_specs = self._resolve_clippath_to_paths(
-                clippath_definitions[clip_id], clippath_definitions, svg_root
+                clippath_definitions[clip_id], clippath_definitions, svg_root,
             )
             if not clippath_specs:
                 logger.warning(f"ClipPath {clip_id} has no valid paths")
@@ -294,7 +298,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
             logger.error(f"Failed to perform intersection for element {element.tag}: {e}")
             return False
 
-    def _parse_clippath_reference(self, clip_path_attr: str) -> Optional[str]:
+    def _parse_clippath_reference(self, clip_path_attr: str) -> str | None:
         """
         Parse clipPath reference attribute to extract ID.
 
@@ -317,7 +321,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
 
         return None
 
-    def _element_to_path_spec(self, element: ET.Element) -> Optional[Tuple[str, str]]:
+    def _element_to_path_spec(self, element: ET.Element) -> tuple[str, str] | None:
         """
         Convert an SVG element to a PathSpec tuple for boolean operations.
 
@@ -366,7 +370,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         fill_rule = element.get('fill-rule', 'nonzero')
         return normalize_fill_rule(fill_rule)
 
-    def _rect_to_path_spec(self, rect: ET.Element) -> Optional[Tuple[str, str]]:
+    def _rect_to_path_spec(self, rect: ET.Element) -> tuple[str, str] | None:
         """Convert rect element to path specification."""
         try:
             x = float(rect.get('x', 0))
@@ -384,7 +388,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except (ValueError, TypeError):
             return None
 
-    def _circle_to_path_spec(self, circle: ET.Element) -> Optional[Tuple[str, str]]:
+    def _circle_to_path_spec(self, circle: ET.Element) -> tuple[str, str] | None:
         """Convert circle element to path specification."""
         try:
             cx = float(circle.get('cx', 0))
@@ -405,7 +409,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except (ValueError, TypeError):
             return None
 
-    def _ellipse_to_path_spec(self, ellipse: ET.Element) -> Optional[Tuple[str, str]]:
+    def _ellipse_to_path_spec(self, ellipse: ET.Element) -> tuple[str, str] | None:
         """Convert ellipse element to path specification."""
         try:
             cx = float(ellipse.get('cx', 0))
@@ -427,7 +431,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except (ValueError, TypeError):
             return None
 
-    def _line_to_path_spec(self, line: ET.Element) -> Optional[Tuple[str, str]]:
+    def _line_to_path_spec(self, line: ET.Element) -> tuple[str, str] | None:
         """Convert line element to path specification."""
         try:
             x1 = float(line.get('x1', 0))
@@ -442,7 +446,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except (ValueError, TypeError):
             return None
 
-    def _polygon_to_path_spec(self, polygon: ET.Element) -> Optional[Tuple[str, str]]:
+    def _polygon_to_path_spec(self, polygon: ET.Element) -> tuple[str, str] | None:
         """Convert polygon element to path specification."""
         points_str = polygon.get('points', '')
         if not points_str:
@@ -467,7 +471,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except Exception:
             return None
 
-    def _polyline_to_path_spec(self, polyline: ET.Element) -> Optional[Tuple[str, str]]:
+    def _polyline_to_path_spec(self, polyline: ET.Element) -> tuple[str, str] | None:
         """Convert polyline element to path specification."""
         points_str = polyline.get('points', '')
         if not points_str:
@@ -491,7 +495,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         except Exception:
             return None
 
-    def _parse_points(self, points_str: str) -> List[Tuple[float, float]]:
+    def _parse_points(self, points_str: str) -> list[tuple[float, float]]:
         """Parse points string into list of coordinate tuples."""
         points = []
 
@@ -509,8 +513,8 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         return points
 
     def _resolve_clippath_to_paths(self, clippath_element: ET.Element,
-                                  clippath_definitions: Dict[str, ET.Element],
-                                  svg_root: ET.Element) -> List[Tuple[str, str]]:
+                                  clippath_definitions: dict[str, ET.Element],
+                                  svg_root: ET.Element) -> list[tuple[str, str]]:
         """
         Resolve a clipPath element to a list of PathSpec tuples.
 
@@ -552,7 +556,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
                         nested_specs = self._resolve_clippath_to_paths(
                             clippath_definitions[nested_clip_id],
                             clippath_definitions,
-                            svg_root
+                            svg_root,
                         )
 
                         # Convert child element to path and intersect with nested clipPath
@@ -608,7 +612,7 @@ class ResolveClipPathsPlugin(PreprocessingPlugin):
         parent.insert(element_index, new_path)
 
     def _cleanup_clippath_definitions(self, svg_root: ET.Element,
-                                    clippath_definitions: Dict[str, ET.Element]) -> int:
+                                    clippath_definitions: dict[str, ET.Element]) -> int:
         """
         Remove unused clipPath definitions from the document.
 
@@ -656,6 +660,6 @@ def create_clippath_resolver(enable_nested_clips: bool = True,
     config = {
         'enable_nested_clips': enable_nested_clips,
         'enable_transforms': enable_transforms,
-        'fallback_behavior': fallback_behavior
+        'fallback_behavior': fallback_behavior,
     }
     return ResolveClipPathsPlugin(config)

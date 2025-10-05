@@ -7,6 +7,7 @@ and establishes the preprocessor interface.
 """
 
 from abc import ABC, abstractmethod
+
 from lxml import etree as ET
 
 

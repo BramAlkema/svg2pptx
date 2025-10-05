@@ -6,14 +6,14 @@ Provides robust file storage, retrieval, and cleanup for batch processing operat
 Handles job-specific temporary directories with thread-safe operations and automatic cleanup.
 """
 
-import shutil
 import logging
+import shutil
 import threading
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Union
-from dataclasses import dataclass
 from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -24,28 +24,28 @@ class ConvertedFile:
     original_filename: str
     converted_path: Path
     file_size: int
-    conversion_metadata: Dict[str, any]
+    conversion_metadata: dict[str, any]
     created_at: datetime
 
-    def to_dict(self) -> Dict[str, any]:
+    def to_dict(self) -> dict[str, any]:
         """Convert to dictionary for serialization."""
         return {
             'original_filename': self.original_filename,
             'converted_path': str(self.converted_path),
             'file_size': self.file_size,
             'conversion_metadata': self.conversion_metadata,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, any]) -> 'ConvertedFile':
+    def from_dict(cls, data: dict[str, any]) -> 'ConvertedFile':
         """Create from dictionary for deserialization."""
         return cls(
             original_filename=data['original_filename'],
             converted_path=Path(data['converted_path']),
             file_size=data['file_size'],
             conversion_metadata=data['conversion_metadata'],
-            created_at=datetime.fromisoformat(data['created_at'])
+            created_at=datetime.fromisoformat(data['created_at']),
         )
 
 
@@ -57,7 +57,7 @@ class BatchFileManager:
     automatic cleanup mechanisms, and comprehensive error handling.
     """
 
-    def __init__(self, base_storage_path: Optional[Union[str, Path]] = None,
+    def __init__(self, base_storage_path: str | Path | None = None,
                  retention_hours: int = 24):
         """
         Initialize BatchFileManager.
@@ -82,7 +82,7 @@ class BatchFileManager:
         """Get the directory path for a specific job."""
         return self.base_storage_path / f"job_{job_id}"
 
-    def store_converted_files(self, job_id: str, files: List[ConvertedFile]) -> None:
+    def store_converted_files(self, job_id: str, files: list[ConvertedFile]) -> None:
         """
         Store converted files for a batch job.
 
@@ -127,7 +127,7 @@ class BatchFileManager:
                 metadata = {
                     'job_id': job_id,
                     'stored_at': datetime.utcnow().isoformat(),
-                    'files': [f.to_dict() for f in stored_files]
+                    'files': [f.to_dict() for f in stored_files],
                 }
 
                 with open(metadata_path, 'w') as f:
@@ -142,7 +142,7 @@ class BatchFileManager:
                     shutil.rmtree(job_dir, ignore_errors=True)
                 raise OSError(f"Failed to store files: {e}") from e
 
-    def get_converted_files(self, job_id: str) -> List[ConvertedFile]:
+    def get_converted_files(self, job_id: str) -> list[ConvertedFile]:
         """
         Retrieve all converted files for a batch job.
 
@@ -274,7 +274,7 @@ class BatchFileManager:
 
         return cleanup_count
 
-    def get_storage_stats(self) -> Dict[str, any]:
+    def get_storage_stats(self) -> dict[str, any]:
         """
         Get storage statistics for monitoring.
 
@@ -286,7 +286,7 @@ class BatchFileManager:
             'total_files': 0,
             'total_size_bytes': 0,
             'oldest_job': None,
-            'newest_job': None
+            'newest_job': None,
         }
 
         if not self.base_storage_path.exists():
@@ -343,8 +343,8 @@ class BatchFileManager:
             # Cleanup on exit (success or failure)
             self.cleanup_job_files(job_id)
 
-    def extract_zip_with_structure(self, job_id: str, zip_file_path: Union[str, Path],
-                                  preserve_structure: bool = True) -> Dict[str, List[str]]:
+    def extract_zip_with_structure(self, job_id: str, zip_file_path: str | Path,
+                                  preserve_structure: bool = True) -> dict[str, list[str]]:
         """
         Extract ZIP file and return file structure information.
 
@@ -360,8 +360,8 @@ class BatchFileManager:
             ValueError: If ZIP file is invalid or job_id is empty
             FileNotFoundError: If ZIP file doesn't exist
         """
-        import zipfile
         import json
+        import zipfile
 
         if not job_id or not job_id.strip():
             raise ValueError("job_id cannot be empty")
@@ -408,7 +408,7 @@ class BatchFileManager:
                             'original_path': source_path,
                             'extracted_path': str(extract_path.relative_to(job_dir)),
                             'file_size': zip_info.file_size,
-                            'folder_path': str(Path(source_path).parent) if Path(source_path).parent != Path('.') else ''
+                            'folder_path': str(Path(source_path).parent) if Path(source_path).parent != Path('.') else '',
                         }
                         extracted_files.append(file_info)
 
@@ -426,7 +426,7 @@ class BatchFileManager:
                     'preserve_structure': preserve_structure,
                     'total_files': len(extracted_files),
                     'folder_structure': folder_structure,
-                    'extracted_files': extracted_files
+                    'extracted_files': extracted_files,
                 }
 
                 metadata_path = job_dir / "zip_metadata.json"
@@ -438,7 +438,7 @@ class BatchFileManager:
                 return {
                     'files': extracted_files,
                     'structure': folder_structure,
-                    'metadata': zip_metadata
+                    'metadata': zip_metadata,
                 }
 
             except zipfile.BadZipFile:
@@ -447,7 +447,7 @@ class BatchFileManager:
                 logger.error(f"Failed to extract ZIP file: {e}")
                 raise
 
-    def get_zip_structure_info(self, job_id: str) -> Optional[Dict[str, any]]:
+    def get_zip_structure_info(self, job_id: str) -> dict[str, any] | None:
         """
         Get ZIP structure information for a job.
 
@@ -475,7 +475,7 @@ class BatchFileManager:
                 logger.warning(f"Failed to read ZIP metadata for job {job_id}: {e}")
                 return None
 
-    def create_zip_from_converted_files(self, job_id: str, output_path: Union[str, Path],
+    def create_zip_from_converted_files(self, job_id: str, output_path: str | Path,
                                       preserve_structure: bool = True) -> bool:
         """
         Create ZIP file from converted files, optionally preserving folder structure.

@@ -6,14 +6,11 @@ This module contains the concrete interface definitions and base classes
 for the path processing system components.
 """
 
-from typing import List, Dict, Any, Tuple, Optional
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
 
-from .architecture import (
-    PathCommand, BezierSegment, PathBounds,
-    PathCommandType
-)
+from .architecture import BezierSegment, PathBounds, PathCommand, PathCommandType
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +43,7 @@ class PathParser(BasePathComponent):
     """
 
     @abstractmethod
-    def parse_path_data(self, path_data: str) -> List[PathCommand]:
+    def parse_path_data(self, path_data: str) -> list[PathCommand]:
         """
         Parse SVG path data string into structured path commands.
 
@@ -82,7 +79,7 @@ class PathParser(BasePathComponent):
         """
         pass
 
-    def _validate_command_parameters(self, command_type: PathCommandType, parameters: List[float]) -> bool:
+    def _validate_command_parameters(self, command_type: PathCommandType, parameters: list[float]) -> bool:
         """
         Validate parameter count for a specific command type.
 
@@ -103,7 +100,7 @@ class PathParser(BasePathComponent):
             PathCommandType.QUADRATIC: [4],  # x1, y1, x, y
             PathCommandType.SMOOTH_QUAD: [2],  # x, y
             PathCommandType.ARC: [7],  # rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
-            PathCommandType.CLOSE_PATH: [0]  # no parameters
+            PathCommandType.CLOSE_PATH: [0],  # no parameters
         }
 
         return len(parameters) in expected_counts.get(command_type, [])
@@ -140,7 +137,7 @@ class CoordinateSystem(BasePathComponent):
         pass
 
     @abstractmethod
-    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> Tuple[float, float]:
+    def svg_to_relative(self, x: float, y: float, bounds: PathBounds) -> tuple[float, float]:
         """
         Convert SVG coordinates to PowerPoint relative coordinates (0-100000 range).
 
@@ -162,7 +159,7 @@ class CoordinateSystem(BasePathComponent):
         pass
 
     @abstractmethod
-    def calculate_path_bounds(self, commands: List[PathCommand]) -> PathBounds:
+    def calculate_path_bounds(self, commands: list[PathCommand]) -> PathBounds:
         """
         Calculate bounding box for a series of path commands.
 
@@ -182,7 +179,7 @@ class CoordinateSystem(BasePathComponent):
 
     @abstractmethod
     def create_conversion_context(self, viewport_width: float, viewport_height: float,
-                                 viewbox: Optional[Tuple[float, float, float, float]] = None,
+                                 viewbox: tuple[float, float, float, float] | None = None,
                                  dpi: float = 96.0):
         """
         Create conversion context using existing UnitConverter infrastructure.
@@ -218,7 +215,7 @@ class ArcConverter(BasePathComponent):
     @abstractmethod
     def arc_to_bezier_segments(self, start_x: float, start_y: float, rx: float, ry: float,
                               x_axis_rotation: float, large_arc_flag: int, sweep_flag: int,
-                              end_x: float, end_y: float) -> List[BezierSegment]:
+                              end_x: float, end_y: float) -> list[BezierSegment]:
         """
         Convert SVG arc to cubic bezier segments using a2c algorithm.
 
@@ -271,7 +268,7 @@ class DrawingMLGenerator(BasePathComponent):
     """
 
     @abstractmethod
-    def generate_path_xml(self, commands: List[PathCommand], bounds: PathBounds,
+    def generate_path_xml(self, commands: list[PathCommand], bounds: PathBounds,
                          coordinate_system: CoordinateSystem, arc_converter: ArcConverter) -> str:
         """
         Generate DrawingML path XML for a series of path commands.
@@ -298,7 +295,7 @@ class DrawingMLGenerator(BasePathComponent):
         pass
 
     @abstractmethod
-    def generate_shape_xml(self, path_xml: str, bounds: PathBounds, style_attributes: Dict[str, Any]) -> str:
+    def generate_shape_xml(self, path_xml: str, bounds: PathBounds, style_attributes: dict[str, Any]) -> str:
         """
         Generate complete PowerPoint shape XML with path and styling.
 
@@ -332,7 +329,7 @@ class DrawingMLGenerator(BasePathComponent):
 
 
 # Type aliases for cleaner code
-PathCommandList = List[PathCommand]
-BezierSegmentList = List[BezierSegment]
-StyleAttributes = Dict[str, Any]
-CoordinatePair = Tuple[float, float]
+PathCommandList = list[PathCommand]
+BezierSegmentList = list[BezierSegment]
+StyleAttributes = dict[str, Any]
+CoordinatePair = tuple[float, float]

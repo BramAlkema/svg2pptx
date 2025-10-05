@@ -7,20 +7,27 @@ Converts IR.Path elements to EMF blobs for complex path fallbacks.
 """
 
 import logging
-from typing import List, Tuple, Dict, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple
 
 # Import existing EMF system
 try:
-    from ..emf.emf_blob import EMFBlob, EMFRecordType, EMFBrushStyle
+    from ..emf.emf_blob import EMFBlob, EMFBrushStyle, EMFRecordType
     from ..emf.emf_packaging import EMFPackager
     EMF_AVAILABLE = True
 except ImportError:
     EMF_AVAILABLE = False
     logging.warning("EMF system not available - EMF adapter will use placeholder")
 
-from ..ir import Path, Point, BezierSegment, LineSegment
-from ..ir import SolidPaint, LinearGradientPaint, RadialGradientPaint
+from ..ir import (
+    BezierSegment,
+    LinearGradientPaint,
+    LineSegment,
+    Path,
+    Point,
+    RadialGradientPaint,
+    SolidPaint,
+)
 
 
 @dataclass
@@ -31,7 +38,7 @@ class EMFResult:
     width_emu: int
     height_emu: int
     quality_score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class EMFPathAdapter:
@@ -123,8 +130,8 @@ class EMFPathAdapter:
                     'has_fill': path.fill is not None,
                     'has_stroke': path.stroke is not None,
                     'bbox': bbox,
-                    'generation_method': 'existing_emf_system'
-                }
+                    'generation_method': 'existing_emf_system',
+                },
             )
 
         except Exception as e:
@@ -150,7 +157,7 @@ class EMFPathAdapter:
                 # Add line segment points
                 points.extend([
                     self._point_to_emf_coords(segment.start, path),
-                    self._point_to_emf_coords(segment.end, path)
+                    self._point_to_emf_coords(segment.end, path),
                 ])
 
             elif isinstance(segment, BezierSegment):
@@ -159,7 +166,7 @@ class EMFPathAdapter:
                     self._point_to_emf_coords(segment.start, path),
                     self._point_to_emf_coords(segment.control1, path),
                     self._point_to_emf_coords(segment.control2, path),
-                    self._point_to_emf_coords(segment.end, path)
+                    self._point_to_emf_coords(segment.end, path),
                 ])
 
         # Remove duplicate consecutive points
@@ -173,7 +180,7 @@ class EMFPathAdapter:
             # Note: EMFBlob has methods for basic shapes but may need extension for complex paths
             self._add_polygon_to_emf(emf, unique_points)
 
-    def _add_polygon_to_emf(self, emf: 'EMFBlob', points: List[Tuple[int, int]]) -> None:
+    def _add_polygon_to_emf(self, emf: 'EMFBlob', points: list[tuple[int, int]]) -> None:
         """Add polygon points to EMF using existing EMF system"""
         # This would integrate with EMF system's polygon drawing
         # For now, use rectangle as fallback since EMFBlob has limited path support
@@ -189,7 +196,7 @@ class EMFPathAdapter:
                 y=min_y,
                 width=max_x - min_x,
                 height=max_y - min_y,
-                brush_handle=1  # Default brush
+                brush_handle=1,  # Default brush
             )
 
     def _add_fill_to_emf(self, emf: 'EMFBlob', fill: Any, path: Path) -> None:
@@ -213,7 +220,7 @@ class EMFPathAdapter:
         # This would use EMF pen records for stroke properties
         pass
 
-    def _point_to_emf_coords(self, point: Point, path: Path) -> Tuple[int, int]:
+    def _point_to_emf_coords(self, point: Point, path: Path) -> tuple[int, int]:
         """Convert IR Point to EMF coordinate system"""
         # Convert to EMF coordinate space
         bbox = path.bbox

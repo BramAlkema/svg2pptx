@@ -11,11 +11,12 @@ Unified implementation combining best features from all parallel implementations
 Single source of truth for all unit conversion in SVG2PPTX.
 """
 
-import numpy as np
 import re
-from typing import Union, List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 # Optional numba import for performance
 try:
@@ -70,8 +71,8 @@ class ConversionContext:
     height: float = 600.0
     font_size: float = 16.0
     dpi: float = 96.0
-    parent_width: Optional[float] = None
-    parent_height: Optional[float] = None
+    parent_width: float | None = None
+    parent_height: float | None = None
 
     def __post_init__(self):
         if self.parent_width is None:
@@ -92,7 +93,7 @@ class UnitConverter:
     - Advanced caching and optimization
     """
 
-    def __init__(self, context: Optional[ConversionContext] = None):
+    def __init__(self, context: ConversionContext | None = None):
         """Initialize converter with optional default context."""
         self.default_context = context or ConversionContext()
         self._init_optimization_structures()
@@ -115,7 +116,7 @@ class UnitConverter:
             '%': UnitType.PERCENT,
             'vw': UnitType.VIEWPORT_WIDTH,
             'vh': UnitType.VIEWPORT_HEIGHT,
-            '': UnitType.UNITLESS
+            '': UnitType.UNITLESS,
         }
 
         # Pre-computed conversion matrix for base units
@@ -130,10 +131,10 @@ class UnitConverter:
             8.0,                    # EX (will be context-dependent)
             1.0,                    # PERCENT (will be context-dependent)
             1.0,                    # VIEWPORT_WIDTH (will be context-dependent)
-            1.0                     # VIEWPORT_HEIGHT (will be context-dependent)
+            1.0,                     # VIEWPORT_HEIGHT (will be context-dependent)
         ], dtype=np.float64)
 
-    def parse_value(self, value: Union[str, float, int]) -> Tuple[float, UnitType]:
+    def parse_value(self, value: str | float | int) -> tuple[float, UnitType]:
         """
         Parse a value with unit into numeric value and unit type.
 
@@ -171,8 +172,8 @@ class UnitConverter:
         unit_type = self._unit_map.get(unit_part.lower(), UnitType.UNITLESS)
         return numeric_value, unit_type
 
-    def to_emu(self, value: Union[str, float, int],
-              context: Optional[ConversionContext] = None,
+    def to_emu(self, value: str | float | int,
+              context: ConversionContext | None = None,
               axis: str = 'x') -> int:
         """
         Convert value to EMU (English Metric Units).
@@ -227,8 +228,8 @@ class UnitConverter:
         else:
             return value
 
-    def to_pixels(self, value: Union[str, float, int],
-                  context: Optional[ConversionContext] = None,
+    def to_pixels(self, value: str | float | int,
+                  context: ConversionContext | None = None,
                   axis: str = 'x') -> float:
         """
         Convert value to pixels.
@@ -245,9 +246,9 @@ class UnitConverter:
         numeric_value, unit_type = self.parse_value(value)
         return self._to_pixels(numeric_value, unit_type, ctx, axis)
 
-    def batch_convert(self, values: List[Union[str, float, int]],
-                     context: Optional[ConversionContext] = None,
-                     axis: str = 'x') -> List[int]:
+    def batch_convert(self, values: list[str | float | int],
+                     context: ConversionContext | None = None,
+                     axis: str = 'x') -> list[int]:
         """
         Convert multiple values to EMU efficiently.
 
@@ -269,9 +270,9 @@ class UnitConverter:
             # Use individual conversion for small lists (less overhead)
             return [self.to_emu(val, context, axis) for val in values]
 
-    def _batch_convert_fast(self, values: List[Union[str, float, int]],
-                           context: Optional[ConversionContext] = None,
-                           axis: str = 'x') -> List[int]:
+    def _batch_convert_fast(self, values: list[str | float | int],
+                           context: ConversionContext | None = None,
+                           axis: str = 'x') -> list[int]:
         """Fast batch conversion using NumPy operations."""
         ctx = context or self.default_context
 
@@ -304,7 +305,7 @@ class UnitConverter:
             return self._vectorized_to_pixels_numba(
                 values, unit_types, context.width, context.height,
                 context.font_size, context.dpi, context.parent_width,
-                context.parent_height, axis == 'y'
+                context.parent_height, axis == 'y',
             )
         else:
             # Pure NumPy implementation
@@ -390,8 +391,8 @@ class UnitConverter:
 
         return result
 
-    def batch_convert_dict(self, values: Dict[str, Union[str, float, int]],
-                          context: Optional[ConversionContext] = None) -> Dict[str, int]:
+    def batch_convert_dict(self, values: dict[str, str | float | int],
+                          context: ConversionContext | None = None) -> dict[str, int]:
         """
         Convert dictionary of values to EMU with automatic axis detection.
 
@@ -417,17 +418,17 @@ class UnitConverter:
 
     def create_context(self, width: float = 800, height: float = 600,
                       font_size: float = 16, dpi: float = 96,
-                      parent_width: Optional[float] = None,
-                      parent_height: Optional[float] = None) -> ConversionContext:
+                      parent_width: float | None = None,
+                      parent_height: float | None = None) -> ConversionContext:
         """Create a new conversion context."""
         return ConversionContext(
             width=width, height=height, font_size=font_size, dpi=dpi,
-            parent_width=parent_width, parent_height=parent_height
+            parent_width=parent_width, parent_height=parent_height,
         )
 
     # Compatibility methods for existing code
-    def parse_length(self, value: Union[str, float, int],
-                    context: Optional[ConversionContext] = None,
+    def parse_length(self, value: str | float | int,
+                    context: ConversionContext | None = None,
                     axis: str = 'x') -> float:
         """Parse length value to pixels (legacy compatibility)."""
         return self.to_pixels(value, context, axis)
@@ -466,7 +467,7 @@ class UnitValue:
         300.0
     """
 
-    def __init__(self, value: Union[str, float, int], converter: Optional[UnitConverter] = None):
+    def __init__(self, value: str | float | int, converter: UnitConverter | None = None):
         """Initialize fluent unit value."""
         self._value = value
         self._converter = converter or UnitConverter()
@@ -502,7 +503,7 @@ class UnitValue:
         """Set parent dimensions for percentage calculations."""
         return self.with_context(parent_width=width, parent_height=height)
 
-    def _get_context(self) -> Optional[ConversionContext]:
+    def _get_context(self) -> ConversionContext | None:
         """Get context with overrides applied."""
         if not self._context_overrides:
             return None
@@ -603,7 +604,7 @@ class UnitValue:
         return self.__mul__(1.0 / scalar)
 
 
-def unit(value: Union[str, float, int], converter: Optional[UnitConverter] = None) -> UnitValue:
+def unit(value: str | float | int, converter: UnitConverter | None = None) -> UnitValue:
     """
     Create a fluent unit value for chainable conversions.
 
@@ -643,8 +644,8 @@ class UnitBatch:
         {"x": 952500, "y": 1905000, "width": 381000}
     """
 
-    def __init__(self, values: Union[List[Union[str, float, int]], Dict[str, Union[str, float, int]]],
-                 converter: Optional[UnitConverter] = None):
+    def __init__(self, values: list[str | float | int] | dict[str, str | float | int],
+                 converter: UnitConverter | None = None):
         """Initialize batch unit conversion."""
         self._values = values
         self._converter = converter or UnitConverter()
@@ -680,13 +681,13 @@ class UnitBatch:
         """Set parent dimensions for percentage calculations."""
         return self.with_context(parent_width=width, parent_height=height)
 
-    def _get_context(self) -> Optional[ConversionContext]:
+    def _get_context(self) -> ConversionContext | None:
         """Get context with overrides applied."""
         if not self._context_overrides:
             return None
         return self._converter.create_context(**self._context_overrides)
 
-    def to_emu(self) -> Union[List[int], Dict[str, int]]:
+    def to_emu(self) -> list[int] | dict[str, int]:
         """Convert batch to EMU values."""
         context = self._get_context()
 
@@ -695,7 +696,7 @@ class UnitBatch:
         else:
             return self._converter.batch_convert(self._values, context)
 
-    def to_pixels(self) -> Union[List[float], Dict[str, float]]:
+    def to_pixels(self) -> list[float] | dict[str, float]:
         """Convert batch to pixel values."""
         context = self._get_context()
 
@@ -718,8 +719,8 @@ class UnitBatch:
         return f"UnitBatch({self._values!r}{context_info})"
 
 
-def units(values: Union[List[Union[str, float, int]], Dict[str, Union[str, float, int]]],
-          converter: Optional[UnitConverter] = None) -> UnitBatch:
+def units(values: list[str | float | int] | dict[str, str | float | int],
+          converter: UnitConverter | None = None) -> UnitBatch:
     """
     Create a fluent batch unit converter for efficient batch operations.
 
@@ -741,7 +742,7 @@ def units(values: Union[List[Union[str, float, int]], Dict[str, Union[str, float
 
 
 # Convenience functions for backward compatibility
-def to_emu(value: Union[str, float, int], **context_kwargs) -> int:
+def to_emu(value: str | float | int, **context_kwargs) -> int:
     """Convert value to EMU using default converter."""
     converter = UnitConverter()
     if context_kwargs:
@@ -750,7 +751,7 @@ def to_emu(value: Union[str, float, int], **context_kwargs) -> int:
     return converter.to_emu(value)
 
 
-def to_pixels(value: Union[str, float, int], **context_kwargs) -> float:
+def to_pixels(value: str | float | int, **context_kwargs) -> float:
     """Convert value to pixels using default converter."""
     converter = UnitConverter()
     if context_kwargs:

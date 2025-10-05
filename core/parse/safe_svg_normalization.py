@@ -8,8 +8,11 @@ during element iteration, causing "argument of type '_cython_3_1_3.cython_functi
 """
 
 import logging
-from typing import Dict, Any, Optional, Tuple, Iterator
+from collections.abc import Iterator
+from typing import Any, Dict, Optional, Tuple
+
 from lxml import etree as ET
+
 from ..xml.safe_iter import children, walk
 
 
@@ -29,7 +32,7 @@ def safe_element_iteration(element: ET.Element) -> Iterator[ET.Element]:
     return children(element)
 
 
-def safe_normalize_svg(svg_content: str) -> Optional[ET.Element]:
+def safe_normalize_svg(svg_content: str) -> Optional[Any]:  # ET.Element is not a type (Cython factory)
     """
     Safe SVG normalization with comprehensive error handling.
 
@@ -84,10 +87,10 @@ class SafeSVGNormalizer:
             'fix_encoding_issues': True,
             'add_missing_attributes': True,
             'validate_structure': True,
-            'filter_comments': True  # New setting for comment filtering
+            'filter_comments': True,  # New setting for comment filtering
         }
 
-    def normalize(self, svg_root: ET.Element) -> Tuple[ET.Element, Dict[str, Any]]:
+    def normalize(self, svg_root: ET.Element) -> tuple[ET.Element, dict[str, Any]]:
         """
         Normalize SVG element tree with safe iteration.
 
@@ -103,7 +106,7 @@ class SafeSVGNormalizer:
             'structure_fixes': [],
             'encoding_fixes': [],
             'whitespace_normalized': False,
-            'comments_filtered': False  # Track comment filtering
+            'comments_filtered': False,  # Track comment filtering
         }
 
         try:
@@ -131,7 +134,7 @@ class SafeSVGNormalizer:
             changes['error'] = str(e)
             return svg_root, changes
 
-    def _safe_fix_namespaces(self, svg_root: ET.Element, changes: Dict[str, Any]) -> ET.Element:
+    def _safe_fix_namespaces(self, svg_root: ET.Element, changes: dict[str, Any]) -> ET.Element:
         """Fix namespace declarations with safe iteration."""
         # Check if SVG namespace is properly declared
         svg_ns = 'http://www.w3.org/2000/svg'
@@ -158,7 +161,7 @@ class SafeSVGNormalizer:
             self.logger.warning(f"Namespace fixing failed: {e}")
             return svg_root
 
-    def _safe_rebuild_with_namespaces(self, element: ET.Element, nsmap: Dict[str, str]) -> ET.Element:
+    def _safe_rebuild_with_namespaces(self, element: ET.Element, nsmap: dict[str, str]) -> ET.Element:
         """Rebuild element tree with proper namespaces using safe iteration."""
         # Create new root with namespace map
         tag = element.tag
@@ -185,7 +188,7 @@ class SafeSVGNormalizer:
 
         return new_root
 
-    def _safe_copy_element_with_namespaces(self, element: ET.Element, nsmap: Dict[str, str]) -> ET.Element:
+    def _safe_copy_element_with_namespaces(self, element: ET.Element, nsmap: dict[str, str]) -> ET.Element:
         """Copy element preserving namespace context with safe iteration."""
         # Handle tag namespace
         tag = element.tag
@@ -211,7 +214,7 @@ class SafeSVGNormalizer:
 
         return new_element
 
-    def _safe_add_missing_attributes(self, svg_root: ET.Element, changes: Dict[str, Any]) -> ET.Element:
+    def _safe_add_missing_attributes(self, svg_root: ET.Element, changes: dict[str, Any]) -> ET.Element:
         """Add missing required SVG attributes with safe processing."""
         added_attrs = []
 
@@ -235,7 +238,7 @@ class SafeSVGNormalizer:
 
         return svg_root
 
-    def _safe_normalize_whitespace(self, svg_root: ET.Element, changes: Dict[str, Any]):
+    def _safe_normalize_whitespace(self, svg_root: ET.Element, changes: dict[str, Any]):
         """Normalize whitespace with safe element iteration."""
         try:
             whitespace_normalized = False
@@ -256,7 +259,7 @@ class SafeSVGNormalizer:
         except Exception as e:
             self.logger.warning(f"Whitespace normalization failed: {e}")
 
-    def _safe_fix_structure_issues(self, svg_root: ET.Element, changes: Dict[str, Any]):
+    def _safe_fix_structure_issues(self, svg_root: ET.Element, changes: dict[str, Any]):
         """Fix structural issues with safe element iteration."""
         fixes = []
 
@@ -321,7 +324,7 @@ class SafeSVGNormalizer:
             # Pattern/gradient attributes
             'patternUnits', 'gradientUnits', 'offset', 'stop-color',
             # Filter attributes
-            'in', 'result', 'stdDeviation'
+            'in', 'result', 'stdDeviation',
         }
 
         for attr in element.attrib:

@@ -6,16 +6,17 @@ This module provides comprehensive benchmarking to validate that speedrun
 optimizations achieve the target 10x+ performance improvements.
 """
 
-import time
-import statistics
 import asyncio
-from pathlib import Path
-from typing import List, Dict, Any, Tuple, Optional
-from dataclasses import dataclass, field
-from lxml import etree as ET
-import logging
 import json
+import logging
 import random
+import statistics
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+from lxml import etree as ET
 
 try:
     from ..services import SecureFileService, default_secure_file_service
@@ -26,9 +27,9 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     from core.services import default_secure_file_service
 
-from .speedrun_optimizer import SpeedrunMode, enable_speedrun_mode
-from .speedrun_cache import SpeedrunCache
 from .optimizer import PerformanceOptimizer
+from .speedrun_cache import SpeedrunCache
+from .speedrun_optimizer import SpeedrunMode, enable_speedrun_mode
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class BenchmarkResult:
     conversion_success_rate: float
     error_count: int
     
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     
     def __str__(self) -> str:
         return (f"BenchmarkResult({self.test_name}: "
@@ -70,7 +71,7 @@ class BenchmarkResult:
 class SVGSpeedrunBenchmark:
     """Comprehensive benchmark suite for speedrun optimizations."""
     
-    def __init__(self, cache_dir: Optional[Path] = None):
+    def __init__(self, cache_dir: Path | None = None):
         """
         Initialize benchmark suite.
         
@@ -82,14 +83,14 @@ class SVGSpeedrunBenchmark:
             self.cache_dir = Path(secure_dir.path)
         else:
             self.cache_dir = cache_dir
-        self.results: List[BenchmarkResult] = []
+        self.results: list[BenchmarkResult] = []
         
         # Test SVG samples
         self.test_svgs = self._generate_test_svgs()
         
         logger.info(f"Speedrun benchmark initialized with {len(self.test_svgs)} test SVGs")
     
-    def _generate_test_svgs(self) -> List[str]:
+    def _generate_test_svgs(self) -> list[str]:
         """Generate a variety of test SVG files for benchmarking."""
         test_svgs = []
         
@@ -151,7 +152,7 @@ class SVGSpeedrunBenchmark:
         
         return test_svgs
     
-    async def run_full_benchmark_suite(self) -> List[BenchmarkResult]:
+    async def run_full_benchmark_suite(self) -> list[BenchmarkResult]:
         """Run the complete speedrun benchmark suite."""
         logger.info("Starting speedrun benchmark suite")
         
@@ -159,7 +160,7 @@ class SVGSpeedrunBenchmark:
         modes_to_test = [
             SpeedrunMode.CONSERVATIVE,
             SpeedrunMode.AGGRESSIVE,
-            SpeedrunMode.LUDICROUS
+            SpeedrunMode.LUDICROUS,
         ]
         
         for mode in modes_to_test:
@@ -188,13 +189,13 @@ class SVGSpeedrunBenchmark:
         # Baseline measurement (no optimization)
         baseline_optimizer = PerformanceOptimizer()
         baseline_time, baseline_memory, baseline_errors = await self._measure_conversion_performance(
-            self.test_svgs, baseline_optimizer
+            self.test_svgs, baseline_optimizer,
         )
         
         # Speedrun measurement
         speedrun_optimizer = enable_speedrun_mode(mode)
         speedrun_time, speedrun_memory, speedrun_errors = await self._measure_conversion_performance(
-            self.test_svgs, speedrun_optimizer
+            self.test_svgs, speedrun_optimizer,
         )
         
         # Get cache statistics
@@ -220,7 +221,7 @@ class SVGSpeedrunBenchmark:
             memory_efficiency=memory_efficiency,
             conversion_success_rate=success_rate,
             error_count=speedrun_errors,
-            metadata={'mode': mode.value, 'cache_stats': stats}
+            metadata={'mode': mode.value, 'cache_stats': stats},
         )
         
         logger.info(f"Speedrun mode {mode.value} result: {result}")
@@ -235,7 +236,7 @@ class SVGSpeedrunBenchmark:
         cache.clear_all()
         
         cold_time, cold_memory, cold_errors = await self._measure_cache_performance(
-            self.test_svgs[:10], cache  # Use subset for faster testing
+            self.test_svgs[:10], cache,  # Use subset for faster testing
         )
         
         # Warm cache measurement
@@ -248,7 +249,7 @@ class SVGSpeedrunBenchmark:
             warm_cache.put_with_content_addressing(svg, f"cached_result_{svg[:20]}")
         
         warm_time, warm_memory, warm_errors = await self._measure_cache_performance(
-            self.test_svgs[:10], warm_cache
+            self.test_svgs[:10], warm_cache,
         )
         
         # Calculate metrics
@@ -268,7 +269,7 @@ class SVGSpeedrunBenchmark:
             optimized_memory_mb=warm_memory,
             memory_efficiency=cold_memory / max(warm_memory, 1.0),
             conversion_success_rate=(10 - warm_errors) / 10,
-            error_count=warm_errors
+            error_count=warm_errors,
         )
         
         logger.info(f"Cache warming result: {result}")
@@ -310,7 +311,7 @@ class SVGSpeedrunBenchmark:
             optimized_memory_mb=45.0,  # Estimated improvement
             memory_efficiency=50.0 / 45.0,
             conversion_success_rate=1.0,
-            error_count=0
+            error_count=0,
         )
         
         logger.info(f"Batch processing result: {result}")
@@ -342,15 +343,15 @@ class SVGSpeedrunBenchmark:
             memory_efficiency=baseline_memory / optimized_memory,
             conversion_success_rate=1.0,
             error_count=0,
-            metadata={'memory_reduction_percent': 25.0}
+            metadata={'memory_reduction_percent': 25.0},
         )
         
         logger.info(f"Memory efficiency result: {result}")
         return result
     
     async def _measure_conversion_performance(self, 
-                                           svgs: List[str], 
-                                           optimizer) -> Tuple[float, float, int]:
+                                           svgs: list[str], 
+                                           optimizer) -> tuple[float, float, int]:
         """Measure conversion performance for a list of SVGs."""
         start_time = time.perf_counter()
         errors = 0
@@ -374,8 +375,8 @@ class SVGSpeedrunBenchmark:
         return total_time, peak_memory, errors
     
     async def _measure_cache_performance(self, 
-                                       svgs: List[str], 
-                                       cache: SpeedrunCache) -> Tuple[float, float, int]:
+                                       svgs: list[str], 
+                                       cache: SpeedrunCache) -> tuple[float, float, int]:
         """Measure cache performance for a list of SVGs."""
         start_time = time.perf_counter()
         errors = 0
@@ -465,10 +466,10 @@ class SVGSpeedrunBenchmark:
                     'svg_count': r.svg_count,
                     'baseline_time': r.baseline_time_seconds,
                     'optimized_time': r.optimized_time_seconds,
-                    'metadata': r.metadata
+                    'metadata': r.metadata,
                 }
                 for r in self.results
-            ]
+            ],
         }
         
         with open(output_path, 'w') as f:
@@ -477,7 +478,7 @@ class SVGSpeedrunBenchmark:
         logger.info(f"Benchmark results saved to {output_path}")
 
 
-async def run_speedrun_benchmark(cache_dir: Optional[Path] = None) -> List[BenchmarkResult]:
+async def run_speedrun_benchmark(cache_dir: Path | None = None) -> list[BenchmarkResult]:
     """Run the complete speedrun benchmark suite."""
     benchmark = SVGSpeedrunBenchmark(cache_dir)
     results = await benchmark.run_full_benchmark_suite()

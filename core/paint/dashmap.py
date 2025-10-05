@@ -8,8 +8,10 @@ Reference: ECMA-376 DrawingML dash patterns
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, TYPE_CHECKING
+
 from math import isclose
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
 from lxml import etree
 
 if TYPE_CHECKING:
@@ -31,9 +33,9 @@ def apply_svg_dash_to_ln(
     ln_el: etree._Element,
     *,
     stroke_width_px: float,
-    dasharray_px: Optional[List[float]],
+    dasharray_px: list[float] | None,
     dashoffset_px: float = 0.0,
-    linecap: Optional[str] = None,  # "butt" | "square" | "round"
+    linecap: str | None = None,  # "butt" | "square" | "round"
     respect_non_scaling_stroke: bool = False,
     effective_geom_scale: float = 1.0,
     thresholds: Optional['Thresholds'] = None,
@@ -143,12 +145,12 @@ def _almost_zero(x: float, eps: float = 1e-9) -> bool:
     return abs(x) <= eps
 
 
-def _loop_len(seq: List[float]) -> float:
+def _loop_len(seq: list[float]) -> float:
     """Calculate total length of dash pattern"""
     return sum(seq)
 
 
-def _normalize_dasharray_with_offset(pattern: List[float], offset: float) -> List[float]:
+def _normalize_dasharray_with_offset(pattern: list[float], offset: float) -> list[float]:
     """
     Rotate/trim pattern so the first segment begins at the given offset
     (mod total pattern length).
@@ -167,7 +169,7 @@ def _normalize_dasharray_with_offset(pattern: List[float], offset: float) -> Lis
         return pattern[:]
 
     # Walk the pattern subtracting offset until the segment in which it lands
-    out: List[float] = []
+    out: list[float] = []
     i = 0
     seg = pattern[i]
     while o > 0:
@@ -194,7 +196,7 @@ def _normalize_dasharray_with_offset(pattern: List[float], offset: float) -> Lis
     return out
 
 
-def _to_dash_space_pairs(pattern: List[float]) -> List[Tuple[float, float]]:
+def _to_dash_space_pairs(pattern: list[float]) -> list[tuple[float, float]]:
     """
     Convert a sequence [d1, s1, d2, s2, ...] into list of (dash, space) pairs.
     If odd length, the sequence is cycled: [d1, s1, d2] -> (d1,s1), (d2, s1) …
@@ -210,7 +212,7 @@ def _to_dash_space_pairs(pattern: List[float]) -> List[Tuple[float, float]]:
     if len(seq) % 2 == 1:
         seq.append(seq[1] if len(seq) > 1 else seq[0])
 
-    pairs: List[Tuple[float, float]] = []
+    pairs: list[tuple[float, float]] = []
     for i in range(0, len(seq), 2):
         d = max(0.0, seq[i])
         sp = max(0.0, seq[i + 1])
@@ -239,7 +241,7 @@ def _pct_1k(ratio: float, min_pct: float = 0.01) -> int:
 
 # --- Preset matching (heuristics) --------------------------------------------
 
-def _match_preset(pairs: List[Tuple[float, float]], stroke_w: float) -> Optional[str]:
+def _match_preset(pairs: list[tuple[float, float]], stroke_w: float) -> str | None:
     """
     Try to identify common presets from the normalized (dash, space) pairs.
     Returns a DrawingML preset name or None.

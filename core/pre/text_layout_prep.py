@@ -14,6 +14,7 @@ Features:
 
 import logging
 from typing import Optional
+
 from lxml import etree as ET
 
 from .base import BasePreprocessor
@@ -185,7 +186,7 @@ class TextLayoutPrepPreprocessor(BasePreprocessor):
         # Style attributes that should be inherited
         style_attrs = [
             'font-family', 'font-size', 'font-weight', 'font-style',
-            'text-decoration', 'fill', 'stroke', 'opacity'
+            'text-decoration', 'fill', 'stroke', 'opacity',
         ]
 
         for attr in style_attrs:
@@ -254,7 +255,7 @@ class TextLayoutPrepPreprocessor(BasePreprocessor):
         except ValueError:
             return 12.0
 
-    def _extract_css_property(self, css_style: str, property_name: str) -> Optional[str]:
+    def _extract_css_property(self, css_style: str, property_name: str) -> str | None:
         """Extract CSS property value from style string."""
         if not css_style:
             return None

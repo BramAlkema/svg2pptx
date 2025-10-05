@@ -6,15 +6,17 @@ Core benchmark execution engine with statistical analysis, memory profiling,
 and performance measurement capabilities for the SVG2PPTX performance framework.
 """
 
+import logging
+import os
+import statistics
 import time
 import tracemalloc
-import statistics
-import logging
-from typing import Dict, List, Optional, Any, Callable, Tuple
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from contextlib import contextmanager
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
-import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
 # Optional psutil dependency for memory profiling
 try:
@@ -34,13 +36,13 @@ class BenchmarkResult:
 
     name: str
     category: str
-    execution_times_ms: List[float]
+    execution_times_ms: list[float]
     memory_usage_mb: float
     peak_memory_mb: float
-    ops_per_sec: Optional[float] = None
+    ops_per_sec: float | None = None
     timestamp: float = field(default_factory=time.time)
     implementation: str = "unknown"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Statistical analysis results
     mean_time_ms: float = 0.0
@@ -48,12 +50,12 @@ class BenchmarkResult:
     std_dev_ms: float = 0.0
     min_time_ms: float = 0.0
     max_time_ms: float = 0.0
-    confidence_interval: Tuple[float, float] = (0.0, 0.0)
+    confidence_interval: tuple[float, float] = (0.0, 0.0)
 
     # Success/failure information
     success: bool = True
-    error_message: Optional[str] = None
-    warning_messages: List[str] = field(default_factory=list)
+    error_message: str | None = None
+    warning_messages: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Calculate statistical metrics after initialization."""
@@ -82,7 +84,7 @@ class BenchmarkResult:
                 margin = t_value * (self.std_dev_ms / math.sqrt(n))
                 self.confidence_interval = (
                     self.mean_time_ms - margin,
-                    self.mean_time_ms + margin
+                    self.mean_time_ms + margin,
                 )
         else:
             self.std_dev_ms = 0.0
@@ -124,11 +126,11 @@ class PerformanceMeasurement:
         self.warmup_iterations = warmup_iterations or config.warmup_iterations
         self.measurement_iterations = measurement_iterations or config.measurement_iterations
 
-        self.execution_times: List[float] = []
-        self.memory_snapshots: List[MemorySnapshot] = []
-        self.start_memory: Optional[MemorySnapshot] = None
+        self.execution_times: list[float] = []
+        self.memory_snapshots: list[MemorySnapshot] = []
+        self.start_memory: MemorySnapshot | None = None
         self.peak_memory_mb = 0.0
-        self.metadata: Dict[str, Any] = {}
+        self.metadata: dict[str, Any] = {}
 
         self._tracemalloc_started = False
 
@@ -183,7 +185,7 @@ class PerformanceMeasurement:
             snapshot = MemorySnapshot(
                 current_mb=current_mb,
                 peak_mb=peak_mb,
-                allocated_blocks=allocated_blocks
+                allocated_blocks=allocated_blocks,
             )
 
             self.memory_snapshots.append(snapshot)
@@ -222,8 +224,8 @@ class PerformanceMeasurement:
                 'warmup_iterations': self.warmup_iterations,
                 'measurement_iterations': self.measurement_iterations,
                 'memory_delta_mb': self.get_memory_delta_mb(),
-                'memory_snapshots': len(self.memory_snapshots)
-            }
+                'memory_snapshots': len(self.memory_snapshots),
+            },
         )
 
         return result
@@ -250,7 +252,7 @@ class BenchmarkEngine:
     - Performance measurement utilities
     """
 
-    def __init__(self, config: Optional[PerformanceConfig] = None):
+    def __init__(self, config: PerformanceConfig | None = None):
         """
         Initialize benchmark engine.
 
@@ -258,16 +260,16 @@ class BenchmarkEngine:
             config: Optional performance configuration
         """
         self.config = config or get_config()
-        self._active_measurements: Dict[str, PerformanceMeasurement] = {}
+        self._active_measurements: dict[str, PerformanceMeasurement] = {}
         self._executor = ThreadPoolExecutor(max_workers=1)  # Single-threaded execution
 
     def execute_benchmark(self,
                          benchmark_function: Callable,
                          benchmark_name: str,
                          category: str = "unknown",
-                         warmup_iterations: Optional[int] = None,
-                         measurement_iterations: Optional[int] = None,
-                         timeout_seconds: Optional[float] = None,
+                         warmup_iterations: int | None = None,
+                         measurement_iterations: int | None = None,
+                         timeout_seconds: float | None = None,
                          **kwargs) -> BenchmarkResult:
         """
         Execute a benchmark function with statistical analysis.
@@ -297,7 +299,7 @@ class BenchmarkEngine:
                 benchmark_name=benchmark_name,
                 config=self.config,
                 warmup_iterations=warmup_iter,
-                measurement_iterations=measurement_iter
+                measurement_iterations=measurement_iter,
             )
 
             # Execute warmup iterations
@@ -329,7 +331,7 @@ class BenchmarkEngine:
                             memory_usage_mb=0.0,
                             peak_memory_mb=0.0,
                             success=False,
-                            error_message=f"Benchmark timed out after {timeout} seconds"
+                            error_message=f"Benchmark timed out after {timeout} seconds",
                         )
                     except Exception as e:
                         logger.error(f"Benchmark '{benchmark_name}' failed on iteration {i+1}: {e}")
@@ -340,7 +342,7 @@ class BenchmarkEngine:
                             memory_usage_mb=0.0,
                             peak_memory_mb=0.0,
                             success=False,
-                            error_message=str(e)
+                            error_message=str(e),
                         )
 
             # Get final result with statistical analysis
@@ -371,7 +373,7 @@ class BenchmarkEngine:
                 memory_usage_mb=0.0,
                 peak_memory_mb=0.0,
                 success=False,
-                error_message=f"Benchmark engine error: {str(e)}"
+                error_message=f"Benchmark engine error: {str(e)}",
             )
 
     def _execute_with_timeout(self,
@@ -409,7 +411,7 @@ class BenchmarkEngine:
             outlier_info = [f"iteration {i+1}: {time:.2f}ms (z={z:.1f})"
                            for i, time, z in outliers]
             result.warning_messages.append(
-                f"Detected {len(outliers)} outliers: {', '.join(outlier_info)}"
+                f"Detected {len(outliers)} outliers: {', '.join(outlier_info)}",
             )
             logger.warning(f"Benchmark '{result.name}' has {len(outliers)} outliers")
 
@@ -425,7 +427,7 @@ class BenchmarkEngine:
         """
         return PerformanceMeasurement(benchmark_name, self.config)
 
-    def analyze_results(self, results: List[BenchmarkResult]) -> Dict[str, Any]:
+    def analyze_results(self, results: list[BenchmarkResult]) -> dict[str, Any]:
         """
         Analyze multiple benchmark results for trends and comparisons.
 
@@ -448,7 +450,7 @@ class BenchmarkEngine:
             "success_rate": len(successful_results) / len(results) * 100,
             "categories": {},
             "performance_summary": {},
-            "warnings": []
+            "warnings": [],
         }
 
         if not successful_results:
@@ -471,7 +473,7 @@ class BenchmarkEngine:
                 "avg_time_ms": avg_time,
                 "avg_ops_per_sec": avg_ops,
                 "fastest_benchmark": min(cat_results, key=lambda r: r.mean_time_ms).name,
-                "slowest_benchmark": max(cat_results, key=lambda r: r.mean_time_ms).name
+                "slowest_benchmark": max(cat_results, key=lambda r: r.mean_time_ms).name,
             }
 
         # Overall performance summary
@@ -484,7 +486,7 @@ class BenchmarkEngine:
             "median_time_ms": statistics.median(all_times),
             "avg_time_ms": statistics.mean(all_times),
             "highest_ops_per_sec": max(all_ops) if all_ops else 0,
-            "median_ops_per_sec": statistics.median(all_ops) if all_ops else 0
+            "median_ops_per_sec": statistics.median(all_ops) if all_ops else 0,
         }
 
         return analysis

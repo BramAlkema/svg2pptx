@@ -14,15 +14,18 @@ Key Features:
 """
 
 import logging
-from typing import List, Tuple
 from math import sqrt
+from typing import List, Tuple
 
-from .interfaces import ArcConverter as BaseArcConverter
+from .a2c import ArcTooBigError, InvalidArcParametersError, arc_to_cubic_bezier
 from .architecture import (
-    PathCommand, CoordinatePoint, BezierSegment, PathCommandType,
-    ArcConversionError
+    ArcConversionError,
+    BezierSegment,
+    CoordinatePoint,
+    PathCommand,
+    PathCommandType,
 )
-from .a2c import arc_to_cubic_bezier, ArcTooBigError, InvalidArcParametersError
+from .interfaces import ArcConverter as BaseArcConverter
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +74,7 @@ class ArcConverter(BaseArcConverter):
 
         self.log_debug("ArcConverter initialized with industry-standard a2c algorithm")
 
-    def _norm_flags(self, large_arc_flag: int, sweep_flag: int) -> Tuple[int, int]:
+    def _norm_flags(self, large_arc_flag: int, sweep_flag: int) -> tuple[int, int]:
         """Normalize arc flags to 0/1 values per SVG spec."""
         return (1 if large_arc_flag else 0, 1 if sweep_flag else 0)
 
@@ -84,7 +87,7 @@ class ArcConverter(BaseArcConverter):
 
     def _scale_radii_if_needed(self, rx: float, ry: float,
                                x0: float, y0: float, x1: float, y1: float,
-                               phi_deg: float) -> Tuple[float, float]:
+                               phi_deg: float) -> tuple[float, float]:
         """Scale radii when the ellipse can't reach per SVG 1.1 §A.4.5."""
         if rx == 0 or ry == 0:
             return 0.0, 0.0
@@ -124,7 +127,7 @@ class ArcConverter(BaseArcConverter):
 
     def arc_to_bezier_segments(self, start_x: float, start_y: float, rx: float, ry: float,
                               x_axis_rotation: float, large_arc_flag: int, sweep_flag: int,
-                              end_x: float, end_y: float) -> List[BezierSegment]:
+                              end_x: float, end_y: float) -> list[BezierSegment]:
         """
         Convert SVG arc to cubic bezier segments using a2c algorithm.
 
@@ -164,7 +167,7 @@ class ArcConverter(BaseArcConverter):
                     start_point=CoordinatePoint(start_x, start_y, 'svg'),
                     control_point_1=CoordinatePoint(start_x + (end_x-start_x)/3.0, start_y + (end_y-start_y)/3.0, 'svg'),
                     control_point_2=CoordinatePoint(start_x + 2*(end_x-start_x)/3.0, start_y + 2*(end_y-start_y)/3.0, 'svg'),
-                    end_point=CoordinatePoint(end_x, end_y, 'svg')
+                    end_point=CoordinatePoint(end_x, end_y, 'svg'),
                 )]
 
             # If start == end, draw nothing (spec)
@@ -190,7 +193,7 @@ class ArcConverter(BaseArcConverter):
                 rotation=x_axis_rotation,
                 large_arc_flag=bool(large_arc_flag),
                 sweep_flag=bool(sweep_flag),
-                max_segment_angle=self.max_segment_angle
+                max_segment_angle=self.max_segment_angle,
             )
 
             # Convert to BezierSegment objects
@@ -200,7 +203,7 @@ class ArcConverter(BaseArcConverter):
                     start_point=CoordinatePoint(x=curve[0], y=curve[1], coordinate_system='svg'),
                     control_point_1=CoordinatePoint(x=curve[2], y=curve[3], coordinate_system='svg'),
                     control_point_2=CoordinatePoint(x=curve[4], y=curve[5], coordinate_system='svg'),
-                    end_point=CoordinatePoint(x=curve[6], y=curve[7], coordinate_system='svg')
+                    end_point=CoordinatePoint(x=curve[6], y=curve[7], coordinate_system='svg'),
                 )
                 bezier_segments.append(segment)
 
@@ -266,7 +269,7 @@ class ArcConverter(BaseArcConverter):
             return False
 
     def convert_arc_command(self, arc_command: PathCommand,
-                          current_point: CoordinatePoint) -> List[PathCommand]:
+                          current_point: CoordinatePoint) -> list[PathCommand]:
         """
         Convert arc command to equivalent cubic Bezier commands.
 
@@ -308,7 +311,7 @@ class ArcConverter(BaseArcConverter):
                 start_x=current_point.x, start_y=current_point.y,
                 rx=rx, ry=ry, x_axis_rotation=rotation,
                 large_arc_flag=large_arc_flag, sweep_flag=sweep_flag,
-                end_x=end_x, end_y=end_y
+                end_x=end_x, end_y=end_y,
             )
 
             # Convert segments to PathCommand objects
@@ -321,9 +324,9 @@ class ArcConverter(BaseArcConverter):
                     parameters=[
                         segment.control_point_1.x, segment.control_point_1.y,
                         segment.control_point_2.x, segment.control_point_2.y,
-                        segment.end_point.x, segment.end_point.y
+                        segment.end_point.x, segment.end_point.y,
                     ],
-                    original_command='C'
+                    original_command='C',
                 )
                 bezier_commands.append(command)
 
@@ -385,7 +388,7 @@ class ArcConverter(BaseArcConverter):
                 'arc_distance': distance,
                 'average_radius': avg_radius,
                 'complexity_score': estimated_segments * (distance / 100),
-                'is_degenerate': self._is_degenerate_arc(start_x, start_y, end_x, end_y, rx, ry)
+                'is_degenerate': self._is_degenerate_arc(start_x, start_y, end_x, end_y, rx, ry),
             }
 
         except Exception as e:
@@ -395,7 +398,7 @@ class ArcConverter(BaseArcConverter):
                 'average_radius': 0,
                 'complexity_score': 0,
                 'is_degenerate': True,
-                'error': str(e)
+                'error': str(e),
             }
 
     def get_conversion_statistics(self) -> dict:
@@ -411,7 +414,7 @@ class ArcConverter(BaseArcConverter):
             'average_segments_per_arc': avg_segments,
             'total_approximation_error': self._total_error,
             'max_segment_angle': self.max_segment_angle,
-            'error_tolerance': self.error_tolerance
+            'error_tolerance': self.error_tolerance,
         }
 
     def reset_statistics(self):
@@ -444,7 +447,7 @@ class ArcConverter(BaseArcConverter):
         return False
 
     def _handle_degenerate_arc(self, start_x: float, start_y: float,
-                             end_x: float, end_y: float) -> List[BezierSegment]:
+                             end_x: float, end_y: float) -> list[BezierSegment]:
         """Handle degenerate arc as a straight line."""
         self.log_debug("Handling degenerate arc as straight line")
 
@@ -455,19 +458,19 @@ class ArcConverter(BaseArcConverter):
         control1 = CoordinatePoint(
             x=start_x + dx / 3,
             y=start_y + dy / 3,
-            coordinate_system='svg'
+            coordinate_system='svg',
         )
         control2 = CoordinatePoint(
             x=start_x + 2 * dx / 3,
             y=start_y + 2 * dy / 3,
-            coordinate_system='svg'
+            coordinate_system='svg',
         )
 
         segment = BezierSegment(
             start_point=CoordinatePoint(x=start_x, y=start_y, coordinate_system='svg'),
             control_point_1=control1,
             control_point_2=control2,
-            end_point=CoordinatePoint(x=end_x, y=end_y, coordinate_system='svg')
+            end_point=CoordinatePoint(x=end_x, y=end_y, coordinate_system='svg'),
         )
 
         return [segment]

@@ -17,9 +17,14 @@ Key Features:
 from typing import List, Optional, Union
 
 from .core import (
-    AnimationDefinition, AnimationTiming, AnimationType, FillMode,
-    TransformType, CalcMode
+    AnimationDefinition,
+    AnimationTiming,
+    AnimationType,
+    CalcMode,
+    FillMode,
+    TransformType,
 )
+
 # AnimationConverter moved to src.converters.animation_converter
 
 
@@ -39,15 +44,15 @@ class AnimationBuilder:
 
     def __init__(self):
         """Initialize animation builder."""
-        self._element_id: Optional[str] = None
-        self._animation_type: Optional[AnimationType] = None
-        self._target_attribute: Optional[str] = None
-        self._values: List[str] = []
-        self._timing: Optional[AnimationTiming] = None
-        self._key_times: Optional[List[float]] = None
-        self._key_splines: Optional[List[List[float]]] = None
+        self._element_id: str | None = None
+        self._animation_type: AnimationType | None = None
+        self._target_attribute: str | None = None
+        self._values: list[str] = []
+        self._timing: AnimationTiming | None = None
+        self._key_times: list[float] | None = None
+        self._key_splines: list[list[float]] | None = None
         self._calc_mode: CalcMode = CalcMode.LINEAR
-        self._transform_type: Optional[TransformType] = None
+        self._transform_type: TransformType | None = None
         self._additive: str = "replace"
         self._accumulate: str = "none"
 
@@ -78,7 +83,7 @@ class AnimationBuilder:
         self._animation_type = AnimationType.ANIMATE
         return self
 
-    def animate_transform(self, transform_type: Union[str, TransformType]) -> 'AnimationBuilder':
+    def animate_transform(self, transform_type: str | TransformType) -> 'AnimationBuilder':
         """
         Set up transform animation.
 
@@ -98,7 +103,7 @@ class AnimationBuilder:
                 'rotate': TransformType.ROTATE,
                 'skewx': TransformType.SKEWX,
                 'skewy': TransformType.SKEWY,
-                'matrix': TransformType.MATRIX
+                'matrix': TransformType.MATRIX,
             }
             self._transform_type = transform_map.get(transform_type.lower())
         else:
@@ -184,7 +189,7 @@ class AnimationBuilder:
         self._values = list(values)
         return self
 
-    def duration(self, duration: Union[str, float]) -> 'AnimationBuilder':
+    def duration(self, duration: str | float) -> 'AnimationBuilder':
         """
         Set animation duration.
 
@@ -204,7 +209,7 @@ class AnimationBuilder:
 
         return self
 
-    def delay(self, delay: Union[str, float]) -> 'AnimationBuilder':
+    def delay(self, delay: str | float) -> 'AnimationBuilder':
         """
         Set animation delay.
 
@@ -224,7 +229,7 @@ class AnimationBuilder:
 
         return self
 
-    def repeat(self, count: Union[int, str]) -> 'AnimationBuilder':
+    def repeat(self, count: int | str) -> 'AnimationBuilder':
         """
         Set animation repeat count.
 
@@ -240,7 +245,7 @@ class AnimationBuilder:
         self._timing.repeat_count = count
         return self
 
-    def fill_mode(self, mode: Union[str, FillMode]) -> 'AnimationBuilder':
+    def fill_mode(self, mode: str | FillMode) -> 'AnimationBuilder':
         """
         Set animation fill mode.
 
@@ -260,7 +265,7 @@ class AnimationBuilder:
 
         return self
 
-    def with_easing(self, easing: Union[str, List[float]]) -> 'AnimationBuilder':
+    def with_easing(self, easing: str | list[float]) -> 'AnimationBuilder':
         """
         Set animation easing.
 
@@ -277,7 +282,7 @@ class AnimationBuilder:
                 'ease': [0.25, 0.1, 0.25, 1.0],
                 'ease-in': [0.42, 0.0, 1.0, 1.0],
                 'ease-out': [0.0, 0.0, 0.58, 1.0],
-                'ease-in-out': [0.42, 0.0, 0.58, 1.0]
+                'ease-in-out': [0.42, 0.0, 0.58, 1.0],
             }
             control_points = easing_map.get(easing.lower(), [0.25, 0.1, 0.25, 1.0])
         else:
@@ -287,7 +292,7 @@ class AnimationBuilder:
         self._calc_mode = CalcMode.SPLINE
         return self
 
-    def with_keyframes(self, times: List[float], splines: Optional[List[List[float]]] = None) -> 'AnimationBuilder':
+    def with_keyframes(self, times: list[float], splines: list[list[float]] | None = None) -> 'AnimationBuilder':
         """
         Set explicit keyframe timing.
 
@@ -362,7 +367,7 @@ class AnimationBuilder:
             calc_mode=self._calc_mode,
             transform_type=self._transform_type,
             additive=self._additive,
-            accumulate=self._accumulate
+            accumulate=self._accumulate,
         )
 
     def _parse_time_value(self, time_str: str) -> float:
@@ -394,7 +399,7 @@ class AnimationSequenceBuilder:
 
     def __init__(self):
         """Initialize sequence builder."""
-        self._animations: List[AnimationDefinition] = []
+        self._animations: list[AnimationDefinition] = []
         self._current_time_offset: float = 0.0
 
     def add_animation(self, animation: AnimationDefinition) -> 'AnimationSequenceBuilder':
@@ -425,7 +430,7 @@ class AnimationSequenceBuilder:
         animation = builder.build()
         return self.add_animation(animation)
 
-    def then_after(self, delay: Union[str, float]) -> 'AnimationSequenceBuilder':
+    def then_after(self, delay: str | float) -> 'AnimationSequenceBuilder':
         """
         Set delay before next animation.
 
@@ -461,7 +466,7 @@ class AnimationSequenceBuilder:
             self._current_time_offset = self._animations[-1].timing.begin
         return self
 
-    def build(self) -> List[AnimationDefinition]:
+    def build(self) -> list[AnimationDefinition]:
         """
         Build the animation sequence.
 
@@ -488,7 +493,7 @@ class TimingBuilder:
         """Initialize timing builder."""
         self._timing = AnimationTiming()
 
-    def duration(self, duration: Union[str, float]) -> 'TimingBuilder':
+    def duration(self, duration: str | float) -> 'TimingBuilder':
         """Set animation duration."""
         if isinstance(duration, str):
             self._timing.duration = AnimationBuilder()._parse_time_value(duration)
@@ -496,7 +501,7 @@ class TimingBuilder:
             self._timing.duration = float(duration)
         return self
 
-    def delay(self, delay: Union[str, float]) -> 'TimingBuilder':
+    def delay(self, delay: str | float) -> 'TimingBuilder':
         """Set animation delay."""
         if isinstance(delay, str):
             self._timing.begin = AnimationBuilder()._parse_time_value(delay)
@@ -504,7 +509,7 @@ class TimingBuilder:
             self._timing.begin = float(delay)
         return self
 
-    def repeat(self, count: Union[int, str]) -> 'TimingBuilder':
+    def repeat(self, count: int | str) -> 'TimingBuilder':
         """Set repeat count."""
         self._timing.repeat_count = count
         return self
@@ -604,7 +609,7 @@ class AnimationComposer:
         self._sequence_builder.add_animation(animation)
         return self
 
-    def then_after(self, delay: Union[str, float]) -> 'AnimationComposer':
+    def then_after(self, delay: str | float) -> 'AnimationComposer':
         """Add delay before next animation."""
         self._sequence_builder.then_after(delay)
         return self
@@ -614,6 +619,6 @@ class AnimationComposer:
         self._sequence_builder.simultaneously()
         return self
 
-    def build(self) -> List[AnimationDefinition]:
+    def build(self) -> list[AnimationDefinition]:
         """Build the complete animation sequence."""
         return self._sequence_builder.build()

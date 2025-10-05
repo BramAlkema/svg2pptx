@@ -13,10 +13,11 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
-from lxml import etree as ET
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices
 
@@ -46,10 +47,10 @@ class ClippingStrategy(Enum):
 class ClippingPath:
     """Information about a clipping path."""
     id: str
-    path_data: Optional[str]
-    shapes: List[ET.Element]
+    path_data: str | None
+    shapes: list[ET.Element]
     units: str
-    transform: Optional[str]
+    transform: str | None
     complexity: ClippingComplexity
     powerpoint_compatible: bool
 
@@ -58,12 +59,12 @@ class ClippingPath:
 class ClippingAnalysis:
     """Result of clipping analysis."""
     target_element: ET.Element
-    clipping_paths: List[ClippingPath]
+    clipping_paths: list[ClippingPath]
     complexity: ClippingComplexity
     recommended_strategy: ClippingStrategy
     powerpoint_compatible: bool
     requires_preprocessing: bool
-    optimization_opportunities: List[str]
+    optimization_opportunities: list[str]
     fallback_strategy: ClippingStrategy
     estimated_performance_impact: str
 
@@ -89,7 +90,7 @@ class ClippingAnalyzer:
         self.logger = logging.getLogger(__name__)
 
         # Analysis cache
-        self.analysis_cache: Dict[str, ClippingAnalysis] = {}
+        self.analysis_cache: dict[str, ClippingAnalysis] = {}
 
         # Statistics
         self.stats = {
@@ -97,7 +98,7 @@ class ClippingAnalyzer:
             'simple_clips': 0,
             'complex_clips': 0,
             'unsupported_clips': 0,
-            'cache_hits': 0
+            'cache_hits': 0,
         }
 
     def analyze_clipping_scenario(self, element: ET.Element, context: Any) -> ClippingAnalysis:
@@ -175,10 +176,10 @@ class ClippingAnalyzer:
             requires_preprocessing=requires_preprocessing,
             optimization_opportunities=optimizations,
             fallback_strategy=fallback_strategy,
-            estimated_performance_impact=performance_impact
+            estimated_performance_impact=performance_impact,
         )
 
-    def _extract_clipping_paths(self, element: ET.Element, context: Any) -> List[ClippingPath]:
+    def _extract_clipping_paths(self, element: ET.Element, context: Any) -> list[ClippingPath]:
         """Extract clipping path information from element."""
         clipping_paths = []
 
@@ -196,7 +197,7 @@ class ClippingAnalyzer:
 
         return clipping_paths
 
-    def _resolve_clip_path_reference(self, clip_ref: str, context: Any) -> Optional[ClippingPath]:
+    def _resolve_clip_path_reference(self, clip_ref: str, context: Any) -> ClippingPath | None:
         """Resolve clip-path reference to ClippingPath object."""
         # Extract clip path ID
         clip_id = self._extract_reference_id(clip_ref)
@@ -216,7 +217,7 @@ class ClippingAnalyzer:
         clippath_def = clippath_element[0]
         return self._analyze_clippath_definition(clippath_def)
 
-    def _extract_preprocessing_clips(self, element: ET.Element) -> List[ClippingPath]:
+    def _extract_preprocessing_clips(self, element: ET.Element) -> list[ClippingPath]:
         """Extract clipping paths from preprocessing metadata."""
         clips = []
 
@@ -257,10 +258,10 @@ class ClippingAnalyzer:
             units=units,
             transform=transform,
             complexity=complexity,
-            powerpoint_compatible=powerpoint_compatible
+            powerpoint_compatible=powerpoint_compatible,
         )
 
-    def _analyze_mask_element(self, mask_element: ET.Element) -> Optional[ClippingPath]:
+    def _analyze_mask_element(self, mask_element: ET.Element) -> ClippingPath | None:
         """Analyze a clipping mask element from preprocessing."""
         mask_id = mask_element.get('id', f'mask_{id(mask_element)}')
         transform = mask_element.get('transform')
@@ -285,10 +286,10 @@ class ClippingAnalyzer:
             units='userSpaceOnUse',  # Default for preprocessing
             transform=transform,
             complexity=complexity,
-            powerpoint_compatible=self._is_powerpoint_compatible(shapes, complexity)
+            powerpoint_compatible=self._is_powerpoint_compatible(shapes, complexity),
         )
 
-    def _analyze_clippath_complexity(self, shapes: List[ET.Element], path_data: Optional[str]) -> ClippingComplexity:
+    def _analyze_clippath_complexity(self, shapes: list[ET.Element], path_data: str | None) -> ClippingComplexity:
         """Analyze the complexity of a clipping path."""
         if not shapes:
             return ClippingComplexity.UNSUPPORTED
@@ -349,7 +350,7 @@ class ClippingAnalyzer:
         # Complex path
         return ClippingComplexity.COMPLEX
 
-    def _assess_overall_complexity(self, clipping_paths: List[ClippingPath]) -> ClippingComplexity:
+    def _assess_overall_complexity(self, clipping_paths: list[ClippingPath]) -> ClippingComplexity:
         """Assess overall complexity from multiple clipping paths."""
         if not clipping_paths:
             return ClippingComplexity.SIMPLE
@@ -368,7 +369,7 @@ class ClippingAnalyzer:
         else:
             return max_complexity
 
-    def _is_powerpoint_compatible(self, shapes: List[ET.Element], complexity: ClippingComplexity) -> bool:
+    def _is_powerpoint_compatible(self, shapes: list[ET.Element], complexity: ClippingComplexity) -> bool:
         """Check if clipping is PowerPoint compatible."""
         # PowerPoint has limited clipping support
         if complexity in [ClippingComplexity.COMPLEX, ClippingComplexity.UNSUPPORTED]:
@@ -383,7 +384,7 @@ class ClippingAnalyzer:
         # Multiple shapes are generally not compatible
         return len(shapes) <= 2 and complexity == ClippingComplexity.SIMPLE
 
-    def _determine_strategy(self, clipping_paths: List[ClippingPath], complexity: ClippingComplexity) -> ClippingStrategy:
+    def _determine_strategy(self, clipping_paths: list[ClippingPath], complexity: ClippingComplexity) -> ClippingStrategy:
         """Determine the recommended conversion strategy."""
         # Use policy engine if available
         if self._policy_engine and clipping_paths:
@@ -412,7 +413,7 @@ class ClippingAnalyzer:
                 clip_type=clip_type,
                 path_complexity=path_segments,
                 nesting_level=nesting_level,
-                has_boolean_ops=has_boolean_ops
+                has_boolean_ops=has_boolean_ops,
             )
 
             # Map policy decision to strategy
@@ -443,14 +444,14 @@ class ClippingAnalyzer:
 
         return ClippingStrategy.RASTERIZATION
 
-    def _assess_powerpoint_compatibility(self, clipping_paths: List[ClippingPath], complexity: ClippingComplexity) -> bool:
+    def _assess_powerpoint_compatibility(self, clipping_paths: list[ClippingPath], complexity: ClippingComplexity) -> bool:
         """Assess overall PowerPoint compatibility."""
         if complexity in [ClippingComplexity.COMPLEX, ClippingComplexity.UNSUPPORTED]:
             return False
 
         return all(clip.powerpoint_compatible for clip in clipping_paths)
 
-    def _requires_preprocessing(self, element: ET.Element, clipping_paths: List[ClippingPath]) -> bool:
+    def _requires_preprocessing(self, element: ET.Element, clipping_paths: list[ClippingPath]) -> bool:
         """Check if preprocessing is required."""
         # Already has preprocessing metadata
         if element.get('data-clip-operation'):
@@ -467,7 +468,7 @@ class ClippingAnalyzer:
 
         return False
 
-    def _identify_optimizations(self, clipping_paths: List[ClippingPath], complexity: ClippingComplexity) -> List[str]:
+    def _identify_optimizations(self, clipping_paths: list[ClippingPath], complexity: ClippingComplexity) -> list[str]:
         """Identify optimization opportunities."""
         optimizations = []
 
@@ -504,7 +505,7 @@ class ClippingAnalyzer:
 
         return ClippingStrategy.RASTERIZATION
 
-    def _estimate_performance_impact(self, clipping_paths: List[ClippingPath], complexity: ClippingComplexity) -> str:
+    def _estimate_performance_impact(self, clipping_paths: list[ClippingPath], complexity: ClippingComplexity) -> str:
         """Estimate performance impact of clipping conversion."""
         clip_count = len(clipping_paths)
 
@@ -530,10 +531,10 @@ class ClippingAnalyzer:
             requires_preprocessing=False,
             optimization_opportunities=[],
             fallback_strategy=ClippingStrategy.POWERPOINT_NATIVE,
-            estimated_performance_impact='none'
+            estimated_performance_impact='none',
         )
 
-    def _count_path_segments(self, clipping_paths: List[ClippingPath]) -> int:
+    def _count_path_segments(self, clipping_paths: list[ClippingPath]) -> int:
         """Count total path segments across all clipping paths."""
         total_segments = 0
         for clip in clipping_paths:
@@ -546,7 +547,7 @@ class ClippingAnalyzer:
                 total_segments += len(clip.shapes) * 4  # Assume 4 segments per shape
         return total_segments
 
-    def _extract_reference_id(self, reference: str) -> Optional[str]:
+    def _extract_reference_id(self, reference: str) -> str | None:
         """Extract ID from URL reference."""
         if reference.startswith('url(#') and reference.endswith(')'):
             return reference[5:-1]
@@ -561,7 +562,7 @@ class ClippingAnalyzer:
         children_count = len(list(element))
         return f"{element.tag}:{attrs}:{children_count}"
 
-    def get_analysis_statistics(self) -> Dict[str, int]:
+    def get_analysis_statistics(self) -> dict[str, int]:
         """Get analysis statistics."""
         return self.stats.copy()
 
@@ -576,10 +577,10 @@ class ClippingAnalyzer:
             'simple_clips': 0,
             'complex_clips': 0,
             'unsupported_clips': 0,
-            'cache_hits': 0
+            'cache_hits': 0,
         }
 
-    def analyze_clippath(self, element: ET.Element, clippath_definitions: Dict[str, Any], clip_ref: str):
+    def analyze_clippath(self, element: ET.Element, clippath_definitions: dict[str, Any], clip_ref: str):
         """
         Compatibility method for legacy ClipPathAnalyzer API.
 
@@ -597,7 +598,7 @@ class ClippingAnalyzer:
         # Create a minimal context object with clippath_definitions
         context = type('Context', (), {
             'clippath_definitions': clippath_definitions,
-            'clip_ref': clip_ref
+            'clip_ref': clip_ref,
         })()
 
         # Call the main analysis method

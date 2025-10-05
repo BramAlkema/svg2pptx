@@ -11,14 +11,14 @@ This fixes the core issue where SVGs with complex transforms (like DTDA logo)
 end up with shapes positioned off-slide due to improper matrix composition.
 """
 
-import re
 import math
-from typing import Tuple, Optional
-from lxml import etree as ET
+import re
+from typing import Optional, Tuple
+
 import numpy as np
+from lxml import etree as ET
 
 from ..utils.transform_utils import get_transform_safe
-
 
 # EMU Constants for PowerPoint coordinate system
 EMU_PER_INCH = 914400
@@ -31,7 +31,7 @@ STANDARD_SLIDE_WIDTH_EMU = 9144000   # 10 inches
 STANDARD_SLIDE_HEIGHT_EMU = 6858000  # 7.5 inches
 
 
-def parse_viewbox(svg_element: ET.Element) -> Tuple[float, float, float, float]:
+def parse_viewbox(svg_element: ET.Element) -> tuple[float, float, float, float]:
     """
     Parse SVG viewBox attribute into (x, y, width, height).
 
@@ -104,7 +104,7 @@ def parse_svg_length(length_str: str) -> float:
     return value
 
 
-def parse_preserve_aspect_ratio(svg_element: ET.Element) -> Tuple[str, str]:
+def parse_preserve_aspect_ratio(svg_element: ET.Element) -> tuple[str, str]:
     """
     Parse preserveAspectRatio attribute into alignment and meet/slice values.
 
@@ -137,7 +137,7 @@ def parse_preserve_aspect_ratio(svg_element: ET.Element) -> Tuple[str, str]:
     return alignment, meet_slice
 
 
-def get_alignment_factors(alignment: str) -> Tuple[float, float]:
+def get_alignment_factors(alignment: str) -> tuple[float, float]:
     """
     Get alignment offset factors for viewport positioning.
 
@@ -188,7 +188,7 @@ def viewport_matrix(svg_root: ET.Element, slide_w_emu: int, slide_h_emu: int) ->
     T_vb = np.array([
         [1, 0, -vb_x],
         [0, 1, -vb_y],
-        [0, 0, 1]
+        [0, 0, 1],
     ], dtype=float)
 
     # 2) Scale for meet/slice preserving aspect ratio
@@ -205,7 +205,7 @@ def viewport_matrix(svg_root: ET.Element, slide_w_emu: int, slide_h_emu: int) ->
     S = np.array([
         [s, 0, 0],
         [0, s, 0],
-        [0, 0, 1]
+        [0, 0, 1],
     ], dtype=float)
 
     # 3) Align inside the slide
@@ -221,14 +221,14 @@ def viewport_matrix(svg_root: ET.Element, slide_w_emu: int, slide_h_emu: int) ->
     A = np.array([
         [1, 0, off_x],
         [0, 1, off_y],
-        [0, 0, 1]
+        [0, 0, 1],
     ], dtype=float)
 
     # Compose: Align @ Scale @ ViewBoxTranslate
     return A @ S @ T_vb
 
 
-def parse_transform(transform_str: Optional[str]) -> np.ndarray:
+def parse_transform(transform_str: str | None) -> np.ndarray:
     """
     Parse SVG transform string into 3x3 transformation matrix.
 
@@ -282,14 +282,14 @@ def parse_transform(transform_str: Optional[str]) -> np.ndarray:
             rotate_matrix = np.array([
                 [cos_a, -sin_a, cx - cx * cos_a + cy * sin_a],
                 [sin_a, cos_a, cy - cx * sin_a - cy * cos_a],
-                [0, 0, 1]
+                [0, 0, 1],
             ], dtype=float)
         else:
             # Rotate around origin
             rotate_matrix = np.array([
                 [cos_a, -sin_a, 0],
                 [sin_a, cos_a, 0],
-                [0, 0, 1]
+                [0, 0, 1],
             ], dtype=float)
 
         matrix = matrix @ rotate_matrix
@@ -297,7 +297,7 @@ def parse_transform(transform_str: Optional[str]) -> np.ndarray:
     return matrix
 
 
-def element_ctm(node: ET.Element, parent_ctm: Optional[np.ndarray], viewport_ctm: np.ndarray) -> np.ndarray:
+def element_ctm(node: ET.Element, parent_ctm: np.ndarray | None, viewport_ctm: np.ndarray) -> np.ndarray:
     """
     Calculate Current Transformation Matrix for element.
 
@@ -335,7 +335,7 @@ def normalise_content_matrix(min_x: float, min_y: float) -> np.ndarray:
     return np.array([
         [1, 0, -min_x],
         [0, 1, -min_y],
-        [0, 0, 1]
+        [0, 0, 1],
     ], dtype=float)
 
 

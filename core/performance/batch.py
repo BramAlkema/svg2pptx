@@ -9,15 +9,16 @@ This module provides batch processing capabilities to:
 - Enable parallel processing where safe
 """
 
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Tuple, Optional, Any, TypeVar
-from dataclasses import dataclass, field
-from collections import defaultdict
-from lxml import etree as ET
-import time
 import logging
+import threading
+import time
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
+
+from lxml import etree as ET
 
 from .cache import get_global_cache
 from .pools import get_converter_pool
@@ -43,7 +44,7 @@ class BatchItem:
     context: Any
     priority: int = 0
     estimated_time: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,8 +52,8 @@ class BatchGroup:
     """Group of similar items for batch processing."""
     batch_key: str
     strategy: BatchStrategy
-    items: List[BatchItem] = field(default_factory=list)
-    converter_class: Optional[type] = None
+    items: list[BatchItem] = field(default_factory=list)
+    converter_class: type | None = None
     estimated_total_time: float = 0.0
     max_batch_size: int = 50
     
@@ -65,7 +66,7 @@ class BatchGroup:
         """Check if batch should be split due to size."""
         return len(self.items) > self.max_batch_size
     
-    def split(self) -> List['BatchGroup']:
+    def split(self) -> list['BatchGroup']:
         """Split large batch into smaller chunks."""
         if not self.should_split():
             return [self]
@@ -79,7 +80,7 @@ class BatchGroup:
                 batch_key=f"{self.batch_key}_chunk_{i//chunk_size}",
                 strategy=self.strategy,
                 converter_class=self.converter_class,
-                max_batch_size=self.max_batch_size
+                max_batch_size=self.max_batch_size,
             )
             chunk.items = chunk_items
             chunk.estimated_total_time = sum(item.estimated_time for item in chunk_items)
@@ -94,8 +95,8 @@ class BatchResult:
     batch_key: str
     items_processed: int
     processing_time: float
-    outputs: List[str]
-    errors: List[Exception] = field(default_factory=list)
+    outputs: list[str]
+    errors: list[Exception] = field(default_factory=list)
     cache_hits: int = 0
     cache_misses: int = 0
 
@@ -132,7 +133,7 @@ class BatchProcessor:
             BatchStrategy.BY_COMPLEXITY: self._group_by_complexity,
             BatchStrategy.BY_ATTRIBUTES: self._group_by_attributes,
             BatchStrategy.BY_CONVERTER_TYPE: self._group_by_converter_type,
-            BatchStrategy.SEQUENTIAL: self._no_grouping
+            BatchStrategy.SEQUENTIAL: self._no_grouping,
         }
         
         # Performance tracking
@@ -142,9 +143,9 @@ class BatchProcessor:
         self.lock = threading.RLock()
     
     def create_batch_items(self, 
-                          elements: List[ET.Element],
-                          contexts: List[Any],
-                          priorities: Optional[List[int]] = None) -> List[BatchItem]:
+                          elements: list[ET.Element],
+                          contexts: list[Any],
+                          priorities: list[int] | None = None) -> list[BatchItem]:
         """Create batch items from elements and contexts."""
         if priorities is None:
             priorities = [0] * len(elements)
@@ -159,15 +160,15 @@ class BatchProcessor:
                 context=context,
                 priority=priorities[i] if i < len(priorities) else 0,
                 estimated_time=estimated_time,
-                metadata=self._extract_element_metadata(element)
+                metadata=self._extract_element_metadata(element),
             )
             items.append(item)
         
         return items
     
     def group_items(self, 
-                   items: List[BatchItem],
-                   strategy: Optional[BatchStrategy] = None) -> List[BatchGroup]:
+                   items: list[BatchItem],
+                   strategy: BatchStrategy | None = None) -> list[BatchGroup]:
         """Group batch items according to strategy."""
         strategy = strategy or self.default_strategy
         
@@ -187,8 +188,8 @@ class BatchProcessor:
         return final_groups
     
     def process_batches(self, 
-                       batch_groups: List[BatchGroup],
-                       parallel: bool = True) -> List[BatchResult]:
+                       batch_groups: list[BatchGroup],
+                       parallel: bool = True) -> list[BatchResult]:
         """Process batch groups."""
         start_time = time.time()
         
@@ -209,11 +210,11 @@ class BatchProcessor:
         return results
     
     def process_elements(self,
-                        elements: List[ET.Element],
-                        contexts: List[Any],
-                        converter_classes: List[type],
-                        strategy: Optional[BatchStrategy] = None,
-                        parallel: bool = True) -> List[str]:
+                        elements: list[ET.Element],
+                        contexts: list[Any],
+                        converter_classes: list[type],
+                        strategy: BatchStrategy | None = None,
+                        parallel: bool = True) -> list[str]:
         """High-level method to process elements with batching."""
         # Create batch items
         items = self.create_batch_items(elements, contexts)
@@ -235,7 +236,7 @@ class BatchProcessor:
         
         return outputs
     
-    def _process_parallel(self, batch_groups: List[BatchGroup]) -> List[BatchResult]:
+    def _process_parallel(self, batch_groups: list[BatchGroup]) -> list[BatchResult]:
         """Process batch groups in parallel."""
         future_to_group = {}
         
@@ -257,7 +258,7 @@ class BatchProcessor:
                     items_processed=0,
                     processing_time=0.0,
                     outputs=[],
-                    errors=[e]
+                    errors=[e],
                 )
                 results.append(error_result)
         
@@ -265,7 +266,7 @@ class BatchProcessor:
         results.sort(key=lambda r: r.batch_key)
         return results
     
-    def _process_sequential(self, batch_groups: List[BatchGroup]) -> List[BatchResult]:
+    def _process_sequential(self, batch_groups: list[BatchGroup]) -> list[BatchResult]:
         """Process batch groups sequentially."""
         results = []
         for group in batch_groups:
@@ -279,7 +280,7 @@ class BatchProcessor:
                     items_processed=0,
                     processing_time=0.0,
                     outputs=[],
-                    errors=[e]
+                    errors=[e],
                 )
                 results.append(error_result)
         
@@ -334,10 +335,10 @@ class BatchProcessor:
             outputs=outputs,
             errors=errors,
             cache_hits=cache_hits,
-            cache_misses=cache_misses
+            cache_misses=cache_misses,
         )
     
-    def _process_single_item(self, item: BatchItem, converter) -> Tuple[str, bool]:
+    def _process_single_item(self, item: BatchItem, converter) -> tuple[str, bool]:
         """Process a single batch item."""
         cache_hit = False
         
@@ -384,7 +385,7 @@ class BatchProcessor:
             'use': 1.5,
             'circle': 1.0,
             'rect': 1.0,
-            'line': 1.0
+            'line': 1.0,
         }
         
         multiplier = complexity_multipliers.get(tag, 2.0)
@@ -399,7 +400,7 @@ class BatchProcessor:
         
         return base_time * multiplier * attr_multiplier * child_multiplier
     
-    def _extract_element_metadata(self, element: ET.Element) -> Dict[str, Any]:
+    def _extract_element_metadata(self, element: ET.Element) -> dict[str, Any]:
         """Extract metadata from element for grouping."""
         tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
         
@@ -409,7 +410,7 @@ class BatchProcessor:
             'child_count': len(list(element)),
             'has_transform': element.get('transform') is not None,
             'has_style': element.get('style') is not None,
-            'has_class': element.get('class') is not None
+            'has_class': element.get('class') is not None,
         }
     
     def _hash_context(self, context) -> str:
@@ -418,7 +419,7 @@ class BatchProcessor:
         return str(hash(str(context)))
     
     # Strategy implementations
-    def _group_by_element_type(self, items: List[BatchItem]) -> List[BatchGroup]:
+    def _group_by_element_type(self, items: list[BatchItem]) -> list[BatchGroup]:
         """Group items by SVG element type."""
         groups_dict = defaultdict(list)
         
@@ -430,7 +431,7 @@ class BatchProcessor:
         for tag, group_items in groups_dict.items():
             group = BatchGroup(
                 batch_key=f"element_type_{tag}",
-                strategy=BatchStrategy.BY_ELEMENT_TYPE
+                strategy=BatchStrategy.BY_ELEMENT_TYPE,
             )
             for item in group_items:
                 group.add_item(item)
@@ -438,7 +439,7 @@ class BatchProcessor:
         
         return groups
     
-    def _group_by_complexity(self, items: List[BatchItem]) -> List[BatchGroup]:
+    def _group_by_complexity(self, items: list[BatchItem]) -> list[BatchGroup]:
         """Group items by processing complexity."""
         # Divide into complexity tiers
         low_complexity = []
@@ -457,12 +458,12 @@ class BatchProcessor:
         for complexity_level, group_items in [
             ('low', low_complexity),
             ('medium', medium_complexity),
-            ('high', high_complexity)
+            ('high', high_complexity),
         ]:
             if group_items:
                 group = BatchGroup(
                     batch_key=f"complexity_{complexity_level}",
-                    strategy=BatchStrategy.BY_COMPLEXITY
+                    strategy=BatchStrategy.BY_COMPLEXITY,
                 )
                 for item in group_items:
                     group.add_item(item)
@@ -470,7 +471,7 @@ class BatchProcessor:
         
         return groups
     
-    def _group_by_attributes(self, items: List[BatchItem]) -> List[BatchGroup]:
+    def _group_by_attributes(self, items: list[BatchItem]) -> list[BatchGroup]:
         """Group items by similar attributes."""
         groups_dict = defaultdict(list)
         
@@ -487,7 +488,7 @@ class BatchProcessor:
         for key, group_items in groups_dict.items():
             group = BatchGroup(
                 batch_key=f"attributes_{key}",
-                strategy=BatchStrategy.BY_ATTRIBUTES
+                strategy=BatchStrategy.BY_ATTRIBUTES,
             )
             for item in group_items:
                 group.add_item(item)
@@ -495,7 +496,7 @@ class BatchProcessor:
         
         return groups
     
-    def _group_by_converter_type(self, items: List[BatchItem]) -> List[BatchGroup]:
+    def _group_by_converter_type(self, items: list[BatchItem]) -> list[BatchGroup]:
         """Group items by converter class."""
         groups_dict = defaultdict(list)
         
@@ -511,7 +512,7 @@ class BatchProcessor:
         for converter_name, group_items in groups_dict.items():
             group = BatchGroup(
                 batch_key=f"converter_{converter_name}",
-                strategy=BatchStrategy.BY_CONVERTER_TYPE
+                strategy=BatchStrategy.BY_CONVERTER_TYPE,
             )
             
             # Set converter class for pooling
@@ -524,21 +525,21 @@ class BatchProcessor:
         
         return groups
     
-    def _no_grouping(self, items: List[BatchItem]) -> List[BatchGroup]:
+    def _no_grouping(self, items: list[BatchItem]) -> list[BatchGroup]:
         """No grouping - each item is its own batch."""
         groups = []
         for i, item in enumerate(items):
             group = BatchGroup(
                 batch_key=f"sequential_{i}",
                 strategy=BatchStrategy.SEQUENTIAL,
-                max_batch_size=1
+                max_batch_size=1,
             )
             group.add_item(item)
             groups.append(group)
         
         return groups
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get batch processor statistics."""
         with self.lock:
             avg_batch_time = (self.total_processing_time / max(self.processed_batches, 1))
@@ -553,7 +554,7 @@ class BatchProcessor:
                 'max_workers': self.max_workers,
                 'default_strategy': self.default_strategy.value,
                 'caching_enabled': self.enable_caching,
-                'pooling_enabled': self.enable_pooling
+                'pooling_enabled': self.enable_pooling,
             }
 
 

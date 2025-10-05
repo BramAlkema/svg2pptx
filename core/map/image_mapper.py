@@ -6,13 +6,13 @@ Maps IR.Image elements to DrawingML with optimized format conversion
 and embedding strategies.
 """
 
-import time
 import logging
-from typing import Dict, Any
+import time
+from typing import Any, Dict
 
-from ..ir import IRElement, Image
-from ..policy import Policy, ImageDecision
-from .base import Mapper, MapperResult, OutputFormat, MappingError
+from ..ir import Image, IRElement
+from ..policy import ImageDecision, Policy
+from .base import Mapper, MapperResult, MappingError, OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ class ImageMapper(Mapper):
                         target_size = (int(image.size.width), int(image.size.height))
                         if target_size != (processed_width, processed_height):
                             scaled_width, scaled_height = self.image_adapter.calculate_scaling(
-                                (processed_width, processed_height), target_size, preserve_aspect=True
+                                (processed_width, processed_height), target_size, preserve_aspect=True,
                             )
                         else:
                             scaled_width, scaled_height = processed_width, processed_height
@@ -173,14 +173,14 @@ class ImageMapper(Mapper):
                 # Vector images (SVG) - typically need conversion or EMF
                 xml_content = self._generate_vector_image_xml(
                     image, rel_id, x_emu, y_emu, width_emu, height_emu,
-                    clip_xml, opacity_xml
+                    clip_xml, opacity_xml,
                 )
                 output_format = OutputFormat.EMF_VECTOR
             else:
                 # Raster images - direct embedding
                 xml_content = self._generate_raster_image_xml(
                     image, rel_id, x_emu, y_emu, width_emu, height_emu,
-                    clip_xml, opacity_xml
+                    clip_xml, opacity_xml,
                 )
                 output_format = OutputFormat.EMF_RASTER
 
@@ -189,7 +189,7 @@ class ImageMapper(Mapper):
                 'relationship_id': rel_id,
                 'data': processed_data,
                 'format': processed_format,
-                'content_type': self._get_content_type(processed_format)
+                'content_type': self._get_content_type(processed_format),
             }] if processed_data else None
 
             return MapperResult(
@@ -208,11 +208,11 @@ class ImageMapper(Mapper):
                     'has_clipping': image.clip is not None,
                     'has_opacity': image.opacity < 1.0,
                     'image_adapter_used': image_adapter_used,
-                    'processing_metadata': processing_metadata
+                    'processing_metadata': processing_metadata,
                 },
                 estimated_quality=decision.estimated_quality or 0.98,
                 estimated_performance=decision.estimated_performance or 0.9,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -324,11 +324,11 @@ class ImageMapper(Mapper):
             'gif': 'image/gif',
             'bmp': 'image/bmp',
             'tiff': 'image/tiff',
-            'svg': 'application/emf'  # SVG converted to EMF
+            'svg': 'application/emf',  # SVG converted to EMF
         }
         return content_type_map.get(format.lower(), 'application/octet-stream')
 
-    def get_relationship_data(self, image: Image) -> Dict[str, Any]:
+    def get_relationship_data(self, image: Image) -> dict[str, Any]:
         """
         Get relationship data for embedding image in PPTX.
 
@@ -346,7 +346,7 @@ class ImageMapper(Mapper):
             'gif': 'image/gif',
             'bmp': 'image/bmp',
             'tiff': 'image/tiff',
-            'svg': 'application/emf'  # SVG converted to EMF
+            'svg': 'application/emf',  # SVG converted to EMF
         }
 
         content_type = content_type_map.get(image.format, 'application/octet-stream')
@@ -356,14 +356,14 @@ class ImageMapper(Mapper):
             'type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
             'content_type': content_type,
             'data': image.data,
-            'format': image.format
+            'format': image.format,
         }
 
     def supports_format(self, format: str) -> bool:
         """Check if image format is supported"""
         return format.lower() in (self._powerpoint_formats | self._vector_formats)
 
-    def get_format_statistics(self) -> Dict[str, int]:
+    def get_format_statistics(self) -> dict[str, int]:
         """Get image format processing statistics"""
         # This would be enhanced to track format-specific stats
         stats = self.get_statistics()
@@ -371,7 +371,7 @@ class ImageMapper(Mapper):
             'total_images': stats['total_mapped'],
             'raster_images': stats.get('raster_count', 0),
             'vector_images': stats.get('vector_count', 0),
-            'conversion_required': stats.get('conversion_count', 0)
+            'conversion_required': stats.get('conversion_count', 0),
         }
 
 

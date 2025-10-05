@@ -13,13 +13,13 @@ This framework addresses issues like:
 - Invalid unit handling across different SVG specifications
 """
 
-import re
 import html
+import logging
+import re
 import urllib.parse
-from typing import Optional, Dict, Tuple
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class LengthUnit(Enum):
     VMIN = ("vmin", None)               # minimum viewport dimension
     VMAX = ("vmax", None)               # maximum viewport dimension
 
-    def __init__(self, unit_str: str, px_factor: Optional[float]):
+    def __init__(self, unit_str: str, px_factor: float | None):
         self.unit_str = unit_str
         self.px_factor = px_factor
         self.is_absolute = px_factor is not None
@@ -109,7 +109,7 @@ class InputValidator:
     JAVASCRIPT_PATTERN = re.compile(r'javascript:', re.IGNORECASE)
     DATA_URL_PATTERN = re.compile(r'data:[^;,]*(?:;[^;,]*)*,', re.IGNORECASE)
 
-    def __init__(self, context: Optional[ValidationContext] = None):
+    def __init__(self, context: ValidationContext | None = None):
         """
         Initialize InputValidator with validation context.
 
@@ -119,7 +119,7 @@ class InputValidator:
         self.context = context or ValidationContext()
         self._unit_lookup = {unit.unit_str: unit for unit in LengthUnit}
 
-    def parse_length_safe(self, length_str: str, default_unit: str = 'px') -> Optional[float]:
+    def parse_length_safe(self, length_str: str, default_unit: str = 'px') -> float | None:
         """
         Parse length values with comprehensive unit support and overflow protection.
 
@@ -209,7 +209,7 @@ class InputValidator:
                 'centimeters': 'cm',
                 'millimeters': 'mm',
                 'percent': '%',
-                'percentage': '%'
+                'percentage': '%',
             }
             unit = unit_variants.get(unit, unit)
 
@@ -245,7 +245,7 @@ class InputValidator:
         else:
             raise UnitConversionError(f"Cannot convert unit {unit} without additional context")
 
-    def parse_numeric_safe(self, value_str: str, min_val: float = -1e10, max_val: float = 1e10) -> Optional[float]:
+    def parse_numeric_safe(self, value_str: str, min_val: float = -1e10, max_val: float = 1e10) -> float | None:
         """
         Parse numeric values with bounds checking and overflow protection.
 
@@ -299,7 +299,7 @@ class InputValidator:
             logger.debug(f"Numeric parsing failed for '{value_str}': {e}")
             return None
 
-    def validate_svg_attributes(self, attrs: Dict[str, str]) -> Dict[str, str]:
+    def validate_svg_attributes(self, attrs: dict[str, str]) -> dict[str, str]:
         """
         Sanitize SVG attributes against injection attacks and invalid content.
 
@@ -340,7 +340,7 @@ class InputValidator:
 
         return sanitized
 
-    def _sanitize_attribute_name(self, name: str) -> Optional[str]:
+    def _sanitize_attribute_name(self, name: str) -> str | None:
         """Sanitize SVG attribute name."""
         if not name or not isinstance(name, str):
             return None
@@ -365,7 +365,7 @@ class InputValidator:
 
         return name
 
-    def _sanitize_attribute_value(self, attr_name: str, value: str) -> Optional[str]:
+    def _sanitize_attribute_value(self, attr_name: str, value: str) -> str | None:
         """Sanitize SVG attribute value based on attribute type."""
         if not isinstance(value, str):
             return None
@@ -430,7 +430,7 @@ class InputValidator:
 
             return sanitized.strip() if sanitized.strip() else None
 
-    def _sanitize_color_value(self, color: str) -> Optional[str]:
+    def _sanitize_color_value(self, color: str) -> str | None:
         """Sanitize color values (hex, rgb, rgba, named colors)."""
         color = color.strip().lower()
 
@@ -493,7 +493,7 @@ class InputValidator:
         # Named colors (basic set)
         named_colors = {
             'red', 'green', 'blue', 'black', 'white', 'yellow', 'cyan', 'magenta',
-            'gray', 'grey', 'orange', 'purple', 'brown', 'pink', 'transparent', 'none'
+            'gray', 'grey', 'orange', 'purple', 'brown', 'pink', 'transparent', 'none',
         }
 
         if color in named_colors:
@@ -502,7 +502,7 @@ class InputValidator:
         logger.debug(f"Invalid color value: {color}")
         return None
 
-    def _sanitize_url_value(self, url: str) -> Optional[str]:
+    def _sanitize_url_value(self, url: str) -> str | None:
         """Sanitize URL values with strict security checks."""
         if not url:
             return None
@@ -536,7 +536,7 @@ class InputValidator:
         logger.debug(f"Invalid or unsafe URL: {url}")
         return None
 
-    def _sanitize_style_value(self, style: str) -> Optional[str]:
+    def _sanitize_style_value(self, style: str) -> str | None:
         """Sanitize CSS style attribute values."""
         if not style:
             return None
@@ -562,7 +562,7 @@ class InputValidator:
 
         return clean_style.strip() if clean_style.strip() else None
 
-    def validate_viewbox(self, viewbox_str: str) -> Optional[Tuple[float, float, float, float]]:
+    def validate_viewbox(self, viewbox_str: str) -> tuple[float, float, float, float] | None:
         """
         Validate and parse SVG viewBox attribute.
 
@@ -622,7 +622,7 @@ class InputValidator:
             # Basic transform function pattern
             transform_pattern = re.compile(
                 r'(matrix|translate|scale|rotate|skewX|skewY)\s*\(\s*([^)]*)\s*\)',
-                re.IGNORECASE
+                re.IGNORECASE,
             )
 
             # Find all transform functions

@@ -8,9 +8,12 @@ color space operations.
 """
 
 from __future__ import annotations
-import numpy as np
-import colorspacious
+
 from typing import List, Tuple
+
+import colorspacious
+import numpy as np
+
 from .core import Color
 
 
@@ -73,7 +76,7 @@ class ColorHarmony:
             complement_color._alpha = getattr(self.base_color, '_alpha', 1.0)
             return complement_color
 
-    def analogous(self, count: int = 5, spread: float = 30.0) -> List[Color]:
+    def analogous(self, count: int = 5, spread: float = 30.0) -> list[Color]:
         """
         Generate analogous color harmony (adjacent hues).
 
@@ -113,7 +116,7 @@ class ColorHarmony:
 
         return analogous_colors
 
-    def triadic(self) -> List[Color]:
+    def triadic(self) -> list[Color]:
         """
         Generate triadic color harmony (120° intervals).
 
@@ -155,7 +158,7 @@ class ColorHarmony:
 
             return triadic_colors
 
-    def split_complementary(self, spread: float = 30.0) -> List[Color]:
+    def split_complementary(self, spread: float = 30.0) -> list[Color]:
         """
         Generate split-complementary harmony.
 
@@ -204,7 +207,7 @@ class ColorHarmony:
 
             return split_colors
 
-    def tetradic(self) -> List[Color]:
+    def tetradic(self) -> list[Color]:
         """
         Generate tetradic (square) color harmony.
 
@@ -247,7 +250,7 @@ class ColorHarmony:
             return tetradic_colors
 
     def monochromatic(self, count: int = 5,
-                     lightness_range: Tuple[float, float] = (20, 80)) -> List[Color]:
+                     lightness_range: tuple[float, float] = (20, 80)) -> list[Color]:
         """
         Generate monochromatic color scheme (same hue, different lightness).
 
@@ -299,7 +302,7 @@ class ColorHarmony:
 
             return monochromatic_colors
 
-    def custom_harmony(self, hue_offsets: List[float]) -> List[Color]:
+    def custom_harmony(self, hue_offsets: list[float]) -> list[Color]:
         """
         Generate custom harmony with specified hue offsets.
 

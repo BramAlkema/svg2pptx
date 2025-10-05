@@ -6,12 +6,11 @@ Provides backward-compatible TransformEngine that integrates
 with the new matrix composer system.
 """
 
-import numpy as np
 from typing import List, Tuple
 
-from .matrix_composer import (
-    parse_transform
-)
+import numpy as np
+
+from .matrix_composer import parse_transform
 
 
 class TransformEngine:
@@ -26,7 +25,7 @@ class TransformEngine:
         self.current_matrix = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
         self._transform_stack = []
 
-    def apply_combined_transforms(self, transform_list: List[str]) -> None:
+    def apply_combined_transforms(self, transform_list: list[str]) -> None:
         """
         Apply multiple transform strings to current matrix.
 
@@ -56,7 +55,7 @@ class TransformEngine:
             from ..transforms.core import Matrix
             return Matrix(
                 matrix[0, 0], matrix[1, 0], matrix[0, 1],
-                matrix[1, 1], matrix[0, 2], matrix[1, 2]
+                matrix[1, 1], matrix[0, 2], matrix[1, 2],
             )
         except ImportError:
             # Return numpy matrix if legacy Matrix not available
@@ -81,13 +80,13 @@ class TransformEngine:
         else:
             self.reset()
 
-    def transform_point(self, x: float, y: float) -> Tuple[float, float]:
+    def transform_point(self, x: float, y: float) -> tuple[float, float]:
         """Transform point using current matrix."""
         point = np.array([x, y, 1])
         transformed = self.current_matrix @ point
         return float(transformed[0]), float(transformed[1])
 
-    def transform_points(self, points: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    def transform_points(self, points: list[tuple[float, float]]) -> list[tuple[float, float]]:
         """Transform multiple points using current matrix."""
         if not points:
             return points
@@ -101,7 +100,7 @@ class TransformEngine:
         # Convert back to (x, y) tuples
         return [(float(transformed[0, i]), float(transformed[1, i])) for i in range(transformed.shape[1])]
 
-    def compose(self, transforms: List[str], viewport_context=None):
+    def compose(self, transforms: list[str], viewport_context=None):
         """
         Compose transform strings in parent→child order for safe chaining.
 

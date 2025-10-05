@@ -12,8 +12,9 @@ Key Features:
 - Optimized for performance with NumPy operations
 """
 
-import numpy as np
 from typing import Tuple
+
+import numpy as np
 
 
 class ColorSpaceConverter:
@@ -25,7 +26,7 @@ class ColorSpaceConverter:
     """
 
     @staticmethod
-    def rgb_to_oklab(r: int, g: int, b: int) -> Tuple[float, float, float]:
+    def rgb_to_oklab(r: int, g: int, b: int) -> tuple[float, float, float]:
         """
         Convert sRGB to OKLab color space using the OKLab standard.
 
@@ -72,7 +73,7 @@ class ColorSpaceConverter:
         return (ok_l, ok_a, ok_b)
 
     @staticmethod
-    def oklab_to_rgb(l: float, a: float, b: float) -> Tuple[int, int, int]:
+    def oklab_to_rgb(l: float, a: float, b: float) -> tuple[int, int, int]:
         """
         Convert OKLab to sRGB color space.
 
@@ -117,7 +118,7 @@ class ColorSpaceConverter:
         return (r, g, b)
 
     @staticmethod
-    def oklab_to_oklch(l: float, a: float, b: float) -> Tuple[float, float, float]:
+    def oklab_to_oklch(l: float, a: float, b: float) -> tuple[float, float, float]:
         """
         Convert OKLab to OKLCh (cylindrical coordinates).
 
@@ -138,7 +139,7 @@ class ColorSpaceConverter:
         return (l, c, h)
 
     @staticmethod
-    def oklch_to_oklab(l: float, c: float, h: float) -> Tuple[float, float, float]:
+    def oklch_to_oklab(l: float, c: float, h: float) -> tuple[float, float, float]:
         """
         Convert OKLCh to OKLab.
 
@@ -156,7 +157,7 @@ class ColorSpaceConverter:
         return (l, a, b)
 
     @classmethod
-    def rgb_to_oklch(cls, r: int, g: int, b: int) -> Tuple[float, float, float]:
+    def rgb_to_oklch(cls, r: int, g: int, b: int) -> tuple[float, float, float]:
         """
         Direct conversion from RGB to OKLCh.
 
@@ -170,7 +171,7 @@ class ColorSpaceConverter:
         return cls.oklab_to_oklch(*oklab)
 
     @classmethod
-    def oklch_to_rgb(cls, l: float, c: float, h: float) -> Tuple[int, int, int]:
+    def oklch_to_rgb(cls, l: float, c: float, h: float) -> tuple[int, int, int]:
         """
         Direct conversion from OKLCh to RGB.
 
@@ -187,31 +188,31 @@ class ColorSpaceConverter:
 
 
 # Convenience functions for direct access
-def rgb_to_oklab(r: int, g: int, b: int) -> Tuple[float, float, float]:
+def rgb_to_oklab(r: int, g: int, b: int) -> tuple[float, float, float]:
     """Convert RGB to OKLab."""
     return ColorSpaceConverter.rgb_to_oklab(r, g, b)
 
 
-def oklab_to_rgb(l: float, a: float, b: float) -> Tuple[int, int, int]:
+def oklab_to_rgb(l: float, a: float, b: float) -> tuple[int, int, int]:
     """Convert OKLab to RGB."""
     return ColorSpaceConverter.oklab_to_rgb(l, a, b)
 
 
-def rgb_to_oklch(r: int, g: int, b: int) -> Tuple[float, float, float]:
+def rgb_to_oklch(r: int, g: int, b: int) -> tuple[float, float, float]:
     """Convert RGB to OKLCh."""
     return ColorSpaceConverter.rgb_to_oklch(r, g, b)
 
 
-def oklch_to_rgb(l: float, c: float, h: float) -> Tuple[int, int, int]:
+def oklch_to_rgb(l: float, c: float, h: float) -> tuple[int, int, int]:
     """Convert OKLCh to RGB."""
     return ColorSpaceConverter.oklch_to_rgb(l, c, h)
 
 
-def oklab_to_oklch(l: float, a: float, b: float) -> Tuple[float, float, float]:
+def oklab_to_oklch(l: float, a: float, b: float) -> tuple[float, float, float]:
     """Convert OKLab to OKLCh."""
     return ColorSpaceConverter.oklab_to_oklch(l, a, b)
 
 
-def oklch_to_oklab(l: float, c: float, h: float) -> Tuple[float, float, float]:
+def oklch_to_oklab(l: float, c: float, h: float) -> tuple[float, float, float]:
     """Convert OKLCh to OKLab."""
     return ColorSpaceConverter.oklch_to_oklab(l, c, h)

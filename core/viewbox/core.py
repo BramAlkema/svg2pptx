@@ -21,13 +21,14 @@ Key Features:
 - Integration with core unit converter
 """
 
-import numpy as np
-from typing import Optional, Union, Tuple, Dict, Any, List
 from enum import IntEnum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 from lxml import etree as ET
 
 # Import core unit converter
-from ..units import UnitConverter, ConversionContext
+from ..units import ConversionContext, UnitConverter
 from .content_bounds import calculate_content_bounds
 
 # EMU Constants
@@ -92,13 +93,13 @@ ViewBoxArray = np.dtype([
     ('min_y', 'f8'),
     ('width', 'f8'),
     ('height', 'f8'),
-    ('aspect_ratio', 'f8')
+    ('aspect_ratio', 'f8'),
 ])
 
 ViewportArray = np.dtype([
     ('width', 'i8'),    # EMU
     ('height', 'i8'),   # EMU
-    ('aspect_ratio', 'f8')
+    ('aspect_ratio', 'f8'),
 ])
 
 ViewportMappingArray = np.dtype([
@@ -128,7 +129,7 @@ class ViewportEngine:
         ViewportEngine().for_svg(svg_element).with_slide_size(width, height).center().meet().resolve()
     """
 
-    def __init__(self, unit_engine: Optional[UnitConverter] = None):
+    def __init__(self, unit_engine: UnitConverter | None = None):
         """
         Initialize NumPy viewport engine.
 
@@ -179,7 +180,7 @@ class ViewportEngine:
         self._svg_elements = [svg_element]
         return self
 
-    def for_svgs(self, svg_elements: List[ET.Element]) -> 'ViewportEngine':
+    def for_svgs(self, svg_elements: list[ET.Element]) -> 'ViewportEngine':
         """Set multiple SVG elements for batch processing. Supports method chaining."""
         self._svg_elements = svg_elements
         return self
@@ -189,7 +190,7 @@ class ViewportEngine:
         self._target_sizes = [(width, height)]
         return self
 
-    def with_slide_sizes(self, sizes: List[Tuple[int, int]]) -> 'ViewportEngine':
+    def with_slide_sizes(self, sizes: list[tuple[int, int]]) -> 'ViewportEngine':
         """Set multiple target slide dimensions for batch processing. Supports method chaining."""
         self._target_sizes = sizes
         return self
@@ -234,7 +235,7 @@ class ViewportEngine:
         self._contexts = [context]
         return self
 
-    def with_contexts(self, contexts: List) -> 'ViewportEngine':
+    def with_contexts(self, contexts: list) -> 'ViewportEngine':
         """Set multiple conversion contexts for batch processing. Supports method chaining."""
         self._contexts = contexts
         return self
@@ -247,7 +248,7 @@ class ViewportEngine:
         return self.batch_resolve_svg_viewports(
             self._svg_elements,
             target_sizes=self._target_sizes,
-            contexts=self._contexts
+            contexts=self._contexts,
         )
 
     def resolve_single(self):
@@ -299,7 +300,7 @@ class ViewportEngine:
 
         return result
 
-    def parse_preserve_aspect_ratio_batch(self, par_strings: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def parse_preserve_aspect_ratio_batch(self, par_strings: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Parse multiple preserveAspectRatio strings.
 
@@ -331,8 +332,8 @@ class ViewportEngine:
 
         return alignments, meet_slices
 
-    def extract_viewport_dimensions_batch(self, svg_elements: List[ET.Element],
-                                        contexts: Optional[List[ConversionContext]] = None) -> np.ndarray:
+    def extract_viewport_dimensions_batch(self, svg_elements: list[ET.Element],
+                                        contexts: list[ConversionContext] | None = None) -> np.ndarray:
         """
         Extract viewport dimensions from multiple SVG elements.
 
@@ -570,9 +571,9 @@ class ViewportEngine:
 
         return result
 
-    def batch_resolve_svg_viewports(self, svg_elements: List[ET.Element],
-                                  target_sizes: Optional[List[Tuple[int, int]]] = None,
-                                  contexts: Optional[List[ConversionContext]] = None) -> np.ndarray:
+    def batch_resolve_svg_viewports(self, svg_elements: list[ET.Element],
+                                  target_sizes: list[tuple[int, int]] | None = None,
+                                  contexts: list[ConversionContext] | None = None) -> np.ndarray:
         """
         Complete batch SVG viewport resolution pipeline.
 
@@ -684,7 +685,7 @@ class ViewportEngine:
 
         return matrices
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """
         Get performance statistics for the viewport engine.
 
@@ -701,7 +702,7 @@ class ViewportEngine:
             'mapping_dtype_size': ViewportMappingArray.itemsize,
         }
 
-    def benchmark_performance(self, n_viewports: int = 1000) -> Dict[str, float]:
+    def benchmark_performance(self, n_viewports: int = 1000) -> dict[str, float]:
         """
         Benchmark viewport resolution performance.
 
@@ -712,6 +713,7 @@ class ViewportEngine:
             Performance metrics dictionary
         """
         import time
+
         from lxml import etree as ET
 
         # Generate test SVG elements
@@ -730,7 +732,7 @@ class ViewportEngine:
             'total_time': total_time,
             'viewports_per_second': n_viewports / total_time,
             'time_per_viewport_ms': (total_time / n_viewports) * 1000,
-            'viewports_per_second_k': (n_viewports / total_time) / 1000
+            'viewports_per_second_k': (n_viewports / total_time) / 1000,
         }
 
     def calculate_shape_bounding_box_and_relative_coords(self, svg_coords, viewport_mapping):
@@ -792,15 +794,15 @@ class ViewportEngine:
 
         return emu_x, emu_y, emu_width, emu_height, relative_coords
 
-    def get_memory_usage(self) -> Dict[str, int]:
+    def get_memory_usage(self) -> dict[str, int]:
         """
         Get current memory usage of the viewport engine.
 
         Returns:
             Dictionary with memory usage metrics in bytes
         """
-        import sys
         import gc
+        import sys
 
         # Force garbage collection to get accurate memory readings
         gc.collect()
@@ -829,10 +831,10 @@ class ViewportEngine:
         return {
             'total_bytes': total_bytes,
             'total_mb': total_bytes / (1024 * 1024),
-            'alignment_factors_bytes': self.alignment_factors.nbytes if hasattr(self, 'alignment_factors') else 0
+            'alignment_factors_bytes': self.alignment_factors.nbytes if hasattr(self, 'alignment_factors') else 0,
         }
 
-    def benchmark_parsing_performance(self, viewbox_strings: np.ndarray) -> Dict[str, float]:
+    def benchmark_parsing_performance(self, viewbox_strings: np.ndarray) -> dict[str, float]:
         """
         Benchmark viewBox string parsing performance.
 
@@ -855,11 +857,11 @@ class ViewportEngine:
             'operations_per_second': ops_per_sec,
             'total_time_seconds': total_time,
             'memory_usage_mb': self.get_memory_usage()['total_mb'],
-            'n_operations': n_operations
+            'n_operations': n_operations,
         }
 
-    def benchmark_batch_performance(self, svg_elements: List[ET.Element],
-                                  context: Optional[ConversionContext] = None) -> Dict[str, float]:
+    def benchmark_batch_performance(self, svg_elements: list[ET.Element],
+                                  context: ConversionContext | None = None) -> dict[str, float]:
         """
         Benchmark batch SVG viewport resolution performance.
 
@@ -885,7 +887,7 @@ class ViewportEngine:
             'total_time_seconds': total_time,
             'average_time_per_element_us': time_per_element_us,
             'n_elements': n_elements,
-            'memory_usage_mb': self.get_memory_usage()['total_mb']
+            'memory_usage_mb': self.get_memory_usage()['total_mb'],
         }
 
     # ==================== Task 1.5.3: Advanced Viewport Features ====================
@@ -964,7 +966,7 @@ class ViewportEngine:
             meet_slice_modes == MeetOrSlice.SLICE.value,
             np.maximum(scale_x_candidates / scale_y_candidates,
                       scale_y_candidates / scale_x_candidates) - 1.0,
-            0.0
+            0.0,
         )
 
         # Detect precision loss scenarios
@@ -1049,11 +1051,11 @@ class ViewportEngine:
 
             result['cumulative_clip_width'] = np.minimum(
                 parent_widths,
-                effective_content_width - result['cumulative_clip_x']
+                effective_content_width - result['cumulative_clip_x'],
             )
             result['cumulative_clip_height'] = np.minimum(
                 parent_heights,
-                effective_content_height - result['cumulative_clip_y']
+                effective_content_height - result['cumulative_clip_y'],
             )
 
             # Validate transformations
@@ -1138,7 +1140,7 @@ class ViewportEngine:
         result['overlap_ratio'] = np.where(
             union_area > 1e-10,
             intersection_area / union_area,
-            0.0
+            0.0,
         )
 
         result['has_intersection'] = intersection_area > 1e-10
@@ -1226,7 +1228,7 @@ class ViewportEngine:
 
     # ==================== Coordinate Conversion Methods ====================
 
-    def svg_to_emu(self, x: float, y: float) -> Tuple[int, int]:
+    def svg_to_emu(self, x: float, y: float) -> tuple[int, int]:
         """
         Convert SVG coordinate pair to EMU (English Metric Units).
 
@@ -1242,7 +1244,7 @@ class ViewportEngine:
         y_emu = self.unit_engine.to_emu(f"{y}px")
         return (int(x_emu), int(y_emu))
 
-    def svg_to_emu_with_units(self, x: str, y: str) -> Tuple[int, int]:
+    def svg_to_emu_with_units(self, x: str, y: str) -> tuple[int, int]:
         """
         Convert SVG coordinate pair with explicit units to EMU.
 
@@ -1257,7 +1259,7 @@ class ViewportEngine:
         y_emu = self.unit_engine.to_emu(y)
         return (int(x_emu), int(y_emu))
 
-    def svg_to_emu_batch(self, coordinates: Union[np.ndarray, List[Tuple[float, float]]]) -> np.ndarray:
+    def svg_to_emu_batch(self, coordinates: np.ndarray | list[tuple[float, float]]) -> np.ndarray:
         """
         Convert batch of SVG coordinates to EMU using vectorized operations.
 
@@ -1283,12 +1285,12 @@ class ViewportEngine:
 
 
 # Convenience functions for direct usage
-def create_viewport_engine(unit_engine: Optional[UnitConverter] = None) -> ViewportEngine:
+def create_viewport_engine(unit_engine: UnitConverter | None = None) -> ViewportEngine:
     """Create a NumPy viewport engine with optional unit engine."""
     return ViewportEngine(unit_engine)
 
 
-def batch_resolve_viewports(svg_elements: List[ET.Element], **kwargs) -> np.ndarray:
+def batch_resolve_viewports(svg_elements: list[ET.Element], **kwargs) -> np.ndarray:
     """
     Quick batch viewport resolution.
 

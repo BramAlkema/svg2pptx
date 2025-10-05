@@ -7,13 +7,13 @@ regression detection, and performance monitoring.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Callable, Union, Set
-from pathlib import Path
-from dataclasses import dataclass, field
 from collections import defaultdict
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Union
 
 from .config import PerformanceConfig, get_config, validate_config
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,21 +27,21 @@ class BenchmarkMetadata:
     name: str
     category: str
     function: Callable
-    target_ops_per_sec: Optional[float] = None
-    regression_threshold: Optional[float] = None
-    tags: Set[str] = field(default_factory=set)
-    description: Optional[str] = None
-    setup_function: Optional[Callable] = None
-    teardown_function: Optional[Callable] = None
+    target_ops_per_sec: float | None = None
+    regression_threshold: float | None = None
+    tags: set[str] = field(default_factory=set)
+    description: str | None = None
+    setup_function: Callable | None = None
+    teardown_function: Callable | None = None
 
 
 class BenchmarkRegistry:
     """Registry for managing benchmark functions and metadata."""
 
     def __init__(self):
-        self._benchmarks: Dict[str, BenchmarkMetadata] = {}
-        self._categories: Dict[str, Set[str]] = defaultdict(set)
-        self._tags: Dict[str, Set[str]] = defaultdict(set)
+        self._benchmarks: dict[str, BenchmarkMetadata] = {}
+        self._categories: dict[str, set[str]] = defaultdict(set)
+        self._tags: dict[str, set[str]] = defaultdict(set)
 
     def register(self, metadata: BenchmarkMetadata) -> None:
         """
@@ -62,29 +62,29 @@ class BenchmarkRegistry:
 
         logger.debug(f"Registered benchmark: {metadata.name} (category: {metadata.category})")
 
-    def get(self, name: str) -> Optional[BenchmarkMetadata]:
+    def get(self, name: str) -> BenchmarkMetadata | None:
         """Get benchmark metadata by name."""
         return self._benchmarks.get(name)
 
-    def get_by_category(self, category: str) -> List[BenchmarkMetadata]:
+    def get_by_category(self, category: str) -> list[BenchmarkMetadata]:
         """Get all benchmarks in a category."""
         benchmark_names = self._categories.get(category, set())
         return [self._benchmarks[name] for name in benchmark_names]
 
-    def get_by_tag(self, tag: str) -> List[BenchmarkMetadata]:
+    def get_by_tag(self, tag: str) -> list[BenchmarkMetadata]:
         """Get all benchmarks with a specific tag."""
         benchmark_names = self._tags.get(tag, set())
         return [self._benchmarks[name] for name in benchmark_names]
 
-    def list_categories(self) -> List[str]:
+    def list_categories(self) -> list[str]:
         """List all registered benchmark categories."""
         return list(self._categories.keys())
 
-    def list_tags(self) -> List[str]:
+    def list_tags(self) -> list[str]:
         """List all registered tags."""
         return list(self._tags.keys())
 
-    def list_benchmarks(self) -> List[str]:
+    def list_benchmarks(self) -> list[str]:
         """List all registered benchmark names."""
         return list(self._benchmarks.keys())
 
@@ -104,7 +104,7 @@ class PerformanceFramework:
     - Regression detection and reporting
     """
 
-    def __init__(self, config: Optional[PerformanceConfig] = None):
+    def __init__(self, config: PerformanceConfig | None = None):
         """
         Initialize performance framework.
 
@@ -151,12 +151,12 @@ class PerformanceFramework:
         name: str,
         function: Callable,
         category: str,
-        target_ops_per_sec: Optional[float] = None,
-        regression_threshold: Optional[float] = None,
-        tags: Optional[Set[str]] = None,
-        description: Optional[str] = None,
-        setup_function: Optional[Callable] = None,
-        teardown_function: Optional[Callable] = None
+        target_ops_per_sec: float | None = None,
+        regression_threshold: float | None = None,
+        tags: set[str] | None = None,
+        description: str | None = None,
+        setup_function: Callable | None = None,
+        teardown_function: Callable | None = None,
     ) -> None:
         """
         Register a benchmark function.
@@ -181,12 +181,12 @@ class PerformanceFramework:
             tags=tags or set(),
             description=description,
             setup_function=setup_function,
-            teardown_function=teardown_function
+            teardown_function=teardown_function,
         )
 
         self.registry.register(metadata)
 
-    def discover_benchmarks(self, module_path: Optional[str] = None) -> int:
+    def discover_benchmarks(self, module_path: str | None = None) -> int:
         """
         Discover and register benchmarks from modules.
 
@@ -210,7 +210,7 @@ class PerformanceFramework:
                 "src/converters/",
                 "src/paths/",
                 "src/units/",
-                "src/performance/benchmarks/"
+                "src/performance/benchmarks/",
             ]
 
             for path in benchmark_paths:
@@ -223,10 +223,10 @@ class PerformanceFramework:
 
     def list_benchmarks(
         self,
-        category: Optional[str] = None,
-        tag: Optional[str] = None,
-        include_metadata: bool = False
-    ) -> Union[List[str], List[BenchmarkMetadata]]:
+        category: str | None = None,
+        tag: str | None = None,
+        include_metadata: bool = False,
+    ) -> list[str] | list[BenchmarkMetadata]:
         """
         List registered benchmarks.
 
@@ -251,7 +251,7 @@ class PerformanceFramework:
         else:
             return [b.name for b in benchmarks if b is not None]
 
-    def get_benchmark_info(self, name: str) -> Optional[Dict[str, Any]]:
+    def get_benchmark_info(self, name: str) -> dict[str, Any] | None:
         """
         Get detailed information about a benchmark.
 
@@ -273,10 +273,10 @@ class PerformanceFramework:
             "tags": list(metadata.tags),
             "description": metadata.description,
             "has_setup": metadata.setup_function is not None,
-            "has_teardown": metadata.teardown_function is not None
+            "has_teardown": metadata.teardown_function is not None,
         }
 
-    def execute_benchmark(self, name: str, **kwargs) -> Optional[Dict[str, Any]]:
+    def execute_benchmark(self, name: str, **kwargs) -> dict[str, Any] | None:
         """
         Execute a single benchmark using the BenchmarkEngine.
 
@@ -310,7 +310,7 @@ class PerformanceFramework:
             result = self.benchmark_engine.execute_benchmark(
                 benchmark_function=benchmark_wrapper,
                 benchmark_name=name,
-                category=metadata.category
+                category=metadata.category,
             )
 
             # Convert BenchmarkResult to dictionary for backward compatibility
@@ -331,7 +331,7 @@ class PerformanceFramework:
                 "success": result.success,
                 "error_message": result.error_message,
                 "warning_messages": result.warning_messages,
-                "metadata": result.metadata
+                "metadata": result.metadata,
             }
 
             return result_dict
@@ -345,7 +345,7 @@ class PerformanceFramework:
                 except Exception as e:
                     logger.warning(f"Teardown failed for {name}: {e}")
 
-    def execute_category(self, category: str, **kwargs) -> List[Dict[str, Any]]:
+    def execute_category(self, category: str, **kwargs) -> list[dict[str, Any]]:
         """
         Execute all benchmarks in a category.
 
@@ -368,7 +368,7 @@ class PerformanceFramework:
 
         return results
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get framework statistics.
 
@@ -383,6 +383,6 @@ class PerformanceFramework:
             "config": {
                 "timeout": self.config.benchmark_timeout,
                 "min_samples": self.config.min_sample_size,
-                "confidence_level": self.config.confidence_level
-            }
+                "confidence_level": self.config.confidence_level,
+            },
         }

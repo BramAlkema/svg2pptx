@@ -5,15 +5,16 @@ Huey tasks for SVG to PowerPoint conversion.
 
 import logging
 import tempfile
-import zipfile
-import uuid
 import time
-from pathlib import Path
-from typing import List, Dict, Any
+import uuid
+import zipfile
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
+
+from core.utils.powerpoint_merger import PPTXMergeError, PPTXMerger
 
 from .huey_app import huey
-from core.utils.powerpoint_merger import PPTXMerger, PPTXMergeError
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class ConversionError(Exception):
 
 
 @huey.task(retries=3, retry_delay=60)
-def convert_single_svg(file_data: Dict[str, Any], conversion_options: Dict[str, Any] = None) -> Dict[str, Any]:
+def convert_single_svg(file_data: dict[str, Any], conversion_options: dict[str, Any] = None) -> dict[str, Any]:
     """
     Convert a single SVG file to PowerPoint format.
     
@@ -117,7 +118,7 @@ Generated: {datetime.utcnow().isoformat()}
                 'output_size': output_path.stat().st_size,
                 'processing_time': actual_processing_time,
                 'conversion_options': options,
-                'completed_at': datetime.utcnow().isoformat()
+                'completed_at': datetime.utcnow().isoformat(),
             }
             
             logger.info(f"Successfully converted {filename} to {output_filename} in {actual_processing_time:.2f}s")
@@ -134,7 +135,7 @@ Generated: {datetime.utcnow().isoformat()}
             'input_filename': filename,
             'error_message': str(e),
             'error_type': 'conversion_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
         
     except Exception as e:
@@ -144,12 +145,12 @@ Generated: {datetime.utcnow().isoformat()}
             'input_filename': filename,
             'error_message': str(e),
             'error_type': 'unexpected_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task()
-def merge_presentations(conversion_results: List[Dict[str, Any]], output_format: str = 'single_pptx') -> Dict[str, Any]:
+def merge_presentations(conversion_results: list[dict[str, Any]], output_format: str = 'single_pptx') -> dict[str, Any]:
     """
     Merge multiple PowerPoint presentations into a single file or ZIP archive.
     
@@ -200,14 +201,14 @@ def merge_presentations(conversion_results: List[Dict[str, Any]], output_format:
                     merger = PPTXMerger(
                         preserve_master_slides=True,
                         copy_embedded_media=True,
-                        default_slide_size=(10, 7.5)
+                        default_slide_size=(10, 7.5),
                     )
 
                     presentation_title = f"Merged Presentation - Batch {batch_id}"
                     merge_result = merger.merge_presentations(
                         input_files=pptx_files,
                         output_path=merged_path,
-                        presentation_title=presentation_title
+                        presentation_title=presentation_title,
                     )
 
                     if merge_result.success:
@@ -259,10 +260,10 @@ def merge_presentations(conversion_results: List[Dict[str, Any]], output_format:
                         {
                             'original': r['input_filename'],
                             'converted': r['output_filename'],
-                            'size': r['input_size']
+                            'size': r['input_size'],
                         }
                         for r in successful_results
-                    ]
+                    ],
                 }
                 
                 import json
@@ -294,7 +295,7 @@ def merge_presentations(conversion_results: List[Dict[str, Any]], output_format:
             'total_input_size': total_input_size,
             'total_processing_time': total_processing_time,
             'individual_results': conversion_results,
-            'completed_at': datetime.utcnow().isoformat()
+            'completed_at': datetime.utcnow().isoformat(),
         }
         
         logger.info(f"Successfully merged {len(successful_results)} presentations into {final_output}")
@@ -306,12 +307,12 @@ def merge_presentations(conversion_results: List[Dict[str, Any]], output_format:
             'success': False,
             'error_message': str(e),
             'error_type': 'merge_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task()
-def cleanup_temp_files(file_paths: List[str]) -> Dict[str, Any]:
+def cleanup_temp_files(file_paths: list[str]) -> dict[str, Any]:
     """
     Clean up temporary files after processing.
     
@@ -343,12 +344,12 @@ def cleanup_temp_files(file_paths: List[str]) -> Dict[str, Any]:
     return {
         'cleaned_files': cleaned_count,
         'errors': errors,
-        'total_requested': len(file_paths)
+        'total_requested': len(file_paths),
     }
 
 
 @huey.task()
-def process_svg_batch(file_list: List[Dict[str, Any]], conversion_options: Dict[str, Any] = None) -> Dict[str, Any]:
+def process_svg_batch(file_list: list[dict[str, Any]], conversion_options: dict[str, Any] = None) -> dict[str, Any]:
     """
     Process a batch of SVG files.
     
@@ -379,7 +380,7 @@ def process_svg_batch(file_list: List[Dict[str, Any]], conversion_options: Dict[
                     'input_filename': file_data.get('filename', 'unknown'),
                     'error_message': str(e),
                     'error_type': 'processing_error',
-                    'failed_at': datetime.utcnow().isoformat()
+                    'failed_at': datetime.utcnow().isoformat(),
                 })
         
         # Merge results
@@ -401,12 +402,12 @@ def process_svg_batch(file_list: List[Dict[str, Any]], conversion_options: Dict[
             'success': False,
             'error_message': str(e),
             'error_type': 'batch_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 
 @huey.task()
-def extract_and_process_zip(zip_content: bytes, conversion_options: Dict[str, Any] = None) -> Dict[str, Any]:
+def extract_and_process_zip(zip_content: bytes, conversion_options: dict[str, Any] = None) -> dict[str, Any]:
     """
     Extract SVG files from ZIP and process them.
     
@@ -451,7 +452,7 @@ def extract_and_process_zip(zip_content: bytes, conversion_options: Dict[str, An
                             file_list.append({
                                 'filename': Path(svg_filename).name,  # Remove directory structure
                                 'content': svg_content,
-                                'original_path': svg_filename
+                                'original_path': svg_filename,
                             })
                         except Exception as e:
                             logger.warning(f"Failed to extract {svg_filename}: {e}")
@@ -475,7 +476,7 @@ def extract_and_process_zip(zip_content: bytes, conversion_options: Dict[str, An
             'success': False,
             'error_message': str(e),
             'error_type': 'zip_processing_error',
-            'failed_at': datetime.utcnow().isoformat()
+            'failed_at': datetime.utcnow().isoformat(),
         }
 
 

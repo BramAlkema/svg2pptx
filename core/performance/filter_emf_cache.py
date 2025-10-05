@@ -7,14 +7,15 @@ enabling high-fidelity storage and retrieval of complex filter effects that
 cannot be efficiently represented in pure vector format.
 """
 
+import hashlib
 import os
 import pickle
-import zlib
-import hashlib
 import time
-from typing import Dict, List, Optional, Any
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from lxml import etree as ET
 
 try:
@@ -37,7 +38,7 @@ class EMFCacheEntry:
     compression_ratio: float = 1.0
     access_count: int = 0
     last_accessed: float = 0.0
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         """Initialize metadata and timestamps."""
@@ -75,7 +76,7 @@ class EMFFilterCache:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # In-memory cache
-        self._memory_cache: Dict[str, EMFCacheEntry] = {}
+        self._memory_cache: dict[str, EMFCacheEntry] = {}
         self._memory_usage = 0
 
         # Cache statistics
@@ -85,12 +86,12 @@ class EMFFilterCache:
             'evictions': 0,
             'disk_reads': 0,
             'disk_writes': 0,
-            'compression_savings': 0
+            'compression_savings': 0,
         }
 
     def cache_filter_result(self,
-                          filter_chain: List[ET.Element],
-                          context: Dict[str, Any],
+                          filter_chain: list[ET.Element],
+                          context: dict[str, Any],
                           emf_blob: bytes,
                           complexity_score: float = 1.0) -> str:
         """
@@ -127,8 +128,8 @@ class EMFFilterCache:
                 'original_size': len(emf_blob),
                 'compressed_size': len(compressed_blob),
                 'filter_count': len(filter_chain),
-                'filter_types': [self._get_filter_type(f) for f in filter_chain]
-            }
+                'filter_types': [self._get_filter_type(f) for f in filter_chain],
+            },
         )
 
         # Store in memory cache
@@ -142,8 +143,8 @@ class EMFFilterCache:
         return cache_key
 
     def get_cached_result(self,
-                         filter_chain: List[ET.Element],
-                         context: Dict[str, Any]) -> Optional[bytes]:
+                         filter_chain: list[ET.Element],
+                         context: dict[str, Any]) -> bytes | None:
         """
         Retrieve cached EMF blob for filter combination.
 
@@ -181,7 +182,7 @@ class EMFFilterCache:
         self.stats['misses'] += 1
         return None
 
-    def _generate_cache_key(self, filter_chain: List[ET.Element], context: Dict[str, Any]) -> str:
+    def _generate_cache_key(self, filter_chain: list[ET.Element], context: dict[str, Any]) -> str:
         """Generate unique cache key for filter combination."""
         filter_hash = self._hash_filter_chain(filter_chain)
         context_hash = self._hash_context(context)
@@ -190,7 +191,7 @@ class EMFFilterCache:
         combined = f"{filter_hash}:{context_hash}"
         return hashlib.blake2b(combined.encode(), digest_size=16).hexdigest()
 
-    def _hash_filter_chain(self, filter_chain: List[ET.Element]) -> str:
+    def _hash_filter_chain(self, filter_chain: list[ET.Element]) -> str:
         """Generate hash for filter chain."""
         chain_data = []
 
@@ -198,21 +199,21 @@ class EMFFilterCache:
             element_data = {
                 'tag': self._get_filter_type(element),
                 'attributes': dict(element.attrib),
-                'text': element.text or ''
+                'text': element.text or '',
             }
             chain_data.append(element_data)
 
         chain_str = str(sorted(chain_data, key=lambda x: x['tag']))
         return hashlib.md5(chain_str.encode()).hexdigest()
 
-    def _hash_context(self, context: Dict[str, Any]) -> str:
+    def _hash_context(self, context: dict[str, Any]) -> str:
         """Generate hash for context."""
         # Extract relevant context data
         context_data = {
             'viewport': context.get('viewport', {}),
             'coordinate_system': context.get('coordinate_system', {}),
             'transform_chain': context.get('transform_chain', []),
-            'filter_parameters': context.get('filter_parameters', {})
+            'filter_parameters': context.get('filter_parameters', {}),
         }
 
         context_str = str(sorted(context_data.items()))
@@ -267,7 +268,7 @@ class EMFFilterCache:
             # Log error but don't fail the operation
             print(f"Warning: Failed to write cache file {cache_file}: {e}")
 
-    def _load_from_disk(self, cache_key: str) -> Optional[EMFCacheEntry]:
+    def _load_from_disk(self, cache_key: str) -> EMFCacheEntry | None:
         """Load entry from disk cache."""
         cache_file = self.cache_dir / f"{cache_key}.emf_cache"
 
@@ -323,7 +324,7 @@ class EMFFilterCache:
             except:
                 pass
 
-    def invalidate_by_filter_type(self, filter_types: List[str]) -> int:
+    def invalidate_by_filter_type(self, filter_types: list[str]) -> int:
         """
         Invalidate cache entries containing specific filter types.
 
@@ -360,7 +361,7 @@ class EMFFilterCache:
 
         return invalidated
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get comprehensive cache statistics."""
         memory_entries = len(self._memory_cache)
         disk_files = len(list(self.cache_dir.glob("*.emf_cache")))
@@ -375,7 +376,7 @@ class EMFFilterCache:
             'memory_usage_bytes': self._memory_usage,
             'memory_usage_mb': self._memory_usage / (1024 * 1024),
             'hit_rate': hit_rate,
-            'cache_dir': str(self.cache_dir)
+            'cache_dir': str(self.cache_dir),
         }
 
     def clear_cache(self, memory_only: bool = False):
@@ -405,9 +406,9 @@ class EMFFilterCacheManager:
         self.emf_cache = EMFFilterCache(cache_dir)
 
     def cache_complex_filter_result(self,
-                                  filter_chain: List[ET.Element],
-                                  context: Dict[str, Any],
-                                  result: Dict[str, Any]) -> str:
+                                  filter_chain: list[ET.Element],
+                                  context: dict[str, Any],
+                                  result: dict[str, Any]) -> str:
         """
         Cache complex filter result with EMF storage.
 
@@ -426,12 +427,12 @@ class EMFFilterCacheManager:
         complexity_score = result.get('complexity_score', 1.0)
 
         return self.emf_cache.cache_filter_result(
-            filter_chain, context, emf_blob, complexity_score
+            filter_chain, context, emf_blob, complexity_score,
         )
 
     def get_cached_filter_result(self,
-                               filter_chain: List[ET.Element],
-                               context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+                               filter_chain: list[ET.Element],
+                               context: dict[str, Any]) -> dict[str, Any] | None:
         """
         Get cached filter result.
 
@@ -447,11 +448,11 @@ class EMFFilterCacheManager:
             return {
                 'emf_blob': emf_blob,
                 'cached': True,
-                'cache_type': 'emf_storage'
+                'cache_type': 'emf_storage',
             }
         return None
 
-    def invalidate_filter_cache(self, filter_types: List[str] = None) -> int:
+    def invalidate_filter_cache(self, filter_types: list[str] = None) -> int:
         """
         Invalidate cached filter results.
 
@@ -468,7 +469,7 @@ class EMFFilterCacheManager:
             self.emf_cache.clear_cache()
             return stats_before['memory_entries'] + stats_before['disk_entries']
 
-    def get_cache_performance_stats(self) -> Dict[str, Any]:
+    def get_cache_performance_stats(self) -> dict[str, Any]:
         """Get cache performance statistics."""
         return self.emf_cache.get_cache_stats()
 

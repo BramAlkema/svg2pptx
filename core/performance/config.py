@@ -7,9 +7,9 @@ benchmark categories, regression thresholds, and execution parameters.
 """
 
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -32,14 +32,14 @@ class PerformanceConfig:
     outlier_threshold: float = 2.0  # standard deviations
 
     # Regression detection thresholds
-    regression_thresholds: Dict[str, float] = field(default_factory=lambda: {
+    regression_thresholds: dict[str, float] = field(default_factory=lambda: {
         "minor": 0.05,    # 5% slowdown
         "major": 0.15,    # 15% slowdown
-        "critical": 0.30  # 30% slowdown
+        "critical": 0.30,  # 30% slowdown
     })
 
     # Performance targets (ops per second)
-    performance_targets: Dict[str, float] = field(default_factory=lambda: {
+    performance_targets: dict[str, float] = field(default_factory=lambda: {
         "unit_conversion": 791453,     # Target from units core module
         "bezier_evaluation": 100000,   # Target for path processing
         "filter_displacement": 50000,  # Target for filter operations
@@ -48,62 +48,62 @@ class PerformanceConfig:
     })
 
     # Benchmark categories and their associated benchmarks
-    benchmark_categories: Dict[str, List[str]] = field(default_factory=lambda: {
+    benchmark_categories: dict[str, list[str]] = field(default_factory=lambda: {
         "paths": [
             "bezier_evaluation",
             "path_parsing",
             "coordinate_transformation",
-            "batch_path_processing"
+            "batch_path_processing",
         ],
         "filters": [
             "displacement_map",
             "color_matrix",
             "gaussian_blur",
             "component_transfer",
-            "composite_operations"
+            "composite_operations",
         ],
         "converters": [
             "rectangle_conversion",
             "text_conversion",
             "gradient_conversion",
             "complex_shape_conversion",
-            "batch_conversion"
+            "batch_conversion",
         ],
         "units": [
             "emu_conversion",
             "batch_parsing",
             "context_resolution",
-            "unit_validation"
+            "unit_validation",
         ],
         "gradients": [
             "linear_gradient_generation",
             "radial_gradient_generation",
             "gradient_transformation",
-            "color_interpolation"
-        ]
+            "color_interpolation",
+        ],
     })
 
     # Memory profiling configuration
-    memory_profiling: Dict[str, Any] = field(default_factory=lambda: {
+    memory_profiling: dict[str, Any] = field(default_factory=lambda: {
         "enabled": True,
         "precision": 3,  # tracemalloc precision
         "threshold": 1024 * 1024,  # 1MB threshold for leak detection
-        "max_frames": 10  # stack trace frames to capture
+        "max_frames": 10,  # stack trace frames to capture
     })
 
     # Reporting configuration
-    reporting: Dict[str, Any] = field(default_factory=lambda: {
+    reporting: dict[str, Any] = field(default_factory=lambda: {
         "html_reports": True,
         "json_export": True,
         "csv_export": False,
         "chart_generation": True,
         "trend_analysis": True,
-        "comparison_reports": True
+        "comparison_reports": True,
     })
 
 
 # Global configuration instance
-_config: Optional[PerformanceConfig] = None
+_config: PerformanceConfig | None = None
 
 
 def get_config() -> PerformanceConfig:
@@ -114,7 +114,7 @@ def get_config() -> PerformanceConfig:
     return _config
 
 
-def load_config(config_path: Optional[str] = None) -> PerformanceConfig:
+def load_config(config_path: str | None = None) -> PerformanceConfig:
     """
     Load performance configuration from file or environment.
 
@@ -162,7 +162,7 @@ def reset_config() -> None:
 
 
 # Configuration validation
-def validate_config(config: PerformanceConfig) -> List[str]:
+def validate_config(config: PerformanceConfig) -> list[str]:
     """
     Validate performance configuration.
 

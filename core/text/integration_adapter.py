@@ -12,11 +12,12 @@ Features:
 """
 
 import logging
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
+
 from lxml import etree as ET
 
-from .converter_service import TextConverterService
 from ..services.conversion_services import ConversionServices
+from .converter_service import TextConverterService
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,11 @@ class TextIntegrationAdapter:
         self.usage_stats = {
             'preprocessed_conversions': 0,
             'fallback_conversions': 0,
-            'errors': 0
+            'errors': 0,
         }
 
     def convert_text_with_enhancement(self, element: ET.Element, context: Any,
-                                    force_preprocessing: Optional[bool] = None) -> str:
+                                    force_preprocessing: bool | None = None) -> str:
         """
         Convert text element with optional preprocessing enhancement.
 
@@ -70,7 +71,7 @@ class TextIntegrationAdapter:
         try:
             # Use new text pipeline
             result = self.text_service.convert_text_element(
-                element, context, apply_preprocessing=use_preprocessing
+                element, context, apply_preprocessing=use_preprocessing,
             )
 
             # Update stats
@@ -94,7 +95,7 @@ class TextIntegrationAdapter:
         try:
             # Use text service without preprocessing
             return self.text_service.convert_text_element(
-                element, context, apply_preprocessing=False
+                element, context, apply_preprocessing=False,
             )
         except Exception as e:
             self.logger.error(f"Fallback conversion also failed: {e}")
@@ -147,7 +148,7 @@ class TextIntegrationAdapter:
     </p:txBody>
 </p:sp>'''
 
-    def get_usage_statistics(self) -> Dict[str, int]:
+    def get_usage_statistics(self) -> dict[str, int]:
         """Get usage statistics for monitoring."""
         return self.usage_stats.copy()
 
@@ -156,10 +157,10 @@ class TextIntegrationAdapter:
         self.usage_stats = {
             'preprocessed_conversions': 0,
             'fallback_conversions': 0,
-            'errors': 0
+            'errors': 0,
         }
 
-    def validate_text_element(self, element: ET.Element) -> Dict[str, Any]:
+    def validate_text_element(self, element: ET.Element) -> dict[str, Any]:
         """
         Validate text element and provide preprocessing recommendations.
 
@@ -173,7 +174,7 @@ class TextIntegrationAdapter:
             'valid': True,
             'issues': [],
             'recommendations': [],
-            'preprocessing_benefits': []
+            'preprocessing_benefits': [],
         }
 
         # Check for complex text anchor

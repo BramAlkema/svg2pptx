@@ -7,18 +7,20 @@ eliminating duplicate coordinate processing implementations across the codebase.
 """
 
 import re
-import numpy as np
-from typing import List, Tuple, Optional, Any
 from dataclasses import dataclass
+from typing import Any, List, Optional, Tuple
+
+import numpy as np
+
 # Removed circular import - CoordinateTransformer is now a standalone service
 
 
 @dataclass
 class CoordinateParsingResult:
     """Result of coordinate parsing operation."""
-    coordinates: List[Tuple[float, float]]
+    coordinates: list[tuple[float, float]]
     raw_text: str
-    parsing_errors: List[str]
+    parsing_errors: list[str]
 
 
 @dataclass
@@ -59,7 +61,7 @@ class CoordinateTransformer:
             return CoordinateParsingResult(
                 coordinates=[],
                 raw_text=coord_string,
-                parsing_errors=[]
+                parsing_errors=[],
             )
 
         coordinates = []
@@ -94,10 +96,10 @@ class CoordinateTransformer:
         return CoordinateParsingResult(
             coordinates=coordinates,
             raw_text=coord_string,
-            parsing_errors=errors
+            parsing_errors=errors,
         )
 
-    def parse_points_string(self, points_string: str) -> List[Tuple[float, float]]:
+    def parse_points_string(self, points_string: str) -> list[tuple[float, float]]:
         """
         Parse SVG points attribute string.
 
@@ -110,7 +112,7 @@ class CoordinateTransformer:
         result = self.parse_coordinate_string(points_string)
         return result.coordinates
 
-    def parse_viewbox_string(self, viewbox_string: str) -> Optional[ViewBoxData]:
+    def parse_viewbox_string(self, viewbox_string: str) -> ViewBoxData | None:
         """
         Parse SVG viewBox attribute string.
 
@@ -136,7 +138,7 @@ class CoordinateTransformer:
                     min_x=min_x,
                     min_y=min_y,
                     width=width,
-                    height=height
+                    height=height,
                 )
             except ValueError:
                 return None
@@ -151,8 +153,8 @@ class CoordinateTransformer:
         return None
 
     def transform_coordinates_with_precision(self,
-                                           coordinates: List[Tuple[float, float]],
-                                           precision: int = 3) -> List[Tuple[float, float]]:
+                                           coordinates: list[tuple[float, float]],
+                                           precision: int = 3) -> list[tuple[float, float]]:
         """
         Transform coordinates with specified precision.
 
@@ -182,7 +184,7 @@ class CoordinateTransformer:
 
         return transformed
 
-    def coordinates_to_string(self, coordinates: List[Tuple[float, float]],
+    def coordinates_to_string(self, coordinates: list[tuple[float, float]],
                             separator: str = " ") -> str:
         """
         Convert coordinate list back to string format.
@@ -206,7 +208,7 @@ class CoordinateTransformer:
 
         return separator.join(coord_strings)
 
-    def extract_coordinate_pairs_from_path(self, path_data: str) -> List[Tuple[float, float]]:
+    def extract_coordinate_pairs_from_path(self, path_data: str) -> list[tuple[float, float]]:
         """
         Extract coordinate pairs from SVG path data.
 
@@ -234,7 +236,7 @@ class CoordinateTransformer:
 
         return coordinates
 
-    def calculate_bounding_box(self, coordinates: List[Tuple[float, float]]) -> Optional[ViewBoxData]:
+    def calculate_bounding_box(self, coordinates: list[tuple[float, float]]) -> ViewBoxData | None:
         """
         Calculate bounding box for a set of coordinates.
 
@@ -265,14 +267,14 @@ class CoordinateTransformer:
             min_x=min_x,
             min_y=min_y,
             width=width,
-            height=height
+            height=height,
         )
 
     def normalize_coordinates_to_viewbox(self,
-                                       coordinates: List[Tuple[float, float]],
+                                       coordinates: list[tuple[float, float]],
                                        viewbox: ViewBoxData,
                                        target_width: float = 100.0,
-                                       target_height: float = 100.0) -> List[Tuple[float, float]]:
+                                       target_height: float = 100.0) -> list[tuple[float, float]]:
         """
         Normalize coordinates to fit within a target viewbox.
 
@@ -302,7 +304,7 @@ class CoordinateTransformer:
 
         return normalized
 
-    def validate_coordinates(self, coordinates: List[Tuple[float, float]]) -> List[str]:
+    def validate_coordinates(self, coordinates: list[tuple[float, float]]) -> list[str]:
         """
         Validate coordinate list and return list of issues.
 
@@ -330,8 +332,8 @@ class CoordinateTransformer:
 
         return issues
 
-    def transform_coordinates(self, coordinates: List[Tuple[float, float]],
-                            transform_matrix: Any) -> List[Tuple[float, float]]:
+    def transform_coordinates(self, coordinates: list[tuple[float, float]],
+                            transform_matrix: Any) -> list[tuple[float, float]]:
         """
         Transform coordinates using matrix - adapter compatibility alias.
 
@@ -363,12 +365,12 @@ def get_coordinate_transformer():
     return _transformer_instance
 
 
-def parse_coordinate_string(coord_string: str) -> List[Tuple[float, float]]:
+def parse_coordinate_string(coord_string: str) -> list[tuple[float, float]]:
     """Convenience function for simple coordinate parsing."""
     result = get_coordinate_transformer().parse_coordinate_string(coord_string)
     return result.coordinates
 
 
-def parse_viewbox_string(viewbox_string: str) -> Optional[ViewBoxData]:
+def parse_viewbox_string(viewbox_string: str) -> ViewBoxData | None:
     """Convenience function for viewBox parsing."""
     return get_coordinate_transformer().parse_viewbox_string(viewbox_string)

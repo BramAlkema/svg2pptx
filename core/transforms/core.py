@@ -29,7 +29,7 @@ Usage:
 """
 
 import math
-from typing import List, Tuple, Optional, Dict
+from typing import Dict, List, Optional, Tuple
 
 
 class Matrix:
@@ -93,7 +93,7 @@ class Matrix:
         return cls(1, 0, 0, 1, tx, ty)
 
     @classmethod
-    def scale(cls, sx: float, sy: Optional[float] = None) -> 'Matrix':
+    def scale(cls, sx: float, sy: float | None = None) -> 'Matrix':
         """
         Create scale matrix.
 
@@ -168,7 +168,7 @@ class Matrix:
             self.a * other.c + self.c * other.d,
             self.b * other.c + self.d * other.d,
             self.a * other.e + self.c * other.f + self.e,
-            self.b * other.e + self.d * other.f + self.f
+            self.b * other.e + self.d * other.f + self.f,
         )
 
     def __matmul__(self, other: 'Matrix') -> 'Matrix':
@@ -201,10 +201,10 @@ class Matrix:
             -self.c * inv_det,
             self.a * inv_det,
             (self.c * self.f - self.d * self.e) * inv_det,
-            (self.b * self.e - self.a * self.f) * inv_det
+            (self.b * self.e - self.a * self.f) * inv_det,
         )
 
-    def transform_point(self, x: float, y: float) -> Tuple[float, float]:
+    def transform_point(self, x: float, y: float) -> tuple[float, float]:
         """
         Transform a single point using this matrix.
 
@@ -219,7 +219,7 @@ class Matrix:
         new_y = self.b * x + self.d * y + self.f
         return (new_x, new_y)
 
-    def transform_points(self, points: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    def transform_points(self, points: list[tuple[float, float]]) -> list[tuple[float, float]]:
         """
         Transform multiple points using this matrix.
 
@@ -231,7 +231,7 @@ class Matrix:
         """
         return [self.transform_point(x, y) for x, y in points]
 
-    def decompose(self) -> Dict[str, float]:
+    def decompose(self) -> dict[str, float]:
         """
         Decompose matrix into transform components.
 
@@ -264,10 +264,10 @@ class Matrix:
             'scaleX': scale_x,
             'scaleY': scale_y,
             'rotation': rotation,
-            'skewX': skew_x
+            'skewX': skew_x,
         }
 
-    def get_translation(self) -> Tuple[float, float]:
+    def get_translation(self) -> tuple[float, float]:
         """
         Get translation components.
 
@@ -276,7 +276,7 @@ class Matrix:
         """
         return (self.e, self.f)
 
-    def get_scale(self) -> Tuple[float, float]:
+    def get_scale(self) -> tuple[float, float]:
         """
         Get scale components.
 

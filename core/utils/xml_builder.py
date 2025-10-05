@@ -9,6 +9,7 @@ duplication and provide consistent, reusable XML building patterns.
 import logging
 from typing import Dict, List, Optional
 from xml.sax.saxutils import escape
+
 from lxml import etree as ET
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class XMLBuilder:
         'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
         'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
         'content_types': 'http://schemas.openxmlformats.org/package/2006/content-types',
-        'relationships': 'http://schemas.openxmlformats.org/package/2006/relationships'
+        'relationships': 'http://schemas.openxmlformats.org/package/2006/relationships',
     }
 
     def __init__(self):
@@ -50,7 +51,7 @@ class XMLBuilder:
             return ""
         return escape(str(text))
 
-    def create_namespace_declaration(self, namespaces: Optional[Dict[str, str]] = None) -> str:
+    def create_namespace_declaration(self, namespaces: dict[str, str] | None = None) -> str:
         """
         Create XML namespace declarations.
 
@@ -95,7 +96,7 @@ class XMLBuilder:
 
         namespaces = self.create_namespace_declaration({
             'p': self.NAMESPACES['p'],
-            'r': self.NAMESPACES['r']
+            'r': self.NAMESPACES['r'],
         })
 
         return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -123,7 +124,7 @@ class XMLBuilder:
         """
         namespaces = self.create_namespace_declaration({
             'p': self.NAMESPACES['p'],
-            'a': self.NAMESPACES['a']
+            'a': self.NAMESPACES['a'],
         })
 
         return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -146,7 +147,7 @@ class XMLBuilder:
     </p:clrMapOvr>
 </p:sld>'''
 
-    def create_content_types_xml(self, additional_overrides: Optional[List[Dict[str, str]]] = None) -> str:
+    def create_content_types_xml(self, additional_overrides: list[dict[str, str]] | None = None) -> str:
         """
         Create [Content_Types].xml for PowerPoint presentations.
 
@@ -160,20 +161,20 @@ class XMLBuilder:
         standard_overrides = [
             {
                 'PartName': '/ppt/presentation.xml',
-                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml'
+                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml',
             },
             {
                 'PartName': '/ppt/theme/theme1.xml',
-                'ContentType': 'application/vnd.openxmlformats-officedocument.theme+xml'
+                'ContentType': 'application/vnd.openxmlformats-officedocument.theme+xml',
             },
             {
                 'PartName': '/ppt/slideLayouts/slideLayout1.xml',
-                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml'
+                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml',
             },
             {
                 'PartName': '/ppt/slideMasters/slideMaster1.xml',
-                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml'
-            }
+                'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml',
+            },
         ]
 
         # Combine with additional overrides
@@ -185,7 +186,7 @@ class XMLBuilder:
         override_xml = []
         for override in all_overrides:
             override_xml.append(
-                f'    <Override PartName="{override["PartName"]}" ContentType="{override["ContentType"]}"/>'
+                f'    <Override PartName="{override["PartName"]}" ContentType="{override["ContentType"]}"/>',
             )
 
         overrides_str = '\n'.join(override_xml)
@@ -226,7 +227,7 @@ class XMLBuilder:
 
         namespaces = self.create_namespace_declaration({
             'p': self.NAMESPACES['p'],
-            'a': self.NAMESPACES['a']
+            'a': self.NAMESPACES['a'],
         })
 
         # Basic animation template - can be extended for specific effect types
@@ -251,7 +252,7 @@ class XMLBuilder:
     </p:cTn>
 </p:par>'''
 
-    def create_relationships_xml(self, relationships: List[Dict[str, str]]) -> str:
+    def create_relationships_xml(self, relationships: list[dict[str, str]]) -> str:
         """
         Create relationships XML (.rels files).
 
@@ -264,7 +265,7 @@ class XMLBuilder:
         rel_xml = []
         for rel in relationships:
             rel_xml.append(
-                f'    <Relationship Id="{rel["Id"]}" Type="{rel["Type"]}" Target="{rel["Target"]}"/>'
+                f'    <Relationship Id="{rel["Id"]}" Type="{rel["Type"]}" Target="{rel["Target"]}"/>',
             )
 
         relationships_str = '\n'.join(rel_xml)

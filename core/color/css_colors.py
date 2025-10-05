@@ -11,15 +11,16 @@ for accurate color parsing in SVG to PPTX conversion.
 
 from typing import Dict, Tuple
 
+
 # CSS Level 4 Named Colors
 # Source: Mozilla Developer Network - CSS named colors
 # https://developer.mozilla.org/en-US/docs/Web/CSS/named-color
-def _hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     """Convert hex color to RGB tuple."""
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
-CSS_NAMED_COLORS: Dict[str, Tuple[int, int, int]] = {
+CSS_NAMED_COLORS: dict[str, tuple[int, int, int]] = {
     'aliceblue': _hex_to_rgb('#f0f8ff'),
     'antiquewhite': _hex_to_rgb('#faebd7'),
     'aqua': _hex_to_rgb('#00ffff'),
@@ -173,7 +174,7 @@ CSS_NAMED_COLORS: Dict[str, Tuple[int, int, int]] = {
     'transparent': (0, 0, 0),  # Special case handled separately with alpha=0
 }
 
-def get_css_color(color_name: str) -> Tuple[int, int, int]:
+def get_css_color(color_name: str) -> tuple[int, int, int]:
     """
     Get RGB tuple for CSS named color.
 

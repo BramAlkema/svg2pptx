@@ -7,8 +7,8 @@ Supports SVG textPath elements with character positioning along curves.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
 from enum import Enum
+from typing import List, Optional, Union
 
 from .geometry import Point, Rect
 from .text import EnhancedRun, Run, TextAnchor
@@ -86,7 +86,7 @@ class TextPathFrame:
     along a path curve. Includes all information needed for
     character-by-character positioning.
     """
-    runs: List[Union[Run, EnhancedRun]]       # Text runs to place on path
+    runs: list[Run | EnhancedRun]       # Text runs to place on path
     path_reference: str                        # Reference to path element ID
     start_offset: float = 0.0                 # Start offset along path (0-1 or length)
     method: TextPathMethod = TextPathMethod.ALIGN
@@ -94,9 +94,9 @@ class TextPathFrame:
     side: TextPathSide = TextPathSide.LEFT
 
     # Optional pre-calculated positioning
-    character_placements: Optional[List[CharacterPlacement]] = None
-    path_points: Optional[List[PathPoint]] = None
-    total_path_length: Optional[float] = None
+    character_placements: list[CharacterPlacement] | None = None
+    path_points: list[PathPoint] | None = None
+    total_path_length: float | None = None
 
     # Layout hints
     auto_rotate: bool = True                   # Rotate characters with path
@@ -160,7 +160,7 @@ class TextPathFrame:
         return score
 
     @property
-    def estimated_bounds(self) -> Optional[Rect]:
+    def estimated_bounds(self) -> Rect | None:
         """Get estimated bounding box if positioning is available."""
         if not self.is_positioned:
             return None
@@ -178,10 +178,10 @@ class TextPathFrame:
             x=min_x,
             y=min_y,
             width=max_x - min_x,
-            height=max_y - min_y
+            height=max_y - min_y,
         )
 
-    def get_characters_with_runs(self) -> List[tuple]:
+    def get_characters_with_runs(self) -> list[tuple]:
         """
         Get list of (character, run_index, char_index) tuples.
 
@@ -194,7 +194,7 @@ class TextPathFrame:
                 characters.append((char, run_idx, char_idx))
         return characters
 
-    def get_run_for_character(self, global_char_index: int) -> Optional[Union[Run, EnhancedRun]]:
+    def get_run_for_character(self, global_char_index: int) -> Run | EnhancedRun | None:
         """
         Get the run that contains the character at global index.
 
@@ -217,9 +217,9 @@ class TextPathFrame:
 
     def with_positioning(
         self,
-        character_placements: List[CharacterPlacement],
-        path_points: Optional[List[PathPoint]] = None,
-        total_path_length: Optional[float] = None
+        character_placements: list[CharacterPlacement],
+        path_points: list[PathPoint] | None = None,
+        total_path_length: float | None = None,
     ) -> 'TextPathFrame':
         """
         Create new TextPathFrame with positioning information.
@@ -246,7 +246,7 @@ class TextPathFrame:
             baseline_offset=self.baseline_offset,
             letter_spacing=self.letter_spacing,
             render_method=self.render_method,
-            fallback_anchor=self.fallback_anchor
+            fallback_anchor=self.fallback_anchor,
         )
 
 
@@ -260,14 +260,14 @@ class TextPathLayout:
     rendering metadata.
     """
     text_path_frame: TextPathFrame            # Original TextPath data
-    character_placements: List[CharacterPlacement]  # Character positioning
-    path_points: List[PathPoint]              # Path point data
+    character_placements: list[CharacterPlacement]  # Character positioning
+    path_points: list[PathPoint]              # Path point data
     total_path_length: float                  # Total path length
     layout_time_ms: float                     # Time taken for layout
 
     # Layout metadata
     method_used: str = "exact"                # Method used for positioning
-    spacing_adjustments: List[float] = field(default_factory=list)
+    spacing_adjustments: list[float] = field(default_factory=list)
     overflow_characters: int = 0              # Characters that didn't fit
     layout_quality: float = 1.0              # Quality score (0-1)
 
@@ -277,11 +277,11 @@ class TextPathLayout:
         return self.text_path_frame.with_positioning(
             self.character_placements,
             self.path_points,
-            self.total_path_length
+            self.total_path_length,
         )
 
     @property
-    def rendering_bounds(self) -> Optional[Rect]:
+    def rendering_bounds(self) -> Rect | None:
         """Get rendering bounds for the positioned text."""
         return self.positioned_frame.estimated_bounds
 
@@ -295,7 +295,7 @@ class TextPathLayout:
         """Get path coverage as percentage (0-100)."""
         return self.positioned_frame.path_coverage * 100
 
-    def get_character_at_distance(self, distance: float) -> Optional[CharacterPlacement]:
+    def get_character_at_distance(self, distance: float) -> CharacterPlacement | None:
         """
         Get character placement at specific distance along path.
 
@@ -313,9 +313,9 @@ class TextPathLayout:
 
 # Factory functions
 def create_text_path_frame(
-    runs: List[Union[Run, EnhancedRun]],
+    runs: list[Run | EnhancedRun],
     path_reference: str,
-    **kwargs
+    **kwargs,
 ) -> TextPathFrame:
     """
     Create TextPathFrame with validation.
@@ -336,7 +336,7 @@ def create_simple_text_path(
     path_reference: str,
     font_family: str = "Arial",
     font_size_pt: float = 12.0,
-    **kwargs
+    **kwargs,
 ) -> TextPathFrame:
     """
     Create simple TextPathFrame from text string.
@@ -356,7 +356,7 @@ def create_simple_text_path(
     run = Run(
         text=text,
         font_family=font_family,
-        font_size_pt=font_size_pt
+        font_size_pt=font_size_pt,
     )
 
     return TextPathFrame(runs=[run], path_reference=path_reference, **kwargs)
