@@ -190,12 +190,20 @@ class SVGParser:
     def _parse_xml(self, content: str) -> ET.Element:
         """Parse XML content with error recovery following existing codebase patterns"""
         try:
-            # Follow the same pattern as svg2drawingml.py SVGParser
-            if isinstance(content, str) and content.strip().startswith('<?xml'):
-                svg_bytes = content.encode('utf-8')
-                root = ET.fromstring(svg_bytes)
+            # Use configured parser settings
+            base_parser = ET.XMLParser(
+                recover=self.parser_config['recover'],
+                strip_cdata=self.parser_config['strip_cdata'],
+                remove_blank_text=self.parser_config['remove_blank_text'],
+                remove_comments=self.parser_config['remove_comments'],
+                resolve_entities=self.parser_config['resolve_entities'],
+                no_network=True,
+            )
+
+            if isinstance(content, str):
+                root = ET.fromstring(content.encode('utf-8'), base_parser)
             else:
-                root = ET.fromstring(content)
+                root = ET.fromstring(content, base_parser)
 
             return root
 
@@ -333,7 +341,7 @@ class SVGParser:
                 error=f"Failed to read file {file_path}: {e}",
             )
 
-    def parse_to_ir(self, svg_content: str):
+    def parse_to_ir(self, svg_content: str) -> tuple[list, 'ParseResult']:
         """
         Parse SVG content directly to Clean Slate IR.
 
@@ -341,23 +349,27 @@ class SVGParser:
             svg_content: SVG content as string
 
         Returns:
-            Tuple[SceneGraph, ParseResult] with IR scene and parse metadata
+            Tuple[SceneGraph, ParseResult] where SceneGraph is a list of IRElements
+            Always returns a list (possibly empty) - never None
         """
         # First parse to DOM
         parse_result = self.parse(svg_content)
 
         if not parse_result.success:
-            return None, parse_result
+            # Return empty SceneGraph (list) with the error
+            return [], parse_result
 
         # Convert DOM to IR
         try:
             scene = self._convert_dom_to_ir(parse_result.svg_root)
+            # Ensure a list is always returned
+            scene = scene or []
             return scene, parse_result
         except Exception as e:
             # Update parse result with conversion error
             parse_result.success = False
             parse_result.error = f"IR conversion failed: {e}"
-            return None, parse_result
+            return [], parse_result
 
     def _convert_dom_to_ir(self, svg_root: ET.Element):
         """Convert SVG DOM to Clean Slate IR using existing parsing logic"""
@@ -617,7 +629,6 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink,
         )
 
     def _convert_circle_to_ir(self, element: ET.Element):
@@ -678,7 +689,6 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink,
         )
 
     def _convert_ellipse_to_ir(self, element: ET.Element):
@@ -736,7 +746,6 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink,
         )
 
     def _convert_line_to_ir(self, element: ET.Element):
@@ -787,7 +796,6 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
-            hyperlink=hyperlink,
         )
 
     def _convert_polygon_to_ir(self, element: ET.Element, closed: bool = True):
@@ -887,7 +895,6 @@ class SVGParser:
                 runs=line.runs,
                 bbox=Rect(x, y, estimated_width, estimated_height),
                 anchor=line.anchor,
-                hyperlink=hyperlink,
             )
 
     def _convert_image_to_ir(self, element: ET.Element):
@@ -931,7 +938,6 @@ class SVGParser:
             format=format,
             href=href,
             opacity=float(element.get('opacity', 1.0)),
-            hyperlink=hyperlink,
         )
 
     def _convert_group_to_ir(self, element: ET.Element):
@@ -949,10 +955,24 @@ class SVGParser:
         # Get hyperlink from current context if any
         hyperlink = getattr(self, '_current_hyperlink', None)
 
+        # Parse transform matrix if present
+        transform_matrix = None
+        transform_attr = element.get('transform')
+        if transform_attr:
+            try:
+                from ..transforms.parser import TransformParser
+                parser = TransformParser()
+                tm = parser.parse_to_matrix(transform_attr)
+                if hasattr(tm, 'to_numpy'):
+                    tm = tm.to_numpy()
+                transform_matrix = tm
+            except Exception as e:
+                self.logger.warning(f"Failed to parse group transform '{transform_attr}': {e}")
+
         return Group(
             children=child_nodes,
             opacity=float(element.get('opacity', 1.0)),
-            hyperlink=hyperlink,
+            transform=transform_matrix,
         )
 
     def _extract_styling(self, element: ET.Element):
@@ -985,6 +1005,9 @@ class SVGParser:
             stroke_color = stroke_attr
             if stroke_color.startswith('#'):
                 stroke_color = stroke_color[1:]
+                # Expand 3-char hex to 6-char (e.g., "333" -> "333333")
+                if len(stroke_color) == 3:
+                    stroke_color = ''.join(c*2 for c in stroke_color)
             elif stroke_color.startswith('rgb('):
                 # Parse rgb format
                 rgb_values = stroke_color[4:-1].split(',')
@@ -1688,7 +1711,7 @@ class SVGParser:
         from ..ir import Point, Run, TextAnchor, TextFrame
 
         # Extract text content (very basic implementation)
-        text_content = self._extract_text_content(xhtml_element)
+        text_content = self._extract_xhtml_text_content(xhtml_element)
         if not text_content.strip():
             return None
 
@@ -1708,7 +1731,7 @@ class SVGParser:
             anchor=TextAnchor.START,
         )
 
-    def _extract_text_content(self, element: ET.Element) -> str:
+    def _extract_xhtml_text_content(self, element: ET.Element) -> str:
         """Extract all text content from an XHTML element tree"""
         text_parts = []
 
@@ -1745,8 +1768,8 @@ class SVGParser:
 
         placeholder_path = Path(
             segments=segments,
-            fill=SolidPaint(color="#f0f0f0"),  # Light gray fill
-            stroke=Stroke(color="#999999", width=1.0),  # Gray border
+            fill=SolidPaint(rgb="F0F0F0"),  # Light gray fill
+            stroke=Stroke(paint=SolidPaint(rgb="999999"), width=1.0),  # Gray border
             opacity=0.5,
         )
 
