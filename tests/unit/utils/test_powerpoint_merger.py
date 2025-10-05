@@ -119,7 +119,7 @@ class TestPPTXMerger:
         assert merger.copy_embedded_media is True
         assert merger.default_slide_size == (10, 7.5)
 
-    @patch('src.utils.powerpoint_merger.PPTX_AVAILABLE', False)
+    @patch('core.utils.powerpoint_merger.PPTX_AVAILABLE', False)
     def test_merger_no_pptx_library(self):
         """Test merger when python-pptx is not available."""
         with pytest.raises(ImportError, match="python-pptx library is required"):
@@ -158,7 +158,7 @@ class TestPPTXMerger:
         with pytest.raises(PPTXMergeError, match="Input path is not a file"):
             merger._validate_input_files([test_dir])
 
-    @patch('src.utils.powerpoint_merger.Presentation')
+    @patch('core.utils.powerpoint_merger.Presentation')
     def test_configure_presentation(self, mock_presentation_class):
         """Test presentation configuration."""
         merger = PPTXMerger(default_slide_size=(12, 9))
@@ -170,7 +170,7 @@ class TestPPTXMerger:
         assert mock_presentation.slide_width == Inches(12)
         assert mock_presentation.slide_height == Inches(9)
 
-    @patch('src.utils.powerpoint_merger.Presentation')
+    @patch('core.utils.powerpoint_merger.Presentation')
     def test_merge_presentations_success(self, mock_presentation_class, mock_presentation_files, temp_dir):
         """Test successful presentation merging."""
         # Setup mocks
@@ -202,7 +202,7 @@ class TestPPTXMerger:
             assert len(result.source_files) == 3
             assert mock_copy.call_count == 6
 
-    @patch('src.utils.powerpoint_merger.Presentation')
+    @patch('core.utils.powerpoint_merger.Presentation')
     def test_merge_presentations_file_error(self, mock_presentation_class, mock_presentation_files, temp_dir):
         """Test merge with file processing error."""
         # Make one file fail to open, others succeed with slides
@@ -237,7 +237,7 @@ class TestPPTXMerger:
             assert len(result.warnings) == 1
             assert "Cannot open file" in result.warnings[0]
 
-    @patch('src.utils.powerpoint_merger.Presentation')
+    @patch('core.utils.powerpoint_merger.Presentation')
     def test_merge_presentations_all_files_fail(self, mock_presentation_class, mock_presentation_files, temp_dir):
         """Test merge when all files fail."""
         # Make all files fail
@@ -342,7 +342,7 @@ class TestPPTXMerger:
         assert summary['output_path'] is None
         assert summary['error'] == "Merge failed"
 
-    @patch('src.utils.powerpoint_merger.Presentation')
+    @patch('core.utils.powerpoint_merger.Presentation')
     def test_copy_slide_methods(self, mock_presentation_class):
         """Test slide copying methods (simplified)."""
         merger = PPTXMerger()
@@ -369,7 +369,7 @@ class TestPPTXMerger:
 class TestSimpleFunctions:
     """Test simple function interfaces."""
 
-    @patch('src.utils.powerpoint_merger.PPTXMerger')
+    @patch('core.utils.powerpoint_merger.PPTXMerger')
     def test_merge_presentations_simple_success(self, mock_merger_class):
         """Test simple merge function with success."""
         mock_merger = Mock()
@@ -388,7 +388,7 @@ class TestSimpleFunctions:
         assert result['total_slides'] == 5
         mock_merger_class.assert_called_once_with(preserve_master_slides=False)
 
-    @patch('src.utils.powerpoint_merger.PPTXMerger')
+    @patch('core.utils.powerpoint_merger.PPTXMerger')
     def test_merge_presentations_simple_failure(self, mock_merger_class):
         """Test simple merge function with failure."""
         mock_merger_class.side_effect = Exception("Test error")
@@ -403,7 +403,7 @@ class TestSimpleFunctions:
         assert result['total_slides'] == 0
         assert result['source_file_count'] == 2
 
-    @patch('src.utils.powerpoint_merger.merge_presentations_simple')
+    @patch('core.utils.powerpoint_merger.merge_presentations_simple')
     def test_merge_pptx_files_success(self, mock_simple_merge):
         """Test backward compatibility function with success."""
         mock_simple_merge.return_value = {'success': True}
@@ -413,7 +413,7 @@ class TestSimpleFunctions:
         assert result is True
         mock_simple_merge.assert_called_once_with(["file1.pptx", "file2.pptx"], "merged.pptx")
 
-    @patch('src.utils.powerpoint_merger.merge_presentations_simple')
+    @patch('core.utils.powerpoint_merger.merge_presentations_simple')
     def test_merge_pptx_files_failure(self, mock_simple_merge):
         """Test backward compatibility function with failure."""
         mock_simple_merge.return_value = {'success': False}
@@ -422,7 +422,7 @@ class TestSimpleFunctions:
 
         assert result is False
 
-    @patch('src.utils.powerpoint_merger.merge_presentations_simple')
+    @patch('core.utils.powerpoint_merger.merge_presentations_simple')
     def test_merge_pptx_files_exception(self, mock_simple_merge):
         """Test backward compatibility function with exception."""
         mock_simple_merge.side_effect = Exception("Test error")
@@ -468,7 +468,7 @@ class TestErrorHandling:
 
             # Mock the actual merging to avoid complex setup
             with patch.object(merger, '_merge_single_presentation', return_value=1):
-                with patch('src.utils.powerpoint_merger.Presentation'):
+                with patch('core.utils.powerpoint_merger.Presentation'):
                     result = merger.merge_presentations(input_files, output_path)
                     # Just verify it runs without path-related errors
                     assert isinstance(result, MergeResult)

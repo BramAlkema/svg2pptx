@@ -277,7 +277,7 @@ class TestPathSystem:
         assert bounds_info['width'] > 0
         assert bounds_info['height'] > 0
 
-    @patch('src.paths.path_system.PathParser')
+    @patch('core.paths.path_system.PathParser')
     def test_parser_error_handling(self, mock_parser_class, configured_system):
         """Test error handling when parser fails."""
         # Mock parser to raise an error
@@ -288,7 +288,7 @@ class TestPathSystem:
         with pytest.raises(PathSystemError, match="Path processing failed"):
             configured_system.process_path("M 100 100 L 200 200")
 
-    @patch('src.paths.path_system.CoordinateSystem')
+    @patch('core.paths.path_system.CoordinateSystem')
     def test_coordinate_system_error_handling(self, mock_cs_class, configured_system):
         """Test error handling when coordinate system fails."""
         # Mock coordinate system to raise an error
@@ -299,7 +299,7 @@ class TestPathSystem:
         with pytest.raises(PathSystemError, match="Path processing failed"):
             configured_system.process_path("M 100 100 L 200 200")
 
-    @patch('src.paths.path_system.DrawingMLGenerator')
+    @patch('core.paths.path_system.DrawingMLGenerator')
     def test_xml_generator_error_handling(self, mock_gen_class, configured_system):
         """Test error handling when XML generator fails."""
         # Mock XML generator to raise an error

@@ -223,7 +223,7 @@ class TestColorToning:
         assert max(toned_green.rgb()) - min(toned_green.rgb()) < max(self.green.rgb()) - min(self.green.rgb())
         assert max(toned_blue.rgb()) - min(toned_blue.rgb()) < max(self.blue.rgb()) - min(self.blue.rgb())
 
-    @patch('src.color.manipulation.colorspacious.cspace_convert')
+    @patch('core.color.manipulation.colorspacious.cspace_convert')
     def test_tone_fallback_behavior(self, mock_convert):
         """Test toning fallback when colorspacious fails."""
         mock_convert.side_effect = Exception("Mock error")
@@ -486,7 +486,7 @@ class TestVibranceAdjustment:
         # Both colors should show some change from vibrance adjustment
         assert skin_change > 0 or blue_change > 0
 
-    @patch('src.color.manipulation.colorspacious.cspace_convert')
+    @patch('core.color.manipulation.colorspacious.cspace_convert')
     def test_adjust_vibrance_fallback(self, mock_convert):
         """Test vibrance adjustment fallback behavior."""
         mock_convert.side_effect = Exception("Mock error")
@@ -583,7 +583,7 @@ class TestGradientCreation:
         assert gradient[0]._alpha == 0.2
         assert gradient[-1]._alpha == 0.8
 
-    @patch('src.color.manipulation.colorspacious.cspace_convert')
+    @patch('core.color.manipulation.colorspacious.cspace_convert')
     def test_create_gradient_fallback(self, mock_convert):
         """Test gradient creation fallback behavior."""
         mock_convert.side_effect = Exception("Mock error")
@@ -634,7 +634,7 @@ class TestPaletteCreation:
         assert len(palette) == 3
         # Should cluster into groups
 
-    @patch('src.color.manipulation.colorspacious.cspace_convert')
+    @patch('core.color.manipulation.colorspacious.cspace_convert')
     def test_create_palette_fallback(self, mock_convert):
         """Test palette creation fallback behavior."""
         mock_convert.side_effect = Exception("Mock error")
@@ -694,7 +694,7 @@ class TestColorBalanceAdjustment:
 
         assert isinstance(adjusted, Color)
 
-    @patch('src.color.manipulation.colorspacious.cspace_convert')
+    @patch('core.color.manipulation.colorspacious.cspace_convert')
     def test_adjust_color_balance_fallback(self, mock_convert):
         """Test color balance adjustment fallback behavior."""
         mock_convert.side_effect = Exception("Mock error")

@@ -191,7 +191,7 @@ class TestColorBatchDarkening:
             # Should be significantly darker (at least 30% reduction)
             assert dark_sum <= orig_sum * 0.7
 
-    @patch('src.color.batch.colorspacious.cspace_convert')
+    @patch('core.color.batch.colorspacious.cspace_convert')
     def test_darken_fallback(self, mock_convert):
         """Test darkening fallback when colorspacious fails."""
         mock_convert.side_effect = Exception("Mock error")
@@ -258,7 +258,7 @@ class TestColorBatchLightening:
             # Should be significantly lighter (at least 30% increase)
             assert light_sum >= orig_sum * 1.3
 
-    @patch('src.color.batch.colorspacious.cspace_convert')
+    @patch('core.color.batch.colorspacious.cspace_convert')
     def test_lighten_fallback(self, mock_convert):
         """Test lightening fallback when colorspacious fails."""
         mock_convert.side_effect = Exception("Mock error")

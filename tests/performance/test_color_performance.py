@@ -344,7 +344,7 @@ class TestColorPerformanceBenchmarks:
 
         # Test fallback color manipulation (when colorspacious fails)
         try:
-            with patch('src.color.core.colorspacious.cspace_convert', side_effect=Exception("Mock failure")):
+            with patch('core.color.core.colorspacious.cspace_convert', side_effect=Exception("Mock failure")):
                 start_time = time.perf_counter()
 
                 # These should use fallback implementations

@@ -241,7 +241,7 @@ class TestFontEmbeddingE2E:
         output_file = expected_outputs['google_fonts_output']
 
         # Simulate conversion with font embedding
-        with patch('src.converters.font_embedding.GoogleFontsDownloader') as mock_downloader:
+        with patch('core.converters.font_embedding.GoogleFontsDownloader') as mock_downloader:
             mock_downloader.return_value.download_font.return_value = b"MOCK_ROBOTO_FONT_DATA"
 
             # Mock conversion process
@@ -325,7 +325,7 @@ class TestFontEmbeddingE2E:
         output_file = expected_outputs['cjk_fonts_output']
 
         # Mock CJK font handling
-        with patch('src.converters.font_embedding.CJKFontHandler') as mock_cjk:
+        with patch('core.converters.font_embedding.CJKFontHandler') as mock_cjk:
             mock_cjk.return_value.supports_characters.return_value = True
             mock_cjk.return_value.get_font_subset.return_value = b"MOCK_CJK_SUBSET"
 
@@ -354,7 +354,7 @@ class TestFontEmbeddingE2E:
         output_file = expected_outputs['subsetting_output']
 
         # Mock font subsetting
-        with patch('src.converters.font_embedding.FontSubsetter') as mock_subsetter:
+        with patch('core.converters.font_embedding.FontSubsetter') as mock_subsetter:
             mock_subsetter.return_value.extract_used_characters.return_value = set('ABCDEFGHIJ')
             mock_subsetter.return_value.create_subset.return_value = b"MOCK_SUBSET_FONT"
 
@@ -409,7 +409,7 @@ class TestFontEmbeddingE2E:
         output_file = expected_outputs['google_fonts_output']
 
         # Mock visual comparison
-        with patch('src.visual.comparison.FontRenderingComparator') as mock_comparator:
+        with patch('core.visual.comparison.FontRenderingComparator') as mock_comparator:
             mock_comparator.return_value.compare_rendering.return_value = {
                 'similarity_score': 0.95,
                 'font_metrics_match': True,
@@ -447,7 +447,7 @@ class TestFontEmbeddingE2E:
         ]
 
         # Mock batch processing
-        with patch('src.converters.font_embedding.BatchFontProcessor') as mock_batch:
+        with patch('core.converters.font_embedding.BatchFontProcessor') as mock_batch:
             mock_batch.return_value.process_batch.return_value = {
                 'processed_count': 3,
                 'fonts_cached': 5,
@@ -495,7 +495,7 @@ class TestFontEmbeddingE2E:
         output_file = temp_workspace / "output" / "error_test.pptx"
 
         # Simulate font embedding with errors
-        with patch('src.converters.font_embedding.FontResolver') as mock_resolver:
+        with patch('core.converters.font_embedding.FontResolver') as mock_resolver:
             mock_resolver.return_value.resolve_font.side_effect = FileNotFoundError("Font not found")
 
             result = self._simulate_svg_to_pptx_conversion(

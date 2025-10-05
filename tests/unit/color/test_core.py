@@ -804,7 +804,7 @@ class TestColorEdgeCases:
         # Test that methods work even if advanced features fail
         try:
             # Force fallback by mocking colorspacious failure
-            with patch('src.color.core.colorspacious') as mock_colorspacious:
+            with patch('core.color.core.colorspacious') as mock_colorspacious:
                 mock_colorspacious.cspace_convert.side_effect = Exception("Mock failure")
 
                 darker = red.darken(0.2)
@@ -903,7 +903,7 @@ class TestColorEdgeCases:
 
         # Force fallback by testing error handling
         try:
-            with patch('src.color.core.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+            with patch('core.color.core.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
                 delta = red.delta_e(blue)
                 assert isinstance(delta, float)
                 assert delta > 0

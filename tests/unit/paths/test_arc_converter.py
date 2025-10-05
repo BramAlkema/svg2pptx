@@ -396,7 +396,7 @@ class TestArcConverter:
         # Should generate multiple segments for a large arc with small max angle
         assert len(bezier_segments) > 1
 
-    @patch('src.paths.arc_converter.arc_to_cubic_bezier')
+    @patch('core.paths.arc_converter.arc_to_cubic_bezier')
     def test_error_handling_a2c_failure(self, mock_a2c, converter):
         """Test error handling when a2c algorithm fails."""
         # Mock the a2c function to raise an error

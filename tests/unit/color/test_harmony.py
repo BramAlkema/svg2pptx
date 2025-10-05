@@ -80,7 +80,7 @@ class TestComplementaryColors:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             complement = harmony.complementary()
 
             assert isinstance(complement, Color)
@@ -231,7 +231,7 @@ class TestTriadicColors:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             triadic = harmony.triadic()
 
             assert isinstance(triadic, list)
@@ -294,7 +294,7 @@ class TestSplitComplementaryColors:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             split_comp = harmony.split_complementary()
 
             assert isinstance(split_comp, list)
@@ -359,7 +359,7 @@ class TestTetradicColors:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             tetradic = harmony.tetradic()
 
             assert isinstance(tetradic, list)
@@ -440,7 +440,7 @@ class TestMonochromaticColors:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             monochromatic = harmony.monochromatic(count=3)
 
             assert isinstance(monochromatic, list)
@@ -524,7 +524,7 @@ class TestCustomHarmony:
         harmony = ColorHarmony(red)
 
         # Mock colorspacious to raise exception and trigger fallback
-        with patch('src.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.harmony.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             custom = harmony.custom_harmony([0, 120, 240])
 
             assert isinstance(custom, list)

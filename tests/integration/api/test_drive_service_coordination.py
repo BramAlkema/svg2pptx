@@ -204,7 +204,7 @@ class TestDriveServiceCoordination:
             ]
             
             # Test coordinated upload
-            with patch('src.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
+            with patch('core.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
                 results = drive_controller.upload_batch_files(
                     batch_job_id=job_id,
                     files=files,
@@ -246,7 +246,7 @@ class TestDriveServiceCoordination:
             file_path = Path(temp_dir) / "test.pptx"
             file_path.write_bytes(b"mock content")
             
-            with patch('src.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
+            with patch('core.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
                 results = drive_controller.upload_batch_files(
                     batch_job_id=job_id,
                     files=[{"file_path": str(file_path), "original_filename": "test.svg"}],
@@ -286,7 +286,7 @@ class TestDriveServiceCoordination:
         file_metadata.save(test_db_path)
         
         # Test preview generation
-        with patch('src.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
+        with patch('core.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
             file_ids = ['file_preview_123']
             
             results = drive_controller.generate_batch_previews(
@@ -367,7 +367,7 @@ class TestBatchWorkflowIntegration:
         batch_job.save(test_db_path)
         
         # Step 2: Create folder and update database
-        with patch('src.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
+        with patch('core.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
             folder_result = controller.create_batch_folder(
                 batch_job_id=job_id,
                 folder_pattern="Complete-Test-{job_id}/"
@@ -486,7 +486,7 @@ class TestBatchWorkflowIntegration:
             file_path = Path(temp_dir) / "test.pptx"
             file_path.write_bytes(b"content")
             
-            with patch('src.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
+            with patch('core.batch.drive_controller.DEFAULT_DB_PATH', test_db_path):
                 results = controller.upload_batch_files(
                     batch_job_id=job_id,
                     files=[{"file_path": str(file_path), "original_filename": "test.svg"}],

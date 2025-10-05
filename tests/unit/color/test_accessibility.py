@@ -260,7 +260,7 @@ class TestAccessibleColorGeneration:
         accessibility = ColorAccessibility()
 
         # Mock colorspacious to trigger fallback
-        with patch('src.color.accessibility.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
+        with patch('core.color.accessibility.colorspacious.cspace_convert', side_effect=Exception("Mock error")):
             light_gray = Color('#dddddd')
             white = Color('#ffffff')
 

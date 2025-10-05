@@ -57,7 +57,7 @@ class TestTransformPolicyIntegration:
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
             with patch('core.policy.engine.Policy._check_wordart_opportunity', return_value=None):
-                with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+                with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                     # Mock the decomposer and components
                     mock_decomposer = Mock()
                     mock_decomposer_factory.return_value = mock_decomposer
@@ -88,7 +88,7 @@ class TestTransformPolicyIntegration:
         text = self.create_mock_text_frame(transform=transform)
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
-            with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+            with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                 # Mock the decomposer and components
                 mock_decomposer = Mock()
                 mock_decomposer_factory.return_value = mock_decomposer
@@ -120,7 +120,7 @@ class TestTransformPolicyIntegration:
         text = self.create_mock_text_frame(transform=transform)
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
-            with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+            with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                 # Mock the decomposer and components
                 mock_decomposer = Mock()
                 mock_decomposer_factory.return_value = mock_decomposer
@@ -151,7 +151,7 @@ class TestTransformPolicyIntegration:
         text = self.create_mock_text_frame(transform=transform)
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
-            with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+            with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                 # Mock the decomposer and components
                 mock_decomposer = Mock()
                 mock_decomposer_factory.return_value = mock_decomposer
@@ -181,7 +181,7 @@ class TestTransformPolicyIntegration:
         text = self.create_mock_text_frame(transform=transform)
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
-            with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+            with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                 # Mock the decomposer and components
                 mock_decomposer = Mock()
                 mock_decomposer_factory.return_value = mock_decomposer
@@ -234,7 +234,7 @@ class TestTransformPolicyIntegration:
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
             with patch('core.policy.engine.Policy._check_wordart_opportunity', return_value=None):
-                with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+                with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                     # Mock decomposer that raises exception
                     mock_decomposer = Mock()
                     mock_decomposer_factory.return_value = mock_decomposer
@@ -254,7 +254,7 @@ class TestTransformPolicyIntegration:
         text = self.create_mock_text_frame(transform=transform_matrix)
 
         with patch('core.policy.engine.Policy._check_missing_fonts', return_value=False):
-            with patch('src.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
+            with patch('core.services.wordart_transform_service.create_transform_decomposer') as mock_decomposer_factory:
                 # Mock the decomposer and components
                 mock_decomposer = Mock()
                 mock_decomposer_factory.return_value = mock_decomposer
