@@ -207,7 +207,7 @@ class SecureFileService:
             # Use NamedTemporaryFile with delete=False for secure creation
             with tempfile.NamedTemporaryFile(suffix=suffix, prefix=prefix, delete=False) as tmp:
                 temp_path = tmp.name
-                file_descriptor = tmp.fileno()
+                tmp.fileno()
 
             # Set secure permissions (owner read/write only)
             os.chmod(temp_path, 0o600)
@@ -292,7 +292,7 @@ class SecureFileService:
 
             # Additional check: ensure the resolved path doesn't go above current working directory
             # unless it's an absolute path that was explicitly provided
-            if not path.startswith('/') and not os.path.abspath(os.getcwd()) in abs_path:
+            if not path.startswith('/') and os.path.abspath(os.getcwd()) not in abs_path:
                 # Check if resolved path went outside current directory tree
                 cwd_abs = os.path.abspath(os.getcwd())
                 try:

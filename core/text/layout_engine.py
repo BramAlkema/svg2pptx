@@ -333,7 +333,7 @@ class TextLayoutEngine:
             ],
         }
 
-        self.logger.debug(f"Fallback text layout for non-preprocessed element")
+        self.logger.debug("Fallback text layout for non-preprocessed element")
         return layout
 
 

@@ -91,7 +91,7 @@ def coordinate_batch_workflow_clean_slate(
         options = conversion_options or {}
 
         # Create output path for batch
-        output_dir = Path(f"/tmp/batch_output")
+        output_dir = Path("/tmp/batch_output")
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = str(output_dir / f"{job_id}.pptx")
 
@@ -123,7 +123,7 @@ def coordinate_batch_workflow_clean_slate(
 
         # Step 4: Upload to Drive if enabled
         if batch_job.drive_integration_enabled and DRIVE_AVAILABLE:
-            logger.info(f"Drive integration enabled, uploading to Drive")
+            logger.info("Drive integration enabled, uploading to Drive")
 
             batch_job.status = "uploading"
             batch_job.drive_upload_status = "in_progress"

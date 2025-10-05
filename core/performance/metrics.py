@@ -503,7 +503,7 @@ class MetricsCollector:
         numeric_data.sort(key=lambda x: x[0])  # Sort by timestamp
 
         # Simple linear trend calculation
-        timestamps = [d[0] for d in numeric_data]
+        [d[0] for d in numeric_data]
         values = [d[1] for d in numeric_data]
 
         # Calculate correlation coefficient between time and values

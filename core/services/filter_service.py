@@ -151,7 +151,7 @@ class FilterService:
             return drawingml_parts[0]
 
         # For multiple effects, wrap in effect group
-        combined = f'<a:effectLst>\n'
+        combined = '<a:effectLst>\n'
         for part in drawingml_parts:
             if part and not part.strip().startswith('<!--'):
                 combined += f'  {part}\n'

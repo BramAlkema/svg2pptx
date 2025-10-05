@@ -149,7 +149,7 @@ class TextLayoutPrepPreprocessor(BasePreprocessor):
             y_val = float(y)
         except ValueError:
             x_val, y_val = 0.0, 0.0
-            self.logger.warning(f"Invalid text coordinates, defaulting to (0,0)")
+            self.logger.warning("Invalid text coordinates, defaulting to (0,0)")
 
         text_elem.set('x', str(x_val))
         text_elem.set('y', str(y_val))

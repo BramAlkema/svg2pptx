@@ -96,7 +96,7 @@ class SVGSpeedrunBenchmark:
         
         # Simple geometric shapes (should have high cache hit rates)
         for i in range(20):
-            svg = f'''<?xml version="1.0"?>
+            svg = '''<?xml version="1.0"?>
             <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
                 <rect x="10" y="10" width="80" height="80" fill="red" stroke="black"/>
                 <circle cx="50" cy="50" r="20" fill="blue" opacity="0.5"/>
@@ -245,7 +245,7 @@ class SVGSpeedrunBenchmark:
         
         # Pre-populate cache with similar patterns
         for svg in self.test_svgs[:5]:
-            root = ET.fromstring(svg)
+            ET.fromstring(svg)
             warm_cache.put_with_content_addressing(svg, f"cached_result_{svg[:20]}")
         
         warm_time, warm_memory, warm_errors = await self._measure_cache_performance(
@@ -412,14 +412,14 @@ class SVGSpeedrunBenchmark:
         avg_speedup = statistics.mean(speedups)
         max_speedup = max(speedups)
         
-        report.append(f"\n## Performance Summary")
+        report.append("\n## Performance Summary")
         report.append(f"- Average speedup: {avg_speedup:.1f}x")
         report.append(f"- Maximum speedup: {max_speedup:.1f}x")
         report.append(f"- Tests achieving >5x speedup: {sum(1 for s in speedups if s >= 5)}/{len(speedups)}")
         report.append(f"- Tests achieving >10x speedup: {sum(1 for s in speedups if s >= 10)}/{len(speedups)}")
         
         # Individual test results
-        report.append(f"\n## Individual Test Results")
+        report.append("\n## Individual Test Results")
         for result in self.results:
             report.append(f"\n### {result.test_name}")
             report.append(f"- Speedup: {result.speedup_factor:.1f}x")
@@ -432,7 +432,7 @@ class SVGSpeedrunBenchmark:
                 report.append(f"- Errors: {result.error_count}")
         
         # Performance targets assessment
-        report.append(f"\n## Target Achievement")
+        report.append("\n## Target Achievement")
         target_achievements = []
         
         if avg_speedup >= 10.0:

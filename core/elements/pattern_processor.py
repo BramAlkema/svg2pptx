@@ -512,7 +512,7 @@ class PatternProcessor:
                        if child.tag.endswith(('circle', 'ellipse')))
 
         # Estimate coverage based on tile size and dot count
-        tile_area = geometry.tile_width * geometry.tile_height
+        geometry.tile_width * geometry.tile_height
         estimated_coverage = min(dot_count * 0.1, 0.9)  # Simplified estimation
 
         return estimated_coverage

@@ -241,7 +241,7 @@ class ConversionServices:
         try:
             # Extract service configurations with defaults
             unit_config = custom_config.get('unit_converter', {})
-            color_config = custom_config.get('color_factory', {})
+            custom_config.get('color_factory', {})
             transform_config = custom_config.get('transform_parser', {})
             viewport_config = custom_config.get('viewport_resolver', {})
 

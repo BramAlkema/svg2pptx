@@ -113,7 +113,7 @@ class PolicyDecision:
         if len(self.reasons) == 1:
             explanation += f" - {primary}"
         else:
-            reason_list = [r.value.replace('_', ' ') for r in self.reasons]
+            [r.value.replace('_', ' ') for r in self.reasons]
             explanation += f" - {primary} + {len(self.reasons)-1} other factors"
 
         return explanation

@@ -55,9 +55,9 @@ def convert_single_svg(file_data: dict[str, Any], conversion_options: dict[str, 
         
         # Set default conversion options
         options = conversion_options or {}
-        slide_width = options.get('slide_width', 10.0)
-        slide_height = options.get('slide_height', 7.5)
-        quality = options.get('quality', 'high')
+        options.get('slide_width', 10.0)
+        options.get('slide_height', 7.5)
+        options.get('quality', 'high')
         
         # Create temporary files
         with tempfile.NamedTemporaryFile(suffix='.svg', delete=False) as svg_file:
@@ -92,7 +92,7 @@ def convert_single_svg(file_data: dict[str, Any], conversion_options: dict[str, 
                     f.write(conversion_result.output_data)
 
                 if not output_path.exists():
-                    raise Exception(f"Conversion failed - output file not created")
+                    raise Exception("Conversion failed - output file not created")
 
                 logger.info(f"Queue: Successfully converted {filename}")
 
@@ -193,7 +193,7 @@ def merge_presentations(conversion_results: list[dict[str, Any]], output_format:
                     logger.warning(f"No valid PPTX files found for merging in batch {batch_id}")
                     # Create a simple text file explaining the issue
                     with open(merged_path, 'w') as f:
-                        f.write(f"No valid PPTX files were available for merging.\n")
+                        f.write("No valid PPTX files were available for merging.\n")
                         f.write(f"Batch ID: {batch_id}\n")
                         f.write(f"Generated: {datetime.utcnow().isoformat()}\n")
                 else:

@@ -251,7 +251,7 @@ class FontEmbeddingEngine:
                 if os.path.exists(temp_path):
                     os.unlink(temp_path)
 
-        except Exception as e:
+        except Exception:
             return None
 
     def create_embedding_for_text(self, font_path: str, text_content: str | list[str],

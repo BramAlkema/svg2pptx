@@ -724,7 +724,7 @@ class ViewportEngine:
 
         # Benchmark complete pipeline
         start_time = time.perf_counter()
-        mappings = self.batch_resolve_svg_viewports(test_svgs)
+        self.batch_resolve_svg_viewports(test_svgs)
         total_time = time.perf_counter() - start_time
 
         return {
@@ -847,7 +847,7 @@ class ViewportEngine:
         import time
 
         start_time = time.perf_counter()
-        result = self.parse_viewbox_strings(viewbox_strings)
+        self.parse_viewbox_strings(viewbox_strings)
         total_time = time.perf_counter() - start_time
 
         n_operations = len(viewbox_strings)
@@ -875,7 +875,7 @@ class ViewportEngine:
         import time
 
         start_time = time.perf_counter()
-        results = self.batch_resolve_svg_viewports(svg_elements, None, [context] if context else None)
+        self.batch_resolve_svg_viewports(svg_elements, None, [context] if context else None)
         total_time = time.perf_counter() - start_time
 
         n_elements = len(svg_elements)

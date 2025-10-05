@@ -222,7 +222,7 @@ class CleanSlateMultiPageConverter:
 
                 # Convert the page result to an embedder result
                 embedder_result = EmbedderResult(
-                    slide_xml=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                    slide_xml='''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
        xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
     <p:cSld>

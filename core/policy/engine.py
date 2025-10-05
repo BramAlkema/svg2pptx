@@ -555,7 +555,7 @@ class Policy:
 
         # Check for simple arch pattern (basic heuristic)
         y_values = [p.y for p in path_points]
-        x_values = [p.x for p in path_points]
+        [p.x for p in path_points]
 
         # Simple arch detection: check if Y values form single peak
         if len(y_values) >= MIN_STOPS_FOR_COMPLEX_GRADIENT:

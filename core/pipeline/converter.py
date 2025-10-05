@@ -448,7 +448,7 @@ class CleanSlateConverter:
         try:
             if self.config.output_format == OutputFormat.PPTX:
                 # Generate complete PPTX package
-                package_stats = self.package_writer.write_package_stream(
+                self.package_writer.write_package_stream(
                     [embedder_result],
                     output_stream := io.BytesIO(),
                 )

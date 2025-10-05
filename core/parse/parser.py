@@ -622,7 +622,7 @@ class SVGParser:
         fill, stroke, opacity = self._extract_styling(element)
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         return Path(
             segments=segments,
@@ -682,7 +682,7 @@ class SVGParser:
         fill, stroke, opacity = self._extract_styling(element)
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         return Path(
             segments=segments,
@@ -739,7 +739,7 @@ class SVGParser:
         fill, stroke, opacity = self._extract_styling(element)
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         return Path(
             segments=segments,
@@ -789,7 +789,7 @@ class SVGParser:
         fill, stroke, opacity = self._extract_styling(element)
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         return Path(
             segments=segments,
@@ -839,7 +839,7 @@ class SVGParser:
                 stroke=stroke,
                 opacity=opacity,
             )
-        except (ValueError, IndexError) as e:
+        except (ValueError, IndexError):
             # If parsing fails, return None
             return None
 
@@ -888,7 +888,7 @@ class SVGParser:
             estimated_height = line.primary_font_size * 1.2
 
             # Get hyperlink from current context if any
-            hyperlink = getattr(self, '_current_hyperlink', None)
+            getattr(self, '_current_hyperlink', None)
 
             return TextFrame(
                 origin=position,
@@ -929,7 +929,7 @@ class SVGParser:
             format = 'svg'
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         return Image(
             origin=Point(x, y),
@@ -953,7 +953,7 @@ class SVGParser:
             return None
 
         # Get hyperlink from current context if any
-        hyperlink = getattr(self, '_current_hyperlink', None)
+        getattr(self, '_current_hyperlink', None)
 
         # Parse transform matrix if present
         transform_matrix = None

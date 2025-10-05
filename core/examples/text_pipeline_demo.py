@@ -312,7 +312,7 @@ def demonstrate_documented_fixes():
         # Fix 2: Tspan styling
         tspans = text_elem.xpath('./svg:tspan', namespaces={'svg': 'http://www.w3.org/2000/svg'})
         if tspans:
-            print(f"  Tspan styling inheritance:")
+            print("  Tspan styling inheritance:")
             for j, tspan in enumerate(tspans):
                 inherited_attrs = [attr for attr in tspan.attrib if attr.startswith('data-inherited-')]
                 if inherited_attrs:

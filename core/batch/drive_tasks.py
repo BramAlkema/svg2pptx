@@ -1773,7 +1773,7 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: dict[str, Any] = No
         # Archive logs if requested
         if cleanup_options.get('keep_logs', True):
             try:
-                log_data = {
+                {
                     'job_id': job_id,
                     'completed_at': datetime.utcnow().isoformat(),
                     'final_status': batch_job.status,
@@ -1843,7 +1843,7 @@ def test_drive_connection() -> dict[str, Any]:
         drive_connection = drive_service.test_connection()
         
         # Test Slides service
-        slides_service = GoogleSlidesService()
+        GoogleSlidesService()
         # Note: GoogleSlidesService doesn't have a test_connection method
         # We'll just check if we can initialize it
         slides_connection = True

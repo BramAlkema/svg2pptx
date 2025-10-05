@@ -371,7 +371,6 @@ class RichTextFrame:
 
     def to_text_frame(self) -> TextFrame:
         """Convert to standard TextFrame for backward compatibility"""
-        all_runs = self.all_runs
 
         # Combine line breaks back into run text where appropriate
         combined_runs = []

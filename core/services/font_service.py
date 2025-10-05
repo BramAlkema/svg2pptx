@@ -225,7 +225,7 @@ class FontService:
             font = TTFont(font_path)
             self._font_cache[cache_key] = font
             return font
-        except (TTLibError, OSError, IOError) as e:
+        except (TTLibError, OSError, IOError):
             # Font file is corrupted or invalid
             return None
 

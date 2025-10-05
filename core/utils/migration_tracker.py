@@ -62,7 +62,7 @@ class DuplicateWarning:
         if deprecation_version:
             message += f"\n  └─ Deprecated in version: {deprecation_version}"
         else:
-            message += f"\n  └─ Scheduled for removal in Phase 1-6 consolidation"
+            message += "\n  └─ Scheduled for removal in Phase 1-6 consolidation"
 
         warnings.warn(message, UserWarning, stacklevel=2)
 

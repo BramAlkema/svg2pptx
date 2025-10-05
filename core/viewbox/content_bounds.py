@@ -147,7 +147,7 @@ def get_element_bounds(element: ET.Element, parent_transform: np.ndarray = None)
         r = float(element.get('r', 0))
 
         # Transform center and radius points
-        center = np.array([[cx, cy, 1]]).T
+        np.array([[cx, cy, 1]]).T
         radius_points = np.array([
             [cx - r, cy, 1],
             [cx + r, cy, 1],

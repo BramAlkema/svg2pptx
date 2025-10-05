@@ -225,7 +225,7 @@ class XMLBuilder:
         duration_ms = int(duration * 1000)
         delay_ms = int(delay * 1000)
 
-        namespaces = self.create_namespace_declaration({
+        self.create_namespace_declaration({
             'p': self.NAMESPACES['p'],
             'a': self.NAMESPACES['a'],
         })

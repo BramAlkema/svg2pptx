@@ -222,13 +222,13 @@ def demonstrate_group_processing():
 
                 # Extract key information
                 if '<a:grpSp>' in drawingml:
-                    print(f"  Type: Group Shape")
+                    print("  Type: Group Shape")
                 elif '<p:sp>' in drawingml:
-                    print(f"  Type: Shape")
+                    print("  Type: Shape")
 
                 # Check for clipping
                 if 'Clipping' in drawingml or 'Clip' in drawingml:
-                    print(f"  Contains clipping elements")
+                    print("  Contains clipping elements")
 
             else:
                 print("  ⚠ No DrawingML generated")
@@ -297,9 +297,9 @@ def demonstrate_clipping_analysis():
             # Convert clipped element
             drawingml = group_service.convert_clipped_element(clipped_elem, context)
             if drawingml:
-                print(f"  ✓ Conversion successful")
+                print("  ✓ Conversion successful")
             else:
-                print(f"  ⚠ No conversion output")
+                print("  ⚠ No conversion output")
 
         except Exception as e:
             print(f"  ✗ Analysis failed: {e}")
@@ -484,9 +484,9 @@ def demonstrate_powerpoint_compatibility():
 
                 # Check if prediction matches expectation
                 if analysis.powerpoint_compatible == scenario['expected_compatibility']:
-                    print(f"  ✓ Prediction matches expectation")
+                    print("  ✓ Prediction matches expectation")
                 else:
-                    print(f"  ⚠ Prediction differs from expectation")
+                    print("  ⚠ Prediction differs from expectation")
 
         except Exception as e:
             print(f"  ✗ Test failed: {e}")

@@ -69,7 +69,7 @@ class SMILParser:
             except SMILParsingError as e:
                 self.animation_summary.add_warning(f"Failed to parse animation: {e}")
                 continue
-            except Exception as e:
+            except Exception:
                 continue
 
         # Calculate final complexity

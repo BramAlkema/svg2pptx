@@ -59,8 +59,8 @@ class PatternService:
     def _convert_pattern(self, pattern_element: ET.Element) -> str:
         """Convert SVG pattern to basic DrawingML pattern representation."""
         # Get pattern dimensions
-        width = pattern_element.get('width', '10')
-        height = pattern_element.get('height', '10')
+        pattern_element.get('width', '10')
+        pattern_element.get('height', '10')
 
         # For now, convert patterns to simple preset patterns
         # This is a placeholder - real implementation would analyze pattern content

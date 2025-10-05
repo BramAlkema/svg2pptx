@@ -143,7 +143,7 @@ class ObjectPool(Generic[T]):
                     if current_time - return_time > self.max_idle_time:
                         # Object is too old, don't return to pool
                         objects_to_remove.append(obj_id)
-                        logger.debug(f"Removing idle object from pool")
+                        logger.debug("Removing idle object from pool")
                     else:
                         # Object is still fresh, keep it
                         temp_objects.append(obj)

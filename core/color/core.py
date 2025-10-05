@@ -681,7 +681,7 @@ class Color:
             else:
                 raise ValueError(f"Unsupported Delta E method: {method}")
 
-        except Exception as e:
+        except Exception:
             # Fallback to simple RGB distance
             rgb_diff = sum((a - b) ** 2 for a, b in zip(self._rgb, other._rgb))
             return float(np.sqrt(rgb_diff) / np.sqrt(3 * 255 * 255) * 100)  # Normalize to ~0-100 scale

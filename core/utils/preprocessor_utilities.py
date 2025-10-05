@@ -190,7 +190,7 @@ class PreprocessorUtilities:
                     errors=result.parsing_errors,
                 )
 
-        except Exception as e:
+        except Exception:
             # Fall back to manual parsing
             pass
 
@@ -273,7 +273,7 @@ class PreprocessorUtilities:
                     errors=style_result.errors,
                 )
 
-        except Exception as e:
+        except Exception:
             # Fall back to manual parsing
             pass
 

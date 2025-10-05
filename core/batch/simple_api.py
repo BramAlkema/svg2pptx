@@ -102,7 +102,7 @@ def convert_single_svg_sync(file_data: dict, conversion_options: dict = None) ->
             }
 
             # Perform the actual conversion
-            conversion_result = svg_to_pptx(
+            svg_to_pptx(
                 content,
                 output_path=str(output_path),
                 **conversion_params,

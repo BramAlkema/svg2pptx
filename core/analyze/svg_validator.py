@@ -206,7 +206,7 @@ class SVGValidator:
 
             try:
                 # Use existing attribute validator
-                sanitized = self.input_validator.validate_svg_attributes(attrs)
+                self.input_validator.validate_svg_attributes(attrs)
             except ValidationError as e:
                 result.warnings.append(ValidationIssue(
                     code="INVALID_ATTRIBUTE",

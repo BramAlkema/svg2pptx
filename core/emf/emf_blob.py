@@ -406,7 +406,7 @@ class EMFBlob:
         """
         emf_data = self.finalize()
         import base64
-        emf_b64 = base64.b64encode(emf_data).decode('ascii')
+        base64.b64encode(emf_data).decode('ascii')
 
         return f'''
         <a:blipFill>
@@ -431,7 +431,7 @@ class EMFBlob:
         """
         emf_data = self.finalize()
         import base64
-        emf_b64 = base64.b64encode(emf_data).decode('ascii')
+        base64.b64encode(emf_data).decode('ascii')
 
         return f'''
         <a:blipFill>

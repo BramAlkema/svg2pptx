@@ -381,7 +381,6 @@ class PPTXMerger:
             # Copy embedded images through direct part relationships
             if hasattr(source_prs, 'part') and hasattr(target_prs, 'part'):
                 source_part = source_prs.part
-                target_part = target_prs.part
 
                 # Copy image parts that are referenced by the source slide
                 if hasattr(source_part, 'related_parts'):
@@ -391,7 +390,6 @@ class PPTXMerger:
                             if related_part.content_type.startswith('image/'):
                                 try:
                                     # Get image data
-                                    image_data = related_part.blob
 
                                     # Create new image part in target presentation
                                     # The python-pptx library handles this automatically

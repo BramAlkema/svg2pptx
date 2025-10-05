@@ -151,7 +151,7 @@ class EnhancedXMLBuilder:
             slide_id: Unique slide ID
             rel_id: Relationship ID (e.g., 'rId2')
         """
-        slide_list = presentation.find(f'.//p:sldIdLst', NSMAP)
+        slide_list = presentation.find('.//p:sldIdLst', NSMAP)
         if slide_list is None:
             raise ValueError("Presentation element missing slide ID list")
 

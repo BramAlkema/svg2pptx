@@ -135,9 +135,9 @@ class LegacyMigrator:
 
     def create_services_injection_helper(self, file_path: Path) -> str:
         """Create code template for services injection."""
-        class_name = file_path.stem.title().replace('_', '')
+        file_path.stem.title().replace('_', '')
 
-        template = f'''
+        template = '''
 # Add this to your class __init__ method:
 def __init__(self, services: Optional[ConversionServices] = None, ...):
     """Initialize with ConversionServices dependency injection."""
@@ -183,7 +183,7 @@ def main():
     successful = sum(1 for success in results.values() if success)
     total = len(results)
 
-    print(f"\n📊 MIGRATION SUMMARY")
+    print("\n📊 MIGRATION SUMMARY")
     print("=" * 30)
     print(f"Files processed: {total}")
     print(f"Successfully migrated: {successful}")
@@ -191,13 +191,13 @@ def main():
     print(f"Total pattern replacements: {migrator.migrations_applied}")
 
     if successful > 0:
-        print(f"\n✅ Migration completed successfully!")
+        print("\n✅ Migration completed successfully!")
         print("Next steps:")
         print("1. Test the migrated files")
         print("2. Update remaining manual patterns")
         print("3. Run tests to ensure nothing broke")
     else:
-        print(f"\n⚠️  No automatic migrations applied.")
+        print("\n⚠️  No automatic migrations applied.")
         print("Manual migration may be required for complex patterns.")
 
 

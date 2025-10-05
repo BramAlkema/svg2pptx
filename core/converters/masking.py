@@ -357,7 +357,6 @@ class MaskingConverter(BaseConverter):
     def _generate_powerpoint_clip_output(self, clip_app: 'ClipApplication',
                                         context: ConversionContext) -> str:
         """Generate PowerPoint-compatible clipping output."""
-        element = clip_app.target_element
         resolved_path = clip_app.resolved_path
 
         # Check if resolved_path is custGeom XML

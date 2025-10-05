@@ -119,13 +119,11 @@ class PowerPointAnimationGenerator:
         """Generate opacity animation (fade effect)."""
         # Determine fade direction
         if len(animation.values) >= 2:
-            start_opacity = float(animation.values[0])
-            end_opacity = float(animation.values[-1])
-            is_fade_in = end_opacity > start_opacity
+            float(animation.values[0])
+            float(animation.values[-1])
         else:
-            is_fade_in = True  # Default to fade in
+            pass  # Default to fade in
 
-        effect_type = "fadeIn" if is_fade_in else "fadeOut"
 
         # Generate easing attributes
         easing_attrs = self._generate_easing_attributes(animation)

@@ -106,7 +106,6 @@ class ImageMapper(Mapper):
                     processed_width = processing_result.width
                     processed_height = processing_result.height
                     rel_id = processing_result.relationship_id
-                    embed_id = processing_result.embed_id
 
                     # Calculate positioning - use processed dimensions if available
                     if processed_width > 0 and processed_height > 0:
@@ -313,7 +312,7 @@ class ImageMapper(Mapper):
             return ""
 
         # Image clipping can be handled through crop settings
-        return f'<a:crop/>'  # Simplified - real implementation would calculate crop values
+        return '<a:crop/>'  # Simplified - real implementation would calculate crop values
 
     def _get_content_type(self, format: str) -> str:
         """Get MIME content type for image format"""

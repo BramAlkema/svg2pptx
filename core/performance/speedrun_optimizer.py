@@ -163,9 +163,9 @@ class SVGSpeedrunOptimizer:
         elements_processed = 0
         cache_hits = 0
         
-        with self.profiler.profile_session(f"speedrun_conversion") as session:
+        with self.profiler.profile_session("speedrun_conversion") as session:
             # Check for full document cache hit first
-            full_doc_hash = self.speedrun_cache.put_with_content_addressing(
+            self.speedrun_cache.put_with_content_addressing(
                 svg_content, None, context, persist_to_disk=False,
             )
             

@@ -416,7 +416,7 @@ class CurveTextPositioner:
 
         # Calculate tangent angle
         angle_rad = math.atan2(end.y - start.y, end.x - start.x)
-        angle_deg = math.degrees(angle_rad)
+        math.degrees(angle_rad)
 
         for i in range(num_samples):
             t = i / (num_samples - 1) if num_samples > 1 else 0
@@ -953,7 +953,7 @@ class PathWarpFitter:
         # Build normal equations for ax² + bx + c
         sum_x = sum(x_values)
         sum_x2 = sum(x * x for x in x_values)
-        sum_x3 = sum(x * x * x for x in x_values)
+        sum(x * x * x for x in x_values)
         sum_x4 = sum(x * x * x * x for x in x_values)
         sum_y = sum(y_values)
         sum_xy = sum(x * y for x, y in zip(x_values, y_values))
