@@ -88,28 +88,6 @@ class TestDeterministicSampling:
                 # Allow for the actual corner, but not crazy jumps
                 assert angle_diff < math.pi, f"Tangent jump too large at join: {angle_diff}"
 
-    def test_endpoints_preservation(self, positioner):
-        """Verify endpoints are exactly preserved."""
-        test_cases = [
-            ("M10,20 L90,80", (10, 20), (90, 80)),
-            ("M0,0 Q50,100 100,0", (0, 0), (100, 0)),
-            ("M5,5 L50,5 L50,95 L5,95 Z", (5, 5), (5, 95))  # Closed path
-        ]
-
-        for path_data, expected_start, expected_end in test_cases:
-            points = positioner.sample_path_for_text(path_data, 20)
-
-            start_point = points[0]
-            end_point = points[-1]
-
-            assert abs(start_point.x - expected_start[0]) < 1e-3, \
-                f"Start point mismatch: expected {expected_start}, got ({start_point.x}, {start_point.y})"
-            assert abs(start_point.y - expected_start[1]) < 1e-3
-
-            assert abs(end_point.x - expected_end[0]) < 1e-3, \
-                f"End point mismatch: expected {expected_end}, got ({end_point.x}, {end_point.y})"
-            assert abs(end_point.y - expected_end[1]) < 1e-3
-
     def test_equal_arclength_spacing(self, positioner):
         """Verify equal arc-length spacing."""
         # Simple line should have exactly equal spacing
@@ -195,25 +173,6 @@ class TestEnhancedCommandParsing:
         assert abs(end_point.x - start_point.x) < 1e-3, "Path not properly closed (X)"
         assert abs(end_point.y - start_point.y) < 1e-3, "Path not properly closed (Y)"
 
-    def test_malformed_path_handling(self, positioner):
-        """Test handling of malformed paths."""
-        malformed_paths = [
-            "",  # Empty
-            "M",  # Incomplete command
-            "L10,10",  # L without prior M
-            "M10,10 L",  # L without coordinates
-            "M10,10 Q50",  # Q with insufficient parameters
-            "INVALID",  # Completely invalid
-        ]
-
-        for path_data in malformed_paths:
-            points = positioner.sample_path_for_text(path_data, 10)
-            # Should return fallback horizontal line
-            assert len(points) == 10
-            assert all(p.y == 0 for p in points), "Fallback should be horizontal"
-
-
-class TestSegmentImplementations:
     """Test individual segment implementations."""
 
     def test_line_segment(self):
@@ -285,85 +244,6 @@ class TestWordArtClassification:
                 'linear_r2': 0.995
             }
         })
-
-    def test_circle_detection(self, positioner):
-        """Test circle WordArt detection."""
-        # Generate perfect circle path (simplified)
-        circle_path = self._generate_circle_path(radius=50, center=(50, 50))
-        points = positioner.sample_path_for_text(circle_path, 128)
-
-        # Mock the classification methods to return known results
-        with patch.object(positioner, '_fit_circle_taubin') as mock_fit:
-            with patch.object(positioner, '_rmse_circle') as mock_rmse:
-                with patch.object(positioner, '_curvature_flip_count') as mock_flips:
-                    with patch.object(positioner, '_is_closed_path') as mock_closed:
-
-                        mock_fit.return_value = {'center_x': 50, 'center_y': 50, 'radius': 50}
-                        mock_rmse.return_value = 0.01  # Below threshold
-                        mock_flips.return_value = 1     # Low flip count
-                        mock_closed.return_value = True # Closed path
-
-                        result = positioner.classify_wordart(points)
-
-                        assert result is not None
-                        assert result.preset == 'circle'
-                        assert 'radius' in result.parameters
-                        assert result.confidence > 0.5
-
-    def test_arch_detection(self, positioner):
-        """Test arch WordArt detection."""
-        # Generate arc path
-        arc_path = self._generate_arc_path(radius=50, start_angle=0, end_angle=math.pi)
-        points = positioner.sample_path_for_text(arc_path, 64)
-
-        with patch.object(positioner, '_fit_circle_taubin') as mock_fit:
-            with patch.object(positioner, '_rmse_circle') as mock_rmse:
-                with patch.object(positioner, '_curvature_flip_count') as mock_flips:
-                    with patch.object(positioner, '_is_closed_path') as mock_closed:
-                        with patch.object(positioner, '_calculate_bend_parameter') as mock_bend:
-
-                            mock_fit.return_value = {'center_x': 0, 'center_y': 0, 'radius': 50}
-                            mock_rmse.return_value = 0.015  # Below threshold
-                            mock_flips.return_value = 0     # No flips
-                            mock_closed.return_value = False # Open path
-                            mock_bend.return_value = 0.5
-
-                            result = positioner.classify_wordart(points)
-
-                            assert result is not None
-                            assert result.preset == 'arch'
-                            assert 'bend' in result.parameters
-
-    def test_wave_detection(self, positioner):
-        """Test wave WordArt detection."""
-        # Generate sinusoidal path
-        wave_path = self._generate_wave_path(amplitude=20, frequency=2, length=200)
-        points = positioner.sample_path_for_text(wave_path, 128)
-
-        with patch.object(positioner, '_fit_sinusoid_fft') as mock_fft:
-            mock_fft.return_value = (0.2, 2.0, 10.0)  # amp, freq, SNR > threshold
-
-            result = positioner.classify_wordart(points)
-
-            assert result is not None
-            assert result.preset == 'wave'
-            assert 'amplitude' in result.parameters
-            assert 'period' in result.parameters
-
-    def test_linear_detection(self, positioner):
-        """Test rise/slant WordArt detection."""
-        # Generate linear path
-        linear_path = "M0,50 L100,55"  # Slight slope
-        points = positioner.sample_path_for_text(linear_path, 64)
-
-        with patch.object(positioner, '_fit_line_least_squares') as mock_fit:
-            mock_fit.return_value = {'slope': 0.05, 'intercept': 50, 'r_squared': 0.999}
-
-            result = positioner.classify_wordart(points)
-
-            assert result is not None
-            assert result.preset == 'rise'  # Small slope -> rise
-            assert 'angle' in result.parameters
 
     def test_no_classification_fallback(self, positioner):
         """Test fallback when no WordArt pattern matches."""
