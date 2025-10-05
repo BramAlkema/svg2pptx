@@ -39,6 +39,11 @@ class BatchJobCreate(BaseModel):
     preprocessing_preset: Optional[str] = Field(default="default", description="Preprocessing preset: minimal, default, aggressive")
     generate_previews: bool = Field(default=True, description="Generate PNG previews for uploaded files")
     use_clean_slate: Optional[bool] = Field(default=None, description="Enable clean slate architecture (experimental)")
+    # OAuth Slides export parameters
+    user_id: Optional[str] = Field(default=None, description="User ID for OAuth Slides export")
+    export_to_slides: bool = Field(default=False, description="Export to Google Slides using OAuth")
+    slides_title: Optional[str] = Field(default=None, description="Title for Google Slides presentation")
+    slides_folder_id: Optional[str] = Field(default=None, description="Google Drive folder ID for Slides")
 
 
 class BatchJobStatus(BaseModel):
@@ -57,6 +62,10 @@ class BatchJobStatus(BaseModel):
     updated_at: datetime
     estimated_completion_time: Optional[datetime] = None
     errors: List[str] = []
+    # OAuth Slides export info
+    slides_export_enabled: Optional[bool] = False
+    slides_url: Optional[str] = None
+    slides_export_status: Optional[str] = None
 
 
 class BatchDriveInfo(BaseModel):
@@ -187,13 +196,17 @@ async def create_batch_job(
                 # Schedule Clean Slate coordinator task
                 conversion_options = {
                     'quality': 'high' if job_request.preprocessing_preset == 'aggressive' else 'balanced',
-                    'generate_previews': job_request.generate_previews
+                    'generate_previews': job_request.generate_previews,
+                    'title': job_request.slides_title or f'Batch Job {job_id}',
+                    'folder_id': job_request.slides_folder_id
                 }
 
                 task = coordinate_batch_workflow_clean_slate(
                     job_id=job_id,
                     file_paths=download_result.file_paths,
-                    conversion_options=conversion_options
+                    conversion_options=conversion_options,
+                    user_id=job_request.user_id,
+                    export_to_slides=job_request.export_to_slides
                 )
 
                 logger.info(f"Scheduled Clean Slate batch workflow task for job {job_id}")
@@ -306,14 +319,31 @@ async def get_batch_job_status(
         
         # Estimate completion time if still processing
         estimated_completion = None
-        if batch_job.status in ["processing", "uploading"]:
+        if batch_job.status in ["processing", "uploading", "exporting_to_slides"]:
             remaining_files = batch_job.total_files - completed_files - failed_files
             if remaining_files > 0:
                 from datetime import timedelta
                 estimated_completion = datetime.utcnow() + timedelta(seconds=remaining_files * 3)
-        
+
+        # Get Slides export info from trace data (stored by coordinator)
+        slides_export_enabled = False
+        slides_url = None
+        slides_export_status = None
+
+        if hasattr(batch_job, 'trace_data') and batch_job.trace_data:
+            trace_data = batch_job.trace_data
+            if trace_data.get('workflow') in ['conversion_and_slides_export', 'conversion_only_slides_export_failed']:
+                slides_export_enabled = True
+                slides_url = trace_data.get('slides_url')
+                if slides_url:
+                    slides_export_status = "completed"
+                elif batch_job.status == "completed_slides_export_failed":
+                    slides_export_status = "failed"
+                elif batch_job.status == "exporting_to_slides":
+                    slides_export_status = "in_progress"
+
         logger.info(f"Retrieved status for batch job {job_id}: {batch_job.status}")
-        
+
         return BatchJobStatus(
             job_id=job_id,
             status=batch_job.status,
@@ -328,7 +358,10 @@ async def get_batch_job_status(
             created_at=batch_job.created_at,
             updated_at=batch_job.updated_at,
             estimated_completion_time=estimated_completion,
-            errors=errors[:10]  # Limit to 10 most recent errors
+            errors=errors[:10],  # Limit to 10 most recent errors
+            slides_export_enabled=slides_export_enabled,
+            slides_url=slides_url,
+            slides_export_status=slides_export_status
         )
         
     except HTTPException:

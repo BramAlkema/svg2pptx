@@ -39,6 +39,8 @@ def coordinate_batch_workflow_clean_slate(
     job_id: str,
     file_paths: list[str],
     conversion_options: dict[str, Any] = None,
+    user_id: str | None = None,
+    export_to_slides: bool = False,
 ) -> dict[str, Any]:
     """
     Coordinate complete batch workflow using Clean Slate architecture.
@@ -46,7 +48,7 @@ def coordinate_batch_workflow_clean_slate(
     Flow:
     1. Get BatchJob from database
     2. Convert multiple SVGs using Clean Slate (with E2E tracing)
-    3. Upload to Drive (if enabled)
+    3. Upload to Drive (if enabled) OR Export to Slides (if OAuth configured)
     4. Aggregate and store trace data
     5. Update job status
 
@@ -57,6 +59,8 @@ def coordinate_batch_workflow_clean_slate(
             - enable_debug: bool (default True for batch)
             - quality: str (fast/balanced/high)
             - generate_previews: bool (for Drive upload)
+        user_id: Optional user ID for OAuth Slides export
+        export_to_slides: If True, export to Google Slides using OAuth
 
     Returns:
         Dictionary with complete workflow result including:
@@ -64,6 +68,7 @@ def coordinate_batch_workflow_clean_slate(
             - job_id: str
             - conversion: Dict (conversion result with traces)
             - upload: Dict (Drive upload result, if enabled)
+            - slides_export: Dict (Slides export result, if OAuth enabled)
             - architecture: str ('clean_slate')
     """
     try:
@@ -121,8 +126,90 @@ def coordinate_batch_workflow_clean_slate(
         logger.info(f"✅ Conversion succeeded: {conversion_result['page_count']} pages, "
                    f"{conversion_result['output_size_bytes']} bytes")
 
-        # Step 4: Upload to Drive if enabled
-        if batch_job.drive_integration_enabled and DRIVE_AVAILABLE:
+        # Step 4: Export to Slides if OAuth enabled
+        if export_to_slides and user_id:
+            logger.info(f"Slides export enabled for user {user_id}")
+
+            batch_job.status = "exporting_to_slides"
+            batch_job.save()
+
+            try:
+                # Import OAuth services
+                from core.auth import GoogleOAuthService, GoogleDriveService, get_cli_token_store
+                import os
+
+                # Get OAuth credentials
+                token_store = get_cli_token_store()
+                client_id = os.getenv('GOOGLE_DRIVE_CLIENT_ID')
+                client_secret = os.getenv('GOOGLE_DRIVE_CLIENT_SECRET')
+
+                if not client_id or not client_secret:
+                    raise ValueError("OAuth credentials not configured (GOOGLE_DRIVE_CLIENT_ID/CLIENT_SECRET)")
+
+                oauth_service = GoogleOAuthService(token_store, client_id, client_secret)
+                credentials = oauth_service.get_credentials(user_id)
+
+                # Export to Slides
+                drive_service = GoogleDriveService(credentials)
+
+                # Read PPTX bytes
+                with open(output_path, 'rb') as f:
+                    pptx_bytes = f.read()
+
+                # Upload and convert
+                title = conversion_options.get('title', f'Batch Job {job_id}')
+                folder_id = conversion_options.get('folder_id')
+
+                slides_result = drive_service.upload_and_convert_to_slides(
+                    pptx_bytes=pptx_bytes,
+                    title=title,
+                    parent_folder_id=folder_id,
+                )
+
+                batch_job.status = "completed"
+                batch_job.save()
+
+                logger.info(f"✅ Exported to Slides: {slides_result['slides_url']}")
+
+                # Store trace data with Slides info
+                if conversion_result.get('debug_trace'):
+                    batch_job.trace_data = {
+                        'architecture': 'clean_slate',
+                        'page_count': conversion_result.get('page_count', 0),
+                        'workflow': 'conversion_and_slides_export',
+                        'debug_trace': conversion_result['debug_trace'],
+                        'slides_url': slides_result['slides_url'],
+                    }
+                    batch_job.save()
+
+                return {
+                    'success': True,
+                    'job_id': job_id,
+                    'conversion': conversion_result,
+                    'slides_export': slides_result,
+                    'architecture': 'clean_slate',
+                    'workflow': 'conversion_and_slides_export',
+                }
+
+            except Exception as slides_error:
+                logger.error(f"Slides export error for job {job_id}: {slides_error}")
+                batch_job.status = "completed_slides_export_failed"
+                batch_job.save()
+
+                return {
+                    'success': True,  # Conversion succeeded
+                    'job_id': job_id,
+                    'conversion': conversion_result,
+                    'slides_export': {
+                        'success': False,
+                        'error_message': str(slides_error),
+                    },
+                    'architecture': 'clean_slate',
+                    'workflow': 'conversion_only_slides_export_failed',
+                }
+
+        # Step 5: Upload to Drive if enabled (legacy workflow)
+        elif batch_job.drive_integration_enabled and DRIVE_AVAILABLE:
             logger.info("Drive integration enabled, uploading to Drive")
 
             batch_job.status = "uploading"
@@ -249,14 +336,24 @@ def get_coordinator_info() -> dict[str, Any]:
     Returns:
         Dictionary with coordinator capabilities and status
     """
+    # Check OAuth availability
+    oauth_available = False
+    try:
+        from core.auth import GoogleOAuthService
+        import os
+        oauth_available = bool(os.getenv('GOOGLE_DRIVE_CLIENT_ID') and os.getenv('GOOGLE_DRIVE_CLIENT_SECRET'))
+    except ImportError:
+        pass
+
     return {
         'coordinator': 'clean_slate_batch',
-        'version': '1.0.0',
+        'version': '2.0.0',
         'architecture': 'clean_slate',
         'capabilities': {
             'multi_svg_conversion': True,
             'e2e_tracing': True,
             'drive_integration': DRIVE_AVAILABLE,
+            'oauth_slides_export': oauth_available,
             'status_tracking': True,
             'error_recovery': True,
         },
@@ -264,7 +361,8 @@ def get_coordinator_info() -> dict[str, Any]:
             'job_retrieval',
             'status_update_processing',
             'svg_conversion',
-            'drive_upload (optional)',
+            'slides_export (optional - OAuth)',
+            'drive_upload (optional - legacy)',
             'status_update_completed',
             'trace_aggregation',
         ],
@@ -274,5 +372,6 @@ def get_coordinator_info() -> dict[str, Any]:
             'mapper_results',
             'embedder_result',
             'package_debug_data',
+            'slides_url (if OAuth export)',
         ],
     }
