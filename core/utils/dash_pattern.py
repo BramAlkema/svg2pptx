@@ -172,7 +172,7 @@ def to_percent_units(
     value: float,
     stroke_width: float,
     min_value: int = 1,  # Changed from 1000 - let caller decide clamping
-    max_value: int = 100000
+    max_value: int = 100000000  # 100000% - allows dashes up to 1000x stroke width
 ) -> int:
     """
     Convert user unit to percent-of-stroke-width in DrawingML units.
@@ -186,7 +186,7 @@ def to_percent_units(
         value: Dash/space length in user units
         stroke_width: Stroke width in user units
         min_value: Minimum value to prevent rendering glitches (default 1)
-        max_value: Maximum value (100% = 100000)
+        max_value: Maximum value (default 100000000 = 100000%, allows 1000x stroke width)
 
     Returns:
         Value in DrawingML percent units (1/1000%)

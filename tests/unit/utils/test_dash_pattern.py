@@ -109,9 +109,12 @@ class TestToPercentUnits:
         assert to_percent_units(0.01, 10, min_value=1000) == 1000
 
     def test_maximum_clamp(self):
-        """Very large values clamped to 100% maximum"""
-        # 1000px with 1px stroke = 100000% → clamped to 100000 (100%)
-        assert to_percent_units(1000, 1) == 100000
+        """Very large values are allowed (no arbitrary 100% cap)"""
+        # 1000px with 1px stroke = 100000% = 100000000 units (extreme but valid)
+        assert to_percent_units(1000, 1) == 100000000
+
+        # But can specify custom max if needed
+        assert to_percent_units(1000, 1, max_value=100000) == 100000
 
     def test_zero_stroke_width_fallback(self):
         """Zero stroke width uses fallback"""
@@ -176,11 +179,11 @@ class TestSvgDasharrayToCustdash:
             dashoffset=3.0
         )
 
-        # First dash should be trimmed: 10 - 3 = 7px = 350%
-        assert len(pattern.stops) == 1
-        # Note: phase rotation may add complexity, test for reasonable output
-        assert pattern.stops[0][0] > 0  # Dash length > 0
-        assert pattern.stops[0][1] > 0  # Space length > 0
+        # Phase rotation creates: trimmed first dash (7px=350%), space (5px=250%),
+        # then wraps with offset remainder (3px=150%)
+        assert len(pattern.stops) == 2
+        assert pattern.stops[0] == (350000, 250000)  # 7px dash, 5px space
+        assert pattern.stops[1] == (150000, 150000)  # 3px dash, 3px space (wrapped offset)
 
     def test_odd_count_normalized(self):
         """Odd count is doubled before conversion"""
