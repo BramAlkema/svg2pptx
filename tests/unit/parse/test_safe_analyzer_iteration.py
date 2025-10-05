@@ -176,7 +176,7 @@ class TestAnalyzerWithComments:
 
         # Should detect nested groups and shapes
         assert analysis_result.element_count >= 3  # svg, groups, shapes
-        assert analysis_result.features['has_groups']
+        assert analysis_result.group_count > 0  # Should detect groups
 
     def test_analyzer_with_deep_nesting_and_comments(self):
         """Test analyzer with deeply nested structure and comments at every level."""
@@ -208,7 +208,7 @@ class TestAnalyzerWithComments:
 
         # Should handle deep nesting without issues
         assert analysis_result.element_count >= 6  # svg + 5 groups + rect
-        assert analysis_result.features['has_groups']
+        assert analysis_result.group_count >= 5  # Should detect all groups
 
     def test_parser_element_counting_with_comments(self):
         """Test that parser correctly counts elements excluding comments."""
@@ -252,7 +252,7 @@ class TestAnalyzerWithComments:
 
         # Should detect text without crashing
         assert analysis_result.element_count >= 2  # svg, text (tspan might be counted separately)
-        assert analysis_result.features['has_text']
+        assert analysis_result.text_count > 0  # Should detect text elements
 
 
 class TestProcessingInstructionsAndEntities:
