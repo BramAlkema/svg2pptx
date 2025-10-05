@@ -14,9 +14,9 @@ Features:
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from lxml import etree as ET
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk
 
 from .base import BasePreprocessor
 from .expand_use import ExpandUsePreprocessor

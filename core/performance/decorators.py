@@ -7,13 +7,10 @@ registration, parameter validation, and metadata support.
 """
 
 import functools
-import inspect
 import logging
 from typing import Dict, List, Set, Optional, Any, Callable, TypeVar, Union
-from dataclasses import dataclass
 
 from .framework import PerformanceFramework, BenchmarkMetadata
-from .config import get_config
 
 logger = logging.getLogger(__name__)
 

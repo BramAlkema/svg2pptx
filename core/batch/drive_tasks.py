@@ -40,10 +40,10 @@ import requests
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from .huey_app import huey
-from .models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
+from .models import BatchJob, BatchFileDriveMetadata, DEFAULT_DB_PATH
 from .drive_controller import BatchDriveController, BatchDriveError
 from api.services.google_drive import GoogleDriveService, GoogleDriveError
-from api.services.google_slides import GoogleSlidesService, GoogleSlidesError
+from api.services.google_slides import GoogleSlidesService
 
 logger = logging.getLogger(__name__)
 
@@ -951,7 +951,7 @@ def initialize_rate_limiter(job_id: str, max_requests_per_minute: int = 100,
         Dictionary with rate limiter initialization results
     """
     try:
-        from datetime import datetime, timedelta
+        from datetime import datetime
         import json
         
         # Rate limiter state
@@ -1727,7 +1727,6 @@ def cleanup_completed_pipeline(job_id: str, cleanup_options: Dict[str, Any] = No
     try:
         import os
         import shutil
-        from pathlib import Path
         import json
         
         cleanup_options = cleanup_options or {

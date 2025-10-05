@@ -9,9 +9,7 @@ and leverages colorspacious for accurate color science operations.
 from __future__ import annotations
 import numpy as np
 import colorspacious
-from typing import Union, Tuple, Dict, Any, Optional, List
-from dataclasses import dataclass
-from functools import lru_cache
+from typing import Union, Tuple, Dict, Any
 import threading
 
 from .color_spaces import ColorSpaceConverter

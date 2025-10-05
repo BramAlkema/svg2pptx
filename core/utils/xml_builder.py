@@ -7,7 +7,7 @@ duplication and provide consistent, reusable XML building patterns.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional
 from xml.sax.saxutils import escape
 from lxml import etree as ET
 

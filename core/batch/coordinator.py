@@ -9,7 +9,7 @@ Integrates Clean Slate tasks with existing Drive infrastructure.
 import logging
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 # Import Huey instance from tasks
 from .tasks import huey, convert_multiple_svgs_clean_slate

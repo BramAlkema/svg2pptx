@@ -17,11 +17,10 @@ Key Features:
 
 from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
-import math
 
 from .core import (
     AnimationDefinition, AnimationScene, AnimationType,
-    TransformType, CalcMode, FillMode
+    TransformType, CalcMode
 )
 
 

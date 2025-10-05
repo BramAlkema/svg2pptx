@@ -14,8 +14,8 @@ import pickle
 import json
 import time
 import threading
-from typing import Any, Dict, Optional, Union, Tuple, List
-from functools import lru_cache, wraps
+from typing import Any, Dict, Optional, Tuple, List
+from functools import wraps
 from dataclasses import dataclass
 from lxml import etree as ET
 from collections import defaultdict

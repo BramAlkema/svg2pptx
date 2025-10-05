@@ -9,10 +9,10 @@ import logging
 from typing import Dict, Any, Optional
 
 from ..policy import PolicyEngine, PolicyConfig
-from ..map import PathMapper, TextMapper, GroupMapper, ImageMapper, create_path_mapper, create_text_mapper, create_group_mapper, create_image_mapper
-from ..io import DrawingMLEmbedder, SlideBuilder, PackageWriter, create_embedder, create_package_writer
+from ..map import GroupMapper, create_path_mapper, create_text_mapper, create_group_mapper, create_image_mapper
+from ..io import DrawingMLEmbedder, SlideBuilder, create_embedder, create_package_writer
 from .converter import CleanSlateConverter
-from .config import PipelineConfig, QualityLevel
+from .config import PipelineConfig
 
 logger = logging.getLogger(__name__)
 

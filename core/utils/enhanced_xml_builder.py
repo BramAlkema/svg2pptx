@@ -7,7 +7,7 @@ to generate namespace-aware, validated PowerPoint OOXML documents.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional
 from lxml import etree as ET
 from lxml.etree import Element, QName, SubElement
 from ..io.template_loader import TemplateLoader, get_template_loader

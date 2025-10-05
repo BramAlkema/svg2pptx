@@ -16,14 +16,12 @@ Key Features:
 
 import logging
 import re
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
 
 # Import Clean Slate components
-from ..ir.text import Run, TextAnchor
-from ..ir.font_metadata import FontMetadata, create_font_metadata
-from ..ir.geometry import Point
+from ..ir.font_metadata import create_font_metadata
 
 logger = logging.getLogger(__name__)
 

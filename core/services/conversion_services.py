@@ -10,13 +10,12 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Any, ClassVar
 import json
 import logging
-from pathlib import Path
 
 from ..units import UnitConverter, unit
 from ..color import Color
 from ..transforms import TransformEngine
 from ..viewbox import ViewportEngine
-from ..paths import PathSystem, create_path_system
+from ..paths import PathSystem
 from ..utils.style_parser import StyleParser
 from ..utils.coordinate_transformer import CoordinateTransformer
 from ..utils.font_processor import FontProcessor

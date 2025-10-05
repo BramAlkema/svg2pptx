@@ -15,7 +15,7 @@ Key Features:
 
 import re
 import logging
-from typing import List, Optional, Tuple, Iterator
+from typing import List, Optional, Tuple
 from dataclasses import dataclass
 
 from .interfaces import PathParser as PathParserInterface

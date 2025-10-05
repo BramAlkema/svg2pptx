@@ -6,8 +6,6 @@ Central orchestration system for SVG2PPTX performance benchmarking,
 regression detection, and performance monitoring.
 """
 
-import time
-import traceback
 import logging
 from typing import Dict, List, Optional, Any, Callable, Union, Set
 from pathlib import Path

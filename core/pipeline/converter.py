@@ -9,21 +9,21 @@ import time
 import logging
 import json
 import io
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..ir import SceneGraph, IRElement
 from ..analyze import SVGAnalyzer, AnalysisResult
 from ..parse import SVGParser, ParseResult
-from ..policy import Policy, PolicyEngine, PolicyConfig
+from ..policy import PolicyEngine, PolicyConfig
 from ..map.base import Mapper, MapperResult
-from ..map import PathMapper, TextMapper, GroupMapper, ImageMapper
+from ..map import PathMapper, GroupMapper, ImageMapper
 from ..map.font_mapper_adapter import FontMapperAdapter
-from ..io import DrawingMLEmbedder, SlideBuilder, PackageWriter, EmbedderResult
+from ..io import DrawingMLEmbedder, PackageWriter, EmbedderResult
 from ..services.conversion_services import ConversionServices
-from .config import PipelineConfig, OutputFormat, QualityLevel
-from .error_reporter import PipelineErrorReporter, ErrorSeverity, ErrorCategory, ErrorContext
+from .config import PipelineConfig, OutputFormat
+from .error_reporter import PipelineErrorReporter, ErrorSeverity, ErrorCategory
 
 # Import migrated systems for integration
 from core.animations import SMILParser

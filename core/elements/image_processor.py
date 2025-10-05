@@ -14,9 +14,8 @@ Features:
 """
 
 import logging
-import base64
 import hashlib
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Dict, List, Optional, Any
 from lxml import etree as ET
 from enum import Enum
 from dataclasses import dataclass

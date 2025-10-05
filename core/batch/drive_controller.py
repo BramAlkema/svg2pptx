@@ -17,9 +17,9 @@ import sys
 # Add path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from api.services.google_drive import GoogleDriveService, GoogleDriveError
-from api.services.google_slides import GoogleSlidesService, GoogleSlidesError
-from .models import BatchJob, BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
+from api.services.google_drive import GoogleDriveService
+from api.services.google_slides import GoogleSlidesService
+from .models import BatchDriveMetadata, BatchFileDriveMetadata, DEFAULT_DB_PATH
 
 logger = logging.getLogger(__name__)
 

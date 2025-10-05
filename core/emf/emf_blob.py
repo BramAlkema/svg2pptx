@@ -7,8 +7,7 @@ Generates EMF blobs that can be embedded in PowerPoint presentations.
 """
 
 import struct
-import io
-from typing import List, Tuple, Optional, Union
+from typing import List
 from enum import IntEnum
 
 

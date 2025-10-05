@@ -7,9 +7,9 @@ Calculates SVG complexity scores for conversion strategy decisions.
 
 import logging
 import math
-from typing import Dict, Any, List
+from typing import Dict
 from lxml import etree as ET
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk, children
 
 logger = logging.getLogger(__name__)
 

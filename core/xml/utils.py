@@ -4,7 +4,7 @@ Extended XML utilities built on safe iteration foundation.
 
 from lxml import etree as ET
 from typing import Iterator, Optional, Dict, List
-from .safe_iter import children, walk, is_element
+from .safe_iter import children, walk
 
 
 def get_descendants(elem: ET.Element) -> Iterator[ET.Element]:

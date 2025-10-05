@@ -7,9 +7,7 @@ that cannot be efficiently represented in vector format. Uses EMF's add_raster_3
 function to embed high-quality raster representations.
 """
 
-import io
-import struct
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from lxml import etree as ET
 import time

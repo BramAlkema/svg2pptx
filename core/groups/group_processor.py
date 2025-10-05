@@ -15,7 +15,7 @@ Features:
 """
 
 import logging
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Any
 from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices

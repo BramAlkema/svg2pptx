@@ -6,12 +6,11 @@ Creates PPTX files by manually building the ZIP structure
 and injecting DrawingML shapes directly into slide XML.
 """
 
-import os
 import zipfile
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, TYPE_CHECKING
+from typing import Optional, List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..units import UnitConverter

@@ -8,9 +8,6 @@ with proper slide copying, relationship preservation, and media handling.
 
 import io
 import logging
-import tempfile
-import shutil
-import zipfile
 from pathlib import Path
 from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass

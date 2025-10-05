@@ -15,7 +15,7 @@ from lxml import etree as ET
 # Add project root to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from core.pre import create_standard_chain, preprocess_svg
+from core.pre import create_standard_chain
 from core.text import create_text_converter_service, create_text_integration_adapter
 from ..services.conversion_services import ConversionServices
 

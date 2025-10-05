@@ -13,12 +13,11 @@ Key Features:
 - Keyframe generation with timing functions
 """
 
-from typing import List, Dict, Optional, Union, Tuple, Any
+from typing import List, Dict, Optional, Tuple
 import re
-import math
 from dataclasses import dataclass
 
-from .core import AnimationDefinition, CalcMode, TransformType
+from .core import TransformType
 
 
 @dataclass

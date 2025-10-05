@@ -9,7 +9,7 @@ using NumPy vectorization for performance improvements.
 from __future__ import annotations
 import numpy as np
 import colorspacious
-from typing import List, Union, Tuple
+from typing import List, Union
 from .core import Color
 
 

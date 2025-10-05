@@ -13,11 +13,9 @@ Single source of truth for all unit conversion in SVG2PPTX.
 
 import numpy as np
 import re
-import math
-from typing import Union, List, Dict, Optional, Any, Tuple
+from typing import Union, List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import IntEnum
-import functools
 
 # Optional numba import for performance
 try:

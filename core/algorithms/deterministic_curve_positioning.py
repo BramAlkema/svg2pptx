@@ -16,7 +16,6 @@ import math
 import re
 from typing import List, Tuple, Optional, Dict, Any, NamedTuple
 from dataclasses import dataclass
-from enum import Enum
 import logging
 from bisect import bisect_right
 

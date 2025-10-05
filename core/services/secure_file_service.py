@@ -13,9 +13,7 @@ import os
 import tempfile
 import threading
 import atexit
-import weakref
-from typing import Set, List, Callable, Optional, Union, ContextManager
-from pathlib import Path
+from typing import Set, List, Callable, Optional, ContextManager
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 import logging

@@ -12,7 +12,7 @@ import logging
 from typing import Dict, Any, Optional, Callable, TypeVar, cast, Tuple
 from contextlib import contextmanager
 
-from .benchmark import BenchmarkEngine, BenchmarkResult
+from .benchmark import BenchmarkEngine
 from .config import get_config
 
 logger = logging.getLogger(__name__)

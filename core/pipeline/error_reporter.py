@@ -9,7 +9,7 @@ Provides detailed error context, recovery suggestions, and debug information.
 import time
 import logging
 import traceback
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 

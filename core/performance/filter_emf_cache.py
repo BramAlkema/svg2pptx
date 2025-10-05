@@ -12,7 +12,7 @@ import pickle
 import zlib
 import hashlib
 import time
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from pathlib import Path
 from lxml import etree as ET
@@ -23,7 +23,6 @@ except ImportError:
     # Handle import for testing
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-    from emf_blob import EMFBlob
 
 
 @dataclass

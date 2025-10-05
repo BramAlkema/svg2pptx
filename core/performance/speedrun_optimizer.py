@@ -8,17 +8,16 @@ cached conversions.
 """
 
 import time
-import threading
 import asyncio
 import concurrent.futures
-from typing import List, Dict, Any, Optional, Callable, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from lxml import etree as ET
 from dataclasses import dataclass
 from enum import Enum
 import logging
 
 from .optimizer import PerformanceOptimizer, OptimizationConfig, OptimizationLevel
-from .speedrun_cache import SpeedrunCache, get_speedrun_cache
+from .speedrun_cache import get_speedrun_cache
 from .batch import BatchProcessor, BatchStrategy
 from .profiler import get_profiler
 from .pools import get_converter_pool

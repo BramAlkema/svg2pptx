@@ -13,7 +13,7 @@ Features:
 """
 
 import logging
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Dict, Tuple, Any
 from lxml import etree as ET
 
 from ..services.conversion_services import ConversionServices

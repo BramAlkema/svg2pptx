@@ -7,7 +7,7 @@ eliminating duplicate style processing implementations across the codebase.
 """
 
 import re
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 # Removed circular import - StyleParser is now a standalone service
 

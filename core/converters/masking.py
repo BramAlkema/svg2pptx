@@ -17,8 +17,7 @@ Key Features:
 """
 
 from lxml import etree as ET
-from typing import Dict, List, Optional, Tuple, Union, NamedTuple
-import math
+from typing import Dict, List, Optional, Tuple
 import logging
 from dataclasses import dataclass
 from enum import Enum

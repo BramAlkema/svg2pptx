@@ -20,7 +20,7 @@ import hashlib
 
 from ..ir.font_metadata import (
     FontMetadata, FontStrategy, FontAvailability, FontAnalysisResult,
-    FontMetrics, create_font_metadata, parse_font_weight, normalize_font_style
+    create_font_metadata, parse_font_weight, normalize_font_style
 )
 
 logger = logging.getLogger(__name__)

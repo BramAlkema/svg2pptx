@@ -11,7 +11,6 @@ import zipfile
 from typing import Dict, Any, Optional, List, BinaryIO
 from dataclasses import dataclass
 from pathlib import Path
-import tempfile
 import io
 
 from .embedder import EmbedderResult

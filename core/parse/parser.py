@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 from .safe_svg_normalization import SafeSVGNormalizer as SVGNormalizer
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk, children
 
 logger = logging.getLogger(__name__)
 
@@ -352,9 +352,6 @@ class SVGParser:
 
     def _convert_dom_to_ir(self, svg_root: ET.Element):
         """Convert SVG DOM to Clean Slate IR using existing parsing logic"""
-        from ..ir import SceneGraph, Path, TextFrame, Group, Image, Point, Rect
-        from ..ir import SolidPaint, LinearGradientPaint, RadialGradientPaint
-        from ..ir import LineSegment, BezierSegment, Stroke, Run, TextAnchor
 
         # Leverage existing SVG extraction logic from src/svg2drawingml.py
         elements = []
@@ -507,8 +504,6 @@ class SVGParser:
 
     def _extract_recursive_to_ir(self, element: ET.Element, ir_elements: list) -> None:
         """Recursively extract SVG elements and convert to IR, adapting from svg2drawingml.py"""
-        from ..ir import SceneGraph, Path, TextFrame, Group, Image, Point, Rect
-        from ..ir import SolidPaint, LineSegment, BezierSegment, Run, TextAnchor
 
         # Handle namespace-aware tag extraction (from existing code)
         try:
@@ -619,7 +614,6 @@ class SVGParser:
     def _convert_circle_to_ir(self, element: ET.Element):
         """Convert SVG circle to IR Path with Bezier curves"""
         from ..ir import Path, Point, BezierSegment
-        import math
 
         # Extract circle attributes
         cx = float(element.get('cx', 0))
@@ -760,7 +754,7 @@ class SVGParser:
 
     def _convert_path_to_ir(self, element: ET.Element):
         """Convert SVG path to IR Path by parsing d attribute"""
-        from ..ir import Path, Point, LineSegment, BezierSegment
+        from ..ir import Path
 
         d = element.get('d', '')
         if not d:
@@ -834,7 +828,7 @@ class SVGParser:
 
     def _convert_text_to_ir(self, element: ET.Element):
         """Convert SVG text to IR with enhanced tspan support"""
-        from ..ir import TextFrame, RichTextFrame, TextLine, Run, Point, Rect, TextAnchor
+        from ..ir import TextFrame, RichTextFrame, Point, Rect
 
         # Extract text position
         x = float(element.get('x', 0))
@@ -1470,8 +1464,7 @@ class SVGParser:
             IR element (Group for nested SVG, Image for embedded content,
             Path for complex fallback content) or None if conversion fails
         """
-        from ..ir import Group, Image, Path, Point, Rect, SolidPaint
-        from ..xml.safe_iter import children
+        from ..ir import Rect
 
         try:
             # Extract geometry attributes (using same pattern as existing converters)

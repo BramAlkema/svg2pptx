@@ -16,7 +16,7 @@ from lxml import etree as ET
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from core.pre import create_standard_chain
-from core.groups import create_group_converter_service, ClippingComplexity, ClippingStrategy
+from core.groups import create_group_converter_service
 from ..services.conversion_services import ConversionServices
 
 

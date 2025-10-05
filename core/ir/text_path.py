@@ -7,7 +7,7 @@ Supports SVG textPath elements with character positioning along curves.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Union
 from enum import Enum
 
 from .geometry import Point, Rect

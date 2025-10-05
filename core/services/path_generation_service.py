@@ -22,7 +22,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 # Import Clean Slate components
-from ..ir.geometry import Point
 from ..ir.font_metadata import FontMetadata
 
 logger = logging.getLogger(__name__)

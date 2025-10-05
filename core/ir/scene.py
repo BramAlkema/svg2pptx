@@ -11,7 +11,7 @@ from typing import List, Optional, Union, Literal
 from enum import Enum
 
 # Use shared numpy compatibility
-from .numpy_compat import np, NUMPY_AVAILABLE
+from .numpy_compat import np
 
 from .geometry import Point, Rect, SegmentType
 from .paint import Paint, Stroke

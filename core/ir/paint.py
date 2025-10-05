@@ -7,10 +7,10 @@ Adapts the proven color system from src/color/
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Literal, Union
+from typing import List, Optional, Union
 from enum import Enum
 # Use shared numpy compatibility
-from .numpy_compat import np, NUMPY_AVAILABLE
+from .numpy_compat import np
 
 
 @dataclass(frozen=True)

@@ -6,7 +6,7 @@ font embedding is necessary for accurate text rendering.
 """
 
 import re
-from typing import Set, List, Dict, Optional, Tuple
+from typing import Set, List, Dict, Optional
 from lxml import etree as ET
 
 from ..data.embedded_font import FontSubsetRequest

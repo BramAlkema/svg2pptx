@@ -9,9 +9,8 @@ Leverages proven ImageService and ImageConverter for complete image handling cap
 import logging
 import base64
 import os
-from typing import Dict, Any, Optional, Tuple, Union
+from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
-from urllib.parse import urlparse
 
 # Import existing image processing system
 try:

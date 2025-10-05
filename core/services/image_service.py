@@ -15,9 +15,8 @@ import base64
 import hashlib
 import tempfile
 import logging
-from typing import Optional, Tuple, Dict, Any, Union
+from typing import Optional, Tuple, Dict
 from pathlib import Path
-from urllib.parse import urlparse
 from dataclasses import dataclass
 
 # Optional PIL import for image processing

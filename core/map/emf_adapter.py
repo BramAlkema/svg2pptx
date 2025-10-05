@@ -7,7 +7,7 @@ Converts IR.Path elements to EMF blobs for complex path fallbacks.
 """
 
 import logging
-from typing import List, Tuple, Optional, Dict, Any
+from typing import List, Tuple, Dict, Any
 from dataclasses import dataclass
 
 # Import existing EMF system
@@ -19,7 +19,7 @@ except ImportError:
     EMF_AVAILABLE = False
     logging.warning("EMF system not available - EMF adapter will use placeholder")
 
-from ..ir import Path, Point, Segment, BezierSegment, LineSegment
+from ..ir import Path, Point, BezierSegment, LineSegment
 from ..ir import SolidPaint, LinearGradientPaint, RadialGradientPaint
 
 

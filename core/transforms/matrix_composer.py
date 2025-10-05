@@ -13,11 +13,11 @@ end up with shapes positioned off-slide due to improper matrix composition.
 
 import re
 import math
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional
 from lxml import etree as ET
 import numpy as np
 
-from ..utils.transform_utils import get_transform_safe, has_attribute_safe
+from ..utils.transform_utils import get_transform_safe
 
 
 # EMU Constants for PowerPoint coordinate system

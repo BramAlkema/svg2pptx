@@ -8,10 +8,10 @@ Handles XML injection, relationship management, and slide coordination.
 
 import time
 import logging
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, List, Tuple
 from dataclasses import dataclass
 from lxml import etree as ET
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk
 
 from ..map.base import MapperResult, OutputFormat
 from ..ir import IRElement, SceneGraph, Rect

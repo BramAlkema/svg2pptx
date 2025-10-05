@@ -14,9 +14,8 @@ Consolidates:
 
 import re
 import math
-from typing import List, Tuple, Optional, Dict, Any, NamedTuple, Union
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
-from lxml import etree as ET
 
 # Integration with modern PathSystem
 try:

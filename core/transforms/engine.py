@@ -7,12 +7,10 @@ with the new matrix composer system.
 """
 
 import numpy as np
-from typing import List, Optional, Tuple
-from lxml import etree as ET
+from typing import List, Tuple
 
 from .matrix_composer import (
-    parse_transform, viewport_matrix, element_ctm,
-    needs_normalise, normalise_content_matrix
+    parse_transform
 )
 
 

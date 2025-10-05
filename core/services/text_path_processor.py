@@ -15,18 +15,15 @@ Key Features:
 
 import logging
 import math
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
-from enum import Enum
 
 # Import Clean Slate components
 from ..ir.text_path import (
-    TextPathFrame, TextPathLayout, PathPoint, CharacterPlacement,
-    TextPathMethod, TextPathSpacing, TextPathSide
+    TextPathFrame, TextPathLayout, PathPoint, CharacterPlacement
 )
 from ..ir.font_metadata import FontMetadata, create_font_metadata
-from ..ir.text import Run, EnhancedRun, TextAnchor
-from ..ir.geometry import Point
+from ..ir.text import EnhancedRun
 
 logger = logging.getLogger(__name__)
 

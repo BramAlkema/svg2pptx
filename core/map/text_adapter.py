@@ -7,7 +7,7 @@ Leverages the new Clean Slate FontSystem and TextLayoutEngine for enhanced text 
 """
 
 import logging
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 from dataclasses import dataclass
 
 # Import Clean Slate text processing services
@@ -29,7 +29,7 @@ except ImportError:
     LEGACY_SYSTEM_AVAILABLE = False
     logging.warning("Legacy text system not available")
 
-from ..ir import TextFrame, RichTextFrame, Run, TextAnchor, EnhancedRun
+from ..ir import TextFrame, RichTextFrame, TextAnchor
 
 
 @dataclass

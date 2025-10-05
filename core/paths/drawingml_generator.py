@@ -16,7 +16,6 @@ Key Features:
 
 import logging
 from typing import List, Dict, Any
-from xml.sax.saxutils import escape
 
 # Add lxml imports for safe XML generation
 try:

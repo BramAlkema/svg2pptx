@@ -11,7 +11,7 @@ This module provides batch processing capabilities to:
 
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Tuple, Optional, Any, Callable, TypeVar, Generic
+from typing import Dict, List, Tuple, Optional, Any, TypeVar
 from dataclasses import dataclass, field
 from collections import defaultdict
 from lxml import etree as ET

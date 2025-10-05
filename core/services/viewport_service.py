@@ -2,7 +2,7 @@
 from typing import Tuple
 from lxml import etree as ET
 from ..viewbox.core import ViewportEngine
-from ..units import UnitConverter, EMU_PER_POINT
+from ..units import UnitConverter
 
 
 class ViewportService:

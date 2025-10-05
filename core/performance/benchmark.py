@@ -9,10 +9,8 @@ and performance measurement capabilities for the SVG2PPTX performance framework.
 import time
 import tracemalloc
 import statistics
-import threading
-import signal
 import logging
-from typing import Dict, List, Optional, Any, Callable, ContextManager, Tuple
+from typing import Dict, List, Optional, Any, Callable, Tuple
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError

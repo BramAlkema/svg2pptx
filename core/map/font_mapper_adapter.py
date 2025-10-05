@@ -3,9 +3,8 @@ FontMapperAdapter - Bridge between TextMapper interface and SmartFontConverter
 Integrates the isolated FontHandler system into the main pipeline.
 """
 
-from typing import Any, Dict
 from .base import Mapper, MapperResult
-from ..ir import TextFrame, IRElement
+from ..ir import IRElement
 
 try:
     from ..converters.font.smart_converter import SmartFontConverter

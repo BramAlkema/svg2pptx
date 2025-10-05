@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from lxml import etree as ET
 
 # Import safe iteration utilities
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk
 
 # Import OutputFormat with fallback for testing
 try:

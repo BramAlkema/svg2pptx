@@ -14,7 +14,7 @@ Key Features:
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 from math import sqrt
 
 from .interfaces import ArcConverter as BaseArcConverter

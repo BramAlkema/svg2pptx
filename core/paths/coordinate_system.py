@@ -14,17 +14,16 @@ Key Features:
 """
 
 import logging
-from typing import List, Tuple, Optional, Any, Dict
-import numpy as np
+from typing import List, Tuple, Optional
 
 from .interfaces import CoordinateSystem as CoordinateSystemInterface
 from .architecture import (
-    PathCommand, PathBounds, CoordinatePoint, PathCommandType,
+    PathCommand, PathBounds, PathCommandType,
     CoordinateTransformError
 )
 
 # Import existing infrastructure
-from ..viewbox import ViewportEngine, ViewBoxArray, ViewportArray
+from ..viewbox import ViewportEngine
 from ..units import UnitConverter, ConversionContext  # Used for type hints and fallback compatibility
 
 logger = logging.getLogger(__name__)

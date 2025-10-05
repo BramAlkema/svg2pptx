@@ -7,11 +7,10 @@ Defines the common interface for all IR-to-output mappers.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Union, Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List
 from enum import Enum
-import time
 
-from ..ir import IRElement, Path, TextFrame, Group, Image
+from ..ir import IRElement
 from ..policy import Policy, PolicyDecision
 
 

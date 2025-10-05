@@ -7,10 +7,10 @@ Uses proven numpy arrays for transforms and coordinates.
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple, Union
+from typing import Union
 
 # Use shared numpy compatibility
-from .numpy_compat import np, NUMPY_AVAILABLE
+from .numpy_compat import np
 
 
 @dataclass(frozen=True)

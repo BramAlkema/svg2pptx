@@ -7,7 +7,7 @@ eliminating duplicate font handling implementations across text converters.
 """
 
 import re
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Any
 from dataclasses import dataclass
 from lxml import etree as ET
 

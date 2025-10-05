@@ -6,8 +6,7 @@ Provides utilities for converting SVG transforms to PowerPoint DrawingML format.
 Handles unit conversions, angle calculations, and XML generation for <a:xfrm> elements.
 """
 
-import math
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any
 from dataclasses import dataclass
 from lxml import etree as ET
 

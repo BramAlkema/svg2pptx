@@ -5,10 +5,8 @@ This module handles embedding EMF blobs into PowerPoint presentations,
 managing relationships, and generating proper OOXML markup.
 """
 
-import io
 import hashlib
-import base64
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 import zipfile
 from lxml import etree as ET

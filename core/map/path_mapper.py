@@ -8,12 +8,11 @@ Leverages battle-tested path generation components via adapters.
 
 import time
 import logging
-from typing import Dict, Any, Optional
-from lxml import etree as ET
+from typing import Any, Optional
 
-from ..ir import IRElement, Path, Point, Segment, BezierSegment, LineSegment
+from ..ir import IRElement, Path, BezierSegment, LineSegment
 from ..ir import SolidPaint, LinearGradientPaint, RadialGradientPaint, PatternPaint
-from ..policy import Policy, PolicyDecision, PathDecision
+from ..policy import Policy, PathDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
 
 logger = logging.getLogger(__name__)

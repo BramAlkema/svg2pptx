@@ -12,8 +12,7 @@ This is the foundation for the advanced font processing system.
 
 import os
 import platform
-from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttFont import TTLibError
 

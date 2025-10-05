@@ -5,7 +5,7 @@ PatternService for handling SVG pattern definitions and conversions.
 Provides pattern resolution, caching, and conversion to DrawingML patterns.
 """
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, Any
 from lxml import etree as ET
 import logging
 

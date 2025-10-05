@@ -14,12 +14,11 @@ Key Features:
 - Integration with core animation system
 """
 
-from typing import List, Dict, Optional, Union, Any
-from dataclasses import dataclass
+from typing import List, Optional, Union
 
 from .core import (
     AnimationDefinition, AnimationTiming, AnimationType, FillMode,
-    TransformType, CalcMode, AnimationScene
+    TransformType, CalcMode
 )
 # AnimationConverter moved to src.converters.animation_converter
 

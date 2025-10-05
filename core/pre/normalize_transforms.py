@@ -15,7 +15,7 @@ Features:
 import logging
 import re
 import math
-from typing import List, Tuple, Optional
+from typing import List
 import numpy as np
 from lxml import etree as ET
 

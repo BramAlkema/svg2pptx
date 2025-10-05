@@ -12,7 +12,7 @@ from collections import defaultdict
 import logging
 from lxml import etree as ET
 
-from core.utils.input_validator import InputValidator, ValidationContext, ValidationError, NumericOverflowError
+from core.utils.input_validator import InputValidator, ValidationError, NumericOverflowError
 from .types import CompatibilityLevel, CompatibilityReport
 from .constants import SVG_NAMESPACE
 

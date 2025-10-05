@@ -15,14 +15,14 @@ Key Features:
 """
 
 from __future__ import annotations
-from typing import List, Dict, Set, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any
 from lxml import etree as ET
 import logging
 
 from .base import PreprocessingPlugin, PreprocessingContext
 from .geometry import (
-    PathBooleanEngine, create_boolean_engine, create_service_adapters,
-    create_path_spec, normalize_fill_rule, PATHOPS_AVAILABLE, PYCLIPPER_AVAILABLE
+    create_boolean_engine, create_service_adapters,
+    create_path_spec, normalize_fill_rule
 )
 
 logger = logging.getLogger(__name__)

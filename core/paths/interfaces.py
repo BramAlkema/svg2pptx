@@ -6,14 +6,13 @@ This module contains the concrete interface definitions and base classes
 for the path processing system components.
 """
 
-from typing import List, Dict, Any, Tuple, Optional, Union
+from typing import List, Dict, Any, Tuple, Optional
 from abc import ABC, abstractmethod
 import logging
 
 from .architecture import (
-    PathCommand, CoordinatePoint, BezierSegment, PathBounds,
-    PathCommandType, PathSystemError, PathParseError,
-    CoordinateTransformError, ArcConversionError, XMLGenerationError
+    PathCommand, BezierSegment, PathBounds,
+    PathCommandType
 )
 
 logger = logging.getLogger(__name__)

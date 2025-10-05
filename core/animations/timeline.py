@@ -14,12 +14,11 @@ Key Features:
 - Conflict resolution for overlapping animations
 """
 
-from typing import List, Dict, Optional, Set, Tuple, Any
-import math
+from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
 
-from .core import AnimationDefinition, AnimationScene, AnimationTiming, CalcMode
-from .interpolation import InterpolationEngine, InterpolationResult
+from .core import AnimationDefinition, AnimationScene, CalcMode
+from .interpolation import InterpolationEngine
 
 
 @dataclass

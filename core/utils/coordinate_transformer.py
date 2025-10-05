@@ -8,7 +8,7 @@ eliminating duplicate coordinate processing implementations across the codebase.
 
 import re
 import numpy as np
-from typing import List, Tuple, Union, Optional, Any
+from typing import List, Tuple, Optional, Any
 from dataclasses import dataclass
 # Removed circular import - CoordinateTransformer is now a standalone service
 

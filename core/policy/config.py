@@ -7,7 +7,7 @@ Allows tuning for different output quality vs performance trade-offs.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from enum import Enum
 
 

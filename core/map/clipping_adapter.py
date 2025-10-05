@@ -7,7 +7,7 @@ Leverages proven ClipPathAnalyzer, MaskingConverter, and ResolveClipPathsPlugin.
 """
 
 import logging
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any
 from dataclasses import dataclass
 
 # Import existing clipping system

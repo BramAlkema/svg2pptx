@@ -8,10 +8,10 @@ Implements all critical text positioning and alignment corrections.
 
 import time
 import logging
-from typing import Dict, Any, Optional, List
+from typing import List
 
-from ..ir import IRElement, TextFrame, RichTextFrame, TextLine, Run, Point, Rect, TextAnchor
-from ..policy import Policy, PolicyDecision, TextDecision
+from ..ir import IRElement, TextFrame, RichTextFrame, Run, TextAnchor
+from ..policy import Policy, TextDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
 
 logger = logging.getLogger(__name__)

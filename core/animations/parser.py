@@ -13,13 +13,13 @@ Key Features:
 - Error handling and validation reporting
 """
 
-from typing import List, Dict, Optional, Union, Any, Tuple
+from typing import List, Optional
 import re
 from lxml import etree
 
 from .core import (
     AnimationDefinition, AnimationTiming, AnimationType, FillMode,
-    TransformType, CalcMode, AnimationComplexity, AnimationSummary
+    TransformType, CalcMode, AnimationSummary
 )
 
 

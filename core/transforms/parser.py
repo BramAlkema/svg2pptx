@@ -7,7 +7,6 @@ This is a minimal implementation focused on the core functionality needed by con
 """
 
 import re
-import math
 from typing import Optional
 from .core import Matrix
 

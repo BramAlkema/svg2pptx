@@ -9,7 +9,7 @@ Replaces the complex 1700+ line detection system with common use cases.
 from typing import List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 from lxml import etree as ET
-from ..xml.safe_iter import walk, children, is_element
+from ..xml.safe_iter import walk
 
 if TYPE_CHECKING:
     from ..policy.engine import PolicyEngine

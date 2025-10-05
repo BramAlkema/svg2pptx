@@ -13,7 +13,7 @@ Features:
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from lxml import etree as ET
 
 from ..pre.text_layout_prep import TextLayoutPrepPreprocessor

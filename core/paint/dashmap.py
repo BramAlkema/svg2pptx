@@ -13,7 +13,7 @@ from math import isclose
 from lxml import etree
 
 if TYPE_CHECKING:
-    from core.policy.config import PolicyConfig, Thresholds
+    from core.policy.config import Thresholds
 
 
 # DrawingML values for cap:

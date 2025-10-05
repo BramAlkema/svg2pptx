@@ -9,8 +9,7 @@ This module provides pooling mechanisms to reuse heavy objects like:
 """
 
 import threading
-import weakref
-from typing import Dict, List, Optional, Type, TypeVar, Generic, Callable, Any
+from typing import Dict, Optional, Type, TypeVar, Generic, Callable, Any
 from queue import Queue, Empty
 from contextlib import contextmanager
 import time

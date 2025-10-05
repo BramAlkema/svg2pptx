@@ -9,8 +9,7 @@ handling common patterns like:
 """
 
 import re
-import math
-from typing import Tuple, List, Optional
+from typing import Tuple
 from lxml import etree as ET
 import numpy as np
 from ..utils.transform_utils import get_transform_safe

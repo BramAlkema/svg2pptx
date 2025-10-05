@@ -2,8 +2,8 @@
 Type definitions for SVG analysis system.
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Set, Optional, Any
+from dataclasses import dataclass, field
+from typing import Dict, List, Set, Any
 from enum import Enum
 
 

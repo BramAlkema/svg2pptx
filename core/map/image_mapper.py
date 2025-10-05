@@ -8,11 +8,10 @@ and embedding strategies.
 
 import time
 import logging
-import base64
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
-from ..ir import IRElement, Image, Point, Rect
-from ..policy import Policy, PolicyDecision, ImageDecision
+from ..ir import IRElement, Image
+from ..policy import Policy, ImageDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
 
 logger = logging.getLogger(__name__)

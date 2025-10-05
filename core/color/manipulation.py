@@ -9,7 +9,7 @@ mixing, gradients, and professional color adjustment tools.
 from __future__ import annotations
 import numpy as np
 import colorspacious
-from typing import List, Tuple, Optional, Union, Dict
+from typing import List, Optional
 from enum import Enum
 from .core import Color
 from .batch import ColorBatch

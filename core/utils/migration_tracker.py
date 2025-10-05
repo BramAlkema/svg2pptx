@@ -6,7 +6,7 @@ and warning about legacy implementations during the consolidation process.
 """
 
 import warnings
-from typing import Dict, List, Optional
+from typing import Dict, List
 from dataclasses import dataclass
 from pathlib import Path
 import inspect

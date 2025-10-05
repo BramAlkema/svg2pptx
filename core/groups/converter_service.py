@@ -13,11 +13,11 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, Optional, Any, TYPE_CHECKING
 from lxml import etree as ET
 
 from .group_processor import GroupProcessor
-from .clipping_analyzer import ClippingAnalyzer, ClippingStrategy, ClippingComplexity
+from .clipping_analyzer import ClippingAnalyzer, ClippingStrategy
 from ..services.conversion_services import ConversionServices
 
 if TYPE_CHECKING:

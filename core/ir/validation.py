@@ -9,11 +9,10 @@ Ensures IR is always in valid state for mappers.
 from typing import Any, Dict, List, Union
 import json
 # Use shared numpy compatibility
-from .numpy_compat import np, NUMPY_AVAILABLE
 
 from .scene import IRElement, Path, TextFrame, Group, Image
 from .geometry import Point, Rect, Segment, LineSegment, BezierSegment
-from .paint import Paint, SolidPaint, LinearGradientPaint, RadialGradientPaint
+from .paint import Paint, SolidPaint, LinearGradientPaint
 from .text import Run, TextAnchor
 
 

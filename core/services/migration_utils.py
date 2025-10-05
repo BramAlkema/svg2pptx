@@ -6,7 +6,7 @@ to the new ConversionServices dependency injection pattern.
 """
 
 import warnings
-from typing import Optional, Type, Any
+from typing import Optional, Type
 from .conversion_services import ConversionServices, ConversionConfig
 
 

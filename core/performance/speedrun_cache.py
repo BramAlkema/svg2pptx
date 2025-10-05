@@ -15,18 +15,16 @@ import pyzstd as zstd
 import hashlib
 import sqlite3
 import threading
-import asyncio
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List, Tuple, Set
+from typing import Any, Dict, Optional, List, Set
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from functools import lru_cache
+from datetime import datetime
 from lxml import etree as ET
 import logging
 import json
 import time
 
-from .cache import BaseCache, ConversionCache, CacheStats
+from .cache import ConversionCache
 
 logger = logging.getLogger(__name__)
 

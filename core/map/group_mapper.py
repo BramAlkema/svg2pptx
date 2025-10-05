@@ -8,10 +8,10 @@ and nested structure handling.
 
 import time
 import logging
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional
 
-from ..ir import IRElement, Group, Path, TextFrame, Image, Point, Rect
-from ..policy import Policy, PolicyDecision, GroupDecision
+from ..ir import IRElement, Group, Path, TextFrame, Image
+from ..policy import Policy, GroupDecision
 from .base import Mapper, MapperResult, OutputFormat, MappingError
 
 logger = logging.getLogger(__name__)

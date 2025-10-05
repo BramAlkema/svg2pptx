@@ -10,7 +10,7 @@ during element iteration, causing "argument of type '_cython_3_1_3.cython_functi
 import logging
 from typing import Dict, Any, Optional, Tuple, Iterator
 from lxml import etree as ET
-from ..xml.safe_iter import children, walk, is_element
+from ..xml.safe_iter import children, walk
 
 
 def safe_element_iteration(element: ET.Element) -> Iterator[ET.Element]:

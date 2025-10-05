@@ -8,7 +8,6 @@ optimizations achieve the target 10x+ performance improvements.
 
 import time
 import statistics
-import tempfile
 import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
@@ -25,11 +24,11 @@ except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from core.services import SecureFileService, default_secure_file_service
+    from core.services import default_secure_file_service
 
-from .speedrun_optimizer import SVGSpeedrunOptimizer, SpeedrunMode, enable_speedrun_mode
-from .speedrun_cache import SpeedrunCache, enable_speedrun_mode as enable_cache_speedrun
-from .optimizer import PerformanceOptimizer, OptimizationLevel
+from .speedrun_optimizer import SpeedrunMode, enable_speedrun_mode
+from .speedrun_cache import SpeedrunCache
+from .optimizer import PerformanceOptimizer
 
 logger = logging.getLogger(__name__)
 

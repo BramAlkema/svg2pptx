@@ -10,7 +10,7 @@ import sqlite3
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)

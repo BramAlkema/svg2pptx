@@ -5,7 +5,7 @@ Adapts the existing SVG Analyzer to API-friendly response format and adds
 additional features needed for REST API endpoints.
 """
 
-from typing import Dict, Any, List, Set
+from typing import List, Set
 from lxml import etree as ET
 
 from .analyzer import SVGAnalyzer, AnalysisResult
@@ -17,7 +17,6 @@ from .types import (
     SVGAnalysisResult
 )
 from .constants import FILTER_NAME_MAP, SVG_NAMESPACE
-from core.policy.config import OutputTarget
 
 
 class SVGAnalyzerAPI:

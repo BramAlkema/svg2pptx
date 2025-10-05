@@ -14,7 +14,6 @@ import logging
 from typing import Dict, Any
 
 from ....ir import TextFrame
-from ....ir.font_metadata import FontStrategy
 from ....services.conversion_services import ConversionServices
 from ..types import HandlerResult
 from .base import BaseStrategyHandler

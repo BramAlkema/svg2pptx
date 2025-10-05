@@ -10,11 +10,11 @@ import time
 from typing import List, Optional, Union, Dict, Any
 import logging
 
-from ..ir import Path, TextFrame, Group, Image, Paint, Stroke, ClipRef
-from ..ir import LinearGradientPaint, RadialGradientPaint, SolidPaint
+from ..ir import Path, TextFrame, Group, Image, Paint, Stroke
+from ..ir import LinearGradientPaint, RadialGradientPaint
 from .config import PolicyConfig, OutputTarget
 from .targets import (
-    PolicyDecision, PathDecision, TextDecision, GroupDecision, ImageDecision,
+    PathDecision, TextDecision, GroupDecision, ImageDecision,
     FilterDecision, GradientDecision, MultiPageDecision, AnimationDecision, ClipPathDecision,
     DecisionReason, PolicyMetrics
 )

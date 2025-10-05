@@ -7,13 +7,11 @@ Implements the documented text fixes for proper alignment and positioning.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from enum import Enum
 # Use shared numpy compatibility
-from .numpy_compat import np, NUMPY_AVAILABLE
 
 from .geometry import Point, Rect
-from .paint import Paint
 
 
 class TextAnchor(Enum):

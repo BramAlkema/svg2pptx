@@ -10,16 +10,13 @@ This module provides font subsetting and embedding capabilities using fonttools.
 
 import os
 import tempfile
-from pathlib import Path
 from typing import Set, Dict, List, Optional, Union
 from fontTools import subset
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.ttFont import TTLibError
 
 from ..data.embedded_font import (
     EmbeddedFont, FontSubsetRequest, FontEmbeddingStats, EmbeddingPermission
 )
-from ..converters.result_types import ConversionError
 from .font_service import FontService
 
 

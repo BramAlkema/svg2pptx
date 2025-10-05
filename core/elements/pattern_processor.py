@@ -15,8 +15,7 @@ Features:
 
 import logging
 import hashlib
-import math
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Dict, List, Optional, Any, Tuple
 from lxml import etree as ET
 from enum import Enum
 from dataclasses import dataclass

@@ -32,9 +32,11 @@ class TestCompleteCleanSlatePipeline:
     def test_simple_svg_to_powerpoint_pipeline(self):
         """Test complete pipeline for simple SVG."""
         svg_content = '''
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="200" height="200" viewBox="0 0 200 200">
             <rect x="50" y="50" width="100" height="80" fill="#FF0000"/>
-            <text x="100" y="100" text-anchor="middle" font-family="Arial" font-size="16">Test</text>
+            <text x="100" y="100" text-anchor="middle"
+                  font-family="Arial" font-size="16">Test</text>
         </svg>
         '''
 
@@ -72,10 +74,14 @@ class TestCompleteCleanSlatePipeline:
                 embedder = PowerPointEmbedder()
 
                 # Create temporary output file
-                with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
+                with tempfile.NamedTemporaryFile(
+                    suffix='.pptx', delete=False
+                ) as temp_file:
                     temp_pptx_path = temp_file.name
 
-                pptx_result = embedder.embed_to_powerpoint(drawingml_result, temp_pptx_path)
+                pptx_result = embedder.embed_to_powerpoint(
+                    drawingml_result, temp_pptx_path
+                )
 
                 assert pptx_result is not None
                 assert os.path.exists(temp_pptx_path)
@@ -174,7 +180,7 @@ class TestCompleteCleanSlatePipeline:
                 with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as temp_file:
                     temp_pptx_path = temp_file.name
 
-                pptx_result = embedder.embed_to_powerpoint(drawingml_result, temp_pptx_path)
+                embedder.embed_to_powerpoint(drawingml_result, temp_pptx_path)
 
                 # Validate complex PPTX
                 assert os.path.exists(temp_pptx_path)
@@ -253,7 +259,7 @@ class TestCompleteCleanSlatePipeline:
 
                 # Check if multi-slide embedding is supported
                 if hasattr(embedder, 'embed_multi_slide'):
-                    pptx_result = embedder.embed_multi_slide(slide_results, temp_pptx_path)
+                    embedder.embed_multi_slide(slide_results, temp_pptx_path)
 
                     assert os.path.exists(temp_pptx_path)
 
@@ -267,7 +273,7 @@ class TestCompleteCleanSlatePipeline:
                     os.unlink(temp_pptx_path)
                 else:
                     # Single slide fallback
-                    pptx_result = embedder.embed_to_powerpoint(slide_results[0]['drawingml'], temp_pptx_path)
+                    embedder.embed_to_powerpoint(slide_results[0]['drawingml'], temp_pptx_path)
                     assert os.path.exists(temp_pptx_path)
                     os.unlink(temp_pptx_path)
 
@@ -299,7 +305,7 @@ class TestPipelineErrorHandling:
                 if scene_ir is not None:
                     # If parsing succeeds, continue pipeline
                     policy_engine = PolicyEngine()
-                    scene_decision = policy_engine.evaluate_element(scene_ir)
+                    policy_engine.evaluate_element(scene_ir)
 
                     scene_mapper = SceneMapper()
                     result = scene_mapper.map_scene(scene_ir)
@@ -329,7 +335,7 @@ class TestPipelineErrorHandling:
             assert len(scene_ir.elements) == 0
 
             policy_engine = PolicyEngine()
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)
@@ -363,7 +369,7 @@ class TestPipelineErrorHandling:
             assert len(scene_ir.elements) >= 2
 
             policy_engine = PolicyEngine()
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)
@@ -417,8 +423,8 @@ class TestPipelineQualityAndFidelity:
             assert scene_ir is not None
 
             # Evaluate for fidelity
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             # Map with fidelity optimization
             scene_mapper = SceneMapper()
@@ -460,8 +466,8 @@ class TestPipelineQualityAndFidelity:
             import time
             start_time = time.time()
 
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)
@@ -504,8 +510,8 @@ class TestPipelineQualityAndFidelity:
             parser = SVGParser()
             scene_ir = parser.parse_to_ir(basic_svg)
 
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)
@@ -553,8 +559,8 @@ class TestPipelineIntegrationScenarios:
             policy_engine = PolicyEngine()
             quality_engine = QualityEngine()
 
-            scene_decision = policy_engine.evaluate_element(scene_ir)
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
 
             # Map logo elements
             scene_mapper = SceneMapper()
@@ -606,7 +612,7 @@ class TestPipelineIntegrationScenarios:
 
             # Chart preservation policies
             policy_engine = PolicyEngine()
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             # Map chart with data preservation
             scene_mapper = SceneMapper()
@@ -664,8 +670,8 @@ class TestPipelineIntegrationScenarios:
             policy_engine = PolicyEngine()
             quality_engine = QualityEngine()
 
-            scene_decision = policy_engine.evaluate_element(scene_ir)
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
 
             # Map with relationship preservation
             scene_mapper = SceneMapper()
@@ -709,7 +715,7 @@ class TestPipelinePerformanceAndScalability:
             scene_ir = parser.parse_to_ir(large_svg)
 
             policy_engine = PolicyEngine()
-            scene_decision = policy_engine.evaluate_element(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)
@@ -750,8 +756,8 @@ class TestPipelinePerformanceAndScalability:
             policy_engine = PolicyEngine()
             quality_engine = QualityEngine()
 
-            scene_decision = policy_engine.evaluate_element(scene_ir)
-            quality_metrics = quality_engine.evaluate_quality(scene_ir)
+            policy_engine.evaluate_element(scene_ir)
+            quality_engine.evaluate_quality(scene_ir)
 
             scene_mapper = SceneMapper()
             result = scene_mapper.map_scene(scene_ir)

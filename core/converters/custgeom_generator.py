@@ -13,14 +13,13 @@ Key Features:
 """
 
 from __future__ import annotations
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Union
 from lxml import etree as ET
 import re
-import math
 import logging
 from dataclasses import dataclass
 
-from .clippath_types import ClipPathDefinition, ClippingType
+from .clippath_types import ClipPathDefinition
 from ..units.core import ConversionContext
 
 logger = logging.getLogger(__name__)

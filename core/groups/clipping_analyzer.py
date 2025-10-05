@@ -13,7 +13,7 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from lxml import etree as ET
 from enum import Enum
 from dataclasses import dataclass
