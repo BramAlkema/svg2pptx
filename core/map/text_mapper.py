@@ -61,6 +61,25 @@ class TextMapper(Mapper):
             TextAnchor.END: 'r',       # Right alignment
         }
 
+    def _get_runs(self, element) -> list:
+        """
+        Get runs from either TextFrame or RichTextFrame.
+
+        Centralizes run extraction to handle both IR text types uniformly.
+        This prevents AttributeError when accessing .runs on RichTextFrame.
+
+        Args:
+            element: TextFrame or RichTextFrame instance
+
+        Returns:
+            List of Run objects (flattened for RichTextFrame)
+        """
+        if isinstance(element, RichTextFrame):
+            # RichTextFrame stores runs nested in lines - flatten them
+            return [run for line in element.lines for run in line.runs]
+        # TextFrame has runs directly
+        return list(getattr(element, 'runs', []) or [])
+
     def can_map(self, element: IRElement) -> bool:
         """Check if element is a TextFrame or RichTextFrame"""
         return isinstance(element, (TextFrame, RichTextFrame))
@@ -146,13 +165,16 @@ class TextMapper(Mapper):
                 text_adapter_used = False
                 processing_metadata = {'processing_method': 'standard'}
 
+            # Get runs using centralized helper (handles both TextFrame and RichTextFrame)
+            runs = self._get_runs(text)
+
             return MapperResult(
                 element=text,
                 output_format=OutputFormat.NATIVE_DML,
                 xml_content=xml_content,
                 policy_decision=decision,
                 metadata={
-                    'run_count': len(text.runs),
+                    'run_count': len(runs),
                     'complexity_score': text.complexity_score,
                     'bbox': text.bbox,
                     'anchor': text.anchor.value if hasattr(text.anchor, 'value') else str(text.anchor),
@@ -280,6 +302,9 @@ class TextMapper(Mapper):
     </p:spPr>
 </p:pic>"""
 
+            # Get runs using centralized helper (handles both TextFrame and RichTextFrame)
+            runs = self._get_runs(text)
+
             return MapperResult(
                 element=text,
                 output_format=OutputFormat.EMF_VECTOR,
@@ -287,7 +312,7 @@ class TextMapper(Mapper):
                 policy_decision=decision,
                 metadata={
                     'fallback_reason': 'Complex text features require EMF',
-                    'run_count': len(text.runs),
+                    'run_count': len(runs),
                     'complexity_score': text.complexity_score,
                     'bbox': bbox,
                     'emf_required': True,
@@ -304,10 +329,13 @@ class TextMapper(Mapper):
         """Generate paragraph XML with proper alignment and run styling"""
         paragraphs = []
 
+        # Get runs using centralized helper (handles both TextFrame and RichTextFrame)
+        runs = self._get_runs(text)
+
         if text.is_multiline:
             # Split runs into paragraphs at line breaks
             current_runs = []
-            for run in text.runs:
+            for run in runs:
                 if '\n' in run.text:
                     # Split on newlines
                     parts = run.text.split('\n')
@@ -338,7 +366,7 @@ class TextMapper(Mapper):
                 paragraphs.append(current_runs)
         else:
             # Single paragraph
-            paragraphs.append(text.runs)
+            paragraphs.append(runs)
 
         # Generate XML for each paragraph
         paragraph_xmls = []

@@ -324,11 +324,47 @@ def main():
 
     tracer = PipelineTracer()
 
-    # Example SVG
-    svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect x="10" y="10" width="180" height="180" fill="#FF6B6B" stroke="#333" stroke-width="2"/>
-        <text x="100" y="100" text-anchor="middle" font-size="24" fill="white">Hello PPTX</text>
-        <circle cx="50" cy="150" r="30" fill="#4ECDC4"/>
+    # Complex SVG with multiple features
+    svg_content = '''<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+        <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:rgb(255,107,107);stop-opacity:1" />
+                <stop offset="100%" style="stop-color:rgb(78,205,196);stop-opacity:1" />
+            </linearGradient>
+            <filter id="blur1">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+            </filter>
+            <clipPath id="clip1">
+                <circle cx="400" cy="300" r="150"/>
+            </clipPath>
+        </defs>
+
+        <!-- Background with gradient -->
+        <rect x="0" y="0" width="800" height="600" fill="url(#grad1)" opacity="0.3"/>
+
+        <!-- Clipped group with transform -->
+        <g transform="translate(50, 50) rotate(15)" clip-path="url(#clip1)">
+            <rect x="100" y="100" width="200" height="150" fill="#FF6B6B" stroke="#333" stroke-width="3" rx="10"/>
+            <circle cx="200" cy="175" r="40" fill="#4ECDC4" opacity="0.7"/>
+        </g>
+
+        <!-- Path with complex commands -->
+        <path d="M 100 400 Q 200 350, 300 400 T 500 400 L 600 450 Z"
+              fill="none" stroke="#333" stroke-width="4" stroke-dasharray="5,3"/>
+
+        <!-- Multi-line text with styling -->
+        <text x="400" y="500" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold">
+            <tspan x="400" dy="0" fill="#FF6B6B">Complex</tspan>
+            <tspan x="400" dy="35" fill="#4ECDC4" font-style="italic">SVG Pipeline</tspan>
+            <tspan x="400" dy="35" fill="#333" font-size="18">Trace Test</tspan>
+        </text>
+
+        <!-- Filtered element -->
+        <ellipse cx="700" cy="100" rx="60" ry="40" fill="#FFA07A" filter="url(#blur1)"/>
+
+        <!-- Image element -->
+        <image href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiPjxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg=="
+               x="50" y="500" width="50" height="50"/>
     </svg>'''
 
     # Trace SVG → PPTX using full pipeline

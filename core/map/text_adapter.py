@@ -102,13 +102,31 @@ class TextProcessingAdapter:
             self.logger.warning("No text processing services available - using basic fallback")
 
     def can_enhance_text_processing(self, text_frame: TextFrame) -> bool:
-        """Check if text processing can be enhanced for this text frame"""
-        return (
-            (self._clean_slate_available or self._legacy_available) and
-            text_frame is not None and
-            hasattr(text_frame, 'runs') and
-            text_frame.runs
-        )
+        """
+        Check if text processing can be enhanced for this text frame.
+
+        Validates that:
+        1. Enhancement services are available (clean slate or legacy)
+        2. Text frame exists and is valid
+        3. Text frame has runs to process
+
+        Args:
+            text_frame: TextFrame or RichTextFrame to check
+
+        Returns:
+            True if enhancement is possible, False otherwise
+        """
+        # Check service availability
+        if not (self._clean_slate_available or self._legacy_available):
+            return False
+
+        # Check text frame validity
+        if text_frame is None:
+            return False
+
+        # Get runs using helper that handles both TextFrame and RichTextFrame
+        runs = self._get_runs(text_frame)
+        return bool(runs)
 
     def _get_runs(self, text_frame):
         """Get runs from either TextFrame or RichTextFrame"""

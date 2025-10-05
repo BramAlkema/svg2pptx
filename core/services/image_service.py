@@ -84,6 +84,29 @@ class ImageService:
             logger.error(f"Failed to process image source '{image_source}': {e}")
             return None
 
+    def process_data_url(self, data_url: str) -> ImageInfo | None:
+        """
+        Public API for processing data URLs.
+
+        Provides backward compatibility for code that calls this method directly.
+        New code should use process_image_source() which handles all source types.
+
+        Args:
+            data_url: Base64-encoded data URL (e.g., "data:image/png;base64,...")
+
+        Returns:
+            ImageInfo object with metadata and content, or None if processing failed
+
+        Raises:
+            ValueError: If data_url is not a valid data URL
+        """
+        if not isinstance(data_url, str) or not data_url.startswith('data:'):
+            raise ValueError(
+                f"process_data_url expects a data: URL, got: {type(data_url).__name__}"
+            )
+
+        return self._process_data_url(data_url)
+
     def _process_data_url(self, data_url: str) -> ImageInfo | None:
         """Process data URL and extract image content."""
         try:

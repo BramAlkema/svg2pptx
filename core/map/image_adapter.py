@@ -192,8 +192,8 @@ class ImageProcessingAdapter:
     def _process_data_url(self, data_url: str) -> ImageInfo:
         """Process Base64 data URL using ImageService"""
         try:
-            # Use ImageService's data URL processing
-            return self.image_service.process_data_url(data_url)
+            # Use ImageService's general image source processing (handles data URLs)
+            return self.image_service.process_image_source(data_url, base_path=None)
         except Exception as e:
             self.logger.warning(f"Data URL processing failed: {e}")
             # Fallback to manual Base64 processing
