@@ -17,7 +17,8 @@ class FontMapperAdapter(Mapper):
     """Adapter that integrates SmartFontConverter into the mapper interface"""
 
     def __init__(self, policy, services=None):
-        super().__init__(policy, services)
+        super().__init__(policy)
+        self.services = services
 
         if SMART_CONVERTER_AVAILABLE and services:
             try:

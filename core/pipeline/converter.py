@@ -336,7 +336,7 @@ class CleanSlateConverter:
                 'text': text_mapper,
                 'image': image_mapper,
             }
-            group_mapper = GroupMapper(self.policy, self.services, child_mappers)
+            group_mapper = GroupMapper(self.policy, child_mappers)
 
             self.mappers = {
                 'path': path_mapper,
