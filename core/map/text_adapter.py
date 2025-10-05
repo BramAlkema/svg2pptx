@@ -480,8 +480,8 @@ class TextProcessingAdapter:
             width_emu = pos['width_emu']
             height_emu = pos['height_emu']
 
-            # Clean Slate positioning comment
-            positioning_comment = f"<!-- Clean Slate positioning: x={x_emu}, y={y_emu}, w={width_emu}, h={height_emu} -->"
+            # Clean Slate positioning (debug comments removed for PowerPoint compatibility)
+            pass
         else:
             # Use original positioning
             bbox = text_frame.bbox if hasattr(text_frame, 'bbox') else None
@@ -494,18 +494,9 @@ class TextProcessingAdapter:
                 # Fallback dimensions
                 x_emu = y_emu = 0
                 width_emu = height_emu = 100
-            positioning_comment = "<!-- Standard positioning -->"
 
-        # Font analysis comment
-        font_comment = ""
-        if font_analysis:
-            strategies = [analysis.get('strategy', 'unknown') for analysis in font_analysis.values()]
-            font_comment = f"<!-- Font strategies: {', '.join(strategies)} -->"
-
-        # Generate Clean Slate enhanced text shape XML
-        xml_content = f"""{positioning_comment}
-{font_comment}
-<p:sp>
+        # Generate Clean Slate enhanced text shape XML (debug comments removed)
+        xml_content = f"""<p:sp>
     <p:nvSpPr>
         <p:cNvPr id="1" name="CleanSlateTextFrame"/>
         <p:cNvSpPr txBox="1"/>
@@ -551,14 +542,9 @@ class TextProcessingAdapter:
 
             # Check if we have font analysis for this run
             run_analysis = font_analysis.get(f'run_{i}', {})
-            analysis_comment = ""
-            if run_analysis:
-                strategy = run_analysis.get('strategy', 'unknown')
-                confidence = run_analysis.get('confidence', 0.0)
-                analysis_comment = f'<!-- Font strategy: {strategy}, confidence: {confidence:.2f} -->'
+            # Debug comments removed for PowerPoint compatibility
 
-            run_xml = f"""{analysis_comment}
-    <a:r>
+            run_xml = f"""    <a:r>
         <a:rPr sz="{font_size_hundredths}" b="{'1' if run.bold else '0'}" i="{'1' if run.italic else '0'}">
             <a:solidFill>
                 <a:srgbClr val="{run.rgb}"/>

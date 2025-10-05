@@ -289,17 +289,34 @@ class PackageWriter:
         zip_file.writestr('ppt/media/', '')
         zip_file.writestr('_rels/', '')
 
-        # Write minimal theme
-        theme_xml = self._generate_theme_xml()
-        zip_file.writestr('ppt/theme/theme1.xml', theme_xml)
+        # Copy theme, master, and layouts from presentationml templates
+        from pathlib import Path
+        template_dir = Path(__file__).parent.parent.parent / 'archive' / 'presentationml'
 
-        # Write minimal slide master
-        master_xml = self._generate_slide_master_xml()
-        zip_file.writestr('ppt/slideMasters/slideMaster1.xml', master_xml)
+        # Copy theme
+        theme_file = template_dir / 'theme.xml'
+        if theme_file.exists():
+            zip_file.writestr('ppt/theme/theme1.xml', theme_file.read_text())
+        else:
+            theme_xml = self._generate_theme_xml()
+            zip_file.writestr('ppt/theme/theme1.xml', theme_xml)
 
-        # Write minimal slide layout
-        layout_xml = self._generate_slide_layout_xml()
-        zip_file.writestr('ppt/slideLayouts/slideLayout1.xml', layout_xml)
+        # Copy slide master
+        master_file = template_dir / 'slideMaster.xml'
+        if master_file.exists():
+            zip_file.writestr('ppt/slideMasters/slideMaster1.xml', master_file.read_text())
+        else:
+            master_xml = self._generate_slide_master_xml()
+            zip_file.writestr('ppt/slideMasters/slideMaster1.xml', master_xml)
+
+        # Copy all slide layouts
+        layouts_dir = template_dir / 'slideLayouts'
+        if layouts_dir.exists():
+            for layout_file in sorted(layouts_dir.glob('slideLayout*.xml')):
+                zip_file.writestr(f'ppt/slideLayouts/{layout_file.name}', layout_file.read_text())
+        else:
+            layout_xml = self._generate_slide_layout_xml()
+            zip_file.writestr('ppt/slideLayouts/slideLayout1.xml', layout_xml)
 
     def _generate_presentation_xml(self, slide_count: int) -> str:
         """Generate presentation.xml"""
@@ -383,14 +400,17 @@ class PackageWriter:
 </Relationships>'''
 
     def _generate_presentation_relationships(self, slide_count: int) -> str:
-        """Generate presentation relationships"""
+        """Generate presentation relationships with correct rId mapping"""
         relationships = [
             '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>',
-            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>',
         ]
 
+        # Add slides starting at rId2 (presentation.xml expects rId2 for first slide)
         for i in range(1, slide_count + 1):
-            relationships.append(f'<Relationship Id="rId{i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide{i}.xml"/>')
+            relationships.append(f'<Relationship Id="rId{i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide{i}.xml"/>')
+
+        # Theme comes after slides
+        relationships.append('<Relationship Id="rId' + str(slide_count + 2) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>')
 
         return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -456,14 +476,7 @@ class PackageWriter:
                 <p:cNvGrpSpPr/>
                 <p:nvPr/>
             </p:nvGrpSpPr>
-            <p:grpSpPr>
-                <a:xfrm>
-                    <a:off x="0" y="0"/>
-                    <a:ext cx="9144000" cy="6858000"/>
-                    <a:chOff x="0" y="0"/>
-                    <a:chExt cx="9144000" cy="6858000"/>
-                </a:xfrm>
-            </p:grpSpPr>
+            <p:grpSpPr/>
         </p:spTree>
     </p:cSld>
     <p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2"
@@ -488,14 +501,7 @@ class PackageWriter:
                 <p:cNvGrpSpPr/>
                 <p:nvPr/>
             </p:nvGrpSpPr>
-            <p:grpSpPr>
-                <a:xfrm>
-                    <a:off x="0" y="0"/>
-                    <a:ext cx="9144000" cy="6858000"/>
-                    <a:chOff x="0" y="0"/>
-                    <a:chExt cx="9144000" cy="6858000"/>
-                </a:xfrm>
-            </p:grpSpPr>
+            <p:grpSpPr/>
         </p:spTree>
     </p:cSld>
     <p:clrMapOvr>

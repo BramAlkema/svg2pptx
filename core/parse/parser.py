@@ -983,20 +983,9 @@ class SVGParser:
         fill = None
         fill_attr = element.get('fill', '#000000')
         if fill_attr and fill_attr != 'none':
-            if fill_attr.startswith('#'):
-                fill = SolidPaint(rgb=fill_attr[1:])
-            elif fill_attr.startswith('rgb('):
-                # Parse rgb(r,g,b) format - simplified
-                rgb_values = fill_attr[4:-1].split(',')
-                if len(rgb_values) == 3:
-                    r = int(rgb_values[0].strip())
-                    g = int(rgb_values[1].strip())
-                    b = int(rgb_values[2].strip())
-                    rgb_hex = f"{r:02x}{g:02x}{b:02x}"
-                    fill = SolidPaint(rgb=rgb_hex)
-            else:
-                # Named colors or other formats - use default
-                fill = SolidPaint(rgb="000000")
+            # Use centralized color parsing that handles hex, rgb(), and named colors
+            rgb_hex = self._parse_color_value(fill_attr)
+            fill = SolidPaint(rgb=rgb_hex)
 
         # Extract stroke
         stroke = None

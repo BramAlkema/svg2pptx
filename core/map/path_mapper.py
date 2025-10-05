@@ -156,10 +156,13 @@ class PathMapper(Mapper):
                 x_emu = y_emu = 0
                 width_emu = height_emu = 914400  # 1 inch in EMU
 
-            # Generate complete shape XML
+            # Get shape ID from path metadata or use default
+            shape_id = getattr(path, 'shape_id', 1)
+
+            # Generate complete shape XML with required PowerPoint elements
             xml_content = f"""<p:sp>
     <p:nvSpPr>
-        <p:cNvPr id="1" name="Path"/>
+        <p:cNvPr id="{shape_id}" name="Path {shape_id}"/>
         <p:cNvSpPr/>
         <p:nvPr/>
     </p:nvSpPr>
@@ -184,6 +187,27 @@ class PathMapper(Mapper):
         {stroke_xml}
         {clip_xml}
     </p:spPr>
+    <p:style>
+        <a:lnRef idx="1">
+            <a:schemeClr val="accent1"/>
+        </a:lnRef>
+        <a:fillRef idx="3">
+            <a:schemeClr val="accent1"/>
+        </a:fillRef>
+        <a:effectRef idx="2">
+            <a:schemeClr val="accent1"/>
+        </a:effectRef>
+        <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+        </a:fontRef>
+    </p:style>
+    <p:txBody>
+        <a:bodyPr rtlCol="0" anchor="ctr"/>
+        <a:lstStyle/>
+        <a:p>
+            <a:pPr algn="ctr"/>
+        </a:p>
+    </p:txBody>
 </p:sp>"""
 
             return MapperResult(
@@ -427,12 +451,22 @@ class PathMapper(Mapper):
         else:
             xml += '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>'
 
-        # Stroke properties
+        # Stroke cap - map to DrawingML values
         if hasattr(stroke, 'cap') and stroke.cap:
-            xml += f'<a:capStyle val="{stroke.cap}"/>'
+            cap_map = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
+            cap_value = stroke.cap.value if hasattr(stroke.cap, 'value') else str(stroke.cap)
+            dml_cap = cap_map.get(cap_value, 'flat')
+            xml += f'<a:cap val="{dml_cap}"/>'
 
+        # Stroke join - map to DrawingML elements
         if hasattr(stroke, 'join') and stroke.join:
-            xml += f'<a:joinStyle val="{stroke.join}"/>'
+            join_value = stroke.join.value if hasattr(stroke.join, 'value') else str(stroke.join)
+            if join_value == 'miter':
+                xml += '<a:miter/>'
+            elif join_value == 'round':
+                xml += '<a:round/>'
+            elif join_value == 'bevel':
+                xml += '<a:bevel/>'
 
         # Dash pattern
         if hasattr(stroke, 'dash_array') and stroke.dash_array:
