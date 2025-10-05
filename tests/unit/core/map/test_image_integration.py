@@ -24,11 +24,9 @@ def test_image_adapter_import():
         assert isinstance(adapter, ImageProcessingAdapter)
 
         print("✅ Image adapter import and creation successful")
-        return True
 
     except ImportError as e:
         print(f"❌ Import error: {e}")
-        return False
 
 
 def test_image_adapter_basic_functionality():
@@ -60,11 +58,9 @@ def test_image_adapter_basic_functionality():
 
         print(f"✅ Image adapter basic functionality test successful (can_process: {can_process})")
         print(f"   Image system available: {stats['image_system_available']}")
-        return True
 
     except Exception as e:
         print(f"❌ Basic functionality test failed: {e}")
-        return False
 
 
 def test_image_mapper_integration():
@@ -110,13 +106,11 @@ def test_image_mapper_integration():
         has_image_ref = ("blip" in xml_lower and "r:embed" in xml_lower)
 
         print(f"✅ ImageMapper integration test successful (has_image_ref: {has_image_ref})")
-        return True
 
     except Exception as e:
         print(f"❌ ImageMapper integration test failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
 
 
 def test_image_href_processing():
@@ -165,11 +159,9 @@ def test_image_href_processing():
         else:
             print("✅ File path processing correctly handles unavailable files")
 
-        return True
 
     except Exception as e:
         print(f"❌ Image href processing test failed: {e}")
-        return False
 
 
 def test_image_scaling_calculation():
@@ -196,11 +188,9 @@ def test_image_scaling_calculation():
         assert scaled_size_no_aspect == target_size
 
         print(f"✅ Non-aspect scaling calculation successful: {original_size} → {scaled_size_no_aspect}")
-        return True
 
     except Exception as e:
         print(f"❌ Image scaling calculation test failed: {e}")
-        return False
 
 
 def test_image_format_validation():
@@ -221,11 +211,9 @@ def test_image_format_validation():
         assert adapter.validate_image_format('xyz') == False
 
         print("✅ Image format validation test successful")
-        return True
 
     except Exception as e:
         print(f"❌ Image format validation test failed: {e}")
-        return False
 
 
 if __name__ == "__main__":

@@ -23,11 +23,9 @@ def test_emf_adapter_import():
         assert isinstance(adapter, EMFPathAdapter)
 
         print("✅ EMF adapter import and creation successful")
-        return True
 
     except ImportError as e:
         print(f"❌ Import error: {e}")
-        return False
 
 
 def test_emf_adapter_basic_functionality():
@@ -55,11 +53,9 @@ def test_emf_adapter_basic_functionality():
         assert isinstance(can_generate, bool)
 
         print(f"✅ EMF adapter basic functionality test successful (can_generate: {can_generate})")
-        return True
 
     except Exception as e:
         print(f"❌ Basic functionality test failed: {e}")
-        return False
 
 
 def test_path_mapper_emf_integration():
@@ -103,11 +99,9 @@ def test_path_mapper_emf_integration():
         assert result.metadata is not None
 
         print("✅ PathMapper EMF integration test successful")
-        return True
 
     except Exception as e:
         print(f"❌ PathMapper integration test failed: {e}")
-        return False
 
 
 if __name__ == "__main__":

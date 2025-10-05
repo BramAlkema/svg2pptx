@@ -23,11 +23,9 @@ def test_text_adapter_import():
         assert isinstance(adapter, TextProcessingAdapter)
 
         print("✅ Text adapter import and creation successful")
-        return True
 
     except ImportError as e:
         print(f"❌ Import error: {e}")
-        return False
 
 
 def test_text_adapter_basic_functionality():
@@ -65,11 +63,9 @@ def test_text_adapter_basic_functionality():
 
         print(f"✅ Text adapter basic functionality test successful (can_enhance: {can_enhance})")
         print(f"   Text system available: {stats['text_system_available']}")
-        return True
 
     except Exception as e:
         print(f"❌ Basic functionality test failed: {e}")
-        return False
 
 
 def test_text_mapper_integration():
@@ -120,13 +116,11 @@ def test_text_mapper_integration():
         has_text_elements = ("a:r" in xml_lower and "a:t" in xml_lower)
 
         print(f"✅ TextMapper integration test successful (has_text_elements: {has_text_elements})")
-        return True
 
     except Exception as e:
         print(f"❌ TextMapper integration test failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
 
 
 def test_text_fixes_applied():
@@ -184,11 +178,9 @@ def test_text_fixes_applied():
         assert result.metadata.get('baseline_adjusted') == True
 
         print("✅ Text fixes verification successful - All documented fixes applied")
-        return True
 
     except Exception as e:
         print(f"❌ Text fixes test failed: {e}")
-        return False
 
 
 def test_text_font_validation():
@@ -207,11 +199,9 @@ def test_text_font_validation():
             assert isinstance(is_valid, bool)
 
         print("✅ Font validation test successful")
-        return True
 
     except Exception as e:
         print(f"❌ Font validation test failed: {e}")
-        return False
 
 
 def test_text_measurement():
@@ -239,11 +229,9 @@ def test_text_measurement():
         assert height <= font_size_pt * 2  # Not more than 2x font size
 
         print(f"✅ Text measurement successful: '{text}' = {width:.1f}x{height:.1f}pt")
-        return True
 
     except Exception as e:
         print(f"❌ Text measurement test failed: {e}")
-        return False
 
 
 def test_multiline_text_processing():
@@ -288,11 +276,9 @@ def test_multiline_text_processing():
         assert paragraph_count >= 1
 
         print(f"✅ Multiline text processing successful (paragraphs: {paragraph_count})")
-        return True
 
     except Exception as e:
         print(f"❌ Multiline text test failed: {e}")
-        return False
 
 
 if __name__ == "__main__":

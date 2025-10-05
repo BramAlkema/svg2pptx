@@ -23,11 +23,9 @@ def test_clipping_adapter_import():
         assert isinstance(adapter, ClippingPathAdapter)
 
         print("✅ Clipping adapter import and creation successful")
-        return True
 
     except ImportError as e:
         print(f"❌ Import error: {e}")
-        return False
 
 
 def test_clipping_adapter_basic_functionality():
@@ -53,11 +51,9 @@ def test_clipping_adapter_basic_functionality():
 
         print(f"✅ Clipping adapter basic functionality test successful (can_generate: {can_generate})")
         print(f"   Clipping system available: {stats['clipping_system_available']}")
-        return True
 
     except Exception as e:
         print(f"❌ Basic functionality test failed: {e}")
-        return False
 
 
 def test_path_mapper_clipping_integration():
@@ -105,13 +101,11 @@ def test_path_mapper_clipping_integration():
         has_clipping = ("clip" in xml_lower or "test-clip" in xml_lower)
 
         print(f"✅ PathMapper clipping integration test successful (has_clipping: {has_clipping})")
-        return True
 
     except Exception as e:
         print(f"❌ PathMapper clipping integration test failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
 
 
 def test_clipping_generation_strategies():
@@ -136,11 +130,9 @@ def test_clipping_generation_strategies():
         else:
             print("✅ Clipping generation correctly reports unavailable")
 
-        return True
 
     except Exception as e:
         print(f"❌ Clipping generation strategies test failed: {e}")
-        return False
 
 
 def test_clipping_preprocessing_analysis():
@@ -156,11 +148,9 @@ def test_clipping_preprocessing_analysis():
         assert 'can_preprocess' in analysis
 
         print(f"✅ Preprocessing analysis test successful (can_preprocess: {analysis['can_preprocess']})")
-        return True
 
     except Exception as e:
         print(f"❌ Preprocessing analysis test failed: {e}")
-        return False
 
 
 if __name__ == "__main__":
