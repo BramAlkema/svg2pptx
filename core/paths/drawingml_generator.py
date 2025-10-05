@@ -176,7 +176,8 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
                         element_xml = self._generate_command_xml(
                             command, coordinate_system, bounds, current_point
                         )
-                        if element_xml:
+                        # Check for None explicitly (handles both Element and string)
+                        if element_xml is not None:
                             path_elements.append(element_xml)
 
                         # Update current point based on command
@@ -190,7 +191,16 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
                 return ""
 
             # Create the complete path XML structure
-            path_content = ''.join(path_elements)
+            # When using lxml, elements are Element objects that need serialization
+            if self.use_lxml:
+                # Serialize lxml Element objects to XML strings
+                path_content = ''.join(
+                    etree.tostring(elem, encoding='unicode') if isinstance(elem, etree._Element) else str(elem)
+                    for elem in path_elements
+                )
+            else:
+                # String concatenation for fallback mode
+                path_content = ''.join(path_elements)
 
             # Use normalized coordinates (0-100000 range) for path dimensions
             path_xml = f'''<a:pathLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
@@ -252,10 +262,9 @@ class DrawingMLGenerator(BaseDrawingMLGenerator):
                 {stroke_xml}
             </p:spPr>"""
 
-            # Generate unique shape ID if not provided
-            if shape_id is None:
-                import time
-                shape_id = int(time.time() * 1000) % 1000000  # Use timestamp for uniqueness
+            # Generate unique shape ID
+            import time
+            shape_id = int(time.time() * 1000) % 1000000  # Use timestamp for uniqueness
 
             # Create complete shape XML
             shape_xml = f"""<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
