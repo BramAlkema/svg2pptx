@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Import migrated systems for integration
 from core.animations import SMILParser

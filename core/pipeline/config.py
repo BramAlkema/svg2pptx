@@ -8,7 +8,7 @@ Integrates with core.policy.PolicyConfig for unified policy decisions.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Import comprehensive policy configuration
 from ..policy.config import OutputTarget, PolicyConfig

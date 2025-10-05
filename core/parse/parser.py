@@ -503,9 +503,9 @@ class SVGParser:
 
         return navigation_attrs
 
-    def _parse_navigation_attributes(self, href: str, element_attrs: dict, tooltip: str) -> 'NavigationSpec':
+    def _parse_navigation_attributes(self, href: str, element_attrs: dict, tooltip: str) -> Any | None:
         """
-        Parse SVG navigation attributes to create NavigationSpec.
+        Parse SVG navigation attributes to create navigation spec.
 
         Args:
             href: Value of href or xlink:href attribute
@@ -513,7 +513,7 @@ class SVGParser:
             tooltip: Tooltip text from <title> element
 
         Returns:
-            NavigationSpec if valid navigation found, None otherwise
+            Navigation spec if valid navigation found, None otherwise
         """
         from ..pipeline.navigation import parse_svg_navigation
 

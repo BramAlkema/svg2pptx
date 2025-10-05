@@ -6,7 +6,7 @@ Factory for creating configured clean slate conversion pipelines.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..io import DrawingMLEmbedder, SlideBuilder, create_embedder, create_package_writer
 from ..map import (
