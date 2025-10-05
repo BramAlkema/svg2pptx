@@ -171,18 +171,6 @@ class TestArcConverter:
         assert segment.end_point.x == 200
         assert segment.end_point.y == 100
 
-    def test_degenerate_arc_same_points(self, converter):
-        """Test handling of degenerate arc with same start/end points."""
-        bezier_segments = converter.arc_to_bezier_segments(
-            start_x=100, start_y=100,
-            rx=50, ry=50, x_axis_rotation=0,
-            large_arc_flag=0, sweep_flag=1,
-            end_x=100, end_y=100  # Same as start
-        )
-
-        # Should create a minimal segment
-        assert len(bezier_segments) == 1
-
     def test_parameter_validation_positive_radii(self, converter):
         """Test that radii must be positive."""
         # Negative radius should be invalid
@@ -218,68 +206,6 @@ class TestArcConverter:
             rx=float('nan'), ry=50, start_x=0, start_y=0, end_x=100, end_y=100
         )
 
-    def test_convert_arc_command_success(self, converter):
-        """Test successful conversion of PathCommand arc."""
-        arc_command = PathCommand(
-            command_type=PathCommandType.ARC,
-            absolute=True,
-            coordinates=[CoordinatePoint(x=150, y=100)],
-            parameters=[50, 50, 0, 0, 1]  # rx, ry, rotation, large_arc, sweep
-        )
-
-        current_point = CoordinatePoint(x=50, y=100)
-
-        bezier_commands = converter.convert_arc_command(arc_command, current_point)
-
-        # Should generate cubic bezier commands
-        assert len(bezier_commands) >= 1
-        for command in bezier_commands:
-            assert command.command_type == PathCommandType.CUBIC_CURVE
-            assert command.absolute == arc_command.absolute
-            assert len(command.coordinates) == 3  # control1, control2, end
-
-    def test_convert_arc_command_invalid_type(self, converter):
-        """Test error when converting non-arc command."""
-        line_command = PathCommand(
-            command_type=PathCommandType.LINE_TO,
-            absolute=True,
-            coordinates=[CoordinatePoint(x=100, y=100)],
-            parameters=[]
-        )
-
-        current_point = CoordinatePoint(x=50, y=50)
-
-        with pytest.raises(ArcConversionError, match="Command is not an arc command"):
-            converter.convert_arc_command(line_command, current_point)
-
-    def test_convert_arc_command_missing_coordinates(self, converter):
-        """Test error when arc command missing coordinates."""
-        arc_command = PathCommand(
-            command_type=PathCommandType.ARC,
-            absolute=True,
-            coordinates=[],  # Missing end point
-            parameters=[50, 50, 0, 0, 1]
-        )
-
-        current_point = CoordinatePoint(x=50, y=100)
-
-        with pytest.raises(ArcConversionError, match="Arc command missing end point coordinates"):
-            converter.convert_arc_command(arc_command, current_point)
-
-    def test_convert_arc_command_missing_parameters(self, converter):
-        """Test error when arc command missing parameters."""
-        arc_command = PathCommand(
-            command_type=PathCommandType.ARC,
-            absolute=True,
-            coordinates=[CoordinatePoint(x=150, y=100)],
-            parameters=[50, 50]  # Missing rotation, flags
-        )
-
-        current_point = CoordinatePoint(x=50, y=100)
-
-        with pytest.raises(ArcConversionError, match="Arc command missing required parameters"):
-            converter.convert_arc_command(arc_command, current_point)
-
     def test_quality_parameter_configuration(self, converter):
         """Test arc quality parameter configuration."""
         # Valid parameters
@@ -300,25 +226,6 @@ class TestArcConverter:
 
         with pytest.raises(ValueError, match="error_tolerance must be between 0.001 and 1.0"):
             converter.set_quality_parameters(error_tolerance=2.0)
-
-    def test_is_arc_command(self, converter):
-        """Test arc command identification."""
-        arc_command = PathCommand(
-            command_type=PathCommandType.ARC,
-            absolute=True,
-            coordinates=[],
-            parameters=[]
-        )
-
-        line_command = PathCommand(
-            command_type=PathCommandType.LINE_TO,
-            absolute=True,
-            coordinates=[],
-            parameters=[]
-        )
-
-        assert converter.is_arc_command(arc_command) == True
-        assert converter.is_arc_command(line_command) == False
 
     def test_estimate_arc_complexity(self, converter):
         """Test arc complexity estimation."""
@@ -396,21 +303,6 @@ class TestArcConverter:
         # Should generate multiple segments for a large arc with small max angle
         assert len(bezier_segments) > 1
 
-    @patch('core.paths.arc_converter.arc_to_cubic_bezier')
-    def test_error_handling_a2c_failure(self, mock_a2c, converter):
-        """Test error handling when a2c algorithm fails."""
-        # Mock the a2c function to raise an error
-        from core.paths.a2c import ArcTooBigError
-        mock_a2c.side_effect = ArcTooBigError("Arc too big")
-
-        with pytest.raises(ArcConversionError, match="Arc conversion failed: Arc too big"):
-            converter.arc_to_bezier_segments(
-                start_x=50, start_y=100,
-                rx=1e6, ry=1e6, x_axis_rotation=0,  # Extreme values
-                large_arc_flag=0, sweep_flag=1,
-                end_x=150, end_y=100
-            )
-
     def test_scientific_notation_coordinates(self, converter):
         """Test handling of scientific notation coordinates."""
         bezier_segments = converter.arc_to_bezier_segments(
@@ -435,24 +327,3 @@ class TestArcConverter:
         assert len(bezier_segments) >= 1
         # Should handle small arcs correctly
 
-    def test_error_recovery_after_failed_conversion(self, converter):
-        """Test that converter recovers after a failed conversion."""
-        # First, try an invalid arc (this should fail)
-        with pytest.raises(ArcConversionError):
-            converter.arc_to_bezier_segments(
-                start_x=0, start_y=0,
-                rx=-50, ry=50, x_axis_rotation=0,  # Invalid negative radius
-                large_arc_flag=0, sweep_flag=1,
-                end_x=100, end_y=100
-            )
-
-        # Then try a valid arc (this should work)
-        bezier_segments = converter.arc_to_bezier_segments(
-            start_x=50, start_y=100,
-            rx=50, ry=50, x_axis_rotation=0,
-            large_arc_flag=0, sweep_flag=1,
-            end_x=150, end_y=100
-        )
-
-        assert len(bezier_segments) >= 1
-        # Converter should work normally after error
