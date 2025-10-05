@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../..'))
 from core.map.path_mapper import PathMapper
 from core.map.emf_adapter import EMFPathAdapter, create_emf_adapter
 from core.ir import Path, Point, LineSegment, BezierSegment, SolidPaint, Rect
-from core.policy.engine import Policy, PathDecision
+from core.policy.engine import Policy
+from core.policy.targets import PathDecision, DecisionReason
 
 
 @pytest.fixture
@@ -25,9 +26,9 @@ def mock_policy():
     policy = Mock()
     decision = PathDecision(
         use_native=False,  # Force EMF path
+        reasons=[DecisionReason.COMPLEX_GEOMETRY],  # EMF fallback for complex paths
         estimated_quality=0.95,
-        estimated_performance=0.8,
-        reasoning="Complex path requires EMF fallback"
+        estimated_performance=0.8
     )
     policy.decide_path.return_value = decision
     return policy
@@ -47,20 +48,14 @@ def simple_path():
         )
     ]
 
-    path = Path(
+    return Path(
         segments=segments,
-        fill=SolidPaint(color="FF0000"),  # Red fill
+        fill=SolidPaint(rgb="FF0000"),  # Red fill
         stroke=None,
         clip=None,
-        opacity=1.0,
-        is_closed=False
+        opacity=1.0
     )
-
-    # Add bounding box
-    path.bbox = Rect(x=0, y=0, width=200, height=100)
-    path.complexity_score = 0.6
-
-    return path
+    # Note: bbox is computed automatically, complexity_score not used
 
 
 @pytest.fixture
@@ -81,20 +76,14 @@ def complex_path():
         )
     ]
 
-    path = Path(
+    return Path(
         segments=segments,
-        fill=SolidPaint(color="0000FF"),  # Blue fill
+        fill=SolidPaint(rgb="0000FF"),  # Blue fill
         stroke=None,
         clip=None,
-        opacity=1.0,
-        is_closed=True
+        opacity=1.0
     )
-
-    # Add bounding box
-    path.bbox = Rect(x=0, y=0, width=200, height=125)
-    path.complexity_score = 0.8
-
-    return path
+    # Note: bbox is computed automatically, complexity_score not used
 
 
 class TestEMFAdapter:
@@ -121,9 +110,8 @@ class TestEMFAdapter:
         # Should not be able to generate EMF for None path
         assert not adapter.can_generate_emf(None)
 
-        # Should not be able to generate EMF for path without segments
-        empty_path = Path(segments=None, fill=None, stroke=None, clip=None, opacity=1.0)
-        assert not adapter.can_generate_emf(empty_path)
+        # Path with segments=None raises ValueError during construction
+        # So we can only test None path (already tested above)
 
     @patch('core.map.emf_adapter.EMF_AVAILABLE', True)
     def test_generate_emf_blob_success(self, simple_path):
