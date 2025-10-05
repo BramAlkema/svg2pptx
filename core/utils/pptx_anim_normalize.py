@@ -117,6 +117,16 @@ def normalize_animation_xml(xml: str) -> str:
     return result
 
 def normalize_if_color_anim(xml: str, anim_def) -> str:
+    """
+    Normalize animation XML if it's a color animation.
+
+    Args:
+        xml: The animation XML string to normalize
+        anim_def: Animation definition (unused, for signature compatibility)
+
+    Returns:
+        Normalized animation XML, or original on error
+    """
     try:
         if not xml:
             return ""

@@ -42,7 +42,21 @@ except ImportError:
             self.font_size = kwargs.get('font_size', 16.0)
 
     def to_emu(value):
-        # Mock EMU conversion - 1px = 9525 EMU at 96 DPI
+        """
+        Mock EMU conversion for testing.
+
+        Converts various unit formats to EMU (English Metric Units):
+        - 1px = 9525 EMU at 96 DPI
+        - 1in = 914400 EMU
+        - 1pt = 12700 EMU
+        - 1mm = 36000 EMU
+
+        Args:
+            value: Numeric value or string with unit suffix (px, in, pt, mm)
+
+        Returns:
+            int: Value converted to EMU
+        """
         if isinstance(value, str):
             if value.endswith('px'):
                 return int(float(value[:-2]) * 9525)
