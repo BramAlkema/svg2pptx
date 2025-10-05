@@ -455,6 +455,10 @@ class Policy:
     def _check_missing_fonts(self, text: TextFrame) -> bool:
         """Check if any fonts are missing (simplified)"""
         # TODO: Integrate with font service to check font availability
+        # PRIORITY: MEDIUM - Better font fallback decisions
+        # EFFORT: 2-3 hours - Font service integration
+        # BLOCKER: None - Font service is available
+        # TRACKING: Issue #TBD - Font availability checking in policy engine
         return False
 
     def _check_wordart_opportunity(self, text: TextFrame) -> Optional[Dict[str, Any]]:

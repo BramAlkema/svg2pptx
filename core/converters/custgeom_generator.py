@@ -453,6 +453,10 @@ class CustGeomGenerator:
         """
         # For now, log the transform and return path unchanged
         # TODO: Implement full transform matrix application
+        # PRIORITY: MEDIUM - Required for rotated/skewed clip paths
+        # EFFORT: 2-3 hours - Matrix transformation for path coordinates
+        # BLOCKER: None - Can be implemented when needed
+        # TRACKING: Issue #TBD - Transform matrix for clip paths
         logger.debug(f"ClipPath transform applied: {transform}")
         return path_data
 

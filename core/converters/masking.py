@@ -646,6 +646,10 @@ class MaskingConverter(BaseConverter):
 
         # For now, create a simple rectangle as placeholder
         # TODO: Implement proper path-based clipping when EMFBlob supports paths
+        # PRIORITY: HIGH - Required for complex clip-path shapes
+        # EFFORT: 3-4 hours - Path-to-EMF conversion and clipping
+        # BLOCKER: EMFBlob path support - currently only supports rectangles
+        # TRACKING: Issue #TBD - Path-based EMF clipping
         brush_handle = emf_blob.add_hatch("cross", color=0x808080, background=0xFFFFFF)
         emf_blob.fill_rectangle(10, 10, 80, 80, brush_handle)
 

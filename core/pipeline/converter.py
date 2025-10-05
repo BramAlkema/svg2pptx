@@ -216,6 +216,10 @@ class CleanSlateConverter:
                 if animations:
                     self.logger.info(f"Detected {len(animations)} animations in SVG")
                     # TODO: In future, integrate animations into conversion pipeline
+                    # PRIORITY: LOW - Animations are experimental feature
+                    # EFFORT: 4-6 hours - Full animation pipeline integration
+                    # BLOCKER: None - Can be implemented when animation system is stable
+                    # TRACKING: Issue #TBD - Animation integration
                 else:
                     self.logger.debug("No animations detected in SVG")
             except Exception as e:

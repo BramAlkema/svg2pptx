@@ -1627,6 +1627,9 @@ class SVGParser:
         return Group(
             children=child_elements,
             clip=None,  # TODO: Implement bbox clipping in future enhancement
+            # PRIORITY: LOW - Edge case for oversized text
+            # EFFORT: 2 hours - Bbox calculation and clipping logic
+            # BLOCKER: None - Can be implemented when needed
             transform=transform_matrix
         )
 
@@ -1664,6 +1667,9 @@ class SVGParser:
             format="png",  # Default format
             href=href,
             clip=None,  # TODO: Implement bbox clipping if image exceeds dimensions
+            # PRIORITY: LOW - Edge case for oversized images
+            # EFFORT: 2 hours - Image bbox clipping
+            # BLOCKER: None - Can be implemented when needed
             opacity=1.0,
             transform=transform_matrix
         )

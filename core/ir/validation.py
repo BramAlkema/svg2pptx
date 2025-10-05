@@ -310,4 +310,8 @@ def _serialize_image(image: Image) -> Dict[str, Any]:
 def _deserialize_elements(data: List[Dict[str, Any]]) -> List[IRElement]:
     """Deserialize elements from JSON data"""
     # TODO: Implement full deserialization when needed for golden tests
+    # PRIORITY: LOW - Only needed for future golden test framework
+    # EFFORT: 3-4 hours - Full IR deserialization from JSON/dict
+    # BLOCKER: None - Golden test framework not yet implemented
+    # TRACKING: Issue #TBD - IR deserialization for golden tests
     raise NotImplementedError("Full deserialization not yet implemented")
