@@ -22,7 +22,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-import pyzstd as zstd
+try:
+    import pyzstd as zstd
+    ZSTD_AVAILABLE = True
+except ImportError:
+    ZSTD_AVAILABLE = False
+    zstd = None
+
 from lxml import etree as ET
 
 from .cache import ConversionCache
@@ -215,10 +221,14 @@ class DiskCache:
             with self._lock:
                 # Serialize data
                 serialized = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
-                
+
                 # Compress data
-                compressed = zstd.compress(serialized, level=3)  # Fast compression
-                compression_ratio = len(compressed) / len(serialized)
+                if ZSTD_AVAILABLE:
+                    compressed = zstd.compress(serialized, level=3)  # Fast compression
+                    compression_ratio = len(compressed) / len(serialized)
+                else:
+                    compressed = serialized
+                    compression_ratio = 1.0
                 
                 # Write to file
                 file_path = self._get_file_path(content_hash)
@@ -283,9 +293,12 @@ class DiskCache:
                 
                 with open(file_path, 'rb') as f:
                     compressed_data = f.read()
-                
+
                 # Decompress and deserialize
-                serialized = zstd.decompress(compressed_data)
+                if ZSTD_AVAILABLE:
+                    serialized = zstd.decompress(compressed_data)
+                else:
+                    serialized = compressed_data
                 data = pickle.loads(serialized)
                 
                 return data

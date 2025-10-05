@@ -21,7 +21,12 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Dict, List, Optional
 
-import psutil
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    psutil = None
 
 logger = logging.getLogger(__name__)
 
@@ -128,8 +133,10 @@ class PerformanceProfiler:
         self.cpu_profiler: cProfile.Profile | None = None
         
         # Memory tracking
-        if self.profile_memory:
+        if self.profile_memory and PSUTIL_AVAILABLE:
             self.process = psutil.Process()
+        else:
+            self.process = None
     
     def start_session(self, session_id: str) -> ProfileSession:
         """Start a new profiling session."""
@@ -181,10 +188,10 @@ class PerformanceProfiler:
         memory_before = 0
         cpu_percent_start = 0
         
-        if self.profile_memory:
+        if self.profile_memory and self.process:
             memory_before = self.process.memory_info().rss
-        
-        if self.profile_cpu:
+
+        if self.profile_cpu and self.process:
             cpu_percent_start = self.process.cpu_percent()
         
         # Track operation start
@@ -211,10 +218,10 @@ class PerformanceProfiler:
             memory_after = 0
             cpu_percent = 0
             
-            if self.profile_memory:
+            if self.profile_memory and self.process:
                 memory_after = self.process.memory_info().rss
-            
-            if self.profile_cpu:
+
+            if self.profile_cpu and self.process:
                 # Get CPU percentage since start of operation
                 cpu_percent = self.process.cpu_percent()
             
@@ -386,7 +393,7 @@ class PerformanceProfiler:
             
             # Memory usage
             current_memory = 0
-            if self.profile_memory:
+            if self.profile_memory and self.process:
                 current_memory = self.process.memory_info().rss / (1024 * 1024)  # MB
             
             return {
