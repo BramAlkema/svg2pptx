@@ -5,29 +5,30 @@ Clean Slate Converter
 Main end-to-end conversion pipeline from SVG to PPTX using clean slate architecture.
 """
 
-import time
-import logging
-import json
 import io
-from typing import Dict, Any, Optional, List
+import json
+import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
-
-from ..ir import SceneGraph, IRElement
-from ..analyze import SVGAnalyzer, AnalysisResult
-from ..parse import SVGParser, ParseResult
-from ..policy import PolicyEngine, PolicyConfig
-from ..map.base import Mapper, MapperResult
-from ..map import PathMapper, GroupMapper, ImageMapper
-from ..map.font_mapper_adapter import FontMapperAdapter
-from ..io import DrawingMLEmbedder, PackageWriter, EmbedderResult
-from ..services.conversion_services import ConversionServices
-from .config import PipelineConfig, OutputFormat
-from .error_reporter import PipelineErrorReporter, ErrorSeverity, ErrorCategory
+from typing import Any, Optional
 
 # Import migrated systems for integration
 from core.animations import SMILParser
 from core.performance.measurement import BenchmarkEngine
+
+from ..analyze import AnalysisResult, SVGAnalyzer
+from ..io import DrawingMLEmbedder, EmbedderResult, PackageWriter
+from ..ir import IRElement, SceneGraph
+from ..map import GroupMapper, ImageMapper, PathMapper
+from ..map.base import Mapper, MapperResult
+from ..map.font_mapper_adapter import FontMapperAdapter
+from ..parse import ParseResult, SVGParser
+from ..policy import PolicyConfig, PolicyEngine
+from ..services.conversion_services import ConversionServices
+from .config import OutputFormat, PipelineConfig
+from .error_reporter import ErrorCategory, ErrorSeverity, PipelineErrorReporter
+
 # Avoid circular import - import CustGeomGenerator lazily when needed
 
 logger = logging.getLogger(__name__)
@@ -72,7 +73,7 @@ class ConversionResult:
     relationships: int = 0
 
     # Debug information
-    debug_data: Dict[str, Any] = None
+    debug_data: dict[str, Any] = None
 
 
 class CleanSlateConverter:
@@ -108,7 +109,7 @@ class CleanSlateConverter:
             'total_conversions': 0,
             'successful_conversions': 0,
             'failed_conversions': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
     def convert_file(self, svg_path: str, output_path: str = None) -> ConversionResult:
@@ -183,7 +184,7 @@ class CleanSlateConverter:
                 if not parse_result.success:
                     self.error_reporter.report_parsing_error(
                         message=f"SVG parsing failed: {parse_result.error}",
-                        svg_content=svg_content
+                        svg_content=svg_content,
                     )
                     raise ConversionError(f"SVG parsing failed: {parse_result.error}",
                                         stage="parsing")
@@ -192,7 +193,7 @@ class CleanSlateConverter:
                 self.error_reporter.report_parsing_error(
                     message=f"SVG parsing exception: {e}",
                     svg_content=svg_content,
-                    exception=e
+                    exception=e,
                 )
                 raise ConversionError(f"SVG parsing failed: {e}", stage="parsing", cause=e)
 
@@ -206,7 +207,7 @@ class CleanSlateConverter:
                 self.error_reporter.report_analysis_error(
                     message=f"SVG analysis failed: {e}",
                     element_count=parse_result.element_count,
-                    exception=e
+                    exception=e,
                 )
                 raise ConversionError(f"SVG analysis failed: {e}", stage="analysis", cause=e)
 
@@ -268,13 +269,13 @@ class CleanSlateConverter:
                 estimated_performance=embedder_result.estimated_performance,
                 slide_count=1,
                 media_files=len(embedder_result.media_files),
-                relationships=len(embedder_result.relationship_data)
+                relationships=len(embedder_result.relationship_data),
             )
 
             # Add debug data if enabled
             if self.config.enable_debug:
                 result.debug_data = self._collect_debug_data(
-                    parse_result, analysis_result, mapper_results, embedder_result
+                    parse_result, analysis_result, mapper_results, embedder_result,
                 )
 
             # Record success
@@ -296,7 +297,7 @@ class CleanSlateConverter:
                 message=f"Conversion pipeline failed: {e}",
                 severity=ErrorSeverity.CRITICAL,
                 category=ErrorCategory.PARSING,  # Will be more specific based on actual stage
-                exception=e
+                exception=e,
             )
 
             self._record_failure()
@@ -333,7 +334,7 @@ class CleanSlateConverter:
             child_mappers = {
                 'path': path_mapper,
                 'text': text_mapper,
-                'image': image_mapper
+                'image': image_mapper,
             }
             group_mapper = GroupMapper(self.policy, self.services, child_mappers)
 
@@ -342,13 +343,13 @@ class CleanSlateConverter:
                 'textframe': text_mapper,
                 'richtextframe': text_mapper,  # TextMapper handles both TextFrame and RichTextFrame
                 'group': group_mapper,
-                'image': image_mapper
+                'image': image_mapper,
             }
 
             # Initialize embedder
             self.embedder = DrawingMLEmbedder(
                 slide_width_emu=self.config.slide_config.width_emu,
-                slide_height_emu=self.config.slide_config.height_emu
+                slide_height_emu=self.config.slide_config.height_emu,
             )
 
             # Initialize package writer
@@ -369,7 +370,7 @@ class CleanSlateConverter:
             raise ConversionError(f"Failed to initialize pipeline components: {e}",
                                 stage="initialization", cause=e)
 
-    def _map_scene_elements(self, scene: SceneGraph) -> List[MapperResult]:
+    def _map_scene_elements(self, scene: SceneGraph) -> list[MapperResult]:
         """Map all elements in scene using appropriate mappers"""
         mapper_results = []
 
@@ -396,7 +397,7 @@ class CleanSlateConverter:
                     element_type = type(element).__name__
                     self.error_reporter.report_mapping_error(
                         message=f"No mapper found for element type: {element_type}",
-                        element_type=element_type
+                        element_type=element_type,
                     )
                     self.logger.warning(f"No mapper found for element type: {element_type}")
                     continue
@@ -413,7 +414,7 @@ class CleanSlateConverter:
                     message=f"Failed to map element {element_type}: {e}",
                     element_type=element_type,
                     mapper_name=mapper_name,
-                    exception=e
+                    exception=e,
                 )
 
                 self.logger.error(f"Failed to map element {element_type} with {mapper_name}: {e}")
@@ -426,7 +427,7 @@ class CleanSlateConverter:
 
         return mapper_results
 
-    def _find_mapper(self, element: IRElement) -> Optional[Mapper]:
+    def _find_mapper(self, element: IRElement) -> Mapper | None:
         """Find appropriate mapper for IR element"""
         element_type = type(element).__name__.lower()
 
@@ -449,7 +450,7 @@ class CleanSlateConverter:
                 # Generate complete PPTX package
                 package_stats = self.package_writer.write_package_stream(
                     [embedder_result],
-                    output_stream := io.BytesIO()
+                    output_stream := io.BytesIO(),
                 )
                 return output_stream.getvalue()
 
@@ -463,20 +464,20 @@ class CleanSlateConverter:
                     'analysis': {
                         'complexity_score': analysis_result.complexity_score,
                         'element_count': analysis_result.element_count,
-                        'recommended_format': analysis_result.recommended_output_format.value
+                        'recommended_format': analysis_result.recommended_output_format.value,
                     },
                     'embedding': {
                         'elements_embedded': embedder_result.elements_embedded,
                         'native_elements': embedder_result.native_elements,
                         'emf_elements': embedder_result.emf_elements,
-                        'processing_time_ms': embedder_result.processing_time_ms
+                        'processing_time_ms': embedder_result.processing_time_ms,
                     },
                     'slide_xml': embedder_result.slide_xml,
                     'relationships': embedder_result.relationship_data,
                     'media_files': [
                         {k: v for k, v in media.items() if k != 'data'}
                         for media in embedder_result.media_files
-                    ]
+                    ],
                 }
                 return json.dumps(debug_data, indent=2).encode('utf-8')
 
@@ -489,20 +490,20 @@ class CleanSlateConverter:
 
     def _collect_debug_data(self, parse_result: ParseResult,
                            analysis_result: AnalysisResult,
-                           mapper_results: List[MapperResult],
-                           embedder_result: EmbedderResult) -> Dict[str, Any]:
+                           mapper_results: list[MapperResult],
+                           embedder_result: EmbedderResult) -> dict[str, Any]:
         """Collect debug data from all pipeline stages"""
         return {
             'parse_result': {
                 'success': parse_result.success,
                 'element_count': len(parse_result.svg_root) if parse_result.svg_root is not None else 0,
-                'parsing_time_ms': parse_result.processing_time_ms
+                'parsing_time_ms': parse_result.processing_time_ms,
             },
             'analysis_result': {
                 'complexity_score': analysis_result.complexity_score,
                 'element_count': analysis_result.element_count,
                 'recommended_format': analysis_result.recommended_output_format.value,
-                'analysis_time_ms': analysis_result.processing_time_ms
+                'analysis_time_ms': analysis_result.processing_time_ms,
             },
             'mapper_results': [
                 {
@@ -511,7 +512,7 @@ class CleanSlateConverter:
                     'estimated_quality': result.estimated_quality,
                     'estimated_performance': result.estimated_performance,
                     'processing_time_ms': result.processing_time_ms,
-                    'output_size_bytes': result.output_size_bytes
+                    'output_size_bytes': result.output_size_bytes,
                 }
                 for result in mapper_results
             ],
@@ -520,13 +521,13 @@ class CleanSlateConverter:
                 'native_elements': embedder_result.native_elements,
                 'emf_elements': embedder_result.emf_elements,
                 'processing_time_ms': embedder_result.processing_time_ms,
-                'total_size_bytes': embedder_result.total_size_bytes
+                'total_size_bytes': embedder_result.total_size_bytes,
             },
             'policy_decisions': [
                 result.policy_decision.to_dict() if hasattr(result.policy_decision, 'to_dict')
                 else str(result.policy_decision)
                 for result in mapper_results
-            ]
+            ],
         }
 
     def _record_success(self, result: ConversionResult) -> None:
@@ -540,7 +541,7 @@ class CleanSlateConverter:
         self._stats['total_conversions'] += 1
         self._stats['failed_conversions'] += 1
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get converter statistics"""
         total = max(self._stats['total_conversions'], 1)
         return {
@@ -552,7 +553,7 @@ class CleanSlateConverter:
                 name: mapper.get_statistics()
                 for name, mapper in self.mappers.items()
             },
-            'embedder_stats': self.embedder.get_statistics()
+            'embedder_stats': self.embedder.get_statistics(),
         }
 
     def reset_statistics(self) -> None:
@@ -561,7 +562,7 @@ class CleanSlateConverter:
             'total_conversions': 0,
             'successful_conversions': 0,
             'failed_conversions': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
         # Reset component statistics
@@ -578,7 +579,7 @@ class CleanSlateConverter:
         self.config = config
         self._initialize_components()
 
-    def get_error_summary(self) -> Dict[str, Any]:
+    def get_error_summary(self) -> dict[str, Any]:
         """
         Get comprehensive error summary for debugging.
 
@@ -587,7 +588,7 @@ class CleanSlateConverter:
         """
         return self.error_reporter.get_error_summary()
 
-    def get_recent_errors(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_errors(self, limit: int = 10) -> list[dict[str, Any]]:
         """
         Get recent error reports.
 

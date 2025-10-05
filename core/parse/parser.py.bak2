@@ -31,8 +31,8 @@ MAX_SIMPLE_PATH_SEGMENTS = 10  # Maximum segments for simple path
 class ParseResult:
     """Result of SVG parsing"""
     success: bool
-    svg_root: Optional[Any] = None  # ET.Element is not a type, it's a factory
-    error: Optional[str] = None
+    svg_root: ET.Element | None = None
+    error: str | None = None
     processing_time_ms: float = 0.0
 
     # Parse statistics

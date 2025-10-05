@@ -7,8 +7,8 @@ Defines the common interface for all IR-to-output mappers.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
 from enum import Enum
+from typing import Any, Optional
 
 from ..ir import IRElement
 from ..policy import Policy, PolicyDecision
@@ -28,7 +28,7 @@ class MapperResult:
     output_format: OutputFormat
     xml_content: str
     policy_decision: PolicyDecision
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
     # Quality metrics
     estimated_quality: float = 1.0       # 0.0-1.0
@@ -40,7 +40,7 @@ class MapperResult:
     compression_ratio: float = 1.0
 
     # Media files (for EMF blobs, images, etc.)
-    media_files: Optional[List[Dict[str, Any]]] = None
+    media_files: list[dict[str, Any]] | None = None
 
     def __post_init__(self):
         if not (0.0 <= self.estimated_quality <= 1.0):
@@ -78,7 +78,7 @@ class Mapper(ABC):
             'native_count': 0,
             'emf_count': 0,
             'error_count': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
     @abstractmethod
@@ -124,7 +124,7 @@ class Mapper(ABC):
         """Record mapping error"""
         self._stats['error_count'] += 1
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get mapping statistics"""
         total = max(self._stats['total_mapped'], 1)
         return {
@@ -132,7 +132,7 @@ class Mapper(ABC):
             'native_ratio': self._stats['native_count'] / total,
             'emf_ratio': self._stats['emf_count'] / total,
             'error_ratio': self._stats['error_count'] / total,
-            'avg_time_ms': self._stats['total_time_ms'] / total
+            'avg_time_ms': self._stats['total_time_ms'] / total,
         }
 
     def reset_statistics(self) -> None:
@@ -142,7 +142,7 @@ class Mapper(ABC):
             'native_count': 0,
             'emf_count': 0,
             'error_count': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
 
@@ -170,9 +170,9 @@ def validate_mapper_result(result: MapperResult) -> bool:
 
     # Basic XML validation
     try:
-        from xml.etree import ElementTree as ET
+        from lxml import etree as ET
         ET.fromstring(f"<root>{result.xml_content}</root>")
-    except ET.ParseError as e:
+    except ET.XMLSyntaxError as e:
         raise ValueError(f"Invalid XML content: {e}")
 
     return True

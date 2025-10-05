@@ -6,15 +6,16 @@ Embeds mapped IR elements into PowerPoint slide structures.
 Handles XML injection, relationship management, and slide coordination.
 """
 
-import time
 import logging
-from typing import Dict, Any, List, Tuple
+import time
 from dataclasses import dataclass
-from lxml import etree as ET
-from ..xml.safe_iter import walk
+from typing import Any
 
+from lxml import etree as ET
+
+from ..ir import IRElement, Rect, SceneGraph
 from ..map.base import MapperResult, OutputFormat
-from ..ir import IRElement, SceneGraph, Rect
+from ..xml.safe_iter import walk
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,8 @@ class EmbeddingError(Exception):
 class EmbedderResult:
     """Result of embedding mapper results into PPTX structure"""
     slide_xml: str
-    relationship_data: List[Dict[str, Any]]
-    media_files: List[Dict[str, Any]]
+    relationship_data: list[dict[str, Any]]
+    media_files: list[dict[str, Any]]
 
     # Statistics
     elements_embedded: int = 0
@@ -76,10 +77,10 @@ class DrawingMLEmbedder:
             'native_count': 0,
             'emf_count': 0,
             'error_count': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
-    def embed_scene(self, scene: SceneGraph, mapper_results: List[MapperResult]) -> EmbedderResult:
+    def embed_scene(self, scene: SceneGraph, mapper_results: list[MapperResult]) -> EmbedderResult:
         """
         Embed complete scene into PowerPoint slide.
 
@@ -124,7 +125,7 @@ class DrawingMLEmbedder:
                 processing_time_ms=processing_time,
                 total_size_bytes=total_size,
                 estimated_quality=avg_quality,
-                estimated_performance=avg_performance
+                estimated_performance=avg_performance,
             )
 
             # Record statistics
@@ -136,7 +137,7 @@ class DrawingMLEmbedder:
             self._record_error(e)
             raise EmbeddingError(f"Failed to embed scene: {e}", cause=e)
 
-    def embed_elements(self, mapper_results: List[MapperResult],
+    def embed_elements(self, mapper_results: list[MapperResult],
                       viewport: Rect = None) -> EmbedderResult:
         """
         Embed list of mapped elements into slide structure.
@@ -155,12 +156,12 @@ class DrawingMLEmbedder:
         minimal_scene = SceneGraph(
             elements=[],  # Elements already mapped
             viewport=viewport,
-            background=None
+            background=None,
         )
 
         return self.embed_scene(minimal_scene, mapper_results)
 
-    def _generate_slide_xml(self, scene: SceneGraph, mapper_results: List[MapperResult]) -> str:
+    def _generate_slide_xml(self, scene: SceneGraph, mapper_results: list[MapperResult]) -> str:
         """Generate complete slide XML with embedded elements"""
         try:
             # Generate background if present
@@ -232,7 +233,7 @@ class DrawingMLEmbedder:
             self._shape_id_counter += 1
             return shape_xml.replace('id="1"', f'id="{self._shape_id_counter - 1}"')
 
-    def _extract_relationships(self, mapper_results: List[MapperResult]) -> List[Dict[str, Any]]:
+    def _extract_relationships(self, mapper_results: list[MapperResult]) -> list[dict[str, Any]]:
         """Extract relationship data for EMF and media elements"""
         relationships = []
 
@@ -248,12 +249,12 @@ class DrawingMLEmbedder:
                     'target': f'../media/emf{self._relationship_id_counter}.emf',
                     'content_type': 'application/emf',
                     'element_type': type(result.element).__name__,
-                    'fallback_reason': result.metadata.get('fallback_reason', 'Complex element requires EMF')
+                    'fallback_reason': result.metadata.get('fallback_reason', 'Complex element requires EMF'),
                 })
 
         return relationships
 
-    def _extract_media_files(self, mapper_results: List[MapperResult]) -> List[Dict[str, Any]]:
+    def _extract_media_files(self, mapper_results: list[MapperResult]) -> list[dict[str, Any]]:
         """Extract media files that need to be included in PPTX package"""
         media_files = []
 
@@ -264,7 +265,7 @@ class DrawingMLEmbedder:
                     'filename': result.metadata.get('media_filename', 'unknown'),
                     'content_type': result.metadata.get('content_type', 'application/octet-stream'),
                     'data': result.metadata['media_data'],
-                    'element_type': type(result.element).__name__
+                    'element_type': type(result.element).__name__,
                 })
 
             # EMF elements also generate media files
@@ -274,7 +275,7 @@ class DrawingMLEmbedder:
                     'content_type': 'application/emf',
                     'data': b'',  # EMF data would be generated separately
                     'element_type': type(result.element).__name__,
-                    'requires_rendering': True
+                    'requires_rendering': True,
                 })
 
         return media_files
@@ -298,7 +299,7 @@ class DrawingMLEmbedder:
         """Record embedding error"""
         self._stats['error_count'] += 1
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get embedding statistics"""
         total = max(self._stats['total_embedded'], 1)
         return {
@@ -307,7 +308,7 @@ class DrawingMLEmbedder:
             'emf_ratio': self._stats['emf_count'] / total,
             'avg_time_ms': self._stats['total_time_ms'] / max(self._stats['total_embedded'], 1),
             'current_shape_id': self._shape_id_counter,
-            'current_rel_id': self._relationship_id_counter
+            'current_rel_id': self._relationship_id_counter,
         }
 
     def reset_statistics(self) -> None:
@@ -317,10 +318,10 @@ class DrawingMLEmbedder:
             'native_count': 0,
             'emf_count': 0,
             'error_count': 0,
-            'total_time_ms': 0.0
+            'total_time_ms': 0.0,
         }
 
-    def get_slide_dimensions(self) -> Tuple[int, int]:
+    def get_slide_dimensions(self) -> tuple[int, int]:
         """Get slide dimensions in EMU"""
         return (self.slide_width_emu, self.slide_height_emu)
 

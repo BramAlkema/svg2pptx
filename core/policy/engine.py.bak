@@ -524,7 +524,7 @@ class Policy:
                 num_samples,
             )
 
-            if len(path_points) < MIN_COLORS_FOR_COMPLEX_GRADIENT:  # Need minimum points for classification
+            if len(path_points) < 16:  # Need minimum points for classification
                 return None
 
             # Classify using simplified pattern detection
@@ -547,7 +547,7 @@ class Policy:
         This is a basic implementation - the full implementation would use
         the sophisticated algorithms from the deterministic_curve_positioning.py spec.
         """
-        if len(path_points) < MIN_COLORS_FOR_COMPLEX_GRADIENT:
+        if len(path_points) < 16:
             return None
 
         # Basic pattern detection (simplified for integration)
@@ -558,14 +558,14 @@ class Policy:
         x_values = [p.x for p in path_points]
 
         # Simple arch detection: check if Y values form single peak
-        if len(y_values) >= MIN_STOPS_FOR_COMPLEX_GRADIENT:
+        if len(y_values) >= 3:
             max_y_idx = y_values.index(max(y_values))
             min_y = min(y_values)
             max_y = max(y_values)
 
             # If peak is in middle and there's significant height variation
-            if (ARCH_PEAK_MIN_POSITION <= max_y_idx / len(y_values) <= ARCH_PEAK_MAX_POSITION and
-                (max_y - min_y) > MIN_ARCH_HEIGHT):  # Minimum arch height
+            if (0.3 <= max_y_idx / len(y_values) <= 0.7 and
+                (max_y - min_y) > 10):  # Minimum arch height
 
                 return {
                     'preset': 'arch',
@@ -576,7 +576,7 @@ class Policy:
                 }
 
         # Check for roughly horizontal line (rise/slant)
-        if len(path_points) >= COMPLEX_TRANSFORM_COUNT:
+        if len(path_points) >= 2:
             start_y = path_points[0].y
             end_y = path_points[-1].y
             start_x = path_points[0].x
@@ -586,10 +586,10 @@ class Policy:
             x_range = abs(end_x - start_x)
 
             # If mostly horizontal with slight slope
-            if x_range > 0 and y_range / max(x_range, 1) < MIN_QUALITY_THRESHOLD:
+            if x_range > 0 and y_range / max(x_range, 1) < 0.2:
                 slope = (end_y - start_y) / x_range
                 return {
-                    'preset': 'rise' if abs(slope) < VERY_LOW_QUALITY_THRESHOLD else 'slant',
+                    'preset': 'rise' if abs(slope) < 0.1 else 'slant',
                     'parameters': {
                         'angle': slope,
                     },
@@ -647,7 +647,7 @@ class Policy:
                 not max_skew_exceeded and
                 not scale_ratio_exceeded and
                 not rotation_deviation_exceeded and
-                analysis['complexity_score'] < MAX_NESTED_GROUPS
+                analysis['complexity_score'] < 5
             )
 
             # Add policy-specific metadata
@@ -677,7 +677,7 @@ class Policy:
         return (
             self.config.enable_group_flattening and
             group.is_leaf_group and
-            len(group.children) < MAX_CLIP_COMPLEXITY and
+            len(group.children) < 10 and
             group.clip is None
         )
 
@@ -756,7 +756,7 @@ class Policy:
             )
 
         # Simple filters can use approximation
-        if primitive_count <= COMPLEX_TRANSFORM_COUNT and thresholds.enable_filter_approximation:
+        if primitive_count <= 2 and thresholds.enable_filter_approximation:
             return FilterDecision.native(
                 filter_type=filter_type or 'simple',
                 reasons=[DecisionReason.SIMPLE_FILTER, DecisionReason.BELOW_THRESHOLDS],
@@ -1084,7 +1084,7 @@ class Policy:
             )
 
         # Simple clips use native
-        if clip_type in ('rect', 'ellipse') or path_complexity <= MAX_CLIP_COMPLEXITY:
+        if clip_type in ('rect', 'ellipse') or path_complexity <= 10:
             return ClipPathDecision.native(
                 clip_type=clip_type or 'simple',
                 reasons=[DecisionReason.SIMPLE_CLIP_PATH, DecisionReason.BELOW_THRESHOLDS],

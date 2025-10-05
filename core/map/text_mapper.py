@@ -6,13 +6,13 @@ Maps IR.TextFrame elements to DrawingML or EMF with documented text fixes applie
 Implements all critical text positioning and alignment corrections.
 """
 
-import time
 import logging
-from typing import List
+import time
+from typing import Optional
 
-from ..ir import IRElement, TextFrame, RichTextFrame, Run, TextAnchor
+from ..ir import IRElement, RichTextFrame, Run, TextAnchor, TextFrame
 from ..policy import Policy, TextDecision
-from .base import Mapper, MapperResult, OutputFormat, MappingError
+from .base import Mapper, MapperResult, MappingError, OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class TextMapper(Mapper):
         self._anchor_map = {
             TextAnchor.START: 'l',    # Left alignment
             TextAnchor.MIDDLE: 'ctr', # Center alignment
-            TextAnchor.END: 'r'       # Right alignment
+            TextAnchor.END: 'r',       # Right alignment
         }
 
     def can_map(self, element: IRElement) -> bool:
@@ -159,11 +159,11 @@ class TextMapper(Mapper):
                     'baseline_adjusted': True,
                     'fixes_applied': ['raw_anchor', 'per_tspan_styling', 'conservative_baseline', 'proper_alignment'],
                     'text_adapter_used': text_adapter_used,
-                    'processing_metadata': processing_metadata
+                    'processing_metadata': processing_metadata,
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.95,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -290,11 +290,11 @@ class TextMapper(Mapper):
                     'run_count': len(text.runs),
                     'complexity_score': text.complexity_score,
                     'bbox': bbox,
-                    'emf_required': True
+                    'emf_required': True,
                 },
                 estimated_quality=0.98,  # EMF preserves full fidelity
                 estimated_performance=0.85,  # Slightly slower than native
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -321,7 +321,7 @@ class TextMapper(Mapper):
                                 italic=run.italic,
                                 underline=run.underline,
                                 strike=run.strike,
-                                rgb=run.rgb
+                                rgb=run.rgb,
                             )
                             current_runs.append(split_run)
 
@@ -348,7 +348,7 @@ class TextMapper(Mapper):
 
         return '\n'.join(paragraph_xmls)
 
-    def _generate_paragraph_xml(self, runs: List[Run], anchor: TextAnchor) -> str:
+    def _generate_paragraph_xml(self, runs: list[Run], anchor: TextAnchor) -> str:
         """Generate single paragraph XML with proper alignment and run styling"""
         # Apply raw anchor handling (documented fix #1)
         alignment = self._anchor_map.get(anchor, 'l')
@@ -432,13 +432,13 @@ class TextMapper(Mapper):
 
         return '\n'.join(paragraph_xmls)
 
-    def get_text_fixes_applied(self) -> List[str]:
+    def get_text_fixes_applied(self) -> list[str]:
         """Get list of documented text fixes implemented"""
         return [
             'raw_anchor_handling',          # Fix #1: No double mapping
             'per_tspan_styling_inheritance', # Fix #2: Proper run styling
             'conservative_baseline_calc',    # Fix #3: 5% baseline adjustment
-            'proper_alignment_separation'    # Fix #4: Paragraph vs run alignment
+            'proper_alignment_separation',    # Fix #4: Paragraph vs run alignment
         ]
 
 

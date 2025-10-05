@@ -6,14 +6,22 @@ Maps IR.Path elements to DrawingML or EMF based on policy decisions.
 Leverages battle-tested path generation components via adapters.
 """
 
-import time
 import logging
+import time
 from typing import Any, Optional
 
-from ..ir import IRElement, Path, BezierSegment, LineSegment
-from ..ir import SolidPaint, LinearGradientPaint, RadialGradientPaint, PatternPaint
-from ..policy import Policy, PathDecision
-from .base import Mapper, MapperResult, OutputFormat, MappingError
+from ..ir import (
+    BezierSegment,
+    IRElement,
+    LinearGradientPaint,
+    LineSegment,
+    Path,
+    PatternPaint,
+    RadialGradientPaint,
+    SolidPaint,
+)
+from ..policy import PathDecision, Policy
+from .base import Mapper, MapperResult, MappingError, OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +36,7 @@ class PathMapper(Mapper):
     Integrates with existing PathSystem for battle-tested path processing.
     """
 
-    def __init__(self, policy: Policy, path_system: Optional[Any] = None):
+    def __init__(self, policy: Policy, path_system: Any | None = None):
         """
         Initialize path mapper.
 
@@ -106,11 +114,11 @@ class PathMapper(Mapper):
                                 'used_existing_path_system': True,
                                 'path_segments': len(path.segments) if path.segments else 0,
                                 'complexity_score': getattr(path, 'complexity_score', 0.5),
-                                'processing_method': 'existing_system'
+                                'processing_method': 'existing_system',
                             },
                             estimated_quality=decision.estimated_quality or 0.98,
                             estimated_performance=decision.estimated_performance or 0.95,
-                            output_size_bytes=len(result.path_xml.encode('utf-8'))
+                            output_size_bytes=len(result.path_xml.encode('utf-8')),
                         )
                 except Exception as e:
                     self.logger.warning(f"Existing PathSystem failed, falling back to native implementation: {e}")
@@ -190,11 +198,11 @@ class PathMapper(Mapper):
                     'has_fill': path.fill is not None,
                     'has_stroke': path.stroke is not None,
                     'has_clip': path.clip is not None,
-                    'processing_method': 'native_clean_slate'
+                    'processing_method': 'native_clean_slate',
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.9,
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -255,7 +263,7 @@ class PathMapper(Mapper):
                     'emf_generation': 'real_blob',
                     'emf_size_bytes': len(emf_result.emf_data),
                     'relationship_id': emf_result.relationship_id,
-                    **emf_result.metadata
+                    **emf_result.metadata,
                 },
                 estimated_quality=emf_result.quality_score,
                 estimated_performance=0.8,  # EMF processing overhead
@@ -263,8 +271,8 @@ class PathMapper(Mapper):
                 media_files=[{
                     'type': 'emf',
                     'data': emf_result.emf_data,
-                    'relationship_id': emf_result.relationship_id
-                }]
+                    'relationship_id': emf_result.relationship_id,
+                }],
             )
 
         except Exception as e:
@@ -324,11 +332,11 @@ class PathMapper(Mapper):
                     'fallback_reason': 'EMF system not available',
                     'path_segments': len(path.segments) if path.segments else 0,
                     'complexity_score': getattr(path, 'complexity_score', 0.5),
-                    'bbox': bbox
+                    'bbox': bbox,
                 },
                 estimated_quality=0.7,  # Lower quality for placeholder
                 estimated_performance=0.9,  # Faster than real EMF
-                output_size_bytes=len(xml_content.encode('utf-8'))
+                output_size_bytes=len(xml_content.encode('utf-8')),
             )
 
         except Exception as e:
@@ -509,7 +517,7 @@ class PathMapper(Mapper):
         self.path_system = path_system
 
 
-def create_path_mapper(policy: Policy, path_system: Optional[Any] = None) -> PathMapper:
+def create_path_mapper(policy: Policy, path_system: Any | None = None) -> PathMapper:
     """
     Create PathMapper with policy engine and optional existing PathSystem.
 

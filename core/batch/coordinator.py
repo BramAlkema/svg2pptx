@@ -9,10 +9,10 @@ Integrates Clean Slate tasks with existing Drive infrastructure.
 import logging
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 # Import Huey instance from tasks
-from .tasks import huey, convert_multiple_svgs_clean_slate
+from .tasks import convert_multiple_svgs_clean_slate, huey
 
 # Import Clean Slate batch job model
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -37,9 +37,9 @@ class CoordinatorError(Exception):
 @huey.task()
 def coordinate_batch_workflow_clean_slate(
     job_id: str,
-    file_paths: List[str],
-    conversion_options: Dict[str, Any] = None
-) -> Dict[str, Any]:
+    file_paths: list[str],
+    conversion_options: dict[str, Any] = None,
+) -> dict[str, Any]:
     """
     Coordinate complete batch workflow using Clean Slate architecture.
 
@@ -79,7 +79,7 @@ def coordinate_batch_workflow_clean_slate(
                 'job_id': job_id,
                 'error_message': error_msg,
                 'error_type': 'job_not_found',
-                'architecture': 'clean_slate'
+                'architecture': 'clean_slate',
             }
 
         # Step 2: Update status to processing
@@ -103,8 +103,8 @@ def coordinate_batch_workflow_clean_slate(
             output_path=output_path,
             conversion_options={
                 'enable_debug': True,  # Always enable tracing for batch jobs
-                'quality': options.get('quality', 'high')
-            }
+                'quality': options.get('quality', 'high'),
+            },
         )
 
         # Handle Huey Result wrapper (in immediate mode, it's callable)
@@ -133,7 +133,7 @@ def coordinate_batch_workflow_clean_slate(
             files = [{
                 'path': output_path,
                 'original_name': f'{job_id}.pptx',
-                'converted_name': f'{job_id}.pptx'
+                'converted_name': f'{job_id}.pptx',
             }]
 
             # Call Drive upload task
@@ -142,7 +142,7 @@ def coordinate_batch_workflow_clean_slate(
                     job_id=job_id,
                     files=files,
                     folder_pattern=batch_job.drive_folder_pattern,
-                    generate_previews=options.get('generate_previews', True)
+                    generate_previews=options.get('generate_previews', True),
                 )
 
                 # Handle Huey Result wrapper
@@ -165,7 +165,7 @@ def coordinate_batch_workflow_clean_slate(
                         'architecture': 'clean_slate',
                         'page_count': conversion_result.get('page_count', 0),
                         'workflow': 'conversion_and_drive',
-                        'debug_trace': conversion_result['debug_trace']
+                        'debug_trace': conversion_result['debug_trace'],
                     }
 
                 batch_job.save()
@@ -176,7 +176,7 @@ def coordinate_batch_workflow_clean_slate(
                     'conversion': conversion_result,
                     'upload': upload_result,
                     'architecture': 'clean_slate',
-                    'workflow': 'conversion_and_drive'
+                    'workflow': 'conversion_and_drive',
                 }
 
             except Exception as upload_error:
@@ -191,10 +191,10 @@ def coordinate_batch_workflow_clean_slate(
                     'conversion': conversion_result,
                     'upload': {
                         'success': False,
-                        'error_message': str(upload_error)
+                        'error_message': str(upload_error),
                     },
                     'architecture': 'clean_slate',
-                    'workflow': 'conversion_only_upload_failed'
+                    'workflow': 'conversion_only_upload_failed',
                 }
 
         else:
@@ -207,7 +207,7 @@ def coordinate_batch_workflow_clean_slate(
                     'architecture': 'clean_slate',
                     'page_count': conversion_result.get('page_count', 0),
                     'workflow': 'conversion_only',
-                    'debug_trace': conversion_result['debug_trace']
+                    'debug_trace': conversion_result['debug_trace'],
                 }
 
             batch_job.save()
@@ -218,7 +218,7 @@ def coordinate_batch_workflow_clean_slate(
                 'job_id': job_id,
                 'conversion': conversion_result,
                 'architecture': 'clean_slate',
-                'workflow': 'conversion_only'
+                'workflow': 'conversion_only',
             }
 
     except Exception as e:
@@ -238,11 +238,11 @@ def coordinate_batch_workflow_clean_slate(
             'job_id': job_id,
             'error_message': str(e),
             'error_type': type(e).__name__,
-            'architecture': 'clean_slate'
+            'architecture': 'clean_slate',
         }
 
 
-def get_coordinator_info() -> Dict[str, Any]:
+def get_coordinator_info() -> dict[str, Any]:
     """
     Get information about the batch coordinator.
 
@@ -258,7 +258,7 @@ def get_coordinator_info() -> Dict[str, Any]:
             'e2e_tracing': True,
             'drive_integration': DRIVE_AVAILABLE,
             'status_tracking': True,
-            'error_recovery': True
+            'error_recovery': True,
         },
         'workflow_stages': [
             'job_retrieval',
@@ -266,13 +266,13 @@ def get_coordinator_info() -> Dict[str, Any]:
             'svg_conversion',
             'drive_upload (optional)',
             'status_update_completed',
-            'trace_aggregation'
+            'trace_aggregation',
         ],
         'trace_data_available': [
             'parse_result',
             'analysis_result',
             'mapper_results',
             'embedder_result',
-            'package_debug_data'
-        ]
+            'package_debug_data',
+        ],
     }

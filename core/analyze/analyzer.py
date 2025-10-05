@@ -5,10 +5,11 @@ SVG Analyzer
 Analyzes SVG structure and recommends conversion strategies.
 """
 
-import time
 import logging
-from typing import Dict, Any, List, Optional
+import time
 from dataclasses import dataclass
+from typing import Any, Optional
+
 from lxml import etree as ET
 
 # Import safe iteration utilities
@@ -36,7 +37,7 @@ class AnalysisResult:
     complexity_score: float
     element_count: int
     recommended_output_format: OutputFormat
-    scene: Optional[Any] = None  # Will be IR Scene when available
+    scene: Any | None = None  # Will be IR Scene when available
 
     # Detailed metrics
     path_count: int = 0
@@ -62,8 +63,8 @@ class AnalysisResult:
     group_nesting_depth: int = 0
 
     # Recommendations
-    recommended_strategies: List[str] = None
-    optimization_suggestions: List[str] = None
+    recommended_strategies: list[str] = None
+    optimization_suggestions: list[str] = None
 
     def __post_init__(self):
         if self.recommended_strategies is None:
@@ -85,7 +86,7 @@ class SVGAnalyzer:
         self.complexity_thresholds = {
             'simple': 0.3,
             'moderate': 0.6,
-            'complex': 0.8
+            'complex': 0.8,
         }
 
         # Element complexity weights
@@ -111,7 +112,7 @@ class SVGAnalyzer:
             'feDropShadow': 0.6,
             'linearGradient': 0.4,
             'radialGradient': 0.5,
-            'pattern': 0.8
+            'pattern': 0.8,
         }
 
         self.complexity_calculator = ComplexityCalculator()
@@ -190,7 +191,7 @@ class SVGAnalyzer:
                 path_complexity=path_complexity,
                 group_nesting_depth=group_nesting_depth,
                 recommended_strategies=strategies,
-                optimization_suggestions=optimizations
+                optimization_suggestions=optimizations,
             )
 
             self.logger.debug(f"SVG analysis completed in {processing_time:.2f}ms, "
@@ -211,10 +212,10 @@ class SVGAnalyzer:
                 scene=[],  # Empty list, not None - this is iterable
                 processing_time_ms=processing_time,
                 recommended_strategies=['fallback_to_existing_system'],
-                optimization_suggestions=['review_svg_structure']
+                optimization_suggestions=['review_svg_structure'],
             )
 
-    def _count_elements_by_type(self, svg_root: ET.Element) -> Dict[str, int]:
+    def _count_elements_by_type(self, svg_root: ET.Element) -> dict[str, int]:
         """Count elements by type"""
         counts = {}
 
@@ -225,7 +226,7 @@ class SVGAnalyzer:
 
         return counts
 
-    def _calculate_complexity_score(self, svg_root: ET.Element, element_counts: Dict[str, int]) -> float:
+    def _calculate_complexity_score(self, svg_root: ET.Element, element_counts: dict[str, int]) -> float:
         """Calculate overall complexity score (0.0 to 1.0)"""
         try:
             return self.complexity_calculator.calculate_overall_complexity(svg_root, element_counts)
@@ -239,13 +240,13 @@ class SVGAnalyzer:
             # Normalize to 0-1 range (assuming 50 weighted elements = max complexity)
             return min(total_weighted_elements / 50.0, 1.0)
 
-    def _analyze_features(self, svg_root: ET.Element) -> Dict[str, bool]:
+    def _analyze_features(self, svg_root: ET.Element) -> dict[str, bool]:
         """Analyze SVG features that affect complexity"""
         features = {
             'has_transforms': False,
             'has_clipping': False,
             'has_patterns': False,
-            'has_animations': False
+            'has_animations': False,
         }
 
         for element in walk(svg_root):
@@ -337,7 +338,7 @@ class SVGAnalyzer:
                 'C': path_data.count('C') + path_data.count('c'),
                 'Q': path_data.count('Q') + path_data.count('q'),
                 'A': path_data.count('A') + path_data.count('a'),
-                'Z': path_data.count('Z') + path_data.count('z')
+                'Z': path_data.count('Z') + path_data.count('z'),
             }
 
             # Calculate complexity based on command types and counts
@@ -375,7 +376,7 @@ class SVGAnalyzer:
 
         return max_depth
 
-    def _recommend_output_format(self, complexity_score: float, features: Dict[str, bool]) -> OutputFormat:
+    def _recommend_output_format(self, complexity_score: float, features: dict[str, bool]) -> OutputFormat:
         """Recommend output format based on complexity and features"""
         # Force specific formats for certain features
         if features['has_animations']:
@@ -390,8 +391,8 @@ class SVGAnalyzer:
         else:
             return OutputFormat.DEBUG_JSON  # Too complex, needs analysis
 
-    def _generate_strategies(self, complexity_score: float, features: Dict[str, bool],
-                           element_counts: Dict[str, int]) -> List[str]:
+    def _generate_strategies(self, complexity_score: float, features: dict[str, bool],
+                           element_counts: dict[str, int]) -> list[str]:
         """Generate recommended conversion strategies"""
         strategies = []
 
@@ -424,7 +425,7 @@ class SVGAnalyzer:
         return strategies
 
     def _generate_optimization_suggestions(self, svg_root: ET.Element,
-                                         features: Dict[str, bool]) -> List[str]:
+                                         features: dict[str, bool]) -> list[str]:
         """Generate optimization suggestions"""
         suggestions = []
 
@@ -464,7 +465,7 @@ class SVGAnalyzer:
         return base_time + element_time + complexity_overhead
 
     def _create_ir_scene_placeholder(self, svg_root: ET.Element,
-                                   element_counts: Dict[str, int]) -> List[Any]:
+                                   element_counts: dict[str, int]) -> list[Any]:
         """Create IR scene using the new SVG parser - never returns None"""
         try:
             # Use the new SVG to IR parser
@@ -499,7 +500,7 @@ class SVGAnalyzer:
     def _calculate_ir_complexity_adjustment(self, scene) -> float:
         """Calculate complexity adjustment based on IR analysis"""
         try:
-            from ..ir.scene import Path, TextFrame, Group, Image
+            from ..ir.scene import Group, Image, Path, TextFrame
 
             adjustment_factor = 1.0
             total_elements = len(scene)
