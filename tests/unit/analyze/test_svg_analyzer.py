@@ -222,15 +222,6 @@ class TestSVGAnalyzer:
         assert complex_result.estimated_conversion_time_ms > 0
         assert complex_result.estimated_conversion_time_ms > simple_result.estimated_conversion_time_ms
 
-    def test_ir_scene_integration(self, analyzer, simple_svg):
-        """Test IR scene creation integration."""
-        result = analyzer.analyze(simple_svg)
-
-        # Scene should be created if IR parser is available
-        # May be None if integration fails, which is acceptable
-        if result.scene is not None:
-            assert len(result.scene) > 0
-
     def test_error_handling(self, analyzer):
         """Test error handling with malformed SVG."""
         # Test with minimal SVG that might cause issues

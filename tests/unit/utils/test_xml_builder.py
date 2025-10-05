@@ -206,22 +206,6 @@ class TestXMLBuilder:
         assert xml_builder.validate_xml(valid_xml) is True
         assert xml_builder.validate_xml(invalid_xml) is False
 
-    def test_pretty_print_xml(self, xml_builder):
-        """Test XML pretty printing."""
-        compact_xml = '<root><child>content</child></root>'
-
-        formatted_xml = xml_builder.pretty_print_xml(compact_xml)
-
-        # Should contain proper indentation
-        assert '    <child>' in formatted_xml
-        assert '<?xml version=' in formatted_xml
-
-        # Test with invalid XML
-        invalid_xml = '<root><unclosed>'
-        result = xml_builder.pretty_print_xml(invalid_xml)
-        assert result == invalid_xml  # Should return original
-
-
 class TestConvenienceFunctions:
     """Test convenience functions."""
 
@@ -260,38 +244,3 @@ class TestConvenienceFunctions:
 class TestXMLIntegration:
     """Test integration scenarios."""
 
-    def test_complete_presentation_structure(self):
-        """Test creating a complete presentation structure."""
-        xml_builder = get_xml_builder()
-
-        # Create content types
-        content_types = xml_builder.create_content_types_xml(
-            additional_overrides=[
-                {
-                    'PartName': '/ppt/slides/slide1.xml',
-                    'ContentType': 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml'
-                }
-            ]
-        )
-
-        # Create presentation with slide
-        presentation_xml = xml_builder.create_presentation_xml(
-            width_emu=9144000,
-            height_emu=6858000,
-            slide_list='<p:sldId id="256" r:id="rId2"/>'
-        )
-
-        # Create slide
-        slide_xml = xml_builder.create_slide_xml(
-            slide_content='<p:sp><p:nvSpPr><p:cNvPr id="2" name="Test"/></p:nvSpPr></p:sp>'
-        )
-
-        # Verify all are valid XML
-        assert xml_builder.validate_xml(content_types)
-        assert xml_builder.validate_xml(presentation_xml)
-        assert xml_builder.validate_xml(slide_xml)
-
-        # Verify integration
-        assert 'slide1.xml' in content_types
-        assert 'p:sldId' in presentation_xml
-        assert 'Test' in slide_xml

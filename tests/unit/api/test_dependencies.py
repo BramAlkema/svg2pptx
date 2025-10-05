@@ -40,8 +40,9 @@ class TestGetAnalyzer:
         """Test that analyzer can be reused across multiple calls."""
         analyzer = get_analyzer()
 
+        # Use clearly different SVGs - one simple, one complex
         svg1 = '<svg><rect width="10" height="10"/></svg>'
-        svg2 = '<svg><circle r="5"/></svg>'
+        svg2 = '<svg><rect width="10" height="10"/><rect width="20" height="20"/><circle r="5"/><path d="M0,0 L100,100"/></svg>'
 
         # Should work for multiple SVGs
         result1 = analyzer.analyze_svg(svg1)
@@ -49,7 +50,7 @@ class TestGetAnalyzer:
 
         assert result1 is not None
         assert result2 is not None
-        # Results should be different for different inputs
+        # Results should be different for different inputs (different element counts at minimum)
         assert result1.to_dict() != result2.to_dict()
 
 

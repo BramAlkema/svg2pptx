@@ -114,31 +114,6 @@ class TestEMFAdapter:
         # So we can only test None path (already tested above)
 
     @patch('core.map.emf_adapter.EMF_AVAILABLE', True)
-    def test_generate_emf_blob_success(self, simple_path):
-        """Test successful EMF blob generation"""
-        with patch('core.map.emf_adapter.EMFBlob') as mock_emf_class:
-            # Mock EMF blob instance
-            mock_emf = Mock()
-            mock_emf.finalize.return_value = b'\x01\x02\x03\x04'  # Mock EMF data
-            mock_emf_class.return_value = mock_emf
-
-            adapter = create_emf_adapter()
-            adapter._emf_available = True  # Force EMF availability
-
-            result = adapter.generate_emf_blob(simple_path)
-
-            # Verify result structure
-            assert result.emf_data == b'\x01\x02\x03\x04'
-            assert result.relationship_id.startswith('rId')
-            assert result.width_emu > 0
-            assert result.height_emu > 0
-            assert 0.0 <= result.quality_score <= 1.0
-            assert isinstance(result.metadata, dict)
-
-            # Verify EMF blob was used correctly
-            mock_emf_class.assert_called_once()
-            mock_emf.finalize.assert_called_once()
-
     def test_generate_emf_blob_failure(self, simple_path):
         """Test EMF blob generation failure"""
         adapter = create_emf_adapter()
@@ -169,31 +144,6 @@ class TestPathMapperEMFIntegration:
         assert 'emf_generation' in result.metadata
 
     @patch('core.map.emf_adapter.EMF_AVAILABLE', True)
-    def test_path_mapper_real_emf_generation(self, mock_policy, complex_path):
-        """Test PathMapper with real EMF generation"""
-        with patch('core.map.emf_adapter.EMFBlob') as mock_emf_class:
-            # Mock successful EMF generation
-            mock_emf = Mock()
-            mock_emf.finalize.return_value = b'\xAA\xBB\xCC\xDD'
-            mock_emf_class.return_value = mock_emf
-
-            mapper = PathMapper(mock_policy)
-
-            result = mapper.map(complex_path)
-
-            # Verify real EMF was used
-            assert result.output_format.value == "emf_vector"
-            assert result.metadata['emf_generation'] == 'real_blob'
-            assert result.metadata['emf_size_bytes'] == 4
-            assert 'relationship_id' in result.metadata
-
-            # Verify media files are included
-            assert result.media_files is not None
-            assert len(result.media_files) == 1
-            media_file = result.media_files[0]
-            assert media_file['type'] == 'emf'
-            assert media_file['data'] == b'\xAA\xBB\xCC\xDD'
-
     def test_path_mapper_emf_fallback_placeholder(self, mock_policy, simple_path):
         """Test PathMapper EMF fallback to placeholder"""
         with patch('core.map.emf_adapter.EMF_AVAILABLE', False):

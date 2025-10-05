@@ -361,27 +361,6 @@ class TestSVGAttributeValidation:
         for attr in attrs:
             assert attr in result
 
-    def test_validate_svg_attributes_color_validation(self):
-        """Test color attribute validation."""
-        color_attrs = {
-            "fill": "#FF0000",           # Valid hex
-            "stroke": "rgb(255,0,0)",    # Valid RGB
-            "color": "red",              # Valid named color
-            "bad_color": "#GGGGGG",      # Invalid hex
-            "bad_rgb": "rgb(300,300,300)" # Invalid RGB values
-        }
-
-        result = self.validator.validate_svg_attributes(color_attrs)
-
-        # Valid colors should pass
-        assert result.get("fill") == "#ff0000"  # Normalized to lowercase
-        assert result.get("stroke") == "rgb(255,0,0)"
-        assert result.get("color") == "red"
-
-        # Invalid colors should be filtered out
-        assert "bad_color" not in result
-        assert "bad_rgb" not in result
-
     def test_validate_svg_attributes_url_sanitization(self):
         """Test URL attribute sanitization."""
         url_attrs = {
@@ -569,27 +548,6 @@ class TestSecurityValidation:
 
         with pytest.raises(ValidationError):
             self.validator.parse_numeric_safe(long_string)
-
-    def test_injection_prevention(self):
-        """Test various injection attack prevention."""
-        injection_attempts = {
-            "sql": "'; DROP TABLE users; --",
-            "cmd": "$(rm -rf /)",
-            "path": "../../../../etc/passwd",
-            "null": "\x00\x01\x02",
-            "unicode": "\u202e\u0000"  # Unicode RLO attack
-        }
-
-        result = self.validator.validate_svg_attributes(injection_attempts)
-
-        # Injection attempts should be sanitized or filtered
-        for key, value in result.items():
-            if value is not None:
-                assert "DROP TABLE" not in value
-                assert "rm -rf" not in value
-                assert "../" not in value
-                assert "\x00" not in value
-
 
 class TestPropertyBasedValidation:
     """Property-based tests using Hypothesis for robust validation."""

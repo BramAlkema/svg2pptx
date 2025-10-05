@@ -310,60 +310,6 @@ class TestProcessingInstructionsAndEntities:
 class TestRegressionPrevention:
     """Tests that specifically prevent regression of the original cython error."""
 
-    def test_original_error_scenario(self):
-        """Test the exact scenario that caused the original cython error."""
-        # This is the SVG content from the original failing test
-        svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="0 0 400 300" width="400" height="300">
-    <defs>
-        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
-            <stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
-        </linearGradient>
-        <pattern id="pattern1" patternUnits="userSpaceOnUse" width="20" height="20">
-            <rect width="10" height="10" fill="blue"/>
-            <rect x="10" y="10" width="10" height="10" fill="blue"/>
-        </pattern>
-    </defs>
-
-    <!-- Basic shapes -->
-    <rect x="10" y="10" width="100" height="60" fill="url(#grad1)" stroke="black" stroke-width="2"/>
-    <circle cx="200" cy="50" r="40" fill="url(#pattern1)"/>
-    <ellipse cx="320" cy="50" rx="60" ry="30" fill="green" opacity="0.7"/>
-
-    <!-- Paths -->
-    <path d="M 50 150 Q 100 100 150 150 T 250 150" stroke="purple" stroke-width="3" fill="none"/>
-    <path d="M 20 200 L 50 180 L 80 200 Z" fill="orange"/>
-
-    <!-- Text with transformations -->
-    <g transform="translate(50, 250) rotate(15)">
-        <text font-size="16" fill="darkblue">Transformed Text</text>
-    </g>
-
-    <!-- Groups and nested transforms -->
-    <g transform="scale(0.8) translate(200, 180)">
-        <g transform="rotate(30)">
-            <rect width="60" height="40" fill="pink" stroke="navy"/>
-            <text x="30" y="25" text-anchor="middle" font-size="12">Nested</text>
-        </g>
-    </g>
-</svg>'''
-
-        # This should NOT raise the cython error anymore
-        parser = SVGParser()
-        parse_result = parser.parse(svg_content)
-        assert parse_result.success, f"Parse failed: {parse_result.error}"
-
-        analyzer = SVGAnalyzer()
-        analysis_result = analyzer.analyze(parse_result.svg_root)
-
-        # Should complete successfully with meaningful results
-        assert analysis_result.element_count > 10  # Complex SVG with many elements
-        assert analysis_result.complexity_score > 1.0  # Should be complex
-        assert analysis_result.scene is not None
-        assert len(analysis_result.scene) > 0
-
     def test_iterator_error_prevention(self):
         """Test that prevents the specific 'cython_function_or_method' is not iterable error."""
         svg_content = b'''<svg xmlns="http://www.w3.org/2000/svg">

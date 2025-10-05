@@ -68,6 +68,8 @@ class TestConversionServices:
         mock_pptx_builder = Mock()
         mock_style_service = Mock()
 
+        mock_font_service = Mock()
+
         services = ConversionServices(
             unit_converter=mock_unit_converter,
             color_factory=mock_color_factory,
@@ -79,6 +81,7 @@ class TestConversionServices:
             style_service=mock_style_service,
             coordinate_transformer=mock_coordinate_transformer,
             font_processor=mock_font_processor,
+            font_service=mock_font_service,
             path_processor=mock_path_processor,
             pptx_builder=mock_pptx_builder,
             gradient_service=mock_gradient_service,
