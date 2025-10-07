@@ -56,13 +56,18 @@ def mock_oauth_flow():
         mock_flow_class.from_client_config.return_value = mock_flow
 
         # Mock authorization_url() - returns (url, state) tuple
-        mock_flow.authorization_url.return_value = (
-            'https://accounts.google.com/o/oauth2/auth?'
-            'client_id=test&redirect_uri=http://localhost:8080/oauth2/callback&'
-            'response_type=code&access_type=offline&include_granted_scopes=true&'
-            'prompt=consent&state=test_state_token',
-            'test_state_token'  # state value
-        )
+        # Use side_effect to return the state parameter that was passed in
+        def mock_authorization_url(**kwargs):
+            state = kwargs.get('state', 'test_state_token')
+            url = (
+                f'https://accounts.google.com/o/oauth2/auth?'
+                f'client_id=test&redirect_uri=http://localhost:8080/oauth2/callback&'
+                f'response_type=code&access_type=offline&include_granted_scopes=true&'
+                f'prompt=consent&state={state}'
+            )
+            return (url, state)
+
+        mock_flow.authorization_url.side_effect = mock_authorization_url
 
         # Mock fetch_token() - avoids InsecureTransportError
         mock_flow.fetch_token = Mock()
@@ -177,29 +182,32 @@ class TestOAuthFlowInitiation:
 class TestCSRFProtection:
     """Test CSRF protection via state validation."""
 
-    def test_invalid_state_raises_error(self, oauth_service):
+    def test_invalid_state_raises_error(self, oauth_service, mock_oauth_flow):
         """Invalid state token raises OAuthError."""
-        with pytest.raises(OAuthError, match="Invalid or expired state"):
+        mock_flow_class, mock_flow, mock_creds = mock_oauth_flow
+
+        with pytest.raises(OAuthError, match="Invalid state parameter"):
             oauth_service.handle_callback(
                 user_id="alice",
                 authorization_response="http://callback?state=invalid_state&code=auth_code"
             )
 
-    @patch('core.auth.oauth_service.Flow.from_client_config')
-    def test_valid_state_accepted(self, mock_flow_class, oauth_service, mock_token_store):
+    def test_valid_state_accepted(self, oauth_service, mock_oauth_flow, mock_token_store):
         """Valid state token is accepted."""
+        mock_flow_class, mock_flow, mock_creds = mock_oauth_flow
+
         # Start flow to get valid state
         auth_url = oauth_service.start_auth_flow("alice")
         state = parse_qs(urlparse(auth_url).query)['state'][0]
 
-        # Mock flow
-        mock_flow = Mock()
-        mock_flow.fetch_token = Mock()
-        mock_flow.credentials = Mock(spec=Credentials)
-        mock_flow.credentials.refresh_token = "refresh_token_123"
-        mock_flow.credentials.token = "access_token"
-        mock_flow.credentials.id_token = {'sub': 'google_sub', 'email': 'alice@example.com'}
-        mock_flow_class.return_value = mock_flow
+        # Configure mock credentials with id_token (JWT format)
+        # Create a mock JWT: header.payload.signature
+        import json
+        import base64
+        payload = json.dumps({'sub': 'google_sub', 'email': 'alice@example.com'})
+        encoded_payload = base64.urlsafe_b64encode(payload.encode()).decode().rstrip('=')
+        mock_creds.id_token = f'header.{encoded_payload}.signature'
+        mock_creds.refresh_token = "refresh_token_123"
 
         # Should not raise error
         callback_url = f"http://callback?state={state}&code=auth_code"
@@ -208,12 +216,22 @@ class TestCSRFProtection:
         # State should be removed after use
         assert state not in oauth_service._state_store
 
-    def test_state_removed_after_use(self, oauth_service):
+    def test_state_removed_after_use(self, oauth_service, mock_oauth_flow, mock_token_store):
         """State token is removed after successful use."""
+        mock_flow_class, mock_flow, mock_creds = mock_oauth_flow
+
         auth_url = oauth_service.start_auth_flow("alice")
         state = parse_qs(urlparse(auth_url).query)['state'][0]
 
         assert state in oauth_service._state_store
+
+        # Configure mock credentials with id_token (JWT format)
+        import json
+        import base64
+        payload = json.dumps({'sub': 'google_sub', 'email': 'alice@example.com'})
+        encoded_payload = base64.urlsafe_b64encode(payload.encode()).decode().rstrip('=')
+        mock_creds.id_token = f'header.{encoded_payload}.signature'
+        mock_creds.refresh_token = "refresh_token_123"
 
         # After callback (even if it fails), state should be cleaned up
         try:
