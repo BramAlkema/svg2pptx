@@ -95,6 +95,9 @@ class GoogleOAuthService:
         Returns:
             Authorization URL for user to visit
         """
+        if not user_id or not user_id.strip():
+            raise ValueError("user_id cannot be empty")
+
         flow = self._create_flow(is_cli)
 
         # Generate CSRF state token
