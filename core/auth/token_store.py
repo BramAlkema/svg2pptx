@@ -101,6 +101,9 @@ class TokenStore:
         scopes: str = None,
     ) -> None:
         """Save encrypted refresh token for user."""
+        if not user_id or not user_id.strip():
+            raise ValueError("user_id cannot be empty")
+
         encrypted_token = self.cipher.encrypt(refresh_token.encode()).decode()
         scopes = scopes or self.DEFAULT_SCOPES
 

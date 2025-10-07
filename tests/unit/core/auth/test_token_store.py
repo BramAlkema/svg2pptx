@@ -34,9 +34,11 @@ class TestTokenStoreInitialization:
             env_path = Path(tmpdir) / ".env"
             store = TokenStore(env_path)
 
-            # Key should be generated and stored
-            env_content = env_path.read_text()
-            assert "TOKEN_ENCRYPTION_KEY=" in env_content
+            # Key should be generated and stored in encryption.key file
+            key_path = env_path.parent / "encryption.key"
+            assert key_path.exists()
+            key_content = key_path.read_text()
+            assert len(key_content.strip()) > 0  # Has encryption key
 
     def test_initialization_uses_existing_key(self):
         """TokenStore uses existing encryption key."""
@@ -197,7 +199,8 @@ class TestTokenInfo:
             info = store.get_token_info("alice")
 
             assert isinstance(info, TokenInfo)
-            assert info.refresh_token == "token123"
+            # TokenInfo doesn't include refresh_token (security: not in metadata)
+            assert info.user_id == "alice"
             assert info.google_sub == "sub456"
             assert info.email == "alice@example.com"
             assert info.scopes == "openid email profile"
@@ -287,9 +290,9 @@ class TestHelperFunctions:
         with patch('core.auth.token_store.TokenStore') as mock_store_class:
             get_api_token_store()
 
-            # Verify path
+            # Verify path (uses absolute path to current directory .env)
             call_args = mock_store_class.call_args
-            assert call_args[0][0] == Path(".env")
+            assert call_args[0][0] == Path.cwd() / ".env"
 
 
 class TestEdgeCases:
@@ -337,8 +340,9 @@ class TestEdgeCases:
             env_path = Path(tmpdir) / ".env"
             store = TokenStore(env_path)
 
-            # Manually corrupt the token
-            env_path.write_text("GOOGLE_TOKEN_USER1_REFRESH_TOKEN=corrupted_invalid_base64!!!\n", mode='a')
+            # Manually corrupt the token by appending to file
+            with open(env_path, 'a') as f:
+                f.write("GOOGLE_TOKEN_USER1_REFRESH_TOKEN=corrupted_invalid_base64!!!\n")
 
             # Should handle gracefully
             with pytest.raises(Exception):  # Fernet raises InvalidToken
