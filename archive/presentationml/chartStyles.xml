@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cs:chartStyle xmlns:cs="http://schemas.microsoft.com/office/drawing/2012/chartStyle"
+               xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" id="{charts.presentation.style_id}">
+
+  <!-- Chart Area Style -->
+  <cs:chartArea>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.chart_area_background}">
+          <a:tint val="{colors.charts.presentation.chart_area_tint}"/>
+        </a:schemeClr>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.chart_area.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.chart_area_border}"/>
+        </a:solidFill>
+      </a:ln>
+      <a:effectLst>
+        <a:outerShdw blurRad="{charts.presentation.chart_area.shadow_blur}"
+                     dist="{charts.presentation.chart_area.shadow_distance}"
+                     dir="{charts.presentation.chart_area.shadow_direction}"
+                     algn="{charts.presentation.chart_area.shadow_alignment}">
+          <a:schemeClr val="{colors.charts.presentation.chart_area_shadow}">
+            <a:alpha val="{colors.charts.presentation.chart_area_shadow_alpha}"/>
+          </a:schemeClr>
+        </a:outerShdw>
+      </a:effectLst>
+    </cs:spPr>
+  </cs:chartArea>
+
+  <!-- Plot Area Style -->
+  <cs:plotArea>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.plot_area_background}">
+          <a:tint val="{colors.charts.presentation.plot_area_tint}"/>
+        </a:schemeClr>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.plot_area.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.plot_area_border}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+  </cs:plotArea>
+
+  <!-- Legend Style -->
+  <cs:legend>
+    <cs:spPr>
+      <a:noFill/>
+      <a:ln>
+        <a:noFill/>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.legend.anchor}" anchorCtr="{typography.charts.legend.anchor_center}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.legend.font_size}" kern="{typography.charts.legend.kerning}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.legend_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.legend.font_family}"/>
+            <a:ea typeface="{typography.charts.legend.font_family_ea}"/>
+            <a:cs typeface="{typography.charts.legend.font_family_cs}"/>
+          </a:defRPr>
+        </a:pPr>
+        <a:endParaRPr lang="{typography.charts.legend.language}"/>
+      </a:p>
+    </cs:txPr>
+  </cs:legend>
+
+  <!-- Title Style -->
+  <cs:title>
+    <cs:spPr>
+      <a:noFill/>
+      <a:ln>
+        <a:noFill/>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.title.anchor}" anchorCtr="{typography.charts.title.anchor_center}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.title.font_size}" kern="{typography.charts.title.kerning}" b="{typography.charts.title.bold}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.title_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.title.font_family}"/>
+            <a:ea typeface="{typography.charts.title.font_family_ea}"/>
+            <a:cs typeface="{typography.charts.title.font_family_cs}"/>
+          </a:defRPr>
+        </a:pPr>
+        <a:endParaRPr lang="{typography.charts.title.language}"/>
+      </a:p>
+    </cs:txPr>
+  </cs:title>
+
+  <!-- Data Series Colors -->
+  <cs:dataTable>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.data_table_background}"/>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.data_table.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.data_table_border}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.data_table.anchor}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.data_table.font_size}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.data_table_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.data_table.font_family}"/>
+          </a:defRPr>
+        </a:pPr>
+      </a:p>
+    </cs:txPr>
+  </cs:dataTable>
+
+  <!-- Series Style Variations -->
+  <cs:seriesAxis>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.series_axis.line_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.series_axis_line}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.series_axis.anchor}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.series_axis.font_size}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.series_axis_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.series_axis.font_family}"/>
+          </a:defRPr>
+        </a:pPr>
+      </a:p>
+    </cs:txPr>
+    <cs:majorGridlines>
+      <cs:spPr>
+        <a:ln w="{charts.presentation.major_gridlines.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.charts.presentation.major_gridlines}">
+              <a:alpha val="{colors.charts.presentation.major_gridlines_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:ln>
+      </cs:spPr>
+    </cs:majorGridlines>
+    <cs:minorGridlines>
+      <cs:spPr>
+        <a:ln w="{charts.presentation.minor_gridlines.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.charts.presentation.minor_gridlines}">
+              <a:alpha val="{colors.charts.presentation.minor_gridlines_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:ln>
+      </cs:spPr>
+    </cs:minorGridlines>
+  </cs:seriesAxis>
+
+  <!-- Category Axis -->
+  <cs:categoryAxis>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.category_axis.line_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.category_axis_line}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.category_axis.anchor}" rot="{typography.charts.category_axis.rotation}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.category_axis.font_size}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.category_axis_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.category_axis.font_family}"/>
+          </a:defRPr>
+        </a:pPr>
+      </a:p>
+    </cs:txPr>
+    <cs:majorGridlines>
+      <cs:spPr>
+        <a:ln w="{charts.presentation.category_major_gridlines.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.charts.presentation.category_major_gridlines}">
+              <a:alpha val="{colors.charts.presentation.category_major_gridlines_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:ln>
+      </cs:spPr>
+    </cs:majorGridlines>
+  </cs:categoryAxis>
+
+  <!-- Value Axis -->
+  <cs:valueAxis>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.value_axis.line_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.value_axis_line}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.value_axis.anchor}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.value_axis.font_size}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.value_axis_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.value_axis.font_family}"/>
+          </a:defRPr>
+        </a:pPr>
+      </a:p>
+    </cs:txPr>
+    <cs:majorGridlines>
+      <cs:spPr>
+        <a:ln w="{charts.presentation.value_major_gridlines.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.charts.presentation.value_major_gridlines}">
+              <a:alpha val="{colors.charts.presentation.value_major_gridlines_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:ln>
+      </cs:spPr>
+    </cs:majorGridlines>
+    <cs:minorGridlines>
+      <cs:spPr>
+        <a:ln w="{charts.presentation.value_minor_gridlines.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.charts.presentation.value_minor_gridlines}">
+              <a:alpha val="{colors.charts.presentation.value_minor_gridlines_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:ln>
+      </cs:spPr>
+    </cs:minorGridlines>
+  </cs:valueAxis>
+
+  <!-- Data Point Variations -->
+  <cs:dataPoint>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.data_point_fill}"/>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.data_point.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.data_point_border}"/>
+        </a:solidFill>
+      </a:ln>
+      <a:effectLst>
+        <a:glow rad="{charts.presentation.data_point.glow_radius}">
+          <a:schemeClr val="{colors.charts.presentation.data_point_glow}">
+            <a:alpha val="{colors.charts.presentation.data_point_glow_alpha}"/>
+          </a:schemeClr>
+        </a:glow>
+      </a:effectLst>
+    </cs:spPr>
+  </cs:dataPoint>
+
+  <!-- Data Point Line (for Line Charts) -->
+  <cs:dataPointLine>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.data_point_line.width}" cap="{charts.presentation.data_point_line.cap}"
+            cmpd="{charts.presentation.data_point_line.compound}" algn="{charts.presentation.data_point_line.alignment}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.data_point_line_color}"/>
+        </a:solidFill>
+        <a:prstDash val="{charts.presentation.data_point_line.dash_style}"/>
+        <a:round/>
+      </a:ln>
+      <a:effectLst>
+        <a:outerShdw blurRad="{charts.presentation.data_point_line.shadow_blur}"
+                     dist="{charts.presentation.data_point_line.shadow_distance}"
+                     dir="{charts.presentation.data_point_line.shadow_direction}">
+          <a:schemeClr val="{colors.charts.presentation.data_point_line_shadow}">
+            <a:alpha val="{colors.charts.presentation.data_point_line_shadow_alpha}"/>
+          </a:schemeClr>
+        </a:outerShdw>
+      </a:effectLst>
+    </cs:spPr>
+  </cs:dataPointLine>
+
+  <!-- Data Point Marker -->
+  <cs:dataPointMarker>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.data_point_marker_fill}"/>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.data_point_marker.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.data_point_marker_border}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+    <cs:size val="{charts.presentation.data_point_marker.size}"/>
+    <cs:symbol val="{charts.presentation.data_point_marker.symbol}"/>
+  </cs:dataPointMarker>
+
+  <!-- Data Label Style -->
+  <cs:dataLabel>
+    <cs:spPr>
+      <a:solidFill>
+        <a:schemeClr val="{colors.charts.presentation.data_label_background}">
+          <a:alpha val="{colors.charts.presentation.data_label_background_alpha}"/>
+        </a:schemeClr>
+      </a:solidFill>
+      <a:ln w="{charts.presentation.data_label.border_width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.data_label_border}"/>
+        </a:solidFill>
+      </a:ln>
+      <a:effectLst>
+        <a:outerShdw blurRad="{charts.presentation.data_label.shadow_blur}"
+                     dist="{charts.presentation.data_label.shadow_distance}"
+                     dir="{charts.presentation.data_label.shadow_direction}">
+          <a:schemeClr val="{colors.charts.presentation.data_label_shadow}">
+            <a:alpha val="{colors.charts.presentation.data_label_shadow_alpha}"/>
+          </a:schemeClr>
+        </a:outerShdw>
+      </a:effectLst>
+    </cs:spPr>
+    <cs:txPr>
+      <a:bodyPr anchor="{typography.charts.data_label.anchor}"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr>
+          <a:defRPr sz="{typography.charts.data_label.font_size}" b="{typography.charts.data_label.bold}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.charts.presentation.data_label_text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.charts.data_label.font_family}"/>
+          </a:defRPr>
+        </a:pPr>
+      </a:p>
+    </cs:txPr>
+  </cs:dataLabel>
+
+  <!-- Trendline Style -->
+  <cs:trendline>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.trendline.width}" cap="{charts.presentation.trendline.cap}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.trendline_color}"/>
+        </a:solidFill>
+        <a:prstDash val="{charts.presentation.trendline.dash_style}"/>
+      </a:ln>
+    </cs:spPr>
+  </cs:trendline>
+
+  <!-- Error Bars Style -->
+  <cs:errorBar>
+    <cs:spPr>
+      <a:ln w="{charts.presentation.error_bar.width}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.charts.presentation.error_bar_color}"/>
+        </a:solidFill>
+      </a:ln>
+    </cs:spPr>
+  </cs:errorBar>
+
+</cs:chartStyle>

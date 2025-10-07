@@ -374,6 +374,13 @@ class SVGParser:
     def _convert_dom_to_ir(self, svg_root: ET.Element):
         """Convert SVG DOM to Clean Slate IR using existing parsing logic"""
 
+        # Initialize CoordinateSpace with viewport matrix for baked transforms
+        from ..transforms import CoordinateSpace, Matrix
+
+        # For now, use identity matrix as viewport (will be enhanced with actual viewport later)
+        # The viewport transformation is typically handled at a higher level
+        self.coord_space = CoordinateSpace(Matrix.identity())
+
         # Leverage existing SVG extraction logic from src/svg2drawingml.py
         elements = []
         self._extract_recursive_to_ir(svg_root, elements)
@@ -536,6 +543,25 @@ class SVGParser:
                 tag = str(tag)
             tag = tag.split('}')[-1] if '}' in str(tag) else str(tag)
 
+        # Handle transform attribute - push onto CTM stack for baked transforms
+        transform_attr = element.get('transform')
+        transform_pushed = False
+
+        if transform_attr and self.coord_space is not None:
+            try:
+                # Parse transform string to Matrix
+                from ..transforms import TransformParser
+                transform_parser = TransformParser()
+                transform_matrix = transform_parser.parse_to_matrix(transform_attr)
+
+                if transform_matrix is not None:
+                    # Push onto CTM stack
+                    self.coord_space.push_transform(transform_matrix)
+                    transform_pushed = True
+            except Exception as e:
+                # Log warning but continue - don't fail on transform parse errors
+                self.logger.warning(f"Failed to parse transform '{transform_attr}': {e}")
+
         # Convert specific element types to IR
         if tag == 'rect':
             ir_element = self._convert_rect_to_ir(element)
@@ -597,19 +623,68 @@ class SVGParser:
             for child in children(element):
                 self._extract_recursive_to_ir(child, ir_elements)
 
+        # Pop transform from CTM stack when exiting element
+        if transform_pushed:
+            try:
+                self.coord_space.pop_transform()
+            except Exception as e:
+                # Log warning but continue
+                self.logger.warning(f"Failed to pop transform: {e}")
+
     def _convert_rect_to_ir(self, element: ET.Element):
-        """Convert SVG rect to IR Path"""
-        from ..ir import LineSegment, Path, Point
+        """Convert SVG rect to Rectangle IR (or Path for complex cases)"""
+        from ..ir import LineSegment, Path, Point, Rectangle
+        from ..ir.geometry import Rect
 
-        # Extract rectangle attributes
-        x = float(element.get('x', 0))
-        y = float(element.get('y', 0))
-        width = float(element.get('width', 0))
-        height = float(element.get('height', 0))
+        # Extract rectangle attributes (SVG coordinates)
+        x_svg = float(element.get('x', 0))
+        y_svg = float(element.get('y', 0))
+        width_svg = float(element.get('width', 0))
+        height_svg = float(element.get('height', 0))
 
-        if width <= 0 or height <= 0:
+        if width_svg <= 0 or height_svg <= 0:
             return None
 
+        # Apply CTM to transform coordinates (baked transforms)
+        if self.coord_space is not None:
+            # Transform top-left corner
+            x, y = self.coord_space.apply_ctm(x_svg, y_svg)
+            # Transform bottom-right corner
+            x2, y2 = self.coord_space.apply_ctm(x_svg + width_svg, y_svg + height_svg)
+            # Calculate transformed width/height
+            width = abs(x2 - x)
+            height = abs(y2 - y)
+            # Ensure x, y is top-left
+            x = min(x, x2)
+            y = min(y, y2)
+        else:
+            # No transform - use original coordinates
+            x, y, width, height = x_svg, y_svg, width_svg, height_svg
+
+        # Extract rounded corner attributes (rx, ry)
+        rx = float(element.get('rx', 0))
+        ry = float(element.get('ry', 0))
+        corner_radius = max(rx, ry)  # Use the larger of rx/ry for corner_radius
+
+        # Extract styling
+        fill, stroke, opacity = self._extract_styling(element)
+
+        # Check for complex features that prevent native shape use
+        has_filter = element.get('filter') is not None
+        has_clip_path = element.get('clip-path') is not None
+        has_mask = element.get('mask') is not None
+
+        # Simple rectangles with no complex features → Rectangle IR (native PowerPoint shape)
+        if not (has_filter or has_clip_path or has_mask):
+            return Rectangle(
+                bounds=Rect(x=x, y=y, width=width, height=height),
+                corner_radius=corner_radius,
+                fill=fill,
+                stroke=stroke,
+                opacity=opacity,
+            )
+
+        # Complex rectangles with filters/clipping → Path IR (custom geometry fallback)
         # Create rectangle as closed path
         segments = [
             LineSegment(start=Point(x, y), end=Point(x + width, y)),
@@ -617,12 +692,6 @@ class SVGParser:
             LineSegment(start=Point(x + width, y + height), end=Point(x, y + height)),
             LineSegment(start=Point(x, y + height), end=Point(x, y)),
         ]
-
-        # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
-
-        # Get hyperlink from current context if any
-        getattr(self, '_current_hyperlink', None)
 
         return Path(
             segments=segments,
@@ -632,17 +701,72 @@ class SVGParser:
         )
 
     def _convert_circle_to_ir(self, element: ET.Element):
-        """Convert SVG circle to IR Path with Bezier curves"""
-        from ..ir import BezierSegment, Path, Point
+        """Convert SVG circle to Circle IR (or Path for complex cases)"""
+        from ..ir import BezierSegment, Circle, Ellipse, Path, Point
 
-        # Extract circle attributes
-        cx = float(element.get('cx', 0))
-        cy = float(element.get('cy', 0))
-        r = float(element.get('r', 0))
+        # Extract circle attributes (SVG coordinates)
+        cx_svg = float(element.get('cx', 0))
+        cy_svg = float(element.get('cy', 0))
+        r_svg = float(element.get('r', 0))
 
-        if r <= 0:
+        if r_svg <= 0:
             return None
 
+        # Apply CTM to transform coordinates (baked transforms)
+        if self.coord_space is not None:
+            # Transform center
+            cx, cy = self.coord_space.apply_ctm(cx_svg, cy_svg)
+
+            # Get scale factors from CTM to transform radius
+            ctm = self.coord_space.current_ctm
+            scale_x = (ctm.a ** 2 + ctm.c ** 2) ** 0.5
+            scale_y = (ctm.b ** 2 + ctm.d ** 2) ** 0.5
+
+            # Check if scale is uniform
+            if abs(scale_x - scale_y) < 0.001:
+                # Uniform scale - remains a circle
+                r = r_svg * scale_x
+                is_circle = True
+            else:
+                # Non-uniform scale - becomes ellipse
+                rx = r_svg * scale_x
+                ry = r_svg * scale_y
+                is_circle = False
+        else:
+            # No transform
+            cx, cy, r = cx_svg, cy_svg, r_svg
+            is_circle = True
+
+        # Extract styling
+        fill, stroke, opacity = self._extract_styling(element)
+
+        # Check for complex features that prevent native shape use
+        has_filter = element.get('filter') is not None
+        has_clip_path = element.get('clip-path') is not None
+        has_mask = element.get('mask') is not None
+
+        # Simple circles/ellipses with no complex features → native PowerPoint shape
+        if not (has_filter or has_clip_path or has_mask):
+            if is_circle:
+                return Circle(
+                    center=Point(cx, cy),
+                    radius=r,
+                    fill=fill,
+                    stroke=stroke,
+                    opacity=opacity,
+                )
+            else:
+                # Non-uniform scale created an ellipse
+                return Ellipse(
+                    center=Point(cx, cy),
+                    radius_x=rx,
+                    radius_y=ry,
+                    fill=fill,
+                    stroke=stroke,
+                    opacity=opacity,
+                )
+
+        # Complex circles with filters/clipping → Path IR (custom geometry fallback)
         # Create circle using 4 Bezier curves (standard approach)
         # Magic constant for circle approximation with Bezier curves
         k = 0.552284749831
@@ -678,12 +802,6 @@ class SVGParser:
             ),
         ]
 
-        # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
-
-        # Get hyperlink from current context if any
-        getattr(self, '_current_hyperlink', None)
-
         return Path(
             segments=segments,
             fill=fill,
@@ -692,19 +810,56 @@ class SVGParser:
         )
 
     def _convert_ellipse_to_ir(self, element: ET.Element):
-        """Convert SVG ellipse to IR Path"""
-        from ..ir import BezierSegment, Path, Point
+        """Convert SVG ellipse to Ellipse IR (or Path for complex cases)"""
+        from ..ir import BezierSegment, Ellipse, Path, Point
 
-        # Extract ellipse attributes
-        cx = float(element.get('cx', 0))
-        cy = float(element.get('cy', 0))
-        rx = float(element.get('rx', 0))
-        ry = float(element.get('ry', 0))
+        # Extract ellipse attributes (SVG coordinates)
+        cx_svg = float(element.get('cx', 0))
+        cy_svg = float(element.get('cy', 0))
+        rx_svg = float(element.get('rx', 0))
+        ry_svg = float(element.get('ry', 0))
 
-        if rx <= 0 or ry <= 0:
+        if rx_svg <= 0 or ry_svg <= 0:
             return None
 
-        # Create ellipse using 4 Bezier curves
+        # Apply CTM to transform coordinates (baked transforms)
+        if self.coord_space is not None:
+            # Transform center
+            cx, cy = self.coord_space.apply_ctm(cx_svg, cy_svg)
+
+            # Get scale factors from CTM to transform radii
+            ctm = self.coord_space.current_ctm
+            scale_x = (ctm.a ** 2 + ctm.c ** 2) ** 0.5
+            scale_y = (ctm.b ** 2 + ctm.d ** 2) ** 0.5
+
+            # Apply scale to radii
+            rx = rx_svg * scale_x
+            ry = ry_svg * scale_y
+        else:
+            # No transform - use original coordinates
+            cx, cy, rx, ry = cx_svg, cy_svg, rx_svg, ry_svg
+
+        # Extract styling
+        fill, stroke, opacity = self._extract_styling(element)
+
+        # Check for complex features that prevent native shape use
+        has_filter = element.get('filter') is not None
+        has_clip_path = element.get('clip-path') is not None
+        has_mask = element.get('mask') is not None
+
+        # Simple ellipses with no complex features → Ellipse IR (native PowerPoint shape)
+        if not (has_filter or has_clip_path or has_mask):
+            return Ellipse(
+                center=Point(cx, cy),
+                radius_x=rx,
+                radius_y=ry,
+                fill=fill,
+                stroke=stroke,
+                opacity=opacity,
+            )
+
+        # Complex ellipses with filters/clipping → Path IR (custom geometry fallback)
+        # Create ellipse using 4 Bezier curves (using transformed coordinates)
         kx = 0.552284749831 * rx
         ky = 0.552284749831 * ry
 
@@ -735,12 +890,6 @@ class SVGParser:
             ),
         ]
 
-        # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
-
-        # Get hyperlink from current context if any
-        getattr(self, '_current_hyperlink', None)
-
         return Path(
             segments=segments,
             fill=fill,
@@ -752,11 +901,18 @@ class SVGParser:
         """Convert SVG line to IR Path"""
         from ..ir import LineSegment, Path, Point
 
-        # Extract line attributes
-        x1 = float(element.get('x1', 0))
-        y1 = float(element.get('y1', 0))
-        x2 = float(element.get('x2', 0))
-        y2 = float(element.get('y2', 0))
+        # Extract line attributes (SVG coordinates)
+        x1_svg = float(element.get('x1', 0))
+        y1_svg = float(element.get('y1', 0))
+        x2_svg = float(element.get('x2', 0))
+        y2_svg = float(element.get('y2', 0))
+
+        # Apply CTM to transform coordinates (baked transforms)
+        if self.coord_space is not None:
+            x1, y1 = self.coord_space.apply_ctm(x1_svg, y1_svg)
+            x2, y2 = self.coord_space.apply_ctm(x2_svg, y2_svg)
+        else:
+            x1, y1, x2, y2 = x1_svg, y1_svg, x2_svg, y2_svg
 
         segments = [LineSegment(start=Point(x1, y1), end=Point(x2, y2))]
 
@@ -808,7 +964,7 @@ class SVGParser:
 
         # Parse points string - handle both "x1,y1 x2,y2" and "x1 y1 x2 y2" formats
         try:
-            points = []
+            points_svg = []
             # First normalize: replace all commas with spaces
             normalized = points_str.replace(',', ' ')
             # Split into individual coordinate values
@@ -816,10 +972,16 @@ class SVGParser:
 
             # Group coordinates into (x, y) pairs
             for i in range(0, len(coords) - 1, 2):
-                points.append(Point(coords[i], coords[i + 1]))
+                points_svg.append((coords[i], coords[i + 1]))
 
-            if len(points) < 2:
+            if len(points_svg) < 2:
                 return None
+
+            # Apply CTM to transform all points (baked transforms)
+            if self.coord_space is not None:
+                points = [Point(*self.coord_space.apply_ctm(x, y)) for x, y in points_svg]
+            else:
+                points = [Point(x, y) for x, y in points_svg]
 
             # Create line segments between consecutive points
             segments = []
@@ -1345,7 +1507,7 @@ class SVGParser:
                 return 12.0
 
     def _parse_path_data(self, d: str):
-        """Basic path data parser - simplified version"""
+        """Basic path data parser with baked transform support"""
         from ..ir import BezierSegment, LineSegment, Point
 
         segments = []
@@ -1354,7 +1516,14 @@ class SVGParser:
         # In a full implementation, this would use the existing path parser
         commands = re.findall(r'[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*', d)
 
-        current_point = Point(0, 0)
+        # Helper to transform a point with current CTM
+        def transform_point(x, y):
+            if self.coord_space is not None:
+                return Point(*self.coord_space.apply_ctm(x, y))
+            return Point(x, y)
+
+        current_point_svg = (0.0, 0.0)  # Track in SVG coordinates
+        current_point = transform_point(0, 0)  # Transformed coordinates
         last_control = None  # Track last control point for T command
 
         for command in commands:
@@ -1365,66 +1534,89 @@ class SVGParser:
             if cmd.upper() == 'M':  # Move to
                 if len(coords) >= 2:
                     if cmd.isupper():
-                        current_point = Point(coords[0], coords[1])
+                        # Absolute: use coords directly
+                        current_point_svg = (coords[0], coords[1])
                     else:
-                        current_point = Point(current_point.x + coords[0], current_point.y + coords[1])
+                        # Relative: add to current SVG position
+                        current_point_svg = (current_point_svg[0] + coords[0], current_point_svg[1] + coords[1])
+                    current_point = transform_point(*current_point_svg)
                 last_control = None
 
             elif cmd.upper() == 'L':  # Line to
                 if len(coords) >= 2:
                     if cmd.isupper():
-                        end_point = Point(coords[0], coords[1])
+                        end_point_svg = (coords[0], coords[1])
                     else:
-                        end_point = Point(current_point.x + coords[0], current_point.y + coords[1])
+                        end_point_svg = (current_point_svg[0] + coords[0], current_point_svg[1] + coords[1])
+
+                    end_point = transform_point(*end_point_svg)
                     segments.append(LineSegment(start=current_point, end=end_point))
+                    current_point_svg = end_point_svg
                     current_point = end_point
                 last_control = None
 
             elif cmd.upper() == 'H':  # Horizontal line
                 if len(coords) >= 1:
                     if cmd.isupper():
-                        end_point = Point(coords[0], current_point.y)
+                        end_point_svg = (coords[0], current_point_svg[1])
                     else:
-                        end_point = Point(current_point.x + coords[0], current_point.y)
+                        end_point_svg = (current_point_svg[0] + coords[0], current_point_svg[1])
+
+                    end_point = transform_point(*end_point_svg)
                     segments.append(LineSegment(start=current_point, end=end_point))
+                    current_point_svg = end_point_svg
                     current_point = end_point
                 last_control = None
 
             elif cmd.upper() == 'V':  # Vertical line
                 if len(coords) >= 1:
                     if cmd.isupper():
-                        end_point = Point(current_point.x, coords[0])
+                        end_point_svg = (current_point_svg[0], coords[0])
                     else:
-                        end_point = Point(current_point.x, current_point.y + coords[0])
+                        end_point_svg = (current_point_svg[0], current_point_svg[1] + coords[0])
+
+                    end_point = transform_point(*end_point_svg)
                     segments.append(LineSegment(start=current_point, end=end_point))
+                    current_point_svg = end_point_svg
                     current_point = end_point
                 last_control = None
 
             elif cmd.upper() == 'C':  # Cubic Bezier
                 if len(coords) >= 6:
                     if cmd.isupper():
-                        control1 = Point(coords[0], coords[1])
-                        control2 = Point(coords[2], coords[3])
-                        end_point = Point(coords[4], coords[5])
+                        cp1_svg = (coords[0], coords[1])
+                        cp2_svg = (coords[2], coords[3])
+                        end_svg = (coords[4], coords[5])
                     else:
-                        control1 = Point(current_point.x + coords[0], current_point.y + coords[1])
-                        control2 = Point(current_point.x + coords[2], current_point.y + coords[3])
-                        end_point = Point(current_point.x + coords[4], current_point.y + coords[5])
+                        cp1_svg = (current_point_svg[0] + coords[0], current_point_svg[1] + coords[1])
+                        cp2_svg = (current_point_svg[0] + coords[2], current_point_svg[1] + coords[3])
+                        end_svg = (current_point_svg[0] + coords[4], current_point_svg[1] + coords[5])
+
+                    control1 = transform_point(*cp1_svg)
+                    control2 = transform_point(*cp2_svg)
+                    end_point = transform_point(*end_svg)
+
                     segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
                     last_control = control2
+                    current_point_svg = end_svg
                     current_point = end_point
 
             elif cmd.upper() == 'Q':  # Quadratic Bezier - convert to cubic
                 if len(coords) >= 4:
-                    # Get quadratic control point and end point
+                    # Get quadratic control point and end point in SVG coords
                     if cmd.isupper():
-                        qcp = Point(coords[0], coords[1])
-                        end_point = Point(coords[2], coords[3])
+                        qcp_svg = (coords[0], coords[1])
+                        end_svg = (coords[2], coords[3])
                     else:
-                        qcp = Point(current_point.x + coords[0], current_point.y + coords[1])
-                        end_point = Point(current_point.x + coords[2], current_point.y + coords[3])
+                        qcp_svg = (current_point_svg[0] + coords[0], current_point_svg[1] + coords[1])
+                        end_svg = (current_point_svg[0] + coords[2], current_point_svg[1] + coords[3])
+
+                    # Transform all points
+                    qcp = transform_point(*qcp_svg)
+                    end_point = transform_point(*end_svg)
 
                     # Convert Q to C using formula: CP1 = P0 + 2/3*(QCP - P0), CP2 = P2 + 2/3*(QCP - P2)
+                    # Note: This conversion happens AFTER transformation
                     control1 = Point(
                         current_point.x + 2/3 * (qcp.x - current_point.x),
                         current_point.y + 2/3 * (qcp.y - current_point.y),
@@ -1435,12 +1627,13 @@ class SVGParser:
                     )
 
                     segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
-                    last_control = qcp  # Store quadratic control for T command
+                    last_control = qcp  # Store transformed quadratic control for T command
+                    current_point_svg = end_svg
                     current_point = end_point
 
             elif cmd.upper() == 'T':  # Smooth quadratic - convert to cubic
                 if len(coords) >= 2:
-                    # Calculate reflected control point
+                    # Calculate reflected control point (in transformed space)
                     if last_control:
                         qcp = Point(
                             2 * current_point.x - last_control.x,
@@ -1451,11 +1644,13 @@ class SVGParser:
 
                     # Get end point
                     if cmd.isupper():
-                        end_point = Point(coords[0], coords[1])
+                        end_svg = (coords[0], coords[1])
                     else:
-                        end_point = Point(current_point.x + coords[0], current_point.y + coords[1])
+                        end_svg = (current_point_svg[0] + coords[0], current_point_svg[1] + coords[1])
 
-                    # Convert to cubic
+                    end_point = transform_point(*end_svg)
+
+                    # Convert to cubic (in transformed space)
                     control1 = Point(
                         current_point.x + 2/3 * (qcp.x - current_point.x),
                         current_point.y + 2/3 * (qcp.y - current_point.y),
@@ -1467,6 +1662,7 @@ class SVGParser:
 
                     segments.append(BezierSegment(start=current_point, control1=control1, control2=control2, end=end_point))
                     last_control = qcp
+                    current_point_svg = end_svg
                     current_point = end_point
 
         return segments

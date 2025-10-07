@@ -15,6 +15,7 @@ from .geometry import Point, Rect, SegmentType
 # Use shared numpy compatibility
 from .numpy_compat import np
 from .paint import Paint, Stroke
+from .shapes import Circle, Ellipse, Rectangle
 from .text import TextFrame
 
 
@@ -147,7 +148,7 @@ class Group:
     Represents SVG groups with applied transforms and clipping.
     Children are flattened when possible for optimization.
     """
-    children: list[Union['Path', 'TextFrame', 'Group', 'Image']]
+    children: list[Union['Path', 'Circle', 'Ellipse', 'Rectangle', 'TextFrame', 'Group', 'Image']]
     clip: ClipRef | None = None
     opacity: float = 1.0
     transform: np.ndarray | None = None
@@ -221,5 +222,5 @@ class Image:
 
 
 # Type aliases for convenience
-IRElement = Union[Path, TextFrame, Group, Image]
+IRElement = Union[Path, Circle, Ellipse, Rectangle, TextFrame, Group, Image]
 SceneGraph = list[IRElement]

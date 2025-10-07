@@ -91,6 +91,7 @@ class ConversionServices:
     and enhanced StyleService instances to eliminate manual imports across converter classes.
     """
     unit_converter: UnitConverter
+    fractional_emu_converter: Any  # FractionalEMUConverter for float64 precision
     color_factory: type  # Color class for creating color instances
     color_parser: Color  # Color class that can also parse colors for BaseConverter
     transform_parser: TransformEngine
@@ -142,6 +143,17 @@ class ConversionServices:
             context = ConversionContext(dpi=config.default_dpi)
             unit_converter = UnitConverter(context=context)
 
+            # Initialize fractional EMU converter for float64 precision
+            try:
+                from ..fractional_emu import FractionalEMUConverter, PrecisionMode
+                fractional_emu_converter = FractionalEMUConverter(
+                    precision_mode=PrecisionMode.STANDARD,
+                    dpi=config.default_dpi,
+                )
+            except ImportError:
+                logger.warning("FractionalEMUConverter not available, using None")
+                fractional_emu_converter = None
+
             # Use core services directly (adapters removed)
             color_factory = Color
             color_parser = Color   # Same class for parsing colors
@@ -187,6 +199,7 @@ class ConversionServices:
 
             return cls(
                 unit_converter=unit_converter,
+                fractional_emu_converter=fractional_emu_converter,
                 color_factory=color_factory,
                 color_parser=color_parser,
                 transform_parser=transform_parser,

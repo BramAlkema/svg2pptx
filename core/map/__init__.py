@@ -13,9 +13,12 @@ Key principles:
 """
 
 from .base import *
+from .circle_mapper import *
+from .ellipse_mapper import *
 from .group_mapper import *
 from .image_mapper import *
 from .path_mapper import *
+from .rect_mapper import *
 from .text_mapper import *
 
 __all__ = [
@@ -24,6 +27,7 @@ __all__ = [
 
     # Specific mappers
     "PathMapper", "TextMapper", "GroupMapper", "ImageMapper",
+    "CircleMapper", "EllipseMapper", "RectangleMapper",
 
     # Factory functions
     "create_path_mapper", "create_text_mapper",

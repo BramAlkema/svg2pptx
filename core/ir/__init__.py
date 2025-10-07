@@ -16,6 +16,7 @@ from .font_metadata import *
 from .geometry import *
 from .paint import *
 from .scene import *
+from .shapes import *
 from .text import *
 from .text_path import *
 from .validation import *
@@ -23,6 +24,9 @@ from .validation import *
 __all__ = [
     # Core scene graph
     "Path", "TextFrame", "Group", "Image", "IRElement", "SceneGraph",
+
+    # Native shape types (ADR-002 compliance)
+    "Circle", "Ellipse", "Rectangle",
 
     # Geometry primitives
     "Point", "Rect", "Segment", "BezierSegment", "LineSegment",

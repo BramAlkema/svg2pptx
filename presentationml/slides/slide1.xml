@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+
+  <!-- Slide Master Reference -->
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="{slides.slide1.group.id}" name="{slides.slide1.group.name}"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="{layout.slides.slide1.group.offset_x}" y="{layout.slides.slide1.group.offset_y}"/>
+          <a:ext cx="{layout.slides.slide1.group.extent_width}" cy="{layout.slides.slide1.group.extent_height}"/>
+          <a:chOff x="{layout.slides.slide1.group.child_offset_x}" y="{layout.slides.slide1.group.child_offset_y}"/>
+          <a:chExt cx="{layout.slides.slide1.group.child_extent_width}" cy="{layout.slides.slide1.group.child_extent_height}"/>
+        </a:xfrm>
+      </p:grpSpPr>
+
+      <!-- Title Placeholder -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="{slides.slide1.title.id}" name="{slides.slide1.title.name}"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="{slides.slide1.title.locks.no_group}"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.slides.slide1.title.offset_x}" y="{layout.slides.slide1.title.offset_y}"/>
+            <a:ext cx="{layout.slides.slide1.title.extent_width}" cy="{layout.slides.slide1.title.extent_height}"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:schemeClr val="{colors.slides.title.background}">
+              <a:alpha val="{colors.slides.title.background_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+          <a:ln w="{slides.slide1.title.border.width}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.slides.title.border}"/>
+            </a:solidFill>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="{slides.slide1.title.text.anchor}" anchorCtr="{slides.slide1.title.text.anchor_center}"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="{slides.slide1.title.text.alignment}"/>
+            <a:r>
+              <a:rPr lang="{typography.slides.title.language}" sz="{typography.slides.title.font_size}" b="{typography.slides.title.bold}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.title.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.title.font_family}"/>
+                <a:ea typeface="{typography.slides.title.font_family_ea}"/>
+                <a:cs typeface="{typography.slides.title.font_family_cs}"/>
+              </a:rPr>
+              <a:t>{content.slides.slide1.title_text}</a:t>
+            </a:r>
+            <a:endParaRPr lang="{typography.slides.title.end_para_language}"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Content Placeholder -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="{slides.slide1.content.id}" name="{slides.slide1.content.name}"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="{slides.slide1.content.locks.no_group}"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph idx="1"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.slides.slide1.content.offset_x}" y="{layout.slides.slide1.content.offset_y}"/>
+            <a:ext cx="{layout.slides.slide1.content.extent_width}" cy="{layout.slides.slide1.content.extent_height}"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:schemeClr val="{colors.slides.content.background}">
+              <a:alpha val="{colors.slides.content.background_alpha}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="{slides.slide1.content.text.anchor}"
+                    lIns="{spacing.slides.content.left_inset}"
+                    tIns="{spacing.slides.content.top_inset}"
+                    rIns="{spacing.slides.content.right_inset}"
+                    bIns="{spacing.slides.content.bottom_inset}"/>
+          <a:lstStyle>
+            <!-- Level 1 List Style -->
+            <a:lvl1pPr marL="{spacing.slides.content.list.level1.margin_left}" indent="{spacing.slides.content.list.level1.indent}">
+              <a:buFont typeface="{typography.slides.content.bullet.font_family}"/>
+              <a:buChar char="{typography.slides.content.bullet.level1.character}"/>
+              <a:defRPr sz="{typography.slides.content.level1.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.level1.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.level1.font_family}"/>
+              </a:defRPr>
+            </a:lvl1pPr>
+            <!-- Level 2 List Style -->
+            <a:lvl2pPr marL="{spacing.slides.content.list.level2.margin_left}" indent="{spacing.slides.content.list.level2.indent}">
+              <a:buFont typeface="{typography.slides.content.bullet.font_family}"/>
+              <a:buChar char="{typography.slides.content.bullet.level2.character}"/>
+              <a:defRPr sz="{typography.slides.content.level2.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.level2.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.level2.font_family}"/>
+              </a:defRPr>
+            </a:lvl2pPr>
+            <!-- Level 3 List Style -->
+            <a:lvl3pPr marL="{spacing.slides.content.list.level3.margin_left}" indent="{spacing.slides.content.list.level3.indent}">
+              <a:buFont typeface="{typography.slides.content.bullet.font_family}"/>
+              <a:buChar char="{typography.slides.content.bullet.level3.character}"/>
+              <a:defRPr sz="{typography.slides.content.level3.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.level3.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.level3.font_family}"/>
+              </a:defRPr>
+            </a:lvl3pPr>
+          </a:lstStyle>
+          <a:p>
+            <a:pPr lvl="0"/>
+            <a:r>
+              <a:rPr lang="{typography.slides.content.language}" sz="{typography.slides.content.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.font_family}"/>
+              </a:rPr>
+              <a:t>{content.slides.slide1.bullet1_text}</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="0"/>
+            <a:r>
+              <a:rPr lang="{typography.slides.content.language}" sz="{typography.slides.content.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.font_family}"/>
+              </a:rPr>
+              <a:t>{content.slides.slide1.bullet2_text}</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1"/>
+            <a:r>
+              <a:rPr lang="{typography.slides.content.language}" sz="{typography.slides.content.level2.font_size}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.content.level2.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.content.level2.font_family}"/>
+              </a:rPr>
+              <a:t>{content.slides.slide1.subbullet1_text}</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Shape with Custom Formatting -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="{slides.slide1.shape1.id}" name="{slides.slide1.shape1.name}"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.slides.slide1.shape1.offset_x}" y="{layout.slides.slide1.shape1.offset_y}"/>
+            <a:ext cx="{layout.slides.slide1.shape1.extent_width}" cy="{layout.slides.slide1.shape1.extent_height}"/>
+          </a:xfrm>
+          <a:prstGeom prst="{slides.slide1.shape1.geometry_preset}">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:gradFill flip="{colors.slides.shape1.gradient.flip}" rotWithShape="{colors.slides.shape1.gradient.rotate_with_shape}">
+            <a:gsLst>
+              <a:gs pos="{colors.slides.shape1.gradient.stop1_position}">
+                <a:schemeClr val="{colors.slides.shape1.gradient.stop1_color}">
+                  <a:tint val="{colors.slides.shape1.gradient.stop1_tint}"/>
+                </a:schemeClr>
+              </a:gs>
+              <a:gs pos="{colors.slides.shape1.gradient.stop2_position}">
+                <a:schemeClr val="{colors.slides.shape1.gradient.stop2_color}">
+                  <a:shade val="{colors.slides.shape1.gradient.stop2_shade}"/>
+                </a:schemeClr>
+              </a:gs>
+            </a:gsLst>
+            <a:lin ang="{colors.slides.shape1.gradient.angle}" scaled="{colors.slides.shape1.gradient.scaled}"/>
+          </a:gradFill>
+          <a:ln w="{slides.slide1.shape1.border.width}" cap="{slides.slide1.shape1.border.cap}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.slides.shape1.border}"/>
+            </a:solidFill>
+            <a:prstDash val="{slides.slide1.shape1.border.dash_style}"/>
+          </a:ln>
+          <a:effectLst>
+            <a:outerShdw blurRad="{slides.slide1.shape1.shadow.blur_radius}"
+                         dist="{slides.slide1.shape1.shadow.distance}"
+                         dir="{slides.slide1.shape1.shadow.direction}"
+                         algn="{slides.slide1.shape1.shadow.alignment}">
+              <a:schemeClr val="{colors.slides.shape1.shadow}">
+                <a:alpha val="{colors.slides.shape1.shadow_alpha}"/>
+              </a:schemeClr>
+            </a:outerShdw>
+            <a:glow rad="{slides.slide1.shape1.glow.radius}">
+              <a:schemeClr val="{colors.slides.shape1.glow}">
+                <a:alpha val="{colors.slides.shape1.glow_alpha}"/>
+              </a:schemeClr>
+            </a:glow>
+          </a:effectLst>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr anchor="{slides.slide1.shape1.text.anchor}" anchorCtr="{slides.slide1.shape1.text.anchor_center}"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="{slides.slide1.shape1.text.alignment}"/>
+            <a:r>
+              <a:rPr lang="{typography.slides.shape1.language}" sz="{typography.slides.shape1.font_size}" b="{typography.slides.shape1.bold}">
+                <a:solidFill>
+                  <a:schemeClr val="{colors.slides.shape1.text}"/>
+                </a:solidFill>
+                <a:latin typeface="{typography.slides.shape1.font_family}"/>
+              </a:rPr>
+              <a:t>{content.slides.slide1.shape1_text}</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+    </p:spTree>
+  </p:cSld>
+
+  <!-- Color Map Override -->
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+
+  <!-- Slide Layout Reference -->
+  <p:sldLayoutIdLst>
+    <p:sldLayoutId id="{slides.slide1.layout.id}" r:id="{slides.slide1.layout.relationship_id}"/>
+  </p:sldLayoutIdLst>
+
+  <!-- Transition Settings -->
+  <p:transition spd="{transitions.slide1.speed}" advTm="{transitions.slide1.advance_time}" advClick="{transitions.slide1.advance_on_click}">
+    <p:fade thruBlk="{transitions.slide1.fade.through_black}"/>
+  </p:transition>
+
+  <!-- Timing for Animations -->
+  <p:timing>
+    <p:tnLst>
+      <p:par>
+        <p:cTn id="{animations.slide1.timeline.id}" dur="{animations.slide1.timeline.duration}" nodeType="tmRoot">
+          <p:childTnLst>
+            <p:seq concurrent="{animations.slide1.sequence.concurrent}" nextAc="{animations.slide1.sequence.next_action}">
+              <p:cTn id="{animations.slide1.sequence.id}" dur="{animations.slide1.sequence.duration}" nodeType="mainSeq">
+                <p:stCondLst>
+                  <p:cond delay="{animations.slide1.sequence.delay}" evt="{animations.slide1.sequence.trigger_event}"/>
+                </p:stCondLst>
+                <p:childTnLst>
+                  <p:par>
+                    <p:cTn id="{animations.slide1.entrance.id}" fill="{animations.slide1.entrance.fill}" grpId="{animations.slide1.entrance.group_id}">
+                      <p:stCondLst>
+                        <p:cond delay="{animations.slide1.entrance.delay}"/>
+                      </p:stCondLst>
+                      <p:childTnLst>
+                        <p:animEffect transition="{animations.slide1.entrance.transition}" filter="{animations.slide1.entrance.filter}">
+                          <p:cTn id="{animations.slide1.entrance.effect.id}" dur="{animations.slide1.entrance.effect.duration}"/>
+                          <p:tgtEl>
+                            <p:spTgt spid="{animations.slide1.entrance.target_shape_id}"/>
+                          </p:tgtEl>
+                        </p:animEffect>
+                      </p:childTnLst>
+                    </p:cTn>
+                  </p:par>
+                </p:childTnLst>
+              </p:cTn>
+            </p:seq>
+          </p:childTnLst>
+        </p:cTn>
+      </p:par>
+    </p:tnLst>
+  </p:timing>
+
+</p:sld>

@@ -7,6 +7,7 @@ for proper SVG viewport mapping to PowerPoint EMU coordinates.
 """
 
 from .core import Matrix
+from .coordinate_space import CoordinateSpace
 from .engine import TransformEngine
 from .matrix_composer import (
     element_ctm,
@@ -27,5 +28,6 @@ __all__ = [
     'parse_preserve_aspect_ratio',
     'TransformEngine',
     'Matrix',
+    'CoordinateSpace',
     'TransformParser',
 ]

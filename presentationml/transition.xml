@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+              xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+              xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+              spd="{transitions.global.speed}" advTm="{transitions.global.advance_time}"
+              advClick="{transitions.global.advance_on_click}">
+
+  <!-- Fade Transition -->
+  <p:fade thruBlk="{transitions.fade.through_black}">
+    <p:fade thruBlk="{transitions.fade.through_black}"/>
+  </p:fade>
+
+  <!-- Push Transition -->
+  <p:push dir="{transitions.push.direction}"/>
+
+  <!-- Wipe Transition -->
+  <p:wipe dir="{transitions.wipe.direction}"/>
+
+  <!-- Split Transition -->
+  <p:split orient="{transitions.split.orientation}" dir="{transitions.split.direction}"/>
+
+  <!-- Bars Transition -->
+  <p:bars dir="{transitions.bars.direction}"/>
+
+  <!-- Random Bars Transition -->
+  <p:randomBar orient="{transitions.random_bars.orientation}"/>
+
+  <!-- Checkerboard Transition -->
+  <p:checker dir="{transitions.checkerboard.direction}"/>
+
+  <!-- Cover Transition -->
+  <p:cover dir="{transitions.cover.direction}"/>
+
+  <!-- Uncover Transition -->
+  <p:uncover dir="{transitions.uncover.direction}"/>
+
+  <!-- Dissolve Transition -->
+  <p:dissolve/>
+
+  <!-- Random Transition -->
+  <p:random/>
+
+  <!-- Blinds Transition -->
+  <p:blinds dir="{transitions.blinds.direction}"/>
+
+  <!-- Clock Transition -->
+  <p:clock dir="{transitions.clock.direction}"/>
+
+  <!-- Ripple Transition -->
+  <p:ripple/>
+
+  <!-- Honeycomb Transition -->
+  <p:honeycomb/>
+
+  <!-- Prism Transition -->
+  <p:prism dir="{transitions.prism.direction}" isContent="{transitions.prism.is_content}" isInverted="{transitions.prism.is_inverted}"/>
+
+  <!-- Doors Transition -->
+  <p:doors dir="{transitions.doors.direction}"/>
+
+  <!-- Window Transition -->
+  <p:window dir="{transitions.window.direction}"/>
+
+  <!-- Ferris Transition -->
+  <p:ferris dir="{transitions.ferris.direction}"/>
+
+  <!-- Gallery Transition -->
+  <p:gallery dir="{transitions.gallery.direction}"/>
+
+  <!-- Conveyor Transition -->
+  <p:conveyor dir="{transitions.conveyor.direction}"/>
+
+  <!-- Pan Transition -->
+  <p:pan dir="{transitions.pan.direction}"/>
+
+  <!-- Glitter Transition -->
+  <p:glitter dir="{transitions.glitter.direction}" pattern="{transitions.glitter.pattern}"/>
+
+  <!-- Warp Transition -->
+  <p:warp dir="{transitions.warp.direction}"/>
+
+  <!-- Flythrough Transition -->
+  <p:flythrough dir="{transitions.flythrough.direction}" hasBounce="{transitions.flythrough.has_bounce}"/>
+
+  <!-- Flash Transition -->
+  <p:flash/>
+
+  <!-- Shred Transition -->
+  <p:shred pattern="{transitions.shred.pattern}" dir="{transitions.shred.direction}"/>
+
+  <!-- Reveal Transition -->
+  <p:reveal dir="{transitions.reveal.direction}" thruBlk="{transitions.reveal.through_black}"/>
+
+  <!-- Wheel Transition -->
+  <p:wheel spokes="{transitions.wheel.spokes}"/>
+
+  <!-- Circle Transition -->
+  <p:circle/>
+
+  <!-- Diamond Transition -->
+  <p:diamond/>
+
+  <!-- Plus Transition -->
+  <p:plus/>
+
+  <!-- Wedge Transition -->
+  <p:wedge/>
+
+  <!-- Newsflash Transition -->
+  <p:newsflash/>
+
+  <!-- Zoom Transition -->
+  <p:zoom dir="{transitions.zoom.direction}"/>
+
+  <!-- Cube Transition -->
+  <p:cube dir="{transitions.cube.direction}"/>
+
+  <!-- Rotate Transition -->
+  <p:rotate dir="{transitions.rotate.direction}"/>
+
+  <!-- Orbit Transition -->
+  <p:orbit dir="{transitions.orbit.direction}"/>
+
+  <!-- Flip Transition -->
+  <p:flip dir="{transitions.flip.direction}"/>
+
+  <!-- Switch Transition -->
+  <p:switch dir="{transitions.switch.direction}"/>
+
+  <!-- Comb Transition -->
+  <p:comb dir="{transitions.comb.direction}"/>
+
+  <!-- Crush Transition -->
+  <p:crush dir="{transitions.crush.direction}"/>
+
+  <!-- Page Curl Transition -->
+  <p:pageCurlSingle dir="{transitions.page_curl_single.direction}"/>
+
+  <!-- Page Curl Double Transition -->
+  <p:pageCurlDouble dir="{transitions.page_curl_double.direction}"/>
+
+  <!-- Peel Off Transition -->
+  <p:peelOff dir="{transitions.peel_off.direction}"/>
+
+  <!-- Airplane Transition -->
+  <p:airplane dir="{transitions.airplane.direction}"/>
+
+  <!-- Origami Transition -->
+  <p:origami dir="{transitions.origami.direction}"/>
+
+  <!-- Morph Transition -->
+  <p:morph/>
+
+  <!-- Fracture Transition -->
+  <p:fracture/>
+
+  <!-- Vortex Transition -->
+  <p:vortex dir="{transitions.vortex.direction}"/>
+
+  <!-- Wind Transition -->
+  <p:wind pattern="{transitions.wind.pattern}"/>
+
+  <!-- Prestige Transition -->
+  <p:prestige dir="{transitions.prestige.direction}"/>
+
+  <!-- Drape Transition -->
+  <p:drape dir="{transitions.drape.direction}"/>
+
+  <!-- Curtains Transition -->
+  <p:curtains/>
+
+  <!-- Sound Effect for Transition -->
+  <p:sndAc>
+    <p:stSnd>
+      <a:wavAudioFile r:embed="{transitions.sound.audio_file_reference}"/>
+    </p:stSnd>
+  </p:sndAc>
+
+</p:transition>

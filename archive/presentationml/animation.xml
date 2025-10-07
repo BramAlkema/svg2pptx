@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:timing xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+
+  <!-- Main Timeline Container -->
+  <p:tnLst>
+    <!-- Entrance Animation Sequence -->
+    <p:par>
+      <p:cTn id="{animations.entrance.timeline_id}" dur="{animations.entrance.total_duration}" nodeType="tmRoot">
+        <p:childTnLst>
+
+          <!-- Fade In Animation -->
+          <p:par>
+            <p:cTn id="{animations.entrance.fade_in.id}" dur="{animations.entrance.fade_in.duration}"
+                   fill="{animations.entrance.fade_in.fill_behavior}" grpId="{animations.entrance.fade_in.group_id}">
+              <p:stCondLst>
+                <p:cond delay="{animations.entrance.fade_in.delay}" evt="{animations.entrance.fade_in.trigger_event}"/>
+              </p:stCondLst>
+              <p:childTnLst>
+                <p:animEffect transition="{animations.entrance.fade_in.transition_type}" filter="{animations.entrance.fade_in.filter}">
+                  <p:cTn id="{animations.entrance.fade_in.effect_id}" dur="{animations.entrance.fade_in.effect_duration}"
+                         accel="{animations.entrance.fade_in.acceleration}" decel="{animations.entrance.fade_in.deceleration}">
+                    <p:stCondLst>
+                      <p:cond delay="{animations.entrance.fade_in.start_delay}"/>
+                    </p:stCondLst>
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.entrance.fade_in.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:animEffect>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+          <!-- Fly In Animation -->
+          <p:par>
+            <p:cTn id="{animations.entrance.fly_in.id}" dur="{animations.entrance.fly_in.duration}"
+                   fill="{animations.entrance.fly_in.fill_behavior}" grpId="{animations.entrance.fly_in.group_id}">
+              <p:stCondLst>
+                <p:cond delay="{animations.entrance.fly_in.delay}" evt="{animations.entrance.fly_in.trigger_event}"/>
+              </p:stCondLst>
+              <p:childTnLst>
+                <p:animMotion origin="{animations.entrance.fly_in.origin_type}" path="{animations.entrance.fly_in.motion_path}"
+                              pathEditMode="{animations.entrance.fly_in.path_edit_mode}" rAng="{animations.entrance.fly_in.rotation_angle}"
+                              ptsTypes="{animations.entrance.fly_in.point_types}">
+                  <p:cTn id="{animations.entrance.fly_in.motion_id}" dur="{animations.entrance.fly_in.motion_duration}"
+                         accel="{animations.entrance.fly_in.acceleration}" decel="{animations.entrance.fly_in.deceleration}">
+                    <p:stCondLst>
+                      <p:cond delay="{animations.entrance.fly_in.motion_delay}"/>
+                    </p:stCondLst>
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.entrance.fly_in.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:animMotion>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+          <!-- Zoom Animation -->
+          <p:par>
+            <p:cTn id="{animations.entrance.zoom.id}" dur="{animations.entrance.zoom.duration}"
+                   fill="{animations.entrance.zoom.fill_behavior}" grpId="{animations.entrance.zoom.group_id}">
+              <p:stCondLst>
+                <p:cond delay="{animations.entrance.zoom.delay}" evt="{animations.entrance.zoom.trigger_event}"/>
+              </p:stCondLst>
+              <p:childTnLst>
+                <p:animScale>
+                  <p:cTn id="{animations.entrance.zoom.scale_id}" dur="{animations.entrance.zoom.scale_duration}"
+                         accel="{animations.entrance.zoom.acceleration}" decel="{animations.entrance.zoom.deceleration}">
+                    <p:stCondLst>
+                      <p:cond delay="{animations.entrance.zoom.scale_delay}"/>
+                    </p:stCondLst>
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.entrance.zoom.target_shape_id}"/>
+                  </p:tgtEl>
+                  <p:by x="{animations.entrance.zoom.scale_x_factor}" y="{animations.entrance.zoom.scale_y_factor}"/>
+                </p:animScale>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+        </p:childTnLst>
+      </p:cTn>
+    </p:par>
+
+    <!-- Emphasis Animation Sequence -->
+    <p:par>
+      <p:cTn id="{animations.emphasis.timeline_id}" dur="{animations.emphasis.total_duration}" nodeType="clickEffect">
+        <p:stCondLst>
+          <p:cond delay="{animations.emphasis.start_delay}" evt="{animations.emphasis.trigger_event}"/>
+        </p:stCondLst>
+        <p:childTnLst>
+
+          <!-- Pulse Animation -->
+          <p:par>
+            <p:cTn id="{animations.emphasis.pulse.id}" dur="{animations.emphasis.pulse.duration}"
+                   repeatCount="{animations.emphasis.pulse.repeat_count}" fill="{animations.emphasis.pulse.fill_behavior}">
+              <p:childTnLst>
+                <p:animScale>
+                  <p:cTn id="{animations.emphasis.pulse.scale_id}" dur="{animations.emphasis.pulse.scale_duration}"
+                         autoRev="{animations.emphasis.pulse.auto_reverse}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.emphasis.pulse.target_shape_id}"/>
+                  </p:tgtEl>
+                  <p:to x="{animations.emphasis.pulse.scale_to_x}" y="{animations.emphasis.pulse.scale_to_y}"/>
+                </p:animScale>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+          <!-- Color Change Animation -->
+          <p:par>
+            <p:cTn id="{animations.emphasis.color_change.id}" dur="{animations.emphasis.color_change.duration}">
+              <p:stCondLst>
+                <p:cond delay="{animations.emphasis.color_change.delay}"/>
+              </p:stCondLst>
+              <p:childTnLst>
+                <p:animClr clrSpc="{animations.emphasis.color_change.color_space}" dir="{animations.emphasis.color_change.direction}">
+                  <p:cTn id="{animations.emphasis.color_change.color_id}" dur="{animations.emphasis.color_change.color_duration}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.emphasis.color_change.target_shape_id}"/>
+                  </p:tgtEl>
+                  <p:to>
+                    <a:schemeClr val="{colors.animations.emphasis.target_color}">
+                      <a:tint val="{colors.animations.emphasis.color_tint}"/>
+                    </a:schemeClr>
+                  </p:to>
+                </p:animClr>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+        </p:childTnLst>
+      </p:cTn>
+    </p:par>
+
+    <!-- Exit Animation Sequence -->
+    <p:par>
+      <p:cTn id="{animations.exit.timeline_id}" dur="{animations.exit.total_duration}" nodeType="clickEffect">
+        <p:stCondLst>
+          <p:cond delay="{animations.exit.start_delay}" evt="{animations.exit.trigger_event}"/>
+        </p:stCondLst>
+        <p:childTnLst>
+
+          <!-- Fade Out Animation -->
+          <p:par>
+            <p:cTn id="{animations.exit.fade_out.id}" dur="{animations.exit.fade_out.duration}"
+                   fill="{animations.exit.fade_out.fill_behavior}">
+              <p:childTnLst>
+                <p:animEffect transition="{animations.exit.fade_out.transition_type}" filter="{animations.exit.fade_out.filter}">
+                  <p:cTn id="{animations.exit.fade_out.effect_id}" dur="{animations.exit.fade_out.effect_duration}"
+                         accel="{animations.exit.fade_out.acceleration}" decel="{animations.exit.fade_out.deceleration}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.exit.fade_out.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:animEffect>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+          <!-- Fly Out Animation -->
+          <p:par>
+            <p:cTn id="{animations.exit.fly_out.id}" dur="{animations.exit.fly_out.duration}"
+                   fill="{animations.exit.fly_out.fill_behavior}">
+              <p:childTnLst>
+                <p:animMotion origin="{animations.exit.fly_out.origin_type}" path="{animations.exit.fly_out.motion_path}"
+                              pathEditMode="{animations.exit.fly_out.path_edit_mode}" rAng="{animations.exit.fly_out.rotation_angle}">
+                  <p:cTn id="{animations.exit.fly_out.motion_id}" dur="{animations.exit.fly_out.motion_duration}"
+                         accel="{animations.exit.fly_out.acceleration}" decel="{animations.exit.fly_out.deceleration}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.exit.fly_out.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:animMotion>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+        </p:childTnLst>
+      </p:cTn>
+    </p:par>
+
+    <!-- Motion Path Animations -->
+    <p:par>
+      <p:cTn id="{animations.motion_paths.timeline_id}" dur="{animations.motion_paths.total_duration}" nodeType="clickEffect">
+        <p:stCondLst>
+          <p:cond delay="{animations.motion_paths.start_delay}" evt="{animations.motion_paths.trigger_event}"/>
+        </p:stCondLst>
+        <p:childTnLst>
+
+          <!-- Custom Path Animation -->
+          <p:par>
+            <p:cTn id="{animations.motion_paths.custom_path.id}" dur="{animations.motion_paths.custom_path.duration}">
+              <p:childTnLst>
+                <p:animMotion origin="{animations.motion_paths.custom_path.origin_type}"
+                              path="{animations.motion_paths.custom_path.svg_path}"
+                              pathEditMode="{animations.motion_paths.custom_path.edit_mode}"
+                              rAng="{animations.motion_paths.custom_path.rotation_angle}"
+                              ptsTypes="{animations.motion_paths.custom_path.point_types}">
+                  <p:cTn id="{animations.motion_paths.custom_path.motion_id}"
+                         dur="{animations.motion_paths.custom_path.motion_duration}"
+                         accel="{animations.motion_paths.custom_path.acceleration}"
+                         decel="{animations.motion_paths.custom_path.deceleration}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.motion_paths.custom_path.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:animMotion>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+        </p:childTnLst>
+      </p:cTn>
+    </p:par>
+
+    <!-- Audio and Media Synchronization -->
+    <p:par>
+      <p:cTn id="{animations.media.timeline_id}" dur="{animations.media.total_duration}" nodeType="mainSeq">
+        <p:stCondLst>
+          <p:cond delay="{animations.media.start_delay}" evt="{animations.media.trigger_event}"/>
+        </p:stCondLst>
+        <p:childTnLst>
+
+          <!-- Audio Trigger Animation -->
+          <p:par>
+            <p:cTn id="{animations.media.audio_trigger.id}" dur="{animations.media.audio_trigger.duration}">
+              <p:stCondLst>
+                <p:cond delay="{animations.media.audio_trigger.delay}" evt="onMediaEnd"
+                         tn="{animations.media.audio_trigger.target_media_id}"/>
+              </p:stCondLst>
+              <p:childTnLst>
+                <p:cmd type="{animations.media.audio_trigger.command_type}" cmd="{animations.media.audio_trigger.command}">
+                  <p:cTn id="{animations.media.audio_trigger.command_id}" dur="{animations.media.audio_trigger.command_duration}">
+                  </p:cTn>
+                  <p:tgtEl>
+                    <p:spTgt spid="{animations.media.audio_trigger.target_shape_id}"/>
+                  </p:tgtEl>
+                </p:cmd>
+              </p:childTnLst>
+            </p:cTn>
+          </p:par>
+
+        </p:childTnLst>
+      </p:cTn>
+    </p:par>
+
+  </p:tnLst>
+
+  <!-- Animation Build List -->
+  <p:bldLst>
+    <p:bldP spid="{animations.build_list.entrance.shape_id}" grpId="{animations.build_list.entrance.group_id}"
+            build="{animations.build_list.entrance.build_type}" advTm="{animations.build_list.entrance.advance_time}"/>
+    <p:bldP spid="{animations.build_list.emphasis.shape_id}" grpId="{animations.build_list.emphasis.group_id}"
+            build="{animations.build_list.emphasis.build_type}" advTm="{animations.build_list.emphasis.advance_time}"/>
+    <p:bldP spid="{animations.build_list.exit.shape_id}" grpId="{animations.build_list.exit.group_id}"
+            build="{animations.build_list.exit.build_type}" advTm="{animations.build_list.exit.advance_time}"/>
+  </p:bldLst>
+
+</p:timing>

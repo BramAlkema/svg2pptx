@@ -168,18 +168,25 @@ class TextFrame:
     - Per-run styling preserved
     """
     origin: Point                    # Already transformed coordinates (EMU)
-    runs: list[Run]                  # Per-tspan runs with inherited styling
     anchor: TextAnchor               # Raw SVG anchor (start|middle|end)
     bbox: Rect                       # Calculated text bounding box
+    runs: list[Run] | None = None    # Per-tspan runs with inherited styling
     line_height: float | None = None  # Line height multiplier
     baseline_shift: float = 0.0      # Conservative baseline adjustment
 
     def __post_init__(self):
-        if not self.runs:
-            raise ValueError("TextFrame must have at least one run")
+        # Normalize to empty list instead of failing; many shapes are textless
+        if self.runs is None:
+            object.__setattr__(self, 'runs', [])
+
         if any(not run.text.strip() for run in self.runs):
             # Allow empty runs for spacing, but warn about all-empty
             pass
+
+    @property
+    def is_textless(self) -> bool:
+        """Check if this text frame has no actual text content"""
+        return len(self.runs) == 0
 
     @property
     def text_content(self) -> str:
@@ -312,15 +319,23 @@ class RichTextFrame:
     Complements the existing TextFrame with enhanced structure for
     precise multi-line and multi-run text processing.
     """
-    lines: list[TextLine]
     position: Point  # Already transformed coordinates (EMU)
+    lines: list[TextLine] | None = None
     bounds: Rect | None = None
     transform: str | None = None  # SVG transform attribute
     baseline_adjust: bool = True     # Apply baseline corrections
 
     def __post_init__(self):
-        if not self.lines:
-            raise ValueError("RichTextFrame must have at least one line")
+        # Normalize to empty list; use object.__setattr__ for frozen dataclass
+        if self.lines is None:
+            object.__setattr__(self, 'lines', [])
+
+        # Annotate for downstream logic (use property instead for frozen dataclass)
+
+    @property
+    def is_textless(self) -> bool:
+        """Check if this text frame has no actual text content"""
+        return all((not ln.runs) for ln in self.lines) if self.lines else True
 
     @property
     def all_runs(self) -> list[Run]:

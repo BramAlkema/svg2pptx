@@ -35,10 +35,22 @@ class ViewportService:
                                .meet()
                                .resolve_single())
 
-    def svg_to_emu(self, svg_x: float, svg_y: float) -> tuple[int, int]:
-        """Transform SVG coordinates to EMU."""
-        emu_x = int(svg_x * self.viewport_mapping['scale_x'] + self.viewport_mapping['translate_x'])
-        emu_y = int(svg_y * self.viewport_mapping['scale_y'] + self.viewport_mapping['translate_y'])
+    def svg_to_emu(self, svg_x: float, svg_y: float) -> tuple[float, float]:
+        """
+        Transform SVG coordinates to EMU (float precision).
+
+        Returns float EMU values preserving precision throughout the pipeline.
+        Only round to int at final XML serialization.
+
+        Args:
+            svg_x: SVG x coordinate
+            svg_y: SVG y coordinate
+
+        Returns:
+            Tuple of (emu_x, emu_y) as float values
+        """
+        emu_x = svg_x * self.viewport_mapping['scale_x'] + self.viewport_mapping['translate_x']
+        emu_y = svg_y * self.viewport_mapping['scale_y'] + self.viewport_mapping['translate_y']
         return emu_x, emu_y
 
     def get_scale_factors(self) -> tuple[float, float]:

@@ -91,12 +91,15 @@ class Policy:
             if hasattr(self, '_current_decision'):
                 self.metrics.record_decision(self._current_decision, elapsed_ms)
 
-    def decide_text(self, text: TextFrame) -> TextDecision:
+    def decide_text(self, text) -> TextDecision:
         """
-        Decide output format for TextFrame element.
+        Decide output format for TextFrame or RichTextFrame element.
+
+        Accepts TextFrame or RichTextFrame. If RichTextFrame, converts to TextFrame
+        before inspecting runs, sizes, styles, etc.
 
         Args:
-            text: TextFrame IR element
+            text: TextFrame or RichTextFrame IR element
 
         Returns:
             TextDecision with reasoning
@@ -104,6 +107,23 @@ class Policy:
         start_time = time.perf_counter()
 
         try:
+            # Import here to avoid circular dependency
+            from ..ir.text import TextFrame, RichTextFrame
+
+            # Convert RichTextFrame to TextFrame if needed
+            if isinstance(text, RichTextFrame):
+                text = text.to_text_frame()
+
+            # Defensively handle unknown types
+            if not isinstance(text, TextFrame):
+                # Return safe default for unknown text types
+                return TextDecision(
+                    use_native=True,
+                    reasons=[],
+                    estimated_quality=0.9,
+                    estimated_performance=0.95,
+                )
+
             decision = self._analyze_text(text)
             return decision
         finally:

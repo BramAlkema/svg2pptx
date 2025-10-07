@@ -370,22 +370,25 @@ class PathMapper(Mapper):
         """Generate DrawingML path data string from IR segments"""
         commands = []
 
+        # Get bounding box for coordinate normalization
+        bbox = getattr(path, 'bbox', None)
+
         for i, segment in enumerate(path.segments):
             if isinstance(segment, LineSegment):
                 if i == 0:
                     # First segment needs moveTo
-                    commands.append(f'<a:moveTo><a:pt x="{self._coord_to_drawingml(segment.start.x)}" y="{self._coord_to_drawingml(segment.start.y)}"/></a:moveTo>')
-                commands.append(f'<a:lnTo><a:pt x="{self._coord_to_drawingml(segment.end.x)}" y="{self._coord_to_drawingml(segment.end.y)}"/></a:lnTo>')
+                    commands.append(f'<a:moveTo><a:pt x="{self._coord_to_drawingml(segment.start.x, bbox)}" y="{self._coord_to_drawingml(segment.start.y, bbox, is_y=True)}"/></a:moveTo>')
+                commands.append(f'<a:lnTo><a:pt x="{self._coord_to_drawingml(segment.end.x, bbox)}" y="{self._coord_to_drawingml(segment.end.y, bbox, is_y=True)}"/></a:lnTo>')
 
             elif isinstance(segment, BezierSegment):
                 if i == 0:
                     # First segment needs moveTo
-                    commands.append(f'<a:moveTo><a:pt x="{self._coord_to_drawingml(segment.start.x)}" y="{self._coord_to_drawingml(segment.start.y)}"/></a:moveTo>')
+                    commands.append(f'<a:moveTo><a:pt x="{self._coord_to_drawingml(segment.start.x, bbox)}" y="{self._coord_to_drawingml(segment.start.y, bbox, is_y=True)}"/></a:moveTo>')
 
                 commands.append(f'''<a:cubicBezTo>
-    <a:pt x="{self._coord_to_drawingml(segment.control1.x)}" y="{self._coord_to_drawingml(segment.control1.y)}"/>
-    <a:pt x="{self._coord_to_drawingml(segment.control2.x)}" y="{self._coord_to_drawingml(segment.control2.y)}"/>
-    <a:pt x="{self._coord_to_drawingml(segment.end.x)}" y="{self._coord_to_drawingml(segment.end.y)}"/>
+    <a:pt x="{self._coord_to_drawingml(segment.control1.x, bbox)}" y="{self._coord_to_drawingml(segment.control1.y, bbox, is_y=True)}"/>
+    <a:pt x="{self._coord_to_drawingml(segment.control2.x, bbox)}" y="{self._coord_to_drawingml(segment.control2.y, bbox, is_y=True)}"/>
+    <a:pt x="{self._coord_to_drawingml(segment.end.x, bbox)}" y="{self._coord_to_drawingml(segment.end.y, bbox, is_y=True)}"/>
 </a:cubicBezTo>''')
 
         # Close path if it's closed
@@ -394,12 +397,22 @@ class PathMapper(Mapper):
 
         return '\n'.join(commands)
 
-    def _coord_to_drawingml(self, coord: float) -> str:
-        """Convert coordinate to DrawingML units (0-21600 range)"""
-        # This is a simplified conversion - real implementation would
-        # use the path's bounding box to normalize coordinates
-        normalized = max(0, min(21600, int(coord * 100)))
-        return str(normalized)
+    def _coord_to_drawingml(self, coord: float, bbox: Any = None, is_y: bool = False) -> str:
+        """Convert coordinate to DrawingML units (0-21600 range) normalized to bounding box"""
+        if bbox:
+            # Normalize coordinate relative to bounding box
+            if is_y:
+                # Y coordinate: normalize relative to bbox.y and bbox.height
+                normalized = ((coord - bbox.y) / bbox.height) * 21600 if bbox.height > 0 else 0
+            else:
+                # X coordinate: normalize relative to bbox.x and bbox.width
+                normalized = ((coord - bbox.x) / bbox.width) * 21600 if bbox.width > 0 else 0
+
+            return str(int(max(0, min(21600, normalized))))
+        else:
+            # Fallback: simple scaling
+            normalized = max(0, min(21600, int(coord * 100)))
+            return str(normalized)
 
     def _generate_fill_xml(self, fill: Any) -> str:
         """Generate DrawingML fill XML from IR paint"""

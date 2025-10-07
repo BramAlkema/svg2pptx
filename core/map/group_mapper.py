@@ -11,6 +11,7 @@ import time
 from typing import Any, Dict, Optional
 
 from ..ir import Group, Image, IRElement, Path, TextFrame
+from ..ir.shapes import Circle, Ellipse, Rectangle
 from ..policy import GroupDecision, Policy
 from .base import Mapper, MapperResult, MappingError, OutputFormat
 
@@ -263,6 +264,12 @@ class GroupMapper(Mapper):
             return self.child_mappers.get('text')
         elif isinstance(child, Image):
             return self.child_mappers.get('image')
+        elif isinstance(child, Circle):
+            return self.child_mappers.get('circle')
+        elif isinstance(child, Ellipse):
+            return self.child_mappers.get('ellipse')
+        elif isinstance(child, Rectangle):
+            return self.child_mappers.get('rectangle')
         elif isinstance(child, Group):
             return self  # Recursive group mapping
         else:

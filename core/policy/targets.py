@@ -305,7 +305,16 @@ class ImageDecision(PolicyDecision):
 
 @dataclass(frozen=True)
 class FilterDecision(PolicyDecision):
-    """Policy decision for SVG filter effects"""
+    """Policy decision for SVG filter elements (parsing layer)
+
+    Decides how to handle SVG <filter> elements with filter primitives
+    (feGaussianBlur, feDropShadow, etc.). Determines strategy:
+    - Native: Convert SVG filter chain to DrawingML effects (then use EffectDecision)
+    - EMF: Render filter to EMF
+    - Rasterize: Render filter to image
+
+    This is the SVG→IR decision. For IR→DrawingML governance, see EffectDecision.
+    """
     filter_type: str = ""           # 'blur' | 'shadow' | 'color_matrix' | 'composite' | 'chain'
     primitive_count: int = 0        # Number of filter primitives in chain
     complexity_score: int = 0       # Calculated complexity (0-100)
@@ -541,9 +550,99 @@ class ClipPathDecision(PolicyDecision):
         return base_dict
 
 
+@dataclass(frozen=True)
+class EffectDecision(PolicyDecision):
+    """Policy decision for DrawingML effect IR objects (rendering layer)
+
+    Decides whether to allow, clamp, downgrade, or drop individual Effect IR objects
+    (BlurEffect, ShadowEffect, etc.) when generating DrawingML output.
+
+    This is the IR→DrawingML governance layer. For SVG→IR decisions, see FilterDecision.
+
+    Policy rules applied:
+    - Effect type and caps (blur/shadow radius, distance, alpha limits)
+    - Color governance (sRGB vs scheme colors)
+    - Shape context (text vs shapes, logo restrictions)
+    - Performance budgets (effects per shape, per slide)
+    """
+    effect_type: str = ""                    # 'blur' | 'shadow' | 'glow' | 'soft_edge' | 'reflection'
+    action: str = "allow"                    # 'allow' | 'clamp' | 'downgrade' | 'drop' | 'rasterize'
+    original_effect: Any = None              # Original effect before policy
+    modified_effect: Any = None              # Clamped/downgraded effect (if action != 'allow')
+    violation_reason: str | None = None      # Why effect was modified/dropped
+
+    # Caps applied
+    clamped_blur: bool = False
+    clamped_distance: bool = False
+    clamped_alpha: bool = False
+    color_downgraded: bool = False           # sRGB → scheme
+
+    @classmethod
+    def allow(cls, effect: Any, effect_type: str, reasons: list[DecisionReason] = None) -> 'EffectDecision':
+        """Effect allowed as-is"""
+        if reasons is None:
+            reasons = [DecisionReason.SUPPORTED_FEATURES]
+        return cls(
+            use_native=True,
+            effect_type=effect_type,
+            action="allow",
+            original_effect=effect,
+            modified_effect=effect,
+            reasons=reasons
+        )
+
+    @classmethod
+    def clamp(cls, original: Any, modified: Any, effect_type: str,
+              reason: str, reasons: list[DecisionReason] = None, **kwargs) -> 'EffectDecision':
+        """Effect clamped to caps"""
+        if reasons is None:
+            reasons = [DecisionReason.ABOVE_THRESHOLDS]
+        return cls(
+            use_native=True,
+            effect_type=effect_type,
+            action="clamp",
+            original_effect=original,
+            modified_effect=modified,
+            violation_reason=reason,
+            reasons=reasons,
+            **kwargs
+        )
+
+    @classmethod
+    def drop(cls, effect: Any, effect_type: str, reason: str,
+             reasons: list[DecisionReason] = None) -> 'EffectDecision':
+        """Effect dropped/forbidden"""
+        if reasons is None:
+            reasons = [DecisionReason.UNSUPPORTED_FEATURES]
+        return cls(
+            use_native=False,
+            effect_type=effect_type,
+            action="drop",
+            original_effect=effect,
+            modified_effect=None,
+            violation_reason=reason,
+            reasons=reasons
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize EffectDecision to dictionary"""
+        base_dict = super().to_dict()
+        base_dict.update({
+            'effect_type': self.effect_type,
+            'action': self.action,
+            'violation_reason': self.violation_reason,
+            'clamped_blur': self.clamped_blur,
+            'clamped_distance': self.clamped_distance,
+            'clamped_alpha': self.clamped_alpha,
+            'color_downgraded': self.color_downgraded,
+        })
+        return base_dict
+
+
 # Type alias for all decision types
 ElementDecision = Union[PathDecision, TextDecision, GroupDecision, ImageDecision,
                         FilterDecision, GradientDecision, MultiPageDecision,
+                        EffectDecision,
                         AnimationDecision, ClipPathDecision]
 
 

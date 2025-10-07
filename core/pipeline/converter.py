@@ -22,7 +22,10 @@ from ..io import DrawingMLEmbedder, EmbedderResult, PackageWriter
 from ..ir import IRElement, SceneGraph
 from ..map import GroupMapper, ImageMapper, PathMapper
 from ..map.base import Mapper, MapperResult
+from ..map.circle_mapper import CircleMapper
+from ..map.ellipse_mapper import EllipseMapper
 from ..map.font_mapper_adapter import FontMapperAdapter
+from ..map.rect_mapper import RectangleMapper
 from ..parse import ParseResult, SVGParser
 from ..policy import PolicyConfig, PolicyEngine
 from ..services.conversion_services import ConversionServices
@@ -330,16 +333,27 @@ class CleanSlateConverter:
             text_mapper = FontMapperAdapter(self.policy, self.services)
             image_mapper = ImageMapper(self.policy, self.services)
 
+            # Create native shape mappers (new)
+            circle_mapper = CircleMapper()
+            ellipse_mapper = EllipseMapper()
+            rectangle_mapper = RectangleMapper()
+
             # Create group mapper with child_mappers wired
             child_mappers = {
                 'path': path_mapper,
                 'text': text_mapper,
                 'image': image_mapper,
+                'circle': circle_mapper,
+                'ellipse': ellipse_mapper,
+                'rectangle': rectangle_mapper,
             }
             group_mapper = GroupMapper(self.policy, child_mappers)
 
             self.mappers = {
                 'path': path_mapper,
+                'circle': circle_mapper,
+                'ellipse': ellipse_mapper,
+                'rectangle': rectangle_mapper,
                 'textframe': text_mapper,
                 'richtextframe': text_mapper,  # TextMapper handles both TextFrame and RichTextFrame
                 'group': group_mapper,

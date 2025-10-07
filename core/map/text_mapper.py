@@ -67,29 +67,45 @@ class TextMapper(Mapper):
 
         Centralizes run extraction to handle both IR text types uniformly.
         This prevents AttributeError when accessing .runs on RichTextFrame.
+        Fully defensive: handles None, unknown objects, empty lists.
 
         Args:
-            element: TextFrame or RichTextFrame instance
+            element: TextFrame or RichTextFrame instance (or None)
 
         Returns:
             List of Run objects (flattened for RichTextFrame)
         """
-        if isinstance(element, RichTextFrame):
-            # RichTextFrame stores runs nested in lines - flatten them
-            return [run for line in element.lines for run in line.runs]
-        # TextFrame has runs directly
-        return list(getattr(element, 'runs', []) or [])
+        if element is None:
+            return []
+
+        # TextFrame-style: has .runs attribute
+        runs = getattr(element, "runs", None)
+        if isinstance(runs, list):
+            return [r for r in runs if isinstance(r, Run)]
+
+        # RichTextFrame-style: has .lines with nested runs
+        lines = getattr(element, "lines", None)
+        if isinstance(lines, list):
+            flat = []
+            for line in lines:
+                lruns = getattr(line, "runs", None)
+                if isinstance(lruns, list):
+                    flat.extend(r for r in lruns if isinstance(r, Run))
+            return flat
+
+        return []
 
     def can_map(self, element: IRElement) -> bool:
         """Check if element is a TextFrame or RichTextFrame"""
         return isinstance(element, (TextFrame, RichTextFrame))
 
-    def map(self, element) -> MapperResult:
+    def map(self, element, decision: Optional['TextDecision'] = None) -> MapperResult:
         """
         Map TextFrame or RichTextFrame element to appropriate output format.
 
         Args:
             element: TextFrame or RichTextFrame IR element
+            decision: (optional) precomputed TextDecision, mainly for tests
 
         Returns:
             MapperResult with DrawingML or EMF content
@@ -106,8 +122,8 @@ class TextMapper(Mapper):
             else:
                 text_frame = element
 
-            # Get policy decision
-            decision = self.policy.decide_text(text_frame)
+            # Get (or use provided) policy decision
+            decision = decision or self.policy.decide_text(text_frame)
 
             # Map based on decision using original element
             if decision.use_native:
@@ -175,9 +191,9 @@ class TextMapper(Mapper):
                 policy_decision=decision,
                 metadata={
                     'run_count': len(runs),
-                    'complexity_score': text.complexity_score,
-                    'bbox': text.bbox,
-                    'anchor': text.anchor.value if hasattr(text.anchor, 'value') else str(text.anchor),
+                    'complexity_score': getattr(text, 'complexity_score', None),
+                    'bbox': getattr(text, 'bbox', getattr(text, 'bounds', None)),
+                    'anchor': getattr(text, 'anchor', None) if not hasattr(getattr(text, 'anchor', None), 'value') else getattr(text.anchor, 'value'),
                     'baseline_adjusted': True,
                     'fixes_applied': ['raw_anchor', 'per_tspan_styling', 'conservative_baseline', 'proper_alignment'],
                     'text_adapter_used': text_adapter_used,
@@ -196,24 +212,27 @@ class TextMapper(Mapper):
         # Handle both TextFrame and RichTextFrame
         if isinstance(element, RichTextFrame):
             # Use RichTextFrame properties - coordinates already in EMU from ConversionContext
-            x_emu = int(element.position.x)
-            y_emu = int(element.position.y)
+            x_emu = int(getattr(element.position, 'x', 0))
+            y_emu = int(getattr(element.position, 'y', 0))
 
-            if element.bounds:
-                width_emu = int(element.bounds.width)
-                height_emu = int(element.bounds.height)
+            if getattr(element, 'bounds', None):
+                width_emu = int(getattr(element.bounds, 'width', 0))
+                height_emu = int(getattr(element.bounds, 'height', 0))
             else:
                 # Estimate bounds for multi-line text (already in EMU)
-                total_height = sum(line.primary_font_size * 1.2 for line in element.lines)
-                max_width = max(
-                    sum(len(run.text) * run.font_size_pt * 0.6 for run in line.runs)
-                    for line in element.lines
-                )
+                lines = getattr(element, 'lines', []) or []
+                total_height = sum(getattr(line, 'primary_font_size', 12.0) * 1.2 for line in lines) if lines else 12.0
+                max_width = 0.0
+                for line in lines:
+                    line_width = 0.0
+                    for run in getattr(line, 'runs', []) or []:
+                        line_width += len(run.text or "") * (run.font_size_pt or 12.0) * 0.6
+                    max_width = max(max_width, line_width)
                 width_emu = int(max_width * EMU_PER_POINT)
                 height_emu = int(total_height * EMU_PER_POINT)
 
             # Apply baseline adjustment (documented fix #4)
-            primary_font_size = element.lines[0].primary_font_size if element.lines else 12.0
+            primary_font_size = getattr(element.lines[0], 'primary_font_size', 12.0) if getattr(element, 'lines', []) else 12.0
             baseline_shift_emu = int(primary_font_size * EMU_PER_POINT * BASELINE_ADJUSTMENT_FACTOR)
             y_emu += baseline_shift_emu
 
@@ -228,7 +247,8 @@ class TextMapper(Mapper):
             height_emu = int(bbox.height)
 
             # Apply baseline adjustment (documented fix #4)
-            baseline_shift_emu = int(element.primary_font_size * EMU_PER_POINT * BASELINE_ADJUSTMENT_FACTOR)
+            primary = getattr(element, 'primary_font_size', 12.0)
+            baseline_shift_emu = int(primary * EMU_PER_POINT * BASELINE_ADJUSTMENT_FACTOR)
             y_emu += baseline_shift_emu
 
             # Generate paragraph XML with proper alignment separation
@@ -265,13 +285,17 @@ class TextMapper(Mapper):
     def _map_to_emf(self, text: TextFrame, decision: TextDecision) -> MapperResult:
         """Map text to EMF fallback format"""
         try:
-            # For EMF fallback, create a picture shape that would contain
-            # rendered text with full fidelity - coordinates already in EMU from ConversionContext
-            bbox = text.bbox
-            x_emu = int(bbox.x)
-            y_emu = int(bbox.y)
-            width_emu = int(bbox.width)
-            height_emu = int(bbox.height)
+            # For EMF fallback, create a picture shape – support TextFrame and RichTextFrame
+            bbox_like = getattr(text, 'bbox', getattr(text, 'bounds', None))
+            if bbox_like is None:
+                # last-resort defaults
+                x_emu = y_emu = 0
+                width_emu = height_emu = 1
+            else:
+                x_emu = int(getattr(bbox_like, 'x', 0))
+                y_emu = int(getattr(bbox_like, 'y', 0))
+                width_emu = int(getattr(bbox_like, 'width', 1))
+                height_emu = int(getattr(bbox_like, 'height', 1))
 
             xml_content = f"""<p:pic>
     <p:nvPicPr>
@@ -313,8 +337,8 @@ class TextMapper(Mapper):
                 metadata={
                     'fallback_reason': 'Complex text features require EMF',
                     'run_count': len(runs),
-                    'complexity_score': text.complexity_score,
-                    'bbox': bbox,
+                    'complexity_score': getattr(text, 'complexity_score', None),
+                    'bbox': bbox_like,
                     'emf_required': True,
                 },
                 estimated_quality=0.98,  # EMF preserves full fidelity
@@ -332,7 +356,7 @@ class TextMapper(Mapper):
         # Get runs using centralized helper (handles both TextFrame and RichTextFrame)
         runs = self._get_runs(text)
 
-        if text.is_multiline:
+        if getattr(text, 'is_multiline', False):
             # Split runs into paragraphs at line breaks
             current_runs = []
             for run in runs:
@@ -370,8 +394,12 @@ class TextMapper(Mapper):
 
         # Generate XML for each paragraph
         paragraph_xmls = []
+        if not paragraphs:
+            # Emit a minimal empty paragraph (keeps strict consumers happy)
+            return '<a:p><a:r><a:rPr/><a:t></a:t></a:r></a:p>'
+
         for para_runs in paragraphs:
-            para_xml = self._generate_paragraph_xml(para_runs, text.anchor)
+            para_xml = self._generate_paragraph_xml(para_runs, getattr(text, 'anchor', TextAnchor.START))
             paragraph_xmls.append(para_xml)
 
         return '\n'.join(paragraph_xmls)
@@ -383,6 +411,10 @@ class TextMapper(Mapper):
 
         # Generate runs XML with per-tspan styling (documented fix #2)
         runs_xml = []
+        if not runs:
+            # Minimal empty run
+            return f'<a:p><a:pPr algn="{alignment}"/><a:r><a:rPr/><a:t></a:t></a:r></a:p>'
+
         for run in runs:
             run_xml = self._generate_run_xml(run)
             runs_xml.append(run_xml)
@@ -439,17 +471,21 @@ class TextMapper(Mapper):
 
     def _generate_rich_paragraphs_xml(self, element: RichTextFrame) -> str:
         """Generate paragraph XML for RichTextFrame with per-line styling"""
+        lines = getattr(element, 'lines', []) or []
         paragraph_xmls = []
 
-        for line in element.lines:
+        if not lines:
+            return '<a:p><a:r><a:rPr/><a:t></a:t></a:r></a:p>'
+
+        for line in lines:
             # Generate runs XML with per-tspan styling (documented fix #2)
             runs_xml = []
-            for run in line.runs:
+            for run in (getattr(line, 'runs', []) or []):
                 run_xml = self._generate_run_xml(run)
                 runs_xml.append(run_xml)
 
             # Apply raw anchor handling (documented fix #1)
-            alignment = self._anchor_map.get(line.anchor, 'l')
+            alignment = self._anchor_map.get(getattr(line, 'anchor', TextAnchor.START), 'l')
 
             # Combine into paragraph with proper alignment separation (fix #4)
             paragraph_xml = f"""<a:p>

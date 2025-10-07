@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:shapeStyles xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+
+  <!-- Shape Default Properties -->
+  <a:objectDefaults>
+    <a:spDef>
+      <a:spPr>
+        <!-- Default Fill -->
+        <a:solidFill>
+          <a:schemeClr val="{colors.shapes.default.fill}">
+            <a:tint val="{colors.shapes.default.fill_tint}"/>
+          </a:schemeClr>
+        </a:solidFill>
+
+        <!-- Default Line -->
+        <a:ln w="{shapes.default.line_width}" cap="{shapes.default.line_cap}" cmpd="{shapes.default.line_compound}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.shapes.default.line}"/>
+          </a:solidFill>
+          <a:prstDash val="{shapes.default.line_dash}"/>
+          <a:round/>
+        </a:ln>
+
+        <!-- Default Effects -->
+        <a:effectLst>
+          <a:outerShdw blurRad="{shapes.default.shadow.blur_radius}"
+                       dist="{shapes.default.shadow.distance}"
+                       dir="{shapes.default.shadow.direction}"
+                       algn="{shapes.default.shadow.alignment}">
+            <a:schemeClr val="{colors.shapes.default.shadow}">
+              <a:alpha val="{colors.shapes.default.shadow_alpha}"/>
+            </a:schemeClr>
+          </a:outerShdw>
+        </a:effectLst>
+
+        <!-- 3D Properties -->
+        <a:scene3d>
+          <a:camera prst="{shapes.default.camera.preset}"/>
+          <a:lightRig rig="{shapes.default.lighting.rig}" dir="{shapes.default.lighting.direction}"/>
+        </a:scene3d>
+
+        <a:sp3d>
+          <a:bevelT w="{shapes.default.bevel_top.width}" h="{shapes.default.bevel_top.height}" prst="{shapes.default.bevel_top.preset}"/>
+          <a:bevelB w="{shapes.default.bevel_bottom.width}" h="{shapes.default.bevel_bottom.height}" prst="{shapes.default.bevel_bottom.preset}"/>
+          <a:extrusionClr>
+            <a:schemeClr val="{colors.shapes.default.extrusion}"/>
+          </a:extrusionClr>
+          <a:contourClr>
+            <a:schemeClr val="{colors.shapes.default.contour}"/>
+          </a:contourClr>
+        </a:sp3d>
+      </a:spPr>
+
+      <!-- Default Body Properties -->
+      <a:bodyPr wrap="{shapes.default.text.wrap}"
+                lIns="{spacing.shapes.text.left_inset}"
+                tIns="{spacing.shapes.text.top_inset}"
+                rIns="{spacing.shapes.text.right_inset}"
+                bIns="{spacing.shapes.text.bottom_inset}"
+                anchor="{shapes.default.text.anchor}"
+                anchorCtr="{shapes.default.text.anchor_center}"/>
+
+      <!-- Default List Style -->
+      <a:lstStyle>
+        <a:defPPr>
+          <a:defRPr sz="{typography.shapes.default.font_size}" kern="{typography.shapes.default.kerning}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.shapes.default.text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.shapes.default.font_family}"/>
+            <a:ea typeface="{typography.shapes.default.font_family_ea}"/>
+            <a:cs typeface="{typography.shapes.default.font_family_cs}"/>
+          </a:defRPr>
+        </a:defPPr>
+      </a:lstStyle>
+    </a:spDef>
+
+    <!-- Line Default Properties -->
+    <a:lnDef>
+      <a:spPr>
+        <a:ln w="{shapes.lines.default.width}" cap="{shapes.lines.default.cap}" cmpd="{shapes.lines.default.compound}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.shapes.lines.default}"/>
+          </a:solidFill>
+          <a:prstDash val="{shapes.lines.default.dash}"/>
+          <a:round/>
+        </a:ln>
+        <a:effectLst>
+          <a:glow rad="{shapes.lines.default.glow.radius}">
+            <a:schemeClr val="{colors.shapes.lines.glow}">
+              <a:alpha val="{colors.shapes.lines.glow_alpha}"/>
+            </a:schemeClr>
+          </a:glow>
+        </a:effectLst>
+      </a:spPr>
+      <a:bodyPr/>
+      <a:lstStyle/>
+    </a:lnDef>
+
+    <!-- Text Box Default Properties -->
+    <a:txDef>
+      <a:spPr>
+        <a:solidFill>
+          <a:schemeClr val="{colors.shapes.textbox.fill}">
+            <a:alpha val="{colors.shapes.textbox.fill_alpha}"/>
+          </a:schemeClr>
+        </a:solidFill>
+        <a:ln w="{shapes.textbox.border.width}">
+          <a:solidFill>
+            <a:schemeClr val="{colors.shapes.textbox.border}"/>
+          </a:solidFill>
+        </a:ln>
+      </a:spPr>
+      <a:bodyPr wrap="{shapes.textbox.text.wrap}"
+                lIns="{spacing.shapes.textbox.left_inset}"
+                tIns="{spacing.shapes.textbox.top_inset}"
+                rIns="{spacing.shapes.textbox.right_inset}"
+                bIns="{spacing.shapes.textbox.bottom_inset}"/>
+      <a:lstStyle>
+        <a:defPPr>
+          <a:defRPr sz="{typography.shapes.textbox.font_size}">
+            <a:solidFill>
+              <a:schemeClr val="{colors.shapes.textbox.text}"/>
+            </a:solidFill>
+            <a:latin typeface="{typography.shapes.textbox.font_family}"/>
+          </a:defRPr>
+        </a:defPPr>
+      </a:lstStyle>
+    </a:txDef>
+  </a:objectDefaults>
+
+  <!-- Shape Style Gallery -->
+  <a:fmtScheme name="{shapes.gallery.scheme_name}">
+    <!-- Fill Style List -->
+    <a:fillStyleLst>
+      <!-- Solid Fill Style -->
+      <a:solidFill>
+        <a:schemeClr val="{colors.shapes.gallery.fill_style1}"/>
+      </a:solidFill>
+
+      <!-- Gradient Fill Style -->
+      <a:gradFill rotWithShape="{shapes.gallery.gradient.rotate_with_shape}">
+        <a:gsLst>
+          <a:gs pos="{colors.shapes.gallery.gradient.stop1_position}">
+            <a:schemeClr val="{colors.shapes.gallery.gradient.stop1_color}">
+              <a:tint val="{colors.shapes.gallery.gradient.stop1_tint}"/>
+            </a:schemeClr>
+          </a:gs>
+          <a:gs pos="{colors.shapes.gallery.gradient.stop2_position}">
+            <a:schemeClr val="{colors.shapes.gallery.gradient.stop2_color}">
+              <a:shade val="{colors.shapes.gallery.gradient.stop2_shade}"/>
+            </a:schemeClr>
+          </a:gs>
+        </a:gsLst>
+        <a:lin ang="{colors.shapes.gallery.gradient.angle}" scaled="{colors.shapes.gallery.gradient.scaled}"/>
+      </a:gradFill>
+
+      <!-- Pattern Fill Style -->
+      <a:pattFill prst="{colors.shapes.gallery.pattern.preset}">
+        <a:fgClr>
+          <a:schemeClr val="{colors.shapes.gallery.pattern.foreground}"/>
+        </a:fgClr>
+        <a:bgClr>
+          <a:schemeClr val="{colors.shapes.gallery.pattern.background}"/>
+        </a:bgClr>
+      </a:pattFill>
+    </a:fillStyleLst>
+
+    <!-- Line Style List -->
+    <a:lnStyleLst>
+      <!-- Thin Line -->
+      <a:ln w="{shapes.gallery.line_style1.width}" cap="{shapes.gallery.line_style1.cap}" cmpd="{shapes.gallery.line_style1.compound}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.shapes.gallery.line_style1}"/>
+        </a:solidFill>
+        <a:prstDash val="{shapes.gallery.line_style1.dash}"/>
+      </a:ln>
+
+      <!-- Medium Line -->
+      <a:ln w="{shapes.gallery.line_style2.width}" cap="{shapes.gallery.line_style2.cap}" cmpd="{shapes.gallery.line_style2.compound}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.shapes.gallery.line_style2}"/>
+        </a:solidFill>
+        <a:prstDash val="{shapes.gallery.line_style2.dash}"/>
+      </a:ln>
+
+      <!-- Thick Line -->
+      <a:ln w="{shapes.gallery.line_style3.width}" cap="{shapes.gallery.line_style3.cap}" cmpd="{shapes.gallery.line_style3.compound}">
+        <a:solidFill>
+          <a:schemeClr val="{colors.shapes.gallery.line_style3}"/>
+        </a:solidFill>
+        <a:prstDash val="{shapes.gallery.line_style3.dash}"/>
+      </a:ln>
+    </a:lnStyleLst>
+
+    <!-- Effect Style List -->
+    <a:effectStyleLst>
+      <!-- Subtle Effect -->
+      <a:effectStyle>
+        <a:effectLst>
+          <a:outerShdw blurRad="{shapes.gallery.effect_style1.shadow.blur}"
+                       dist="{shapes.gallery.effect_style1.shadow.distance}"
+                       dir="{shapes.gallery.effect_style1.shadow.direction}"
+                       algn="{shapes.gallery.effect_style1.shadow.alignment}">
+            <a:schemeClr val="{colors.shapes.gallery.effect_style1.shadow}">
+              <a:alpha val="{colors.shapes.gallery.effect_style1.shadow_alpha}"/>
+            </a:schemeClr>
+          </a:outerShdw>
+        </a:effectLst>
+      </a:effectStyle>
+
+      <!-- Moderate Effect -->
+      <a:effectStyle>
+        <a:effectLst>
+          <a:outerShdw blurRad="{shapes.gallery.effect_style2.shadow.blur}"
+                       dist="{shapes.gallery.effect_style2.shadow.distance}"
+                       dir="{shapes.gallery.effect_style2.shadow.direction}">
+            <a:schemeClr val="{colors.shapes.gallery.effect_style2.shadow}">
+              <a:alpha val="{colors.shapes.gallery.effect_style2.shadow_alpha}"/>
+            </a:schemeClr>
+          </a:outerShdw>
+          <a:glow rad="{shapes.gallery.effect_style2.glow.radius}">
+            <a:schemeClr val="{colors.shapes.gallery.effect_style2.glow}">
+              <a:alpha val="{colors.shapes.gallery.effect_style2.glow_alpha}"/>
+            </a:schemeClr>
+          </a:glow>
+        </a:effectLst>
+      </a:effectStyle>
+
+      <!-- Intense Effect -->
+      <a:effectStyle>
+        <a:effectLst>
+          <a:outerShdw blurRad="{shapes.gallery.effect_style3.shadow.blur}"
+                       dist="{shapes.gallery.effect_style3.shadow.distance}"
+                       dir="{shapes.gallery.effect_style3.shadow.direction}">
+            <a:schemeClr val="{colors.shapes.gallery.effect_style3.shadow}">
+              <a:alpha val="{colors.shapes.gallery.effect_style3.shadow_alpha}"/>
+            </a:schemeClr>
+          </a:outerShdw>
+          <a:glow rad="{shapes.gallery.effect_style3.glow.radius}">
+            <a:schemeClr val="{colors.shapes.gallery.effect_style3.glow}">
+              <a:alpha val="{colors.shapes.gallery.effect_style3.glow_alpha}"/>
+            </a:schemeClr>
+          </a:glow>
+          <a:reflection blurRad="{shapes.gallery.effect_style3.reflection.blur}"
+                        stA="{shapes.gallery.effect_style3.reflection.start_alpha}"
+                        stPos="{shapes.gallery.effect_style3.reflection.start_position}"
+                        endA="{shapes.gallery.effect_style3.reflection.end_alpha}"
+                        endPos="{shapes.gallery.effect_style3.reflection.end_position}"
+                        dist="{shapes.gallery.effect_style3.reflection.distance}"
+                        dir="{shapes.gallery.effect_style3.reflection.direction}"/>
+        </a:effectLst>
+        <a:scene3d>
+          <a:camera prst="{shapes.gallery.effect_style3.camera.preset}"/>
+          <a:lightRig rig="{shapes.gallery.effect_style3.lighting.rig}" dir="{shapes.gallery.effect_style3.lighting.direction}"/>
+        </a:scene3d>
+        <a:sp3d>
+          <a:bevelT w="{shapes.gallery.effect_style3.bevel_top.width}" h="{shapes.gallery.effect_style3.bevel_top.height}" prst="{shapes.gallery.effect_style3.bevel_top.preset}"/>
+          <a:extrusionClr>
+            <a:schemeClr val="{colors.shapes.gallery.effect_style3.extrusion}"/>
+          </a:extrusionClr>
+          <a:contourClr>
+            <a:schemeClr val="{colors.shapes.gallery.effect_style3.contour}"/>
+          </a:contourClr>
+        </a:sp3d>
+      </a:effectStyle>
+    </a:effectStyleLst>
+
+    <!-- Background Fill Style List -->
+    <a:bgFillStyleLst>
+      <!-- Simple Background -->
+      <a:solidFill>
+        <a:schemeClr val="{colors.shapes.gallery.background1}"/>
+      </a:solidFill>
+
+      <!-- Gradient Background -->
+      <a:gradFill rotWithShape="{shapes.gallery.background.gradient.rotate_with_shape}">
+        <a:gsLst>
+          <a:gs pos="{colors.shapes.gallery.background.gradient.stop1_position}">
+            <a:schemeClr val="{colors.shapes.gallery.background.gradient.stop1_color}">
+              <a:tint val="{colors.shapes.gallery.background.gradient.stop1_tint}"/>
+            </a:schemeClr>
+          </a:gs>
+          <a:gs pos="{colors.shapes.gallery.background.gradient.stop2_position}">
+            <a:schemeClr val="{colors.shapes.gallery.background.gradient.stop2_color}">
+              <a:shade val="{colors.shapes.gallery.background.gradient.stop2_shade}"/>
+            </a:schemeClr>
+          </a:gs>
+          <a:gs pos="{colors.shapes.gallery.background.gradient.stop3_position}">
+            <a:schemeClr val="{colors.shapes.gallery.background.gradient.stop3_color}"/>
+          </a:gs>
+        </a:gsLst>
+        <a:path path="{colors.shapes.gallery.background.gradient.path}"/>
+      </a:gradFill>
+
+      <!-- Pattern Background -->
+      <a:pattFill prst="{colors.shapes.gallery.background.pattern.preset}">
+        <a:fgClr>
+          <a:schemeClr val="{colors.shapes.gallery.background.pattern.foreground}"/>
+        </a:fgClr>
+        <a:bgClr>
+          <a:schemeClr val="{colors.shapes.gallery.background.pattern.background}"/>
+        </a:bgClr>
+      </a:pattFill>
+    </a:bgFillStyleLst>
+  </a:fmtScheme>
+
+</a:shapeStyles>

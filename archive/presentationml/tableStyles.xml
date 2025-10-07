@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{tables.presentation.default_style}">
+
+  <!-- Light Table Styles -->
+  <a:tblStyle styleId="{tables.presentation.light_style_1.id}" styleName="{tables.presentation.light_style_1.name}">
+    <a:wholeTbl>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.light.text_color}"/>
+        </a:fontRef>
+        <a:schemeClr val="{colors.tables.light.background}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:tcBdr>
+          <a:left>
+            <a:ln w="{tables.presentation.border.light.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:left>
+          <a:right>
+            <a:ln w="{tables.presentation.border.light.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:right>
+          <a:top>
+            <a:ln w="{tables.presentation.border.light.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:top>
+          <a:bottom>
+            <a:ln w="{tables.presentation.border.light.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:bottom>
+        </a:tcBdr>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.background}"/>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:wholeTbl>
+
+    <!-- First Row (Header) Style -->
+    <a:band1H>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.light.header_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.header.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.header_background}">
+              <a:tint val="{colors.tables.light.header_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+        <a:tcBdr>
+          <a:bottom>
+            <a:ln w="{tables.presentation.border.header.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.header_border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:bottom>
+        </a:tcBdr>
+      </a:tcStyle>
+    </a:band1H>
+
+    <!-- Last Row (Total) Style -->
+    <a:lastRow>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.light.total_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.total.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.total_background}">
+              <a:tint val="{colors.tables.light.total_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+        <a:tcBdr>
+          <a:top>
+            <a:ln w="{tables.presentation.border.total.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.light.total_border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:top>
+        </a:tcBdr>
+      </a:tcStyle>
+    </a:lastRow>
+
+    <!-- First Column Style -->
+    <a:firstCol>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.light.first_col_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.first_col.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.first_col_background}">
+              <a:tint val="{colors.tables.light.first_col_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:firstCol>
+
+    <!-- Last Column Style -->
+    <a:lastCol>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.light.last_col_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.last_col.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.last_col_background}">
+              <a:tint val="{colors.tables.light.last_col_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:lastCol>
+
+    <!-- Banded Rows -->
+    <a:band1V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.band1_background}">
+              <a:tint val="{colors.tables.light.band1_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1V>
+
+    <a:band2V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.light.band2_background}">
+              <a:tint val="{colors.tables.light.band2_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band2V>
+  </a:tblStyle>
+
+  <!-- Medium Table Styles -->
+  <a:tblStyle styleId="{tables.presentation.medium_style_1.id}" styleName="{tables.presentation.medium_style_1.name}">
+    <a:wholeTbl>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.medium.text_color}"/>
+        </a:fontRef>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:tcBdr>
+          <a:left>
+            <a:ln w="{tables.presentation.border.medium.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.medium.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:left>
+          <a:right>
+            <a:ln w="{tables.presentation.border.medium.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.medium.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:right>
+          <a:top>
+            <a:ln w="{tables.presentation.border.medium.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.medium.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:top>
+          <a:bottom>
+            <a:ln w="{tables.presentation.border.medium.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.medium.border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:bottom>
+        </a:tcBdr>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.medium.background}"/>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:wholeTbl>
+
+    <!-- Header Row -->
+    <a:band1H>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.medium.header_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.header.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.medium.header_background}"/>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1H>
+
+    <!-- Alternating Rows -->
+    <a:band1V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.medium.band1_background}">
+              <a:tint val="{colors.tables.medium.band1_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1V>
+  </a:tblStyle>
+
+  <!-- Dark Table Styles -->
+  <a:tblStyle styleId="{tables.presentation.dark_style_1.id}" styleName="{tables.presentation.dark_style_1.name}">
+    <a:wholeTbl>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.dark.text_color}"/>
+        </a:fontRef>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.dark.background}"/>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:wholeTbl>
+
+    <!-- Header Row -->
+    <a:band1H>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.dark.header_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.header.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.dark.header_background}"/>
+          </a:solidFill>
+        </a:fill>
+        <a:tcBdr>
+          <a:bottom>
+            <a:ln w="{tables.presentation.border.dark.width}" cap="flat" cmpd="sng" algn="ctr">
+              <a:solidFill>
+                <a:schemeClr val="{colors.tables.dark.header_border}"/>
+              </a:solidFill>
+            </a:ln>
+          </a:bottom>
+        </a:tcBdr>
+      </a:tcStyle>
+    </a:band1H>
+
+    <!-- Alternating Rows with Subtle Differences -->
+    <a:band1V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.dark.band1_background}">
+              <a:shade val="{colors.tables.dark.band1_shade}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1V>
+
+    <a:band2V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.dark.band2_background}">
+              <a:shade val="{colors.tables.dark.band2_shade}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band2V>
+  </a:tblStyle>
+
+  <!-- Colorful Table Styles -->
+  <a:tblStyle styleId="{tables.presentation.colorful_style_1.id}" styleName="{tables.presentation.colorful_style_1.name}">
+    <a:wholeTbl>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.colorful.text_color}"/>
+        </a:fontRef>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.colorful.background}"/>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:wholeTbl>
+
+    <!-- Colorful Header -->
+    <a:band1H>
+      <a:tcTxStyle>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="{colors.tables.colorful.header_text}"/>
+        </a:fontRef>
+        <a:bold val="{typography.tables.header.bold}"/>
+      </a:tcTxStyle>
+      <a:tcStyle>
+        <a:fill>
+          <a:gradFill flip="none" rotWithShape="1">
+            <a:gsLst>
+              <a:gs pos="0">
+                <a:schemeClr val="{colors.tables.colorful.header_gradient_start}"/>
+              </a:gs>
+              <a:gs pos="100000">
+                <a:schemeClr val="{colors.tables.colorful.header_gradient_end}"/>
+              </a:gs>
+            </a:gsLst>
+            <a:lin ang="{colors.tables.colorful.gradient_angle}" scaled="1"/>
+          </a:gradFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1H>
+
+    <!-- Colorful Banding -->
+    <a:band1V>
+      <a:tcStyle>
+        <a:fill>
+          <a:solidFill>
+            <a:schemeClr val="{colors.tables.colorful.band1_background}">
+              <a:tint val="{colors.tables.colorful.band1_tint}"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </a:fill>
+      </a:tcStyle>
+    </a:band1V>
+  </a:tblStyle>
+
+</a:tblStyleLst>

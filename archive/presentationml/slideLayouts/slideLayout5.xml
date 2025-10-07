@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldLayout xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" type="twoTxTwoObj" preserve="1">
+  <p:cSld name="Comparison">
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+
+      <!-- Title -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Title 1"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.margins.x}" y="{layout.margins.y}"/>
+            <a:ext cx="{layout.content_area.width}" cy="{layout.title.height}"/>
+          </a:xfrm>
+        </p:spPr>
+      </p:sp>
+
+      <!-- Left Comparison Title -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="Comparison Text 2"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="body" idx="1"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.margins.x}" y="{layout.comparison.left_title_y}"/>
+            <a:ext cx="{layout.comparison.left_width}" cy="{layout.comparison.title_height}"/>
+          </a:xfrm>
+        </p:spPr>
+      </p:sp>
+
+      <!-- Right Comparison Title -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="4" name="Comparison Text 3"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="body" idx="2"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.comparison.right_x}" y="{layout.comparison.left_title_y}"/>
+            <a:ext cx="{layout.comparison.right_width}" cy="{layout.comparison.title_height}"/>
+          </a:xfrm>
+        </p:spPr>
+      </p:sp>
+
+      <!-- Left Comparison Content -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="5" name="Comparison Content 4"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph idx="3"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.margins.x}" y="{layout.comparison.content_y}"/>
+            <a:ext cx="{layout.comparison.left_width}" cy="{layout.comparison.content_height}"/>
+          </a:xfrm>
+        </p:spPr>
+      </p:sp>
+
+      <!-- Right Comparison Content -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="6" name="Comparison Content 5"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph idx="4"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="{layout.comparison.right_x}" y="{layout.comparison.content_y}"/>
+            <a:ext cx="{layout.comparison.right_width}" cy="{layout.comparison.content_height}"/>
+          </a:xfrm>
+        </p:spPr>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sldLayout>
