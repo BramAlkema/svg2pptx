@@ -28,7 +28,17 @@ class GoogleDriveService:
 
         Args:
             credentials: Valid Google OAuth credentials
+
+        Raises:
+            ValueError: If credentials are None
+            DriveError: If credentials are invalid or expired
         """
+        if credentials is None:
+            raise ValueError("credentials are required")
+
+        if not credentials.valid or credentials.expired:
+            raise DriveError("Invalid or expired credentials")
+
         self.credentials = credentials
         self.service = build('drive', 'v3', credentials=credentials)
 
@@ -54,8 +64,14 @@ class GoogleDriveService:
             }
 
         Raises:
+            ValueError: If pptx_bytes or title are empty
             DriveError: If upload or conversion fails
         """
+        if not pptx_bytes:
+            raise ValueError("pptx_bytes cannot be empty")
+        if not title or not title.strip():
+            raise ValueError("title cannot be empty")
+
         try:
             # Create media upload
             media = MediaIoBaseUpload(

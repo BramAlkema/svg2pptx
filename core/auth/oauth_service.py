@@ -49,7 +49,13 @@ class GoogleOAuthService:
             client_id: Google OAuth client ID
             client_secret: Google OAuth client secret
             redirect_uri: OAuth redirect URI (default: http://localhost:8080/oauth2/callback)
+
+        Raises:
+            ValueError: If client_id or client_secret are missing
         """
+        if not client_id or not client_secret:
+            raise ValueError("client_id and client_secret are required")
+
         self.token_store = token_store
         self.client_id = client_id
         self.client_secret = client_secret

@@ -69,6 +69,7 @@ class TestConversionServices:
         mock_style_service = Mock()
 
         mock_font_service = Mock()
+        mock_fractional_emu_converter = Mock()
 
         services = ConversionServices(
             unit_converter=mock_unit_converter,
@@ -87,7 +88,8 @@ class TestConversionServices:
             gradient_service=mock_gradient_service,
             pattern_service=mock_pattern_service,
             filter_service=mock_filter_service,
-            image_service=mock_image_service
+            image_service=mock_image_service,
+            fractional_emu_converter=mock_fractional_emu_converter
         )
 
         assert services.unit_converter is mock_unit_converter
@@ -106,6 +108,7 @@ class TestConversionServices:
         assert services.pattern_service is mock_pattern_service
         assert services.filter_service is mock_filter_service
         assert services.image_service is mock_image_service
+        assert services.fractional_emu_converter is mock_fractional_emu_converter
 
     def test_conversion_services_create_default(self):
         """Test ConversionServices.create_default creates working services."""

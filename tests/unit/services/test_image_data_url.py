@@ -46,16 +46,16 @@ class TestProcessDataURLPublicAPI:
         assert result is not None
         assert result.width > 0
         assert result.height > 0
-        assert result.content_type == 'image/png'
-        assert len(result.image_data) > 0
+        assert result.format == 'PNG'
+        assert len(result.content) > 0
 
     def test_process_data_url_accepts_valid_svg(self, image_service, valid_svg_data_url):
         """Test processing valid SVG data URL"""
         result = image_service.process_data_url(valid_svg_data_url)
 
         assert result is not None
-        assert result.content_type == 'image/svg+xml'
-        assert len(result.image_data) > 0
+        assert result.format == 'SVG'
+        assert len(result.content) > 0
 
     def test_process_data_url_rejects_non_data_url(self, image_service):
         """Test that non-data URLs are rejected"""
@@ -86,7 +86,7 @@ class TestProcessImageSourceUnifiedAPI:
         result = image_service.process_image_source(valid_png_data_url)
 
         assert result is not None
-        assert result.content_type == 'image/png'
+        assert result.format == 'PNG'
 
     def test_process_image_source_same_result_as_process_data_url(
         self, image_service, valid_png_data_url
@@ -95,10 +95,10 @@ class TestProcessImageSourceUnifiedAPI:
         result1 = image_service.process_data_url(valid_png_data_url)
         result2 = image_service.process_image_source(valid_png_data_url)
 
-        assert result1.content_type == result2.content_type
+        assert result1.format == result2.format
         assert result1.width == result2.width
         assert result1.height == result2.height
-        assert result1.image_data == result2.image_data
+        assert result1.content == result2.content
 
 
 class TestBackwardCompatibility:
@@ -112,8 +112,8 @@ class TestBackwardCompatibility:
         assert image_info is not None
         assert hasattr(image_info, 'width')
         assert hasattr(image_info, 'height')
-        assert hasattr(image_info, 'content_type')
-        assert hasattr(image_info, 'image_data')
+        assert hasattr(image_info, 'format')
+        assert hasattr(image_info, 'content')
 
     def test_new_code_using_process_image_source_works(self, image_service, valid_png_data_url):
         """Test that new code using process_image_source() works"""
@@ -123,8 +123,8 @@ class TestBackwardCompatibility:
         assert image_info is not None
         assert hasattr(image_info, 'width')
         assert hasattr(image_info, 'height')
-        assert hasattr(image_info, 'content_type')
-        assert hasattr(image_info, 'image_data')
+        assert hasattr(image_info, 'format')
+        assert hasattr(image_info, 'content')
 
 
 class TestImageAdapterIntegration:

@@ -130,6 +130,7 @@ class ImageService:
                 'image/gif': 'GIF',
                 'image/bmp': 'BMP',
                 'image/webp': 'WEBP',
+                'image/svg+xml': 'SVG',
             }
             image_format = format_map.get(mime_type, 'UNKNOWN')
 

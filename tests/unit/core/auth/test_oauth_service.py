@@ -98,7 +98,7 @@ class TestOAuthFlowInitiation:
         parsed = urlparse(auth_url)
         params = parse_qs(parsed.query)
 
-        assert params['redirect_uri'][0] == "http://localhost:8000/oauth2/callback"
+        assert params['redirect_uri'][0] == "http://localhost:8080/oauth2/callback"
 
     def test_state_token_is_cryptographically_secure(self, oauth_service):
         """State token is cryptographically secure."""

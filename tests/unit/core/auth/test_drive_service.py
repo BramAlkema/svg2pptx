@@ -28,7 +28,7 @@ def mock_credentials():
 @pytest.fixture
 def mock_drive_service(mock_credentials):
     """Mock Google Drive service."""
-    with patch('googleapiclient.discovery.build') as mock_build:
+    with patch('core.auth.drive_service.build') as mock_build:
         mock_service = Mock()
         mock_build.return_value = mock_service
 
@@ -40,7 +40,7 @@ def mock_drive_service(mock_credentials):
 class TestDriveServiceInitialization:
     """Test GoogleDriveService initialization."""
 
-    @patch('googleapiclient.discovery.build')
+    @patch('core.auth.drive_service.build')
     def test_initialization_with_valid_credentials(self, mock_build, mock_credentials):
         """Service initializes with valid credentials."""
         service = GoogleDriveService(mock_credentials)
@@ -53,7 +53,7 @@ class TestDriveServiceInitialization:
         with pytest.raises(ValueError, match="credentials are required"):
             GoogleDriveService(None)
 
-    @patch('googleapiclient.discovery.build')
+    @patch('core.auth.drive_service.build')
     def test_initialization_with_invalid_credentials_raises_error(self, mock_build):
         """Initialization with invalid credentials raises error."""
         invalid_creds = Mock(spec=Credentials)
@@ -112,7 +112,7 @@ class TestSlidesConversion:
         drive_service.upload_and_convert_to_slides(pptx_bytes, "Title")
 
         # Verify body parameter
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         body = call_args[1]['body']
         assert body['name'] == "Title"
         assert body['mimeType'] == 'application/vnd.google-apps.presentation'
@@ -142,7 +142,7 @@ class TestSlidesConversion:
         )
 
         # Verify parent in body
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         body = call_args[1]['body']
         assert 'parents' in body
         assert body['parents'] == ['folder_abc_123']
@@ -164,7 +164,7 @@ class TestSlidesConversion:
         drive_service.upload_and_convert_to_slides(large_pptx, "Title")
 
         # Verify resumable=True for large files
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         media_body = call_args[1]['media_body']
         assert media_body._resumable is True
 
@@ -199,7 +199,7 @@ class TestErrorHandling:
         mock_create = mock_files.create.return_value
         mock_create.execute.side_effect = http_error
 
-        with pytest.raises(DriveError, match="Failed to upload"):
+        with pytest.raises(DriveError, match="Upload failed"):
             drive_service.upload_and_convert_to_slides(b'data', "Title")
 
     def test_upload_with_invalid_folder_id(self, mock_drive_service):
@@ -226,7 +226,7 @@ class TestErrorHandling:
 class TestMediaUpload:
     """Test media upload configuration."""
 
-    @patch('googleapiclient.http.MediaIoBaseUpload')
+    @patch('core.auth.drive_service.MediaIoBaseUpload')
     def test_media_upload_uses_correct_mime_type(self, mock_media_upload, mock_drive_service):
         """MediaIoBaseUpload uses correct PPTX MIME type."""
         drive_service, mock_service = mock_drive_service
@@ -269,7 +269,7 @@ class TestMediaUpload:
         drive_service.upload_and_convert_to_slides(large_pptx, "Title")
 
         # Verify resumable upload configured
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         media_body = call_args[1]['media_body']
         assert media_body._resumable is True
 
@@ -347,7 +347,7 @@ class TestIntegration:
         assert result['slides_id'] == 'final_presentation_id'
         assert 'edit' in result['slides_url']
 
-    @patch('googleapiclient.http.MediaIoBaseUpload')
+    @patch('core.auth.drive_service.MediaIoBaseUpload')
     def test_batch_upload_multiple_presentations(self, mock_media_upload, mock_drive_service):
         """Service can handle multiple sequential uploads."""
         drive_service, mock_service = mock_drive_service
@@ -402,7 +402,7 @@ class TestEdgeCases:
         assert result['slides_id'] == 'large_file_id'
 
         # Verify resumable upload was used
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         media_body = call_args[1]['media_body']
         assert media_body._resumable is True
 
@@ -424,7 +424,7 @@ class TestEdgeCases:
         result = drive_service.upload_and_convert_to_slides(b'data', unicode_title)
 
         # Verify title passed correctly
-        call_args = mock_create.call_args
+        call_args = mock_files.create.call_args
         body = call_args[1]['body']
         assert body['name'] == unicode_title
 
