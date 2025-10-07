@@ -316,22 +316,20 @@ class TestSimpleAPIIntegration:
 @pytest.mark.benchmark
 class TestSimpleAPIPerformance:
     """Performance tests for Simple API functions."""
-    
-    @pytest.mark.skipif('benchmark' not in globals(), reason="pytest-benchmark not available")
+
     def test_single_conversion_performance(self, benchmark):
         """Benchmark single file conversion performance."""
         file_data = {
             'filename': 'perf_test.svg',
             'content': b'<svg xmlns="http://www.w3.org/2000/svg"><circle r="50"/></svg>'
         }
-        
+
         def convert_file():
             return convert_single_svg_sync(file_data)
-        
+
         result = benchmark(convert_file)
         assert result['success'] is True
-    
-    @pytest.mark.skipif('benchmark' not in globals(), reason="pytest-benchmark not available")
+
     def test_merge_performance(self, benchmark):
         """Benchmark merge operation performance."""
         # Create mock conversion results
