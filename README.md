@@ -366,11 +366,15 @@ config = PolicyConfig(
 
 ## Contributing
 
-Contributions are welcome! Please see our contributing guidelines (coming soon).
+Contributions are welcome! Review our [Repository Guidelines](AGENTS.md) before submitting changes.
 
 ### Development Setup
 
 ```bash
+# Create and activate virtualenv (always work inside it)
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\\Scripts\\activate
+
 # Install development dependencies
 pip install -r requirements-dev.txt
 
