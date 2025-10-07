@@ -87,3 +87,7 @@ temp/
 
 # Agent OS
 .agent-os/
+# Generated compliance and visual reports
+reports/compliance/*.html
+reports/compliance/*.md
+tests/visual/results/**/*.html
