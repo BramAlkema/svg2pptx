@@ -38,6 +38,56 @@ def oauth_service(mock_token_store):
     )
 
 
+@pytest.fixture
+def mock_oauth_flow():
+    """Mock OAuth Flow for testing OAuth flow interactions.
+
+    Mocks google_auth_oauthlib.flow.Flow to avoid real OAuth calls and
+    InsecureTransportError (HTTP vs HTTPS).
+
+    Returns:
+        tuple: (mock_flow_class, mock_flow_instance, mock_credentials)
+    """
+    with patch('core.auth.oauth_service.Flow') as mock_flow_class:
+        # Create mock flow instance
+        mock_flow = Mock()
+
+        # Mock factory method - Flow.from_client_config()
+        mock_flow_class.from_client_config.return_value = mock_flow
+
+        # Mock authorization_url() - returns (url, state) tuple
+        mock_flow.authorization_url.return_value = (
+            'https://accounts.google.com/o/oauth2/auth?'
+            'client_id=test&redirect_uri=http://localhost:8080/oauth2/callback&'
+            'response_type=code&access_type=offline&include_granted_scopes=true&'
+            'prompt=consent&state=test_state_token',
+            'test_state_token'  # state value
+        )
+
+        # Mock fetch_token() - avoids InsecureTransportError
+        mock_flow.fetch_token = Mock()
+
+        # Mock credentials property with all required attributes
+        mock_creds = Mock(spec=Credentials)
+        mock_creds.token = 'mock_access_token_123'
+        mock_creds.refresh_token = 'mock_refresh_token_456'
+        mock_creds.token_uri = 'https://oauth2.googleapis.com/token'
+        mock_creds.client_id = 'test_client_id.apps.googleusercontent.com'
+        mock_creds.client_secret = 'test_client_secret'
+        mock_creds.scopes = [
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/presentations'
+        ]
+        mock_creds.valid = True
+        mock_creds.expired = False
+        mock_flow.credentials = mock_creds
+
+        yield mock_flow_class, mock_flow, mock_creds
+
+
 class TestOAuthInitialization:
     """Test GoogleOAuthService initialization."""
 
