@@ -16,6 +16,7 @@ from ..ir import (
     LinearGradientPaint,
     LineSegment,
     Path,
+    ClipRef,
     PatternPaint,
     RadialGradientPaint,
     SolidPaint,
@@ -142,7 +143,13 @@ class PathMapper(Mapper):
             stroke_xml = self._generate_stroke_xml(path.stroke) if path.stroke else ""
 
             # Generate clipping XML
-            clip_xml = self._generate_clip_xml(path.clip) if path.clip else ""
+            clip_xml = ""
+            clip_meta = None
+            clip_media_files = None
+            if path.clip:
+                clip_xml, clip_meta = self._generate_clip_xml(path, path.clip)
+                if clip_meta and 'media_files' in clip_meta:
+                    clip_media_files = clip_meta.pop('media_files')
 
             # Calculate bounds for positioning
             bbox = getattr(path, 'bbox', None)
@@ -222,11 +229,21 @@ class PathMapper(Mapper):
                     'has_fill': path.fill is not None,
                     'has_stroke': path.stroke is not None,
                     'has_clip': path.clip is not None,
+                    'clip_strategy': clip_meta.get('strategy') if clip_meta else None,
+                    'clip_complexity': clip_meta.get('complexity') if clip_meta else None,
+                    'clip_bridge': clip_meta.get('bridge') if clip_meta else None,
+                    'clip_structured_strategy': clip_meta.get('structured_strategy') if clip_meta else None,
+                    'clip_structured_kind': clip_meta.get('structured_kind') if clip_meta else None,
+                    'clip_structured_used_bbox': clip_meta.get('structured_used_bbox') if clip_meta else None,
+                    'clip_media_meta': clip_meta.get('media_meta') if clip_meta else None,
+                    'clip_media_files': clip_media_files,
                     'processing_method': 'native_clean_slate',
+                    'source_id': getattr(path, 'source_id', None),
                 },
                 estimated_quality=decision.estimated_quality or 0.95,
                 estimated_performance=decision.estimated_performance or 0.9,
                 output_size_bytes=len(xml_content.encode('utf-8')),
+                media_files=clip_media_files,
             )
 
         except Exception as e:
@@ -288,6 +305,7 @@ class PathMapper(Mapper):
                     'emf_size_bytes': len(emf_result.emf_data),
                     'relationship_id': emf_result.relationship_id,
                     **emf_result.metadata,
+                    'source_id': getattr(path, 'source_id', None),
                 },
                 estimated_quality=emf_result.quality_score,
                 estimated_performance=0.8,  # EMF processing overhead
@@ -357,6 +375,7 @@ class PathMapper(Mapper):
                     'path_segments': len(path.segments) if path.segments else 0,
                     'complexity_score': getattr(path, 'complexity_score', 0.5),
                     'bbox': bbox,
+                    'source_id': getattr(path, 'source_id', None),
                 },
                 estimated_quality=0.7,  # Lower quality for placeholder
                 estimated_performance=0.9,  # Faster than real EMF
@@ -488,10 +507,10 @@ class PathMapper(Mapper):
         xml += '</a:ln>'
         return xml
 
-    def _generate_clip_xml(self, clip: Any) -> str:
+    def _generate_clip_xml(self, path: Path, clip: ClipRef) -> tuple[str, dict | None]:
         """Generate DrawingML clipping XML from IR clip reference using real clipping system"""
         if not clip:
-            return ""
+            return "", None
 
         try:
             # Import clipping adapter
@@ -502,20 +521,61 @@ class PathMapper(Mapper):
 
             if not clipping_adapter.can_generate_clipping(clip):
                 # Fallback to basic placeholder
-                return f'<!-- Clipping Fallback: {clip.clip_id} -->'
+                return f'<!-- Clipping Fallback: {clip.clip_id} -->', {'strategy': 'fallback'}
 
-            # Generate clipping with existing system integration
-            clipping_result = clipping_adapter.generate_clip_xml(clip)
+            clipping_result = clipping_adapter.generate_clip_xml(
+                clip,
+                element_context=self._build_clip_context(path, clip),
+            )
 
             # Log clipping strategy for debugging
             self.logger.debug(f"Clipping generated - Strategy: {clipping_result.strategy}, "
                             f"Complexity: {clipping_result.complexity}")
 
-            return clipping_result.xml_content
+            clip_meta = {
+                'strategy': clipping_result.strategy,
+                'complexity': clipping_result.complexity,
+            }
+
+            metadata = clipping_result.metadata or {}
+
+            if 'bridge' in metadata:
+                clip_meta['bridge'] = metadata['bridge']
+            if 'structured_strategy' in metadata:
+                clip_meta['structured_strategy'] = metadata['structured_strategy']
+            structured_result = metadata.get('structured_result')
+            if structured_result is not None:
+                clip_meta['structured_used_bbox'] = getattr(structured_result, 'used_bbox_rect', None)
+                clip_meta['structured_kind'] = getattr(getattr(structured_result, 'strategy', None), 'value', None)
+            if 'used_bbox_rect' in metadata:
+                clip_meta['bridge_used_bbox'] = metadata['used_bbox_rect']
+            media_files = metadata.get('media_files')
+            if media_files:
+                clip_meta['media_files'] = media_files
+            if 'media_meta' in metadata:
+                clip_meta['media_meta'] = metadata['media_meta']
+
+            return clipping_result.xml_content, clip_meta
 
         except Exception as e:
             self.logger.warning(f"Clipping generation failed, using placeholder: {e}")
-            return f'<!-- Clipping Error: {clip.clip_id} - {str(e)} -->'
+            return f'<!-- Clipping Error: {clip.clip_id} - {str(e)} -->', {'strategy': 'error', 'error': str(e)}
+
+    def _build_clip_context(self, path: Path, clip: ClipRef) -> dict[str, Any]:
+        context: dict[str, Any] = {}
+        bbox = getattr(path, 'bbox', None)
+        if bbox is not None:
+            context['bounding_box'] = bbox
+        if clip.bounding_box is not None:
+            context.setdefault('clip_bounding_box', clip.bounding_box)
+        if clip.clip_rule:
+            context['clip_rule'] = clip.clip_rule
+        effect_stack = getattr(path, 'effects', None)
+        if effect_stack is None:
+            effect_stack = getattr(path, 'effect_stack', None)
+        if effect_stack is not None:
+            context['effect_stack'] = effect_stack
+        return context
 
     def _wrap_path_xml(self, path_xml: str, path: Path) -> str:
         """Wrap existing PathSystem XML in complete shape structure"""

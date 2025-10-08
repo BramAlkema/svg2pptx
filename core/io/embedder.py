@@ -8,7 +8,7 @@ Handles XML injection, relationship management, and slide coordination.
 
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from lxml import etree as ET
@@ -34,6 +34,7 @@ class EmbedderResult:
     slide_xml: str
     relationship_data: list[dict[str, Any]]
     media_files: list[dict[str, Any]]
+    shape_id_map: dict[str, list[str]] = field(default_factory=dict)
 
     # Statistics
     elements_embedded: int = 0
@@ -45,6 +46,7 @@ class EmbedderResult:
     total_size_bytes: int = 0
     estimated_quality: float = 1.0
     estimated_performance: float = 1.0
+    animation_xml: str | None = None
 
 
 class DrawingMLEmbedder:
@@ -80,7 +82,7 @@ class DrawingMLEmbedder:
             'total_time_ms': 0.0,
         }
 
-    def embed_scene(self, scene: SceneGraph, mapper_results: list[MapperResult]) -> EmbedderResult:
+    def embed_scene(self, scene: SceneGraph, mapper_results: list[MapperResult], animation_xml: str | None = None) -> EmbedderResult:
         """
         Embed complete scene into PowerPoint slide.
 
@@ -98,7 +100,7 @@ class DrawingMLEmbedder:
 
         try:
             # Generate slide XML structure
-            slide_xml = self._generate_slide_xml(scene, mapper_results)
+            slide_xml, shape_id_map = self._generate_slide_xml(scene, mapper_results, animation_xml)
 
             # Extract relationship data for EMF elements
             relationship_data = self._extract_relationships(mapper_results)
@@ -119,6 +121,7 @@ class DrawingMLEmbedder:
                 slide_xml=slide_xml,
                 relationship_data=relationship_data,
                 media_files=media_files,
+                shape_id_map=shape_id_map,
                 elements_embedded=len(mapper_results),
                 native_elements=native_count,
                 emf_elements=emf_count,
@@ -126,6 +129,7 @@ class DrawingMLEmbedder:
                 total_size_bytes=total_size,
                 estimated_quality=avg_quality,
                 estimated_performance=avg_performance,
+                animation_xml=animation_xml,
             )
 
             # Record statistics
@@ -161,7 +165,7 @@ class DrawingMLEmbedder:
 
         return self.embed_scene(minimal_scene, mapper_results)
 
-    def _generate_slide_xml(self, scene: SceneGraph, mapper_results: list[MapperResult]) -> str:
+    def _generate_slide_xml(self, scene: SceneGraph, mapper_results: list[MapperResult], animation_xml: str | None = None) -> tuple[str, dict[str, list[str]]]:
         """Generate complete slide XML with embedded elements"""
         try:
             # Generate background if present
@@ -171,12 +175,28 @@ class DrawingMLEmbedder:
 
             # Combine all element XML content
             shape_xmls = []
+            shape_id_map: dict[str, list[str]] = {}
             for result in mapper_results:
                 # Assign unique shape ID
-                shape_xml = self._assign_shape_id(result.xml_content)
+                shape_xml, assigned_id = self._assign_shape_id(result.xml_content)
+
+                source_id = None
+                if isinstance(result.metadata, dict):
+                    source_id = result.metadata.get('source_id')
+                if not source_id and hasattr(result.element, 'source_id'):
+                    source_id = getattr(result.element, 'source_id')
+                if not source_id and hasattr(result.element, 'id'):
+                    source_id = getattr(result.element, 'id')
+
+                if source_id is not None:
+                    key = str(source_id)
+                    shape_id_map.setdefault(key, []).append(str(assigned_id))
+
                 shape_xmls.append(shape_xml)
 
             # Generate complete slide XML
+            animation_section = f"\n    {animation_xml}\n" if animation_xml else ""
+
             slide_xml = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
        xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -202,42 +222,72 @@ class DrawingMLEmbedder:
     </p:cSld>
     <p:clrMapOvr>
         <a:masterClrMapping/>
-    </p:clrMapOvr>
+    </p:clrMapOvr>{animation_section}
 </p:sld>"""
 
-            return slide_xml
+            return slide_xml, shape_id_map
 
         except Exception as e:
             raise EmbeddingError(f"Failed to generate slide XML: {e}", cause=e)
 
-    def _assign_shape_id(self, shape_xml: str) -> str:
+    def _assign_shape_id(self, shape_xml: str) -> tuple[str, int]:
         """Assign unique ID to shape XML"""
+        assigned_id = self._shape_id_counter
         try:
             # Parse XML to modify ID attribute
             root = ET.fromstring(f"<root>{shape_xml}</root>")
 
             # Find first element with cNvPr and update ID
+            id_assigned = False
             for elem in walk(root):
                 if elem.tag.endswith('cNvPr'):
-                    elem.set('id', str(self._shape_id_counter))
-                    elem.set('name', f"Shape_{self._shape_id_counter}")
-                    self._shape_id_counter += 1
+                    elem.set('id', str(assigned_id))
+                    elem.set('name', f"Shape_{assigned_id}")
+                    id_assigned = True
                     break
+
+            if not id_assigned:
+                # Fallback: try assigning to first element with id attribute
+                for elem in walk(root):
+                    if 'id' in elem.attrib:
+                        elem.set('id', str(assigned_id))
+                        id_assigned = True
+                        break
 
             # Extract modified content
             modified_xml = "".join(ET.tostring(child, encoding='unicode') for child in root)
-            return modified_xml
-
         except ET.ParseError:
             # If XML parsing fails, return original with basic ID replacement
+            modified_xml = shape_xml.replace('id="1"', f'id="{assigned_id}"', 1)
+        finally:
             self._shape_id_counter += 1
-            return shape_xml.replace('id="1"', f'id="{self._shape_id_counter - 1}"')
+
+        return modified_xml, assigned_id
 
     def _extract_relationships(self, mapper_results: list[MapperResult]) -> list[dict[str, Any]]:
         """Extract relationship data for EMF and media elements"""
         relationships = []
 
         for result in mapper_results:
+            if result.media_files:
+                for media in result.media_files:
+                    rel_id = media.get('relationship_id') or f"rId{self._relationship_id_counter}"
+                    self._relationship_id_counter += 1
+
+                    filename = media.get('filename') or f"emf{self._relationship_id_counter}.emf"
+                    target = media.get('part_name') or f"../media/{filename}"
+                    content_type = media.get('content_type', 'application/octet-stream')
+
+                    relationships.append({
+                        'id': rel_id,
+                        'type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+                        'target': target,
+                        'content_type': content_type,
+                        'element_type': type(result.element).__name__,
+                        'fallback_reason': result.metadata.get('fallback_reason', 'clip_media'),
+                    })
+                continue
+
             if result.output_format in [OutputFormat.EMF_VECTOR, OutputFormat.EMF_RASTER]:
                 # EMF elements need relationship entries
                 rel_id = f"rId{self._relationship_id_counter}"
@@ -259,6 +309,13 @@ class DrawingMLEmbedder:
         media_files = []
 
         for result in mapper_results:
+            if result.media_files:
+                for media in result.media_files:
+                    entry = dict(media)
+                    entry.setdefault('element_type', type(result.element).__name__ if result.element else None)
+                    media_files.append(entry)
+                continue
+
             # Check if element has embedded media data
             if 'media_data' in result.metadata:
                 media_files.append({

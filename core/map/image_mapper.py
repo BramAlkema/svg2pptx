@@ -10,7 +10,7 @@ import logging
 import time
 from typing import Any, Dict
 
-from ..ir import Image, IRElement
+from ..ir import ClipRef, Image, IRElement
 from ..policy import ImageDecision, Policy
 from .base import Mapper, MapperResult, MappingError, OutputFormat
 
@@ -159,7 +159,13 @@ class ImageMapper(Mapper):
                 processing_metadata = {'processing_method': 'basic'}
 
             # Generate clipping XML if needed
-            clip_xml = self._generate_image_clip_xml(image.clip) if image.clip else ""
+            clip_xml = ""
+            clip_meta = None
+            clip_media_files = None
+            if image.clip:
+                clip_xml, clip_meta = self._generate_image_clip_xml(image.clip, image)
+                if clip_meta and 'media_files' in clip_meta:
+                    clip_media_files = clip_meta.pop('media_files')
 
             # Generate opacity if needed
             opacity_xml = ""
@@ -191,6 +197,12 @@ class ImageMapper(Mapper):
                 'content_type': self._get_content_type(processed_format),
             }] if processed_data else None
 
+            if clip_media_files:
+                if media_files:
+                    media_files.extend(clip_media_files)
+                else:
+                    media_files = clip_media_files
+
             return MapperResult(
                 element=image,
                 output_format=output_format,
@@ -205,6 +217,14 @@ class ImageMapper(Mapper):
                     'relationship_id': rel_id,
                     'requires_conversion': processed_format in self._vector_formats,
                     'has_clipping': image.clip is not None,
+                    'clip_strategy': clip_meta.get('strategy') if clip_meta else None,
+                    'clip_complexity': clip_meta.get('complexity') if clip_meta else None,
+                    'clip_bridge': clip_meta.get('bridge') if clip_meta else None,
+                    'clip_structured_strategy': clip_meta.get('structured_strategy') if clip_meta else None,
+                    'clip_structured_kind': clip_meta.get('structured_kind') if clip_meta else None,
+                    'clip_structured_used_bbox': clip_meta.get('structured_used_bbox') if clip_meta else None,
+                    'clip_media_meta': clip_meta.get('media_meta') if clip_meta else None,
+                    'clip_media_files': clip_media_files,
                     'has_opacity': image.opacity < 1.0,
                     'image_adapter_used': image_adapter_used,
                     'processing_metadata': processing_metadata,
@@ -222,10 +242,7 @@ class ImageMapper(Mapper):
                                  clip_xml: str, opacity_xml: str) -> str:
         """Generate XML for raster image (PNG, JPG, etc.)"""
 
-        # Generate image effects if needed
-        effects_xml = ""
-        if opacity_xml or clip_xml:
-            effects_xml = f"<a:effectLst>{opacity_xml}{clip_xml}</a:effectLst>"
+        effects_xml = opacity_xml
 
         xml_content = f"""<p:pic>
     <p:nvPicPr>
@@ -255,6 +272,7 @@ class ImageMapper(Mapper):
         <a:prstGeom prst="rect">
             <a:avLst/>
         </a:prstGeom>
+        {clip_xml}
         {effects_xml}
     </p:spPr>
 </p:pic>"""
@@ -266,10 +284,7 @@ class ImageMapper(Mapper):
                                  clip_xml: str, opacity_xml: str) -> str:
         """Generate XML for vector image (SVG) - typically requires EMF conversion"""
 
-        # Generate image effects if needed
-        effects_xml = ""
-        if opacity_xml or clip_xml:
-            effects_xml = f"<a:effectLst>{opacity_xml}{clip_xml}</a:effectLst>"
+        effects_xml = opacity_xml
 
         # Vector images are rendered as EMF for best fidelity
         xml_content = f"""<p:pic>
@@ -300,19 +315,72 @@ class ImageMapper(Mapper):
         <a:prstGeom prst="rect">
             <a:avLst/>
         </a:prstGeom>
+        {clip_xml}
         {effects_xml}
     </p:spPr>
 </p:pic>"""
 
         return xml_content
 
-    def _generate_image_clip_xml(self, clip_ref: Any) -> str:
+    def _generate_image_clip_xml(self, clip_ref: Any, image: Image | None = None) -> tuple[str, dict | None]:
         """Generate image clipping XML"""
         if not clip_ref:
-            return ""
+            return "", None
 
-        # Image clipping can be handled through crop settings
-        return '<a:crop/>'  # Simplified - real implementation would calculate crop values
+        if isinstance(clip_ref, ClipRef) and clip_ref.path_segments:
+            try:
+                from .clipping_adapter import create_clipping_adapter
+                adapter = create_clipping_adapter(self.services)
+                context = {'bounding_box': getattr(image, 'bbox', None)}
+                effect_stack = getattr(image, 'effects', None)
+                if effect_stack is None:
+                    effect_stack = getattr(image, 'effect_stack', None)
+                if effect_stack is not None:
+                    context['effect_stack'] = effect_stack
+                result = adapter.generate_clip_xml(clip_ref, context)
+
+                clip_meta = {
+                    'strategy': result.strategy,
+                    'complexity': result.complexity,
+                }
+                metadata = result.metadata or {}
+                if 'bridge' in metadata:
+                    clip_meta['bridge'] = metadata['bridge']
+                if 'structured_strategy' in metadata:
+                    clip_meta['structured_strategy'] = metadata['structured_strategy']
+                structured_result = metadata.get('structured_result')
+                if structured_result is not None:
+                    clip_meta['structured_kind'] = getattr(getattr(structured_result, 'strategy', None), 'value', None)
+                    clip_meta['structured_used_bbox'] = getattr(structured_result, 'used_bbox_rect', None)
+                media_files = metadata.get('media_files')
+                if media_files:
+                    clip_meta['media_files'] = media_files
+                if 'media_meta' in metadata:
+                    clip_meta['media_meta'] = metadata['media_meta']
+
+                return result.xml_content, clip_meta
+            except Exception as exc:
+                self.logger.debug(f"Image clipping adapter fallback: {exc}")
+
+        clip_id = getattr(clip_ref, 'clip_id', None)
+        if isinstance(clip_id, str) and clip_id.startswith("bbox:"):
+            try:
+                _, _x, _y, width, height = clip_id.split(':')
+                width_emu = int(float(width) * 12700)
+                height_emu = int(float(height) * 12700)
+                return f"""<a:clipPath>
+            <a:path>
+                <a:moveTo><a:pt x="0" y="0"/></a:moveTo>
+                <a:lnTo><a:pt x="{width_emu}" y="0"/></a:lnTo>
+                <a:lnTo><a:pt x="{width_emu}" y="{height_emu}"/></a:lnTo>
+                <a:lnTo><a:pt x="0" y="{height_emu}"/></a:lnTo>
+                <a:close/>
+            </a:path>
+        </a:clipPath>""", {'strategy': 'bbox'}
+            except ValueError:
+                self.logger.debug(f"Unable to parse bbox clip id: {clip_id}")
+
+        return f'<!-- Image clipping: {clip_id or clip_ref} -->', {'strategy': 'fallback'}
 
     def _get_content_type(self, format: str) -> str:
         """Get MIME content type for image format"""

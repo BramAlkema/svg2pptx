@@ -5,6 +5,8 @@ SVG Parser
 Parses SVG content into normalized DOM structure for clean slate processing.
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import time
@@ -15,6 +17,13 @@ from lxml import etree as ET
 
 from ..xml.safe_iter import children, walk
 from .safe_svg_normalization import SafeSVGNormalizer as SVGNormalizer
+from ..css import StyleResolver, StyleContext, parse_color
+from ..ir.geometry import BezierSegment, LineSegment, Point, Rect, SegmentType
+from ..ir.scene import ClipRef
+from ..transforms.coordinate_space import CoordinateSpace
+from ..transforms.core import Matrix
+from ..transforms.parser import TransformParser
+from ..units.core import UnitConverter
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +52,13 @@ class ParseResult:
     # Normalization results
     normalization_applied: bool = False
     normalization_changes: dict[str, Any] = None
+    clip_paths: dict[str, "ClipDefinition"] | None = None
 
     def __post_init__(self):
         if self.normalization_changes is None:
             self.normalization_changes = {}
+        if self.clip_paths is None:
+            self.clip_paths = {}
 
 
 class SVGParser:
@@ -67,6 +79,13 @@ class SVGParser:
         self.enable_normalization = enable_normalization
         self.normalizer = SVGNormalizer() if enable_normalization else None
         self.logger = logging.getLogger(__name__)
+        self.unit_converter = UnitConverter()
+        self.style_resolver = StyleResolver(self.unit_converter)
+        self.filter_service = None
+        self._style_context: StyleContext | None = None
+        self._clip_definitions: dict[str, ClipDefinition] = {}
+        self._transform_parser = TransformParser()
+        self.coord_space = CoordinateSpace(Matrix.identity())
 
         # Parser configuration
         self.parser_config = {
@@ -104,6 +123,13 @@ class SVGParser:
             if self.enable_normalization and self.normalizer:
                 svg_root, normalization_changes = self.normalizer.normalize(svg_root)
 
+            # Prepare style context for downstream consumers
+            self._style_context = self._create_style_context(svg_root)
+
+            # Collect clipPath definitions for downstream use
+            clip_definitions = self._collect_clip_definitions(svg_root)
+            self._clip_definitions = clip_definitions
+
             # Collect statistics
             element_count = len(list(walk(svg_root)))
             namespace_count = len(self._extract_namespaces(svg_root))
@@ -120,6 +146,7 @@ class SVGParser:
                 has_external_references=has_external_refs,
                 normalization_applied=self.enable_normalization,
                 normalization_changes=normalization_changes,
+                clip_paths=clip_definitions,
             )
 
             self.logger.debug(f"SVG parsed successfully in {processing_time:.2f}ms, "
@@ -371,21 +398,319 @@ class SVGParser:
             parse_result.error = f"IR conversion failed: {e}"
             return [], parse_result
 
+    # ------------------------------------------------------------------
+    # ClipPath collection and helpers
+    # ------------------------------------------------------------------
+
+    def _collect_clip_definitions(self, svg_root: ET.Element) -> dict[str, ClipDefinition]:
+        if svg_root is None:
+            return {}
+
+        namespaces = {k or 'svg': v for k, v in svg_root.nsmap.items() if v}
+        if 'svg' not in namespaces:
+            namespaces['svg'] = 'http://www.w3.org/2000/svg'
+
+        try:
+            clip_paths = svg_root.xpath('.//svg:clipPath', namespaces=namespaces)
+        except Exception:
+            clip_paths = []
+
+        definitions: dict[str, ClipDefinition] = {}
+
+        for clip_elem in clip_paths:
+            clip_id = clip_elem.get('id')
+            if not clip_id:
+                continue
+
+            clip_transform = None
+            transform_attr = clip_elem.get('transform')
+            if transform_attr:
+                clip_transform = self._transform_parser.parse_to_matrix(transform_attr)
+
+            segments: list[SegmentType] = []
+            for child in children(clip_elem):
+                segments.extend(self._clip_child_to_segments(child, clip_transform))
+
+            if not segments:
+                continue
+
+            bbox = self._compute_segments_bbox(segments)
+            clip_rule = clip_elem.get('clip-rule') or self._extract_clip_rule_from_style(clip_elem.get('style'))
+
+            definitions[clip_id] = ClipDefinition(
+                clip_id=clip_id,
+                segments=tuple(segments),
+                bounding_box=bbox,
+                clip_rule=clip_rule,
+                transform=clip_transform,
+            )
+
+        return definitions
+
+    def _clip_child_to_segments(self, element: ET.Element, parent_transform=None) -> list[SegmentType]:
+        if element is None or not hasattr(element, 'tag'):
+            return []
+
+        tag = self._get_local_tag(str(element.tag))
+
+        try:
+            matrix = parent_transform
+            local_transform = element.get('transform')
+            if local_transform:
+                child_matrix = self._transform_parser.parse_to_matrix(local_transform)
+                if child_matrix:
+                    matrix = child_matrix if matrix is None else matrix.multiply(child_matrix)
+
+            if tag == 'path':
+                d = element.get('d', '')
+                segments = self._parse_path_data(d) if d else []
+                return self._apply_transform_to_segments(segments, matrix)
+
+            if tag == 'rect':
+                x = float(element.get('x', 0))
+                y = float(element.get('y', 0))
+                width = float(element.get('width', 0))
+                height = float(element.get('height', 0))
+                if width <= 0 or height <= 0:
+                    return []
+                segments = [
+                    LineSegment(Point(x, y), Point(x + width, y)),
+                    LineSegment(Point(x + width, y), Point(x + width, y + height)),
+                    LineSegment(Point(x + width, y + height), Point(x, y + height)),
+                    LineSegment(Point(x, y + height), Point(x, y)),
+                ]
+                return self._apply_transform_to_segments(segments, matrix)
+
+            if tag == 'circle':
+                cx = float(element.get('cx', 0))
+                cy = float(element.get('cy', 0))
+                r = float(element.get('r', 0))
+                if r <= 0:
+                    return []
+                k = 0.552284749831 * r
+                segments = [
+                    BezierSegment(Point(cx + r, cy), Point(cx + r, cy - k), Point(cx + k, cy - r), Point(cx, cy - r)),
+                    BezierSegment(Point(cx, cy - r), Point(cx - k, cy - r), Point(cx - r, cy - k), Point(cx - r, cy)),
+                    BezierSegment(Point(cx - r, cy), Point(cx - r, cy + k), Point(cx - k, cy + r), Point(cx, cy + r)),
+                    BezierSegment(Point(cx, cy + r), Point(cx + k, cy + r), Point(cx + r, cy + k), Point(cx + r, cy)),
+                ]
+                return self._apply_transform_to_segments(segments, matrix)
+
+            if tag == 'ellipse':
+                cx = float(element.get('cx', 0))
+                cy = float(element.get('cy', 0))
+                rx = float(element.get('rx', 0))
+                ry = float(element.get('ry', 0))
+                if rx <= 0 or ry <= 0:
+                    return []
+                kx = 0.552284749831 * rx
+                ky = 0.552284749831 * ry
+                segments = [
+                    BezierSegment(Point(cx + rx, cy), Point(cx + rx, cy - ky), Point(cx + kx, cy - ry), Point(cx, cy - ry)),
+                    BezierSegment(Point(cx, cy - ry), Point(cx - kx, cy - ry), Point(cx - rx, cy - ky), Point(cx - rx, cy)),
+                    BezierSegment(Point(cx - rx, cy), Point(cx - rx, cy + ky), Point(cx - kx, cy + ry), Point(cx, cy + ry)),
+                    BezierSegment(Point(cx, cy + ry), Point(cx + kx, cy + ry), Point(cx + rx, cy + ky), Point(cx + rx, cy)),
+                ]
+                return self._apply_transform_to_segments(segments, matrix)
+
+            if tag in ('polygon', 'polyline'):
+                points_str = element.get('points', '')
+                if not points_str:
+                    return []
+                coords = [float(v) for v in points_str.replace(',', ' ').split() if v.strip()]
+                if len(coords) < 4:
+                    return []
+                points = [Point(coords[i], coords[i + 1]) for i in range(0, len(coords) - 1, 2)]
+                segments: list[SegmentType] = []
+                for i in range(len(points) - 1):
+                    segments.append(LineSegment(points[i], points[i + 1]))
+                if tag == 'polygon' and len(points) > 2:
+                    segments.append(LineSegment(points[-1], points[0]))
+                return self._apply_transform_to_segments(segments, matrix)
+
+        except (ValueError, TypeError):
+            self.logger.debug("Failed to parse clipPath child", exc_info=True)
+
+        return []
+
+    def _apply_transform_to_segments(self, segments: list[SegmentType], matrix) -> list[SegmentType]:
+        if not matrix:
+            return segments
+
+        transformed: list[SegmentType] = []
+
+        def transform_point(pt: Point) -> Point:
+            x, y = matrix.transform_point(pt.x, pt.y)
+            return Point(x, y)
+
+        for segment in segments:
+            if isinstance(segment, LineSegment):
+                transformed.append(LineSegment(transform_point(segment.start), transform_point(segment.end)))
+            elif isinstance(segment, BezierSegment):
+                transformed.append(
+                    BezierSegment(
+                        transform_point(segment.start),
+                        transform_point(segment.control1),
+                        transform_point(segment.control2),
+                        transform_point(segment.end),
+                    )
+                )
+            else:
+                transformed.append(segment)
+
+        return transformed
+
+    def _compute_segments_bbox(self, segments: list[SegmentType]) -> Rect | None:
+        if not segments:
+            return None
+
+        xs: list[float] = []
+        ys: list[float] = []
+
+        for segment in segments:
+            for attr in ('start', 'end', 'control1', 'control2'):
+                point = getattr(segment, attr, None)
+                if point is not None:
+                    xs.append(point.x)
+                    ys.append(point.y)
+
+        if not xs or not ys:
+            return None
+
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        return Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+
+    @staticmethod
+    def _extract_clip_rule_from_style(style: str | None) -> str | None:
+        if not style:
+            return None
+        for declaration in style.split(';'):
+            if ':' not in declaration:
+                continue
+            name, value = declaration.split(':', 1)
+            if name.strip() == 'clip-rule':
+                return value.strip() or None
+        return None
+
+    def _extract_clip_reference(self, element: ET.Element) -> ClipRef | None:
+        clip_attr = element.get('clip-path')
+        if not clip_attr:
+            return None
+
+        clip_key = self._extract_clip_id(clip_attr)
+        if not clip_key:
+            return None
+
+        normalized = self._normalize_clip_attribute(clip_attr, clip_key)
+        clip_def = self._clip_definitions.get(clip_key)
+
+        if clip_def:
+            return ClipRef(
+                clip_id=normalized,
+                path_segments=clip_def.segments,
+                bounding_box=clip_def.bounding_box,
+                clip_rule=clip_def.clip_rule,
+            )
+
+        return ClipRef(clip_id=normalized)
+
+    @staticmethod
+    def _normalize_clip_attribute(raw_value: str, clip_key: str) -> str:
+        value = raw_value.strip()
+        if value.startswith('url('):
+            return value
+        if value.startswith('#'):
+            return f"url({value})"
+        return f"url(#{clip_key})"
+
+    @staticmethod
+    def _extract_clip_id(raw_value: str) -> str | None:
+        if not raw_value:
+            return None
+        value = raw_value.strip()
+        if value.startswith('url(') and value.endswith(')'):
+            inner = value[4:-1].strip().strip('\"\'"')
+            if inner.startswith('#'):
+                inner = inner[1:]
+            return inner or None
+        if value.startswith('#'):
+            return value[1:] or None
+        return None
+
     def _convert_dom_to_ir(self, svg_root: ET.Element):
         """Convert SVG DOM to Clean Slate IR using existing parsing logic"""
 
-        # Initialize CoordinateSpace with viewport matrix for baked transforms
-        from ..transforms import CoordinateSpace, Matrix
+        # Derive initial styling context from the root SVG element
+        self._style_context = self._create_style_context(svg_root)
 
-        # For now, use identity matrix as viewport (will be enhanced with actual viewport later)
-        # The viewport transformation is typically handled at a higher level
         self.coord_space = CoordinateSpace(Matrix.identity())
 
-        # Leverage existing SVG extraction logic from src/svg2drawingml.py
+        # Leverage existing SVG extraction logic from core/svg2drawingml.py
         elements = []
         self._extract_recursive_to_ir(svg_root, elements)
 
         return elements
+
+    def get_style_context(self) -> StyleContext | None:
+        """Return the current style context calculated during parsing."""
+        return self._style_context
+
+    def _create_style_context(self, svg_root: ET.Element) -> StyleContext:
+        width_px, height_px = self._resolve_viewport_dimensions(svg_root)
+
+        conversion_ctx = self.unit_converter.create_context(
+            width=width_px,
+            height=height_px,
+            font_size=12.0,
+            dpi=96.0,
+            parent_width=width_px,
+            parent_height=height_px,
+        )
+
+        return StyleContext(
+            conversion=conversion_ctx,
+            viewport_width=width_px,
+            viewport_height=height_px,
+        )
+
+    def _resolve_viewport_dimensions(self, svg_root: ET.Element) -> tuple[float, float]:
+        width_attr = svg_root.get('width')
+        height_attr = svg_root.get('height')
+        viewbox_attr = svg_root.get('viewBox')
+
+        vb_width = vb_height = None
+        if viewbox_attr:
+            parts = re.split(r'[\s,]+', viewbox_attr.strip())
+            if len(parts) == 4:
+                try:
+                    _, _, vbw, vbh = map(float, parts)
+                    vb_width, vb_height = vbw, vbh
+                except ValueError:
+                    vb_width = vb_height = None
+
+        default_ctx = self.unit_converter.default_context
+
+        width_px = None
+        if width_attr:
+            try:
+                width_px = self.unit_converter.to_pixels(width_attr, default_ctx, axis='x')
+            except Exception:
+                width_px = None
+
+        height_px = None
+        if height_attr:
+            try:
+                height_px = self.unit_converter.to_pixels(height_attr, default_ctx, axis='y')
+            except Exception:
+                height_px = None
+
+        if width_px is None:
+            width_px = vb_width if vb_width is not None else 800.0
+        if height_px is None:
+            height_px = vb_height if vb_height is not None else 600.0
+
+        return width_px, height_px
 
     def _convert_hyperlink_to_ir(self, hyperlink_element: ET.Element, ir_elements: list) -> None:
         """
@@ -566,46 +891,55 @@ class SVGParser:
         if tag == 'rect':
             ir_element = self._convert_rect_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'circle':
             ir_element = self._convert_circle_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'ellipse':
             ir_element = self._convert_ellipse_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'line':
             ir_element = self._convert_line_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'path':
             ir_element = self._convert_path_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'polygon' or tag == 'polyline':
             ir_element = self._convert_polygon_to_ir(element, closed=(tag == 'polygon'))
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'text':
             ir_element = self._convert_text_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'image':
             ir_element = self._convert_image_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'g':
             ir_element = self._convert_group_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         elif tag == 'a':
@@ -616,6 +950,7 @@ class SVGParser:
             # Handle SVG foreignObject elements
             ir_element = self._convert_foreignobject_to_ir(element)
             if ir_element:
+                self._attach_element_metadata(ir_element, element)
                 ir_elements.append(ir_element)
 
         else:
@@ -630,6 +965,16 @@ class SVGParser:
             except Exception as e:
                 # Log warning but continue
                 self.logger.warning(f"Failed to pop transform: {e}")
+
+    def _attach_element_metadata(self, ir_element: Any, source_element: ET.Element) -> None:
+        """Attach source metadata (like SVG id) to IR element for downstream processing."""
+        try:
+            source_id = source_element.get('id')
+            if source_id:
+                setattr(ir_element, 'source_id', source_id)
+        except Exception:
+            # Metadata attachment should never break parsing
+            pass
 
     def _convert_rect_to_ir(self, element: ET.Element):
         """Convert SVG rect to Rectangle IR (or Path for complex cases)"""
@@ -667,21 +1012,26 @@ class SVGParser:
         corner_radius = max(rx, ry)  # Use the larger of rx/ry for corner_radius
 
         # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
+        fill, stroke, opacity, effects = self._extract_styling(element)
 
         # Check for complex features that prevent native shape use
-        has_filter = element.get('filter') is not None
+        has_filter_attr = element.get('filter') is not None
         has_clip_path = element.get('clip-path') is not None
         has_mask = element.get('mask') is not None
 
+        clip_ref = self._extract_clip_reference(element)
+
+        clip_ref = self._extract_clip_reference(element)
+
         # Simple rectangles with no complex features → Rectangle IR (native PowerPoint shape)
-        if not (has_filter or has_clip_path or has_mask):
+        if effects or not (has_filter_attr or has_clip_path or has_mask):
             return Rectangle(
                 bounds=Rect(x=x, y=y, width=width, height=height),
                 corner_radius=corner_radius,
                 fill=fill,
                 stroke=stroke,
                 opacity=opacity,
+                effects=effects,
             )
 
         # Complex rectangles with filters/clipping → Path IR (custom geometry fallback)
@@ -698,6 +1048,7 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
+            clip=clip_ref,
         )
 
     def _convert_circle_to_ir(self, element: ET.Element):
@@ -738,15 +1089,15 @@ class SVGParser:
             is_circle = True
 
         # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
+        fill, stroke, opacity, effects = self._extract_styling(element)
 
         # Check for complex features that prevent native shape use
-        has_filter = element.get('filter') is not None
+        has_filter_attr = element.get('filter') is not None
         has_clip_path = element.get('clip-path') is not None
         has_mask = element.get('mask') is not None
 
         # Simple circles/ellipses with no complex features → native PowerPoint shape
-        if not (has_filter or has_clip_path or has_mask):
+        if effects or not (has_filter_attr or has_clip_path or has_mask):
             if is_circle:
                 return Circle(
                     center=Point(cx, cy),
@@ -754,6 +1105,7 @@ class SVGParser:
                     fill=fill,
                     stroke=stroke,
                     opacity=opacity,
+                    effects=effects,
                 )
             else:
                 # Non-uniform scale created an ellipse
@@ -764,6 +1116,7 @@ class SVGParser:
                     fill=fill,
                     stroke=stroke,
                     opacity=opacity,
+                    effects=effects,
                 )
 
         # Complex circles with filters/clipping → Path IR (custom geometry fallback)
@@ -807,6 +1160,7 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
+            clip=clip_ref,
         )
 
     def _convert_ellipse_to_ir(self, element: ET.Element):
@@ -840,12 +1194,14 @@ class SVGParser:
             cx, cy, rx, ry = cx_svg, cy_svg, rx_svg, ry_svg
 
         # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
+        fill, stroke, opacity, effects = self._extract_styling(element)
 
         # Check for complex features that prevent native shape use
         has_filter = element.get('filter') is not None
         has_clip_path = element.get('clip-path') is not None
         has_mask = element.get('mask') is not None
+
+        clip_ref = self._extract_clip_reference(element)
 
         # Simple ellipses with no complex features → Ellipse IR (native PowerPoint shape)
         if not (has_filter or has_clip_path or has_mask):
@@ -895,6 +1251,7 @@ class SVGParser:
             fill=fill,
             stroke=stroke,
             opacity=opacity,
+            clip=clip_ref,
         )
 
     def _convert_line_to_ir(self, element: ET.Element):
@@ -917,13 +1274,16 @@ class SVGParser:
         segments = [LineSegment(start=Point(x1, y1), end=Point(x2, y2))]
 
         # Extract styling (lines typically only have stroke)
-        fill, stroke, opacity = self._extract_styling(element)
+        fill, stroke, opacity, effects = self._extract_styling(element)
+
+        clip_ref = self._extract_clip_reference(element)
 
         return Path(
             segments=segments,
             fill=None,  # Lines don't have fill
             stroke=stroke,
             opacity=opacity,
+            clip=clip_ref,
         )
 
     def _convert_path_to_ir(self, element: ET.Element):
@@ -935,23 +1295,26 @@ class SVGParser:
             return None
 
         # Use simplified path parsing for now - this could be enhanced
-        # to use the existing path parsing from src/paths/parser.py
+        # to use the existing path parsing from core/paths/parser.py
         segments = self._parse_path_data(d)
 
         if not segments:
             return None
 
         # Extract styling
-        fill, stroke, opacity = self._extract_styling(element)
+        fill, stroke, opacity, effects = self._extract_styling(element)
 
         # Get hyperlink from current context if any
         getattr(self, '_current_hyperlink', None)
+
+        clip_ref = self._extract_clip_reference(element)
 
         return Path(
             segments=segments,
             fill=fill,
             stroke=stroke,
             opacity=opacity,
+            clip=clip_ref,
         )
 
     def _convert_polygon_to_ir(self, element: ET.Element, closed: bool = True):
@@ -993,13 +1356,16 @@ class SVGParser:
                 segments.append(LineSegment(start=points[-1], end=points[0]))
 
             # Extract styling
-            fill, stroke, opacity = self._extract_styling(element)
+            fill, stroke, opacity, effects = self._extract_styling(element)
+
+            clip_ref = self._extract_clip_reference(element)
 
             return Path(
                 segments=segments,
                 fill=fill if closed else None,  # Only polygons have fill
                 stroke=stroke,
                 opacity=opacity,
+                clip=clip_ref,
             )
         except (ValueError, IndexError):
             # If parsing fails, return None
@@ -1131,48 +1497,35 @@ class SVGParser:
             except Exception as e:
                 self.logger.warning(f"Failed to parse group transform '{transform_attr}': {e}")
 
+        clip_ref = self._extract_clip_reference(element)
+
         return Group(
             children=child_nodes,
             opacity=float(element.get('opacity', 1.0)),
             transform=transform_matrix,
+            clip=clip_ref,
         )
 
     def _extract_styling(self, element: ET.Element):
         """Extract fill, stroke, and opacity from SVG element"""
         from ..ir import SolidPaint, Stroke, StrokeCap, StrokeJoin
 
-        # Extract fill
+        context = self._style_context
+        paint_style = self.style_resolver.compute_paint_style(element, context=context)
+
+        # Fill
         fill = None
-        fill_attr = element.get('fill', '#000000')
-        if fill_attr and fill_attr != 'none':
-            # Use centralized color parsing that handles hex, rgb(), and named colors
-            rgb_hex = self._parse_color_value(fill_attr)
-            fill = SolidPaint(rgb=rgb_hex)
+        fill_color = paint_style.get('fill')
+        if fill_color:
+            fill = SolidPaint(
+                rgb=fill_color,
+                opacity=float(paint_style.get('fill_opacity', 1.0)),
+            )
 
-        # Extract stroke
+        # Stroke
         stroke = None
-        stroke_attr = element.get('stroke')
-        if stroke_attr and stroke_attr != 'none':
-            stroke_color = stroke_attr
-            if stroke_color.startswith('#'):
-                stroke_color = stroke_color[1:]
-                # Expand 3-char hex to 6-char (e.g., "333" -> "333333")
-                if len(stroke_color) == 3:
-                    stroke_color = ''.join(c*2 for c in stroke_color)
-            elif stroke_color.startswith('rgb('):
-                # Parse rgb format
-                rgb_values = stroke_color[4:-1].split(',')
-                if len(rgb_values) == 3:
-                    r = int(rgb_values[0].strip())
-                    g = int(rgb_values[1].strip())
-                    b = int(rgb_values[2].strip())
-                    stroke_color = f"{r:02x}{g:02x}{b:02x}"
-            else:
-                stroke_color = "000000"
-
-            stroke_width = float(element.get('stroke-width', 1.0))
-
-            # Parse stroke properties
+        stroke_color = paint_style.get('stroke')
+        if stroke_color:
             stroke_join = StrokeJoin.MITER
             join_attr = element.get('stroke-linejoin', 'miter')
             if join_attr == 'round':
@@ -1188,16 +1541,27 @@ class SVGParser:
                 stroke_cap = StrokeCap.SQUARE
 
             stroke = Stroke(
-                paint=SolidPaint(rgb=stroke_color),
-                width=stroke_width,
+                paint=SolidPaint(
+                    rgb=stroke_color,
+                    opacity=float(paint_style.get('stroke_opacity', 1.0)),
+                ),
+                width=float(paint_style.get('stroke_width_px', 1.0)),
                 join=stroke_join,
                 cap=stroke_cap,
             )
 
-        # Extract opacity
-        opacity = float(element.get('opacity', 1.0))
+        opacity = float(paint_style.get('opacity', 1.0))
 
-        return fill, stroke, opacity
+        effects = []
+        filter_attr = element.get('filter')
+        if filter_attr and self.filter_service:
+            try:
+                effects = self.filter_service.resolve_effects(filter_attr, self._style_context)
+            except Exception as filter_err:
+                self.logger.debug(f"Filter resolution failed for {filter_attr}: {filter_err}")
+                effects = []
+
+        return fill, stroke, opacity, effects
 
     def _extract_text_content(self, element: ET.Element) -> str:
         """Extract text content from text element and its children"""
@@ -1265,7 +1629,7 @@ class SVGParser:
                         current_runs = []
 
                 # Get inherited style for this tspan
-                tspan_style = self._merge_text_styles(base_style, self._read_text_style(child))
+                tspan_style = self._read_text_style(child, parent_style=base_style)
 
                 # Extract tspan content
                 if child.text and child.text.strip():
@@ -1303,60 +1667,9 @@ class SVGParser:
 
         return lines
 
-    def _read_text_style(self, element: ET.Element) -> dict:
-        """Read text styling from element attributes and CSS styles
-
-        Returns dict with normalized style properties for text rendering.
-        """
-        style = {
-            'font_family': 'Arial',
-            'font_size_pt': 12.0,
-            'font_weight': 'normal',
-            'font_style': 'normal',
-            'text_decoration': 'none',
-            'fill': '000000',  # Default black
-        }
-
-        # Extract from direct attributes
-        if element.get('font-family'):
-            style['font_family'] = element.get('font-family')
-
-        if element.get('font-size'):
-            style['font_size_pt'] = self._parse_font_size(element.get('font-size'))
-
-        if element.get('font-weight'):
-            style['font_weight'] = self._normalize_font_weight(element.get('font-weight'))
-
-        if element.get('font-style'):
-            style['font_style'] = element.get('font-style')
-
-        if element.get('text-decoration'):
-            style['text_decoration'] = element.get('text-decoration')
-
-        # Extract fill color
-        if element.get('fill'):
-            style['fill'] = self._parse_color_value(element.get('fill'))
-
-        # Parse style attribute if present
-        if element.get('style'):
-            css_styles = self._parse_css_style(element.get('style'))
-            style.update(css_styles)
-
-        return style
-
-    def _merge_text_styles(self, parent_style: dict, child_style: dict) -> dict:
-        """Merge parent and child styles with proper inheritance
-
-        Child styles override parent where specified, following CSS inheritance rules.
-        """
-        merged = parent_style.copy()
-
-        # Override with child styles where specified
-        for key, value in child_style.items():
-            if value is not None and value != '':
-                merged[key] = value
-
-        return merged
+    def _read_text_style(self, element: ET.Element, parent_style: dict | None = None) -> dict:
+        """Read text styling using the centralized CSS resolver."""
+        return self.style_resolver.compute_text_style(element, parent_style=parent_style)
 
     def _create_text_run(self, text: str, style: dict):
         """Create a Run from text and style dictionary"""
@@ -1366,7 +1679,7 @@ class SVGParser:
             return None
 
         # Parse color value
-        rgb = self._parse_color_value(style.get('fill', '000000'))
+        rgb = parse_color(style.get('fill', '000000'))
 
         # Handle font weight
         font_weight = style.get('font_weight', 'normal')
@@ -1409,102 +1722,6 @@ class SVGParser:
         }
 
         return weight_map.get(weight_str, weight_str)
-
-    def _parse_color_value(self, color_str: str) -> str:
-        """Parse color value to RRGGBB format"""
-        if not color_str or color_str == 'none':
-            return '000000'
-
-        color_str = color_str.strip()
-
-        # Handle hex colors
-        if color_str.startswith('#'):
-            hex_color = color_str[1:]
-            if len(hex_color) == 3:
-                # Expand short hex (e.g., #f0a -> #ff00aa)
-                hex_color = ''.join(c*2 for c in hex_color)
-            if len(hex_color) == 6:
-                return hex_color.upper()
-
-        # Handle rgb() format
-        if color_str.startswith('rgb(') and color_str.endswith(')'):
-            rgb_values = color_str[4:-1].split(',')
-            if len(rgb_values) == 3:
-                try:
-                    r = int(rgb_values[0].strip())
-                    g = int(rgb_values[1].strip())
-                    b = int(rgb_values[2].strip())
-                    return f"{r:02X}{g:02X}{b:02X}"
-                except ValueError:
-                    pass
-
-        # Handle named colors (basic set)
-        named_colors = {
-            'black': '000000', 'white': 'FFFFFF', 'red': 'FF0000',
-            'green': '008000', 'blue': '0000FF', 'yellow': 'FFFF00',
-            'cyan': '00FFFF', 'magenta': 'FF00FF', 'gray': '808080',
-            'grey': '808080', 'silver': 'C0C0C0', 'maroon': '800000',
-            'navy': '000080', 'lime': '00FF00', 'olive': '808000',
-            'purple': '800080', 'teal': '008080', 'aqua': '00FFFF',
-        }
-
-        return named_colors.get(color_str.lower(), '000000')
-
-    def _parse_css_style(self, style_str: str) -> dict:
-        """Parse CSS style attribute into style dictionary"""
-        styles = {}
-        if not style_str:
-            return styles
-
-        # Split on semicolons and parse key:value pairs
-        for declaration in style_str.split(';'):
-            if ':' in declaration:
-                key, value = declaration.split(':', 1)
-                key = key.strip().replace('-', '_')  # Convert to underscore format
-                value = value.strip()
-
-                # Map CSS properties to our style keys
-                css_map = {
-                    'font_family': 'font_family',
-                    'font_size': 'font_size_pt',
-                    'font_weight': 'font_weight',
-                    'font_style': 'font_style',
-                    'text_decoration': 'text_decoration',
-                    'fill': 'fill',
-                }
-
-                # Handle font-family with quotes
-                if key == 'font_family':
-                    value = value.strip('\'"')  # Remove quotes
-
-                if key in css_map:
-                    if key == 'font_size':
-                        styles[css_map[key]] = self._parse_font_size(value)
-                    elif key == 'fill':
-                        styles[css_map[key]] = self._parse_color_value(value)
-                    else:
-                        styles[css_map[key]] = value
-
-        return styles
-
-    def _parse_font_size(self, font_size_str: str) -> float:
-        """Parse font size from string to points"""
-        if not font_size_str:
-            return 12.0
-
-        # Remove units and parse
-        font_size_str = font_size_str.strip()
-        if font_size_str.endswith('px'):
-            return float(font_size_str[:-2]) * 0.75  # Convert px to pt
-        elif font_size_str.endswith('pt'):
-            return float(font_size_str[:-2])
-        elif font_size_str.endswith('em'):
-            return float(font_size_str[:-2]) * 12  # Assume 12pt base
-        else:
-            try:
-                return float(font_size_str)
-            except ValueError:
-                return 12.0
 
     def _parse_path_data(self, d: str):
         """Basic path data parser with baked transform support"""
@@ -1820,9 +2037,13 @@ class SVGParser:
 
         return "unknown"
 
+    def _create_bbox_clip_id(self, bbox) -> str:
+        """Create canonical clip identifier for bounding-box clipping."""
+        return f"bbox:{bbox.x:.4f}:{bbox.y:.4f}:{bbox.width:.4f}:{bbox.height:.4f}"
+
     def _convert_nested_svg_to_ir(self, svg_element: ET.Element, bbox, transform_attr):
         """Convert nested SVG to IR Group with proper viewport handling"""
-        from ..ir import Group
+        from ..ir import Group, ClipRef
 
         # Create child IR elements by recursively parsing the nested SVG
         child_elements = []
@@ -1843,16 +2064,13 @@ class SVGParser:
         # Create group with transform
         return Group(
             children=child_elements,
-            clip=None,  # TODO: Implement bbox clipping in future enhancement
-            # PRIORITY: LOW - Edge case for oversized text
-            # EFFORT: 2 hours - Bbox calculation and clipping logic
-            # BLOCKER: None - Can be implemented when needed
+            clip=ClipRef(self._create_bbox_clip_id(bbox), bounding_box=bbox),
             transform=transform_matrix,
         )
 
     def _convert_image_payload_to_ir(self, img_element: ET.Element, bbox, transform_attr):
         """Convert image payload to IR Image"""
-        from ..ir import Image, Point
+        from ..ir import Image, Point, ClipRef
 
         # Extract image source
         href = (img_element.get('src') or
@@ -1883,10 +2101,7 @@ class SVGParser:
             data=b'',  # Placeholder - actual loading happens later
             format="png",  # Default format
             href=href,
-            clip=None,  # TODO: Implement bbox clipping if image exceeds dimensions
-            # PRIORITY: LOW - Edge case for oversized images
-            # EFFORT: 2 hours - Image bbox clipping
-            # BLOCKER: None - Can be implemented when needed
+            clip=ClipRef(self._create_bbox_clip_id(bbox), bounding_box=bbox),
             opacity=1.0,
             transform=transform_matrix,
         )
@@ -2066,3 +2281,12 @@ class SVGParser:
 def create_parser(enable_normalization: bool = True) -> SVGParser:
     """Factory function to create SVGParser"""
     return SVGParser(enable_normalization)
+@dataclass
+class ClipDefinition:
+    """Resolved clipPath definition used for ClipRef construction."""
+
+    clip_id: str
+    segments: tuple[SegmentType, ...]
+    bounding_box: Rect | None = None
+    clip_rule: str | None = None
+    transform: Matrix | None = None
