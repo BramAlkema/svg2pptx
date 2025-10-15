@@ -24,9 +24,13 @@ from .svg_pptx_comparator import SVGPPTXComparator, ComparisonResult, Compliance
 
 # SVG2PPTX import
 try:
-    from src.svg2pptx import convert_svg_to_pptx
+    from core.pipeline.config import PipelineConfig
+    from core.pipeline.converter import CleanSlateConverter
+
+    converter = CleanSlateConverter(config=PipelineConfig(enable_debug=True))
     SVG2PPTX_AVAILABLE = True
 except ImportError:
+    converter = None
     SVG2PPTX_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -348,7 +352,9 @@ class W3CComplianceTestRunner:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Use SVG2PPTX conversion
-        convert_svg_to_pptx(str(test_case.svg_path), str(output_path))
+        if not converter:
+            raise RuntimeError("CleanSlateConverter is unavailable; ensure core.pipeline is installed")
+        converter.convert_file(str(test_case.svg_path), str(output_path))
 
         if not output_path.exists():
             raise RuntimeError(f"PPTX conversion failed for {test_case.name}")

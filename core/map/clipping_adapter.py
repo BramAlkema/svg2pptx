@@ -2,93 +2,168 @@
 """
 Clipping Integration Adapter
 
-Integrates Clean Slate PathMapper with the extensive existing clipping/masking system.
-Leverages proven ClipPathAnalyzer, MaskingConverter, and ResolveClipPathsPlugin.
+This adapter now returns structured ClipComputeResult payloads that describe the
+native custGeom clip or any media fallback. Legacy XML translation is handled
+by the consumers (mappers) so we can phase out the LegacyClipBridge.
 """
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Dict
+from __future__ import annotations
 
-# Import existing clipping system
+import logging
+import os
+from types import SimpleNamespace
+from typing import Any, Iterable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.services.conversion_services import ConversionServices, EmuValue
+
+logger = logging.getLogger(__name__)
+
 try:
-    from ..converters.clippath_types import (
-        ClipPathAnalysis,
-        ClipPathComplexity,
-        ClipPathDefinition,
-    )
-    from ..converters.masking import MaskDefinition, MaskingConverter
-    from ..groups.clipping_analyzer import ClippingAnalyzer
+    from ..groups.clipping_analyzer import ClippingAnalyzer, ClippingComplexity, ClippingStrategy
     CLIPPING_SYSTEM_AVAILABLE = True
 except ImportError:
     CLIPPING_SYSTEM_AVAILABLE = False
-    logging.warning("Existing clipping system not available - clipping adapter will use fallback")
+    logger.warning(
+        "Existing clipping system not available - clipping adapter will operate in fallback mode",
+    )
 
-from ..clip import LegacyClipBridge, StructuredClipService
+from lxml import etree as ET
+
+from ..clip import (
+    ClipComputeResult,
+    ClipCustGeom,
+    ClipFallback,
+    ClipMediaMeta,
+    StructuredClipService,
+)
 from ..policy.config import ClipPolicy
 from ..ir import ClipRef, Path as IRPath, SolidPaint
 from ..ir.geometry import BezierSegment, LineSegment, Point, Rect, SegmentType
+from ..utils.xml_builder import get_xml_builder
 
 
-@dataclass
-class ClippingResult:
-    """Result of clipping analysis and generation"""
-    xml_content: str
-    complexity: str  # SIMPLE, NESTED, COMPLEX, UNSUPPORTED
-    strategy: str    # native_dml, custgeom, emf_fallback
-    preprocessing_applied: bool
-    metadata: dict[str, Any]
+def _env_enabled(flag: str) -> bool:
+    value = os.getenv(flag)
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 class ClippingPathAdapter:
     """
-    Adapter for integrating IR clipping with existing clipping/masking system.
-
-    Leverages the comprehensive clipping infrastructure:
-    - ClipPathAnalyzer for complexity analysis
-    - MaskingConverter for DrawingML generation
-    - ResolveClipPathsPlugin for preprocessing
+    Adapter for integrating IR clip references with the existing analyzer while
+    emitting the new ClipComputeResult structure.
     """
 
     def __init__(
         self,
-        services=None,
+        services: 'ConversionServices',
         *,
         clip_policy: ClipPolicy | None = None,
         structured_clip_service: StructuredClipService | None = None,
-        clip_bridge: LegacyClipBridge | None = None,
     ):
-        """Initialize clipping adapter"""
         self.logger = logging.getLogger(__name__)
-        self._clipping_available = CLIPPING_SYSTEM_AVAILABLE
         self.services = services
+        if self.services is None:
+            raise RuntimeError("ClippingPathAdapter requires ConversionServices injection.")
         self.clip_policy = clip_policy or self._derive_clip_policy(services)
-        self.structured_clip_service = structured_clip_service or StructuredClipService()
-        self.clip_bridge = clip_bridge or LegacyClipBridge()
+        self.structured_clip_service = structured_clip_service or StructuredClipService(services)
+        self._xml_builder = get_xml_builder()
 
-        # Initialize existing clipping components
+        self._clipping_available = CLIPPING_SYSTEM_AVAILABLE
         if self._clipping_available and services:
             try:
                 self.clippath_analyzer = ClippingAnalyzer(services)
-                if MaskingConverter is not None:
-                    self.masking_converter = MaskingConverter(services)
-                else:
-                    self.masking_converter = None
-            except Exception as e:
-                self.logger.warning(f"Failed to initialize clipping components: {e}")
+            except Exception as exc:  # pragma: no cover - defensive
+                self.logger.warning("Failed to initialize ClipPathAnalyzer: %s", exc)
+                self.clippath_analyzer = None
                 self._clipping_available = False
         else:
             self.clippath_analyzer = None
-            self.masking_converter = None
 
         if not self._clipping_available:
-            self.logger.warning("Clipping system not available - will use placeholder")
+            self.logger.debug("Clipping analyzer unavailable - structural fallbacks only")
+
+    # --------------------------------------------------------------------- #
+    # Public API                                                            #
+    # --------------------------------------------------------------------- #
+
+    def can_generate_clipping(self, clip_ref: ClipRef) -> bool:
+        if clip_ref is None or getattr(clip_ref, "clip_id", None) is None:
+            return False
+        if getattr(clip_ref, "path_segments", None):
+            return True
+        return self._clipping_available
+
+    def generate_clip_xml(  # noqa: D401 - legacy method name retained for callers
+        self,
+        clip_ref: ClipRef,
+        element_context: Optional[dict[str, Any]] = None,
+    ) -> ClipComputeResult:
+        """Compute a ClipComputeResult for the supplied clip reference."""
+        self._emu_trace: list[dict[str, Any]] = []
+        if not self.can_generate_clipping(clip_ref):
+            raise ValueError("Cannot generate clipping for this clip reference")
+
+        element_context = element_context or {}
+
+        if clip_ref.path_segments:
+            return self._generate_from_segments(clip_ref)
+
+        analysis = self._analyze_clip_path(clip_ref, element_context)
+
+        if analysis and self._structured_adapter_enabled():
+            structured = self._try_structured_adapter(clip_ref, analysis, element_context)
+            if structured is not None:
+                return self._with_emu_trace(structured)
+
+        if analysis is not None:
+            return self._generate_with_existing_system(clip_ref, analysis, element_context)
+
+        if clip_ref.bounding_box is not None:
+            return self._generate_basic_clipping(clip_ref, element_context)
+
+        return self._generate_fallback_clipping(clip_ref)
+
+    def analyze_preprocessing_opportunities(
+        self,
+        svg_root,
+        clippath_definitions: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not self.clippath_analyzer:
+            return {"can_preprocess": False, "reason": "analyzer_unavailable"}
+
+        try:
+            preprocessing_context = {
+                "svg_root": svg_root,
+                "clippath_definitions": clippath_definitions,
+            }
+            return {
+                "can_preprocess": True,
+                "strategy": "boolean_intersection",
+                "context": preprocessing_context,
+            }
+        except Exception as exc:  # pragma: no cover - defensive
+            self.logger.warning("Preprocessing analysis failed: %s", exc)
+            return {"can_preprocess": False, "reason": str(exc)}
+
+    def get_clipping_statistics(self) -> dict[str, Any]:
+        return {
+            "clipping_system_available": self._clipping_available,
+            "structured_enabled": self._structured_adapter_enabled(),
+            "components_initialized": {
+                "clippath_analyzer": self.clippath_analyzer is not None,
+            },
+        }
+
+    # --------------------------------------------------------------------- #
+    # Internal helpers                                                      #
+    # --------------------------------------------------------------------- #
 
     def _derive_clip_policy(self, services) -> ClipPolicy | None:
-        """Attempt to derive clip policy information from services."""
         if services is None:
             return None
-
         policy_engine = getattr(services, "policy_engine", None)
         if policy_engine is None:
             return None
@@ -102,314 +177,252 @@ class ClippingPathAdapter:
             try:
                 return get_clip_policy()
             except Exception:  # pragma: no cover - defensive
-                pass
+                return None
 
         config = getattr(policy_engine, "config", None)
         if config is not None:
             return getattr(config, "clip_policy", None)
         return None
 
-    def _can_use_structured_adapter(self) -> bool:
-        """Check if the structured adapter bridge should run."""
-        return (
-            self.clip_policy is not None
-            and getattr(self.clip_policy, "enable_structured_adapter", False)
-            and self.structured_clip_service is not None
-            and self.clip_bridge is not None
-        )
+    def _structured_adapter_enabled(self) -> bool:
+        if _env_enabled("SVG2PPTX_CLIP_ADAPTER_V2"):
+            return True
+        if self.clip_policy is None:
+            return False
+        return getattr(self.clip_policy, "enable_structured_adapter", False)
+
+    def _analyze_clip_path(
+        self,
+        clip_ref: ClipRef,
+        element_context: dict[str, Any],
+    ) -> Any | None:
+        if not self._clipping_available or not self.clippath_analyzer:
+            return None
+
+        context_payload: dict[str, Any] = dict(element_context or {})
+        clip_definitions = context_payload.get("clippath_definitions", {})
+        context_payload.setdefault("clippath_definitions", clip_definitions)
+
+        svg_root = context_payload.get("svg_root")
+        if svg_root is None:
+            clippath_element = context_payload.get("clippath_element")
+            if hasattr(clippath_element, "getroottree"):
+                try:
+                    svg_root = clippath_element.getroottree().getroot()
+                except Exception:  # pragma: no cover - defensive
+                    svg_root = None
+            context_payload["svg_root"] = svg_root
+
+        if context_payload.get("svg_root") is None and not clip_definitions:
+            # Not enough context to resolve the clip definition
+            return None
+
+        normalized_ref = self._normalize_clip_reference(clip_ref.clip_id)
+        proxy_element = ET.Element("proxy")
+        proxy_element.set("clip-path", normalized_ref)
+
+        analysis_context = SimpleNamespace(**context_payload)
+
+        try:
+            return self.clippath_analyzer.analyze_clipping_scenario(
+                proxy_element,
+                analysis_context,
+            )
+        except AttributeError:  # pragma: no cover - compatibility fallback
+            # Older analyzer versions may not expose analyze_clipping_scenario.
+            return None
+        except Exception as exc:  # pragma: no cover - defensive
+            self.logger.debug("ClipPath analysis failed: %s", exc)
+            return None
 
     def _try_structured_adapter(
         self,
         clip_ref: ClipRef,
         analysis: Any,
-        element_context: dict[str, Any] | None,
-    ) -> ClippingResult | None:
-        """Attempt to compute clipping via the structured adapter bridge."""
+        element_context: dict[str, Any],
+    ) -> ClipComputeResult | None:
+        if not self.structured_clip_service:
+            return None
+
         try:
             structured_result = self.structured_clip_service.compute(
                 clip_ref,
                 analysis,
                 element_context,
             )
-        except Exception as exc:
+        except Exception as exc:  # pragma: no cover - defensive
             self.logger.debug("Structured clip service failed: %s", exc)
             return None
 
-        if not structured_result:
+        if structured_result is None:
             return None
 
-        try:
-            legacy_result = self.clip_bridge.convert(
-                structured_result,
-                clip_ref,
-                analysis,
-                preprocessing_applied=bool(getattr(analysis, "can_preprocess", False)),
-            )
-            if legacy_result is not None:
-                legacy_result.metadata.setdefault("structured_result", structured_result)
-            return legacy_result
-        except Exception as exc:  # pragma: no cover - defensive
-            self.logger.debug("Structured clip bridge failed: %s", exc)
-            return None
+        metadata = dict(structured_result.metadata or {})
+        metadata.setdefault("generation_method", "structured_service")
+        metadata.setdefault("analysis", analysis)
+        metadata.setdefault("complexity", self._complexity_value(getattr(analysis, "complexity", None)))
+        structured_result.metadata = metadata
+        return self._with_emu_trace(structured_result)
 
-    def can_generate_clipping(self, clip_ref: ClipRef) -> bool:
-        """Check if clipping can be generated for this clip reference"""
-        if clip_ref is None or getattr(clip_ref, 'clip_id', None) is None:
-            return False
-
-        if getattr(clip_ref, 'path_segments', None):
-            return True
-
-        return self._clipping_available
-
-    def generate_clip_xml(self, clip_ref: ClipRef, element_context: dict[str, Any] = None) -> ClippingResult:
-        """
-        Generate DrawingML clipping XML from IR clip reference.
-
-        Args:
-            clip_ref: IR clip reference
-            element_context: Additional context about the element being clipped
-
-        Returns:
-            ClippingResult with XML and analysis metadata
-
-        Raises:
-            ValueError: If clipping cannot be generated
-        """
-        if not self.can_generate_clipping(clip_ref):
-            raise ValueError("Cannot generate clipping for this clip reference")
-
-        if clip_ref.path_segments:
-            try:
-                return self._generate_from_segments(clip_ref)
-            except Exception as exc:
-                self.logger.warning(f"Segment-based clip generation failed: {exc}")
-
-        try:
-            # Use existing clipping system for analysis and generation
-            return self._generate_with_existing_system(clip_ref, element_context)
-
-        except Exception as e:
-            self.logger.warning(f"Existing clipping system failed, using fallback: {e}")
-            return self._generate_fallback_clipping(clip_ref, element_context)
-
-    def _generate_from_segments(self, clip_ref: ClipRef) -> ClippingResult:
-        """Generate DrawingML clipPath directly from IR segments."""
-        segments = clip_ref.path_segments or ()
+    def _generate_from_segments(self, clip_ref: ClipRef) -> ClipComputeResult:
+        segments = list(clip_ref.path_segments or ())
         if not segments:
             raise ValueError("clip_ref.path_segments is empty")
 
-        segments = clip_ref.path_segments or ()
-        transform_matrix = getattr(clip_ref, 'transform', None)
+        transformed = self._transform_segments(segments, getattr(clip_ref, "transform", None))
+        bbox = clip_ref.bounding_box or self._compute_bbox(transformed) or Rect(0.0, 0.0, 1.0, 1.0)
 
-        def transform_point(pt: Point) -> Point:
-            if transform_matrix:
-                x, y = transform_matrix.transform_point(pt.x, pt.y)
-                return Point(x, y)
-            return pt
-
-        transformed_segments = []
-        for segment in segments:
-            if isinstance(segment, LineSegment):
-                transformed_segments.append(
-                    LineSegment(transform_point(segment.start), transform_point(segment.end))
-                )
-            elif isinstance(segment, BezierSegment):
-                transformed_segments.append(
-                    BezierSegment(
-                        transform_point(segment.start),
-                        transform_point(segment.control1),
-                        transform_point(segment.control2),
-                        transform_point(segment.end),
-                    )
-                )
-            else:
-                transformed_segments.append(segment)
-
-        bbox = self._compute_bbox(transformed_segments) or clip_ref.bounding_box
-        origin_x = bbox.x if bbox else 0.0
-        origin_y = bbox.y if bbox else 0.0
-        width = bbox.width if bbox and bbox.width > 0 else 1.0
-        height = bbox.height if bbox and bbox.height > 0 else 1.0
-
-        width_emu = max(1, int(round(width * 12700)))
-        height_emu = max(1, int(round(height * 12700)))
-
-        def to_emu(point):
-            return (
-                int(round((point.x - origin_x) * 12700)),
-                int(round((point.y - origin_y) * 12700)),
-            )
-
-        path_commands = []
-        current_point = None
-
-        for segment in transformed_segments:
-            start = getattr(segment, 'start', None)
-            if start is not None:
-                if current_point is None or (abs(current_point.x - start.x) > 1e-6 or abs(current_point.y - start.y) > 1e-6):
-                    sx, sy = to_emu(start)
-                    path_commands.append(f"<a:moveTo><a:pt x=\"{sx}\" y=\"{sy}\"/></a:moveTo>")
-                    current_point = start
-
-            if isinstance(segment, LineSegment):
-                end = segment.end
-                ex, ey = to_emu(end)
-                path_commands.append(f"<a:lnTo><a:pt x=\"{ex}\" y=\"{ey}\"/></a:lnTo>")
-                current_point = end
-            elif isinstance(segment, BezierSegment):
-                c1x, c1y = to_emu(segment.control1)
-                c2x, c2y = to_emu(segment.control2)
-                ex, ey = to_emu(segment.end)
-                path_commands.append(
-                    "<a:cubicBezTo>"
-                    f"<a:pt x=\"{c1x}\" y=\"{c1y}\"/>"
-                    f"<a:pt x=\"{c2x}\" y=\"{c2y}\"/>"
-                    f"<a:pt x=\"{ex}\" y=\"{ey}\"/>"
-                    "</a:cubicBezTo>"
-                )
-                current_point = segment.end
-
-        xml_content = (
-            f"<a:clipPath>"
-            f"<a:path w=\"{width_emu}\" h=\"{height_emu}\">"
-            + ''.join(path_commands) +
-            "</a:path></a:clipPath>"
+        clip_xml = self._segments_to_clip_xml(transformed, bbox)
+        custgeom = ClipCustGeom(
+            path=[],
+            path_xml=clip_xml,
+            fill_rule_even_odd=self._is_even_odd(clip_ref, None),
         )
 
-        return ClippingResult(
-            xml_content=xml_content,
-            complexity="segment",
-            strategy="native_dml",
-            preprocessing_applied=False,
-            metadata={
-                'source': 'segment_based',
-                'clip_id': clip_ref.clip_id,
-            },
-        )
+        metadata = {
+            "generation_method": "segments",
+            "clip_id": clip_ref.clip_id,
+            "complexity": "segments",
+        }
 
-    @staticmethod
-    def _compute_bbox(segments: list[SegmentType]) -> Rect | None:
-        if not segments:
-            return None
+        return self._with_emu_trace(ClipComputeResult(
+            strategy=ClipFallback.NONE,
+            custgeom=custgeom,
+            media=None,
+            used_bbox_rect=False,
+            metadata=metadata,
+        ))
 
-        xs: list[float] = []
-        ys: list[float] = []
+    def _generate_with_existing_system(
+        self,
+        clip_ref: ClipRef,
+        analysis: Any,
+        element_context: dict[str, Any],
+    ) -> ClipComputeResult:
+        complexity_value = self._complexity_value(getattr(analysis, "complexity", None))
+        preprocessing_applied = getattr(analysis, "requires_preprocessing", None)
+        if preprocessing_applied is None:
+            preprocessing_applied = getattr(analysis, "can_preprocess", False)
+        metadata = {
+            "generation_method": "existing_system",
+            "analysis": analysis,
+            "complexity": complexity_value,
+            "preprocessing_applied": preprocessing_applied,
+        }
 
-        for segment in segments:
-            for attr in ('start', 'end', 'control1', 'control2'):
-                point = getattr(segment, attr, None)
-                if point is not None:
-                    xs.append(point.x)
-                    ys.append(point.y)
+        recommended = getattr(analysis, "recommended_strategy", None)
+        if recommended == ClippingStrategy.EMF_VECTOR:
+            return self._generate_emf_clipping(clip_ref, analysis, metadata)
 
-        if not xs or not ys:
-            return None
+        if recommended == ClippingStrategy.RASTERIZATION:
+            # Fallback to basic clipping when rasterization is recommended.
+            return self._generate_basic_clipping(clip_ref, element_context)
 
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        return Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+        if recommended in (ClippingStrategy.POWERPOINT_NATIVE, ClippingStrategy.CUSTGEOM):
+            return self._generate_custgeom_clipping(clip_ref, analysis, element_context, metadata)
 
-    def _generate_with_existing_system(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
-        """Generate clipping using existing comprehensive clipping system"""
+        # Legacy fallback based on complexity if no explicit recommendation provided.
+        if complexity_value in {"simple", "moderate"}:
+            return self._generate_custgeom_clipping(clip_ref, analysis, element_context, metadata)
 
-        # Step 1: Analyze clipPath complexity if we have the actual clipPath element
-        clippath_element = element_context.get('clippath_element') if element_context else None
-        clippath_definitions = element_context.get('clippath_definitions', {}) if element_context else {}
+        if complexity_value == "complex":
+            return self._generate_emf_clipping(clip_ref, analysis, metadata)
 
-        if clippath_element is not None and self.clippath_analyzer:
-            # Use existing ClipPathAnalyzer for complexity analysis
-            analysis = self.clippath_analyzer.analyze_clippath(
-                element=clippath_element,
-                clippath_definitions=clippath_definitions,
-                clip_ref=clip_ref.clip_id,
-            )
+        return self._generate_basic_clipping(clip_ref, element_context)
 
-            # Step 1.5: Attempt structured adapter bridge if enabled
-            if self._can_use_structured_adapter():
-                bridged = self._try_structured_adapter(
+    def _generate_custgeom_clipping(
+        self,
+        clip_ref: ClipRef,
+        analysis: Any,
+        element_context: dict[str, Any],
+        base_metadata: dict[str, Any],
+    ) -> ClipComputeResult:
+        metadata = dict(base_metadata)
+
+        structured_result: ClipComputeResult | None = None
+        if self.structured_clip_service:
+            try:
+                structured_result = self.structured_clip_service.compute(
                     clip_ref,
                     analysis,
                     element_context,
                 )
-                if bridged is not None:
-                    return bridged
+            except Exception as exc:  # pragma: no cover - defensive
+                self.logger.debug("CustGeom structured service failed: %s", exc)
+                structured_result = None
 
-            # Step 2: Generate DrawingML based on analysis
-            if analysis.complexity in [ClipPathComplexity.SIMPLE, ClipPathComplexity.NESTED]:
-                # Use native DrawingML clipping for simple cases
-                xml_content = self._generate_native_clip_xml(clip_ref, analysis)
-                strategy = "native_dml"
+        if structured_result and structured_result.custgeom and structured_result.custgeom.path_xml:
+            structured_metadata = dict(structured_result.metadata or {})
+            metadata["generation_method"] = structured_metadata.get("generation_method", "custgeom_generator")
+            metadata.update(structured_metadata)
+            metadata.setdefault("structured_strategy", structured_metadata.get("strategy"))
+            metadata.setdefault("structured_kind", "custgeom")
+            metadata.setdefault("structured_used_bbox", structured_result.used_bbox_rect)
+            metadata.setdefault("strategy", structured_metadata.get("strategy", ClipFallback.NONE.value))
+            structured_result.metadata = metadata
+            return self._with_emu_trace(structured_result)
 
-            elif analysis.complexity == ClipPathComplexity.COMPLEX:
-                # Use custom geometry or EMF for complex cases
-                if self.masking_converter:
-                    xml_content = self._generate_custgeom_clipping(clip_ref, analysis)
-                    strategy = "custgeom"
-                else:
-                    return self._generate_emf_clipping(clip_ref, analysis)
+        custgeom = self._build_custgeom_from_analysis(clip_ref, analysis, element_context)
+        metadata["generation_method"] = "custgeom_bbox"
+        metadata.setdefault("strategy", ClipFallback.NONE.value)
+        metadata.setdefault("structured_kind", "custgeom")
+        metadata.setdefault("structured_used_bbox", True)
 
-            else:  # UNSUPPORTED
-                # Fallback to EMF or rasterization
-                return self._generate_emf_clipping(clip_ref, analysis)
+        return self._with_emu_trace(ClipComputeResult(
+            strategy=ClipFallback.NONE,
+            custgeom=custgeom,
+            media=None,
+            used_bbox_rect=True,
+            metadata=metadata,
+        ))
 
-            return ClippingResult(
-                xml_content=xml_content,
-                complexity=analysis.complexity.value,
-                strategy=strategy,
-                preprocessing_applied=analysis.can_preprocess,
-                metadata={
-                    'analysis': analysis,
-                    'clippath_definitions': clippath_definitions,
-                    'generation_method': 'existing_system',
-                },
-            )
+    def _build_custgeom_from_analysis(
+        self,
+        clip_ref: ClipRef,
+        analysis: Any,
+        element_context: dict[str, Any],
+    ) -> ClipCustGeom:
+        bbox = clip_ref.bounding_box or self._extract_analysis_bbox(analysis)
+        if bbox is None:
+            bbox = element_context.get("bounding_box")
+        if not isinstance(bbox, Rect):
+            bbox = Rect(0.0, 0.0, 1.0, 1.0)
 
-        else:
-            # No clipPath element available - generate basic clipping
-            return self._generate_basic_clipping(clip_ref, element_context)
+        clip_xml = self._rect_clip_xml(bbox)
+        return ClipCustGeom(
+            path=[],
+            path_xml=clip_xml,
+            fill_rule_even_odd=self._is_even_odd(clip_ref, analysis),
+        )
 
-    def _generate_native_clip_xml(self, clip_ref: ClipRef, analysis: Any) -> str:
-        if clip_ref.path_segments:
-            return self._generate_from_segments(clip_ref).xml_content
-
-        clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
-        return f'''<a:clipPath>
-    <a:path w="21600" h="21600">
-        <!-- ClipPath: {clip_id} -->
-        <!-- Complexity: {analysis.complexity.value} -->
-        <a:moveTo><a:pt x="0" y="0"/></a:moveTo>
-        <a:lnTo><a:pt x="21600" y="0"/></a:lnTo>
-        <a:lnTo><a:pt x="21600" y="21600"/></a:lnTo>
-        <a:lnTo><a:pt x="0" y="21600"/></a:lnTo>
-        <a:close/>
-    </a:path>
-</a:clipPath>'''
-
-    def _generate_custgeom_clipping(self, clip_ref: ClipRef, analysis: Any) -> str:
-        """Generate custom geometry-based clipping for complex cases"""
-        if clip_ref.path_segments:
-            return self._generate_from_segments(clip_ref).xml_content
-
-        clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
-        return f'''<!-- Custom Geometry Clipping: {clip_id} -->
-<!-- Strategy: CustGeom for complex path -->
-<!-- Complexity: {analysis.complexity.value} -->'''
-
-    def _generate_emf_clipping(self, clip_ref: ClipRef, analysis: Any) -> ClippingResult:
-        """Generate EMF-based clipping for unsupported cases"""
-        clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
+    def _generate_emf_clipping(
+        self,
+        clip_ref: ClipRef,
+        analysis: Any,
+        base_metadata: dict[str, Any],
+    ) -> ClipComputeResult:
+        clip_id = self._clean_clip_id(clip_ref.clip_id)
+        metadata = dict(base_metadata)
+        metadata["strategy"] = "emf_fallback"
+        metadata["clip_strategy"] = ClipFallback.EMF_SHAPE.value
 
         try:
-            from .emf_adapter import create_emf_adapter  # Deferred import to avoid cycles
-            emf_adapter = create_emf_adapter()
-        except Exception as exc:
-            self.logger.debug("EMF adapter unavailable for clipping: %s", exc)
-            return f'''<!-- EMF Clipping Fallback: {clip_id} -->
-<!-- Strategy: EMF vector for unsupported features -->
-<!-- Complexity: {analysis.complexity.value} -->'''
+            from .emf_adapter import create_emf_adapter  # Deferred to avoid circular import
 
-        path_segments = self._clone_segments(clip_ref.path_segments) if clip_ref.path_segments else None
+            emf_adapter = create_emf_adapter(self.services)
+        except Exception as exc:  # pragma: no cover - defensive
+            self.logger.debug("EMF adapter unavailable for clipping: %s", exc)
+            metadata["xml_placeholder"] = f"<!-- EMF Clipping Fallback: {clip_id} -->"
+            metadata["error"] = str(exc)
+            return self._with_emu_trace(ClipComputeResult(
+                strategy=ClipFallback.EMF_SHAPE,
+                custgeom=None,
+                media=None,
+                used_bbox_rect=False,
+                metadata=metadata,
+            ))
+
+        path_segments = self._clone_segments(getattr(clip_ref, "path_segments", None))
         if not path_segments:
             bbox = clip_ref.bounding_box or self._extract_analysis_bbox(analysis)
             if bbox is None:
@@ -430,50 +443,298 @@ class ClippingPathAdapter:
 
             emf_result = emf_adapter.generate_emf_blob(path_ir)
 
-            media_entry = {
-                'type': 'emf',
-                'data': emf_result.emf_data,
-                'relationship_id': emf_result.relationship_id,
-                'content_type': 'application/emf',
-                'width_emu': emf_result.width_emu,
-                'height_emu': emf_result.height_emu,
-                'description': 'clip_emf_fallback',
-            }
-
-            metadata = {
-                'generation_method': 'emf_clipping',
-                'media_files': [media_entry],
-                'clip_id': clip_id,
-                'analysis': analysis,
-            }
-
-            return ClippingResult(
-                xml_content=f'''<!-- EMF Clipping Fallback: {clip_id} -->
-<!-- Strategy: EMF vector for unsupported features -->
-<!-- Complexity: {analysis.complexity.value} -->''',
-                complexity=analysis.complexity.value if hasattr(analysis.complexity, "value") else str(analysis.complexity),
-                strategy="emf_fallback",
-                preprocessing_applied=analysis.can_preprocess if hasattr(analysis, "can_preprocess") else False,
-                metadata=metadata,
+            media = ClipMediaMeta(
+                content_type="application/emf",
+                rel_id=getattr(emf_result, "relationship_id", None),
+                part_name=None,
+                bbox_emu=(0, 0, getattr(emf_result, "width_emu", 0), getattr(emf_result, "height_emu", 0)),
+                data=getattr(emf_result, "emf_data", None),
+                description="clip_emf_fallback",
             )
+
+            metadata["media_meta"] = media
+            metadata["media_files"] = [
+                {
+                    "type": "emf",
+                    "data": media.data,
+                    "relationship_id": media.rel_id,
+                    "content_type": media.content_type,
+                    "width_emu": media.bbox_emu[2],
+                    "height_emu": media.bbox_emu[3],
+                    "clip_strategy": ClipFallback.EMF_SHAPE.value,
+                },
+            ]
+            metadata["xml_placeholder"] = f"<!-- EMF Clipping Fallback: {clip_id} -->"
+            metadata["emf_pic_xml"] = self._build_emf_pic_xml(media)
+            metadata["tracer_strategy"] = "emf_fallback"
+
+            return self._with_emu_trace(ClipComputeResult(
+                strategy=ClipFallback.EMF_SHAPE,
+                custgeom=None,
+                media=media,
+                used_bbox_rect=False,
+                metadata=metadata,
+            ))
 
         except Exception as exc:
             self.logger.warning("EMF clipping generation failed: %s", exc)
-            return ClippingResult(
-                xml_content=f'''<!-- EMF Clipping Fallback: {clip_id} -->
-<!-- Strategy: EMF vector for unsupported features -->
-<!-- Complexity: {analysis.complexity.value} -->''',
-                complexity=analysis.complexity.value if hasattr(analysis.complexity, "value") else str(analysis.complexity),
-                strategy="emf_fallback",
-                preprocessing_applied=False,
-                metadata={
-                    'clip_id': clip_id,
-                    'generation_method': 'emf_fallback_error',
-                    'error': str(exc),
-                },
+            metadata["error"] = str(exc)
+            metadata["xml_placeholder"] = f"<!-- EMF Clipping Error: {clip_id} -->"
+            metadata.setdefault("tracer_strategy", "emf_fallback")
+            return self._with_emu_trace(ClipComputeResult(
+                strategy=ClipFallback.EMF_SHAPE,
+                custgeom=None,
+                media=None,
+                used_bbox_rect=False,
+                metadata=metadata,
+            ))
+
+    def _generate_basic_clipping(
+        self,
+        clip_ref: ClipRef,
+        element_context: dict[str, Any],
+    ) -> ClipComputeResult:
+        bbox = clip_ref.bounding_box or element_context.get("clip_bounding_box")
+        if not isinstance(bbox, Rect):
+            bbox = Rect(0.0, 0.0, 1.0, 1.0)
+
+        clip_xml = self._rect_clip_xml(bbox)
+        metadata = {
+            "generation_method": "basic_fallback",
+            "clip_id": clip_ref.clip_id,
+        }
+
+        custgeom = ClipCustGeom(
+            path=[],
+            path_xml=clip_xml,
+            fill_rule_even_odd=self._is_even_odd(clip_ref, None),
+        )
+
+        return self._with_emu_trace(ClipComputeResult(
+            strategy=ClipFallback.NONE,
+            custgeom=custgeom,
+            media=None,
+            used_bbox_rect=True,
+            metadata=metadata,
+        ))
+
+    def _generate_fallback_clipping(self, clip_ref: ClipRef) -> ClipComputeResult:
+        clip_id = self._clean_clip_id(clip_ref.clip_id)
+        placeholder = f"<!-- Clipping Fallback: {clip_id} -->"
+
+        bbox = getattr(clip_ref, "bounding_box", None)
+        if bbox is None:
+            parsed = self._parse_bbox_clip_id(clip_ref.clip_id)
+            if parsed is not None:
+                bbox = parsed
+
+        if bbox is None:
+            # Produce a minimal clipPath so downstream consumers still receive valid DrawingML.
+            bbox = Rect(0, 0, 1, 1)
+            used_bbox = False
+        else:
+            used_bbox = True
+
+        clip_xml = self._rect_clip_xml(bbox)
+        metadata = {
+            "generation_method": "fallback_placeholder",
+            "clip_id": clip_ref.clip_id,
+            "xml_placeholder": placeholder,
+        }
+        if used_bbox:
+            metadata["strategy"] = "bbox"
+        custgeom = ClipCustGeom(path=[], path_xml=clip_xml, fill_rule_even_odd=False)
+        return self._with_emu_trace(ClipComputeResult(
+            strategy=ClipFallback.NONE,
+            custgeom=custgeom,
+            media=None,
+            used_bbox_rect=used_bbox,
+            metadata=metadata,
+        ))
+
+    @staticmethod
+    def _build_emf_pic_xml(media: ClipMediaMeta) -> str:
+        rel_id = media.rel_id or ""
+        width_emu = media.bbox_emu[2] if media.bbox_emu else 0
+        height_emu = media.bbox_emu[3] if media.bbox_emu else 0
+        description = media.description or "clip_emf_fallback"
+
+        return (
+            "<p:pic>"
+            "<p:nvPicPr>"
+            f'<p:cNvPr id="1" name="{description}"/>'
+            "<p:cNvPicPr/>"
+            "<p:nvPr/>"
+            "</p:nvPicPr>"
+            "<p:blipFill>"
+            f'<a:blip r:embed="{rel_id}">'
+            "<a:extLst>"
+            '<a:ext uri="{A7D7AC89-857B-4B46-9C2E-2B86D7B4E2B4}">'
+            '<emf:emfBlip xmlns:emf="http://schemas.microsoft.com/office/drawing/2010/emf"/>'
+            "</a:ext>"
+            "</a:extLst>"
+            "</a:blip>"
+            "<a:stretch><a:fillRect/></a:stretch>"
+            "</p:blipFill>"
+            "<p:spPr>"
+            "<a:xfrm>"
+            f'<a:off x="0" y="0"/>'
+            f'<a:ext cx="{width_emu}" cy="{height_emu}"/>'
+            "</a:xfrm>"
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            "</p:spPr>"
+            "</p:pic>"
+        )
+
+    @staticmethod
+    def _parse_bbox_clip_id(clip_id: str | None) -> Rect | None:
+        if not clip_id or not clip_id.startswith("bbox:"):
+            return None
+        parts = clip_id.split(":")
+        if len(parts) < 5:
+            return None
+        try:
+            _, x_str, y_str, width_str, height_str = parts[:5]
+            x = float(x_str)
+            y = float(y_str)
+            width = max(float(width_str), 0.0)
+            height = max(float(height_str), 0.0)
+        except ValueError:
+            return None
+        return Rect(x, y, width, height)
+
+    # ------------------------------------------------------------------ #
+    # Geometry helpers                                                   #
+    # ------------------------------------------------------------------ #
+
+    def _transform_segments(
+        self,
+        segments: Iterable[SegmentType],
+        transform_matrix: Any | None,
+    ) -> list[SegmentType]:
+        if not transform_matrix:
+            return list(segments)
+
+        transformed: list[SegmentType] = []
+        for segment in segments:
+            if isinstance(segment, LineSegment):
+                transformed.append(
+                    LineSegment(
+                        self._transform_point(segment.start, transform_matrix),
+                        self._transform_point(segment.end, transform_matrix),
+                    ),
+                )
+            elif isinstance(segment, BezierSegment):
+                transformed.append(
+                    BezierSegment(
+                        self._transform_point(segment.start, transform_matrix),
+                        self._transform_point(segment.control1, transform_matrix),
+                        self._transform_point(segment.control2, transform_matrix),
+                        self._transform_point(segment.end, transform_matrix),
+                    ),
+                )
+            else:
+                transformed.append(segment)
+        return transformed
+
+    def _transform_point(self, point: Point, matrix: Any) -> Point:
+        x, y = matrix.transform_point(point.x, point.y)
+        return Point(x, y)
+
+    def _segments_to_clip_xml(self, segments: list[SegmentType], bbox: Rect) -> str:
+        origin_x = bbox.x
+        origin_y = bbox.y
+        width = bbox.width or 1.0
+        height = bbox.height or 1.0
+
+        width_emu = self._emu_value(width, axis="x", label="clip_bbox_width")
+        height_emu = self._emu_value(height, axis="y", label="clip_bbox_height")
+        width_emu_value = max(1, width_emu.value)
+        height_emu_value = max(1, height_emu.value)
+
+        def to_emu(point: Point) -> tuple[int, int]:
+            return (
+                self._emu_value(point.x - origin_x, axis="x", label="clip_point_x").value,
+                self._emu_value(point.y - origin_y, axis="y", label="clip_point_y").value,
             )
 
-    def _clone_segments(self, segments: tuple[SegmentType, ...] | None) -> list[SegmentType]:
+        command_specs: list[tuple[str, list[tuple[int, int]]]] = []
+        current_point: Point | None = None
+
+        for segment in segments:
+            start = getattr(segment, "start", None)
+            if start is not None:
+                if current_point is None or not self._points_equal(current_point, start):
+                    sx, sy = to_emu(start)
+                    command_specs.append(("moveTo", [(sx, sy)]))
+                    current_point = start
+
+            if isinstance(segment, LineSegment):
+                end = segment.end
+                ex, ey = to_emu(end)
+                command_specs.append(("lnTo", [(ex, ey)]))
+                current_point = end
+            elif isinstance(segment, BezierSegment):
+                c1x, c1y = to_emu(segment.control1)
+                c2x, c2y = to_emu(segment.control2)
+                ex, ey = to_emu(segment.end)
+                command_specs.append((
+                    "cubicBezTo",
+                    [(c1x, c1y), (c2x, c2y), (ex, ey)],
+                ))
+                current_point = segment.end
+
+        return self._xml_builder.create_clip_path_xml(
+            width_emu_value,
+            height_emu_value,
+            command_specs,
+            close=bool(command_specs),
+        )
+
+    @staticmethod
+    def _points_equal(p1: Point, p2: Point, tolerance: float = 1e-6) -> bool:
+        return abs(p1.x - p2.x) <= tolerance and abs(p1.y - p2.y) <= tolerance
+
+    @staticmethod
+    def _compute_bbox(segments: list[SegmentType]) -> Rect | None:
+        xs: list[float] = []
+        ys: list[float] = []
+
+        for segment in segments:
+            for attr in ("start", "end", "control1", "control2"):
+                point = getattr(segment, attr, None)
+                if point is not None:
+                    xs.append(point.x)
+                    ys.append(point.y)
+
+        if not xs or not ys:
+            return None
+
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        return Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+
+    def _rect_clip_xml(self, bbox: Rect) -> str:
+        width_emu = self._emu_value(bbox.width, axis="x", label="rect_clip_width")
+        height_emu = self._emu_value(bbox.height, axis="y", label="rect_clip_height")
+        width_emu_value = max(1, width_emu.value)
+        height_emu_value = max(1, height_emu.value)
+
+        commands = [
+            ("moveTo", [(0, 0)]),
+            ("lnTo", [(width_emu_value, 0)]),
+            ("lnTo", [(width_emu_value, height_emu_value)]),
+            ("lnTo", [(0, height_emu_value)]),
+        ]
+
+        return self._xml_builder.create_clip_path_xml(
+            width_emu_value,
+            height_emu_value,
+            commands,
+        )
+
+    @staticmethod
+    def _clone_segments(segments: Iterable[SegmentType] | None) -> list[SegmentType]:
         cloned: list[SegmentType] = []
         if not segments:
             return cloned
@@ -499,7 +760,8 @@ class ClippingPathAdapter:
                 cloned.append(segment)
         return cloned
 
-    def _rect_to_segments(self, bbox: Rect) -> list[SegmentType]:
+    @staticmethod
+    def _rect_to_segments(bbox: Rect) -> list[SegmentType]:
         x1, y1 = bbox.x, bbox.y
         x2 = bbox.x + max(bbox.width, 1e-6)
         y2 = bbox.y + max(bbox.height, 1e-6)
@@ -516,118 +778,106 @@ class ClippingPathAdapter:
             LineSegment(p4, p1),
         ]
 
-    def _extract_analysis_bbox(self, analysis: Any) -> Rect | None:
-        chain = getattr(analysis, 'clip_chain', []) or []
+    @staticmethod
+    def _extract_analysis_bbox(analysis: Any) -> Rect | None:
+        if analysis is None:
+            return None
+        chain = getattr(analysis, "clip_chain", []) or []
         for clip_def in chain:
-            bbox = getattr(clip_def, 'bounding_box', None)
+            bbox = getattr(clip_def, "bounding_box", None)
             if bbox:
                 return bbox
-        return getattr(analysis, 'bounding_box', None)
+        return getattr(analysis, "bounding_box", None)
 
-    def _generate_basic_clipping(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
-        """Generate basic clipping when full analysis not available"""
-        clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
+    @staticmethod
+    def _is_even_odd(clip_ref: ClipRef, analysis: Any | None) -> bool:
+        rule = getattr(clip_ref, "clip_rule", None)
+        if rule:
+            return str(rule).lower() == "evenodd"
 
-        xml_content = f'''<a:clipPath>
-    <a:path w="21600" h="21600">
-        <!-- Basic ClipPath: {clip_id} -->
-        <a:moveTo><a:pt x="0" y="0"/></a:moveTo>
-        <a:lnTo><a:pt x="21600" y="0"/></a:lnTo>
-        <a:lnTo><a:pt x="21600" y="21600"/></a:lnTo>
-        <a:lnTo><a:pt x="0" y="21600"/></a:lnTo>
-        <a:close/>
-    </a:path>
-</a:clipPath>'''
+        if analysis is not None:
+            clip_chain = getattr(analysis, "clip_chain", []) or []
+            for clip_def in clip_chain:
+                clip_rule = getattr(clip_def, "clip_rule", None)
+                if clip_rule and str(clip_rule).lower() == "evenodd":
+                    return True
+        return False
 
-        return ClippingResult(
-            xml_content=xml_content,
-            complexity="UNKNOWN",
-            strategy="basic_native",
-            preprocessing_applied=False,
-            metadata={
-                'clip_id': clip_id,
-                'generation_method': 'basic_fallback',
-            },
-        )
+    @staticmethod
+    def _complexity_value(complexity: Any | None) -> str | None:
+        if complexity is None:
+            return None
+        value = getattr(complexity, "value", None)
+        if value is not None:
+            return value
+        return str(complexity).lower()
 
-    def _generate_fallback_clipping(self, clip_ref: ClipRef, element_context: dict[str, Any]) -> ClippingResult:
-        """Fallback clipping when existing system unavailable"""
-        clip_id = clip_ref.clip_id.replace('#', '').replace('url(', '').replace(')', '')
+    @staticmethod
+    def _clean_clip_id(clip_id: str | None) -> str:
+        if not clip_id:
+            return "clip"
+        cleaned = clip_id.strip()
+        if cleaned.startswith("url(") and cleaned.endswith(")"):
+            cleaned = cleaned[4:-1]
+        if cleaned.startswith("#"):
+            cleaned = cleaned[1:]
+        return cleaned or "clip"
 
-        xml_content = f'<!-- Clipping Fallback: {clip_id} -->'
+    @staticmethod
+    def _normalize_clip_reference(clip_id: str | None) -> str:
+        if not clip_id:
+            return ""
+        clip_id = clip_id.strip()
+        if clip_id.startswith("url("):
+            return clip_id
+        if clip_id.startswith("#"):
+            return f"url({clip_id})"
+        return f"url(#{clip_id})"
 
-        return ClippingResult(
-            xml_content=xml_content,
-            complexity="FALLBACK",
-            strategy="placeholder",
-            preprocessing_applied=False,
-            metadata={
-                'clip_id': clip_id,
-                'generation_method': 'fallback_placeholder',
-                'reason': 'clipping_system_unavailable',
-            },
-        )
+    def _record_emu_value(self, axis: str, label: str | None, emu_value: 'EmuValue') -> None:
+        trace = getattr(self, "_emu_trace", None)
+        if trace is None:
+            trace = []
+            self._emu_trace = trace
+        trace.append({
+            "axis": axis,
+            "label": label or axis,
+            "emu": emu_value,
+        })
 
-    def analyze_preprocessing_opportunities(self, svg_root, clippath_definitions: dict[str, Any]) -> dict[str, Any]:
-        """
-        Analyze opportunities for clipPath preprocessing.
+    def _with_emu_trace(self, result: ClipComputeResult) -> ClipComputeResult:
+        trace = getattr(self, "_emu_trace", None)
+        if trace:
+            metadata = dict(result.metadata or {})
+            metadata.setdefault("emu_trace", []).extend(trace)
+            result.metadata = metadata
+        return result
 
-        Args:
-            svg_root: SVG root element
-            clippath_definitions: Available clipPath definitions
-
-        Returns:
-            Analysis of preprocessing opportunities
-        """
-        if not self.clippath_analyzer:
-            return {'can_preprocess': False, 'reason': 'analyzer_unavailable'}
-
-        try:
-            # Use ClippingAnalyzer's preprocessing analysis capabilities
-            preprocessing_context = {
-                'svg_root': svg_root,
-                'clippath_definitions': clippath_definitions,
-            }
-
-            return {
-                'can_preprocess': True,
-                'strategy': 'boolean_intersection',
-                'context': preprocessing_context,
-            }
-
-        except Exception as e:
-            self.logger.warning(f"Preprocessing analysis failed: {e}")
-            return {'can_preprocess': False, 'reason': str(e)}
-
-    def get_clipping_statistics(self) -> dict[str, Any]:
-        """Get statistics about clipping system usage"""
-        return {
-            'clipping_system_available': self._clipping_available,
-            'components_initialized': {
-                'clippath_analyzer': self.clippath_analyzer is not None,
-                'masking_converter': self.masking_converter is not None,
-            },
-            'features_available': {
-                'complexity_analysis': self._clipping_available,
-                'native_dml_clipping': True,
-                'custgeom_clipping': self._clipping_available,
-                'emf_clipping': self._clipping_available,
-                'preprocessing': self._clipping_available,
-            },
-        }
+    def _emu_value(
+        self,
+        value: float | int,
+        axis: str = "uniform",
+        *,
+        label: str | None = None,
+    ) -> 'EmuValue':
+        if not hasattr(self.services, "emu"):
+            raise RuntimeError("ClippingPathAdapter requires ConversionServices.emu().")
+        emu_val = self.services.emu(value, axis=axis)
+        self._record_emu_value(axis=axis, label=label, emu_value=emu_val)
+        return emu_val
 
 
 def create_clipping_adapter(
-    services=None,
+    services: 'ConversionServices',
     *,
     clip_policy: ClipPolicy | None = None,
     structured_clip_service: StructuredClipService | None = None,
-    clip_bridge: LegacyClipBridge | None = None,
 ) -> ClippingPathAdapter:
-    """Create clipping adapter instance"""
+    """Factory helper for callers."""
+    if services is None:
+        raise RuntimeError("create_clipping_adapter requires ConversionServices instance.")
     return ClippingPathAdapter(
         services,
         clip_policy=clip_policy,
         structured_clip_service=structured_clip_service,
-        clip_bridge=clip_bridge,
     )

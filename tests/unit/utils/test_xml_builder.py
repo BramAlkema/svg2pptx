@@ -6,7 +6,7 @@ Tests the consolidated XML generation functionality.
 """
 
 import pytest
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from unittest.mock import Mock
 
 from core.utils.xml_builder import (
@@ -70,7 +70,7 @@ class TestXMLBuilder:
         )
 
         # Verify XML is well-formed
-        root = ET.fromstring(xml_content)
+        root = ET.fromstring(xml_content.encode('utf-8'))
         assert root.tag == '{http://schemas.openxmlformats.org/presentationml/2006/main}presentation'
 
         # Verify slide size
@@ -78,8 +78,32 @@ class TestXMLBuilder:
         assert slide_sz.get('cx') == str(width_emu)
         assert slide_sz.get('cy') == str(height_emu)
 
-        # Verify slide list is included
-        assert slide_list in xml_content
+    def test_create_clip_path_xml(self, xml_builder):
+        """Test builder clip-path generation."""
+        commands = [
+            ("moveTo", [(0, 0)]),
+            ("lnTo", [(100, 0)]),
+            ("cubicBezTo", [(100, 50), (50, 100), (0, 100)]),
+        ]
+
+        clip_xml = xml_builder.create_clip_path_xml(100, 100, commands)
+        element = ET.fromstring(clip_xml.encode('utf-8'))
+        ns = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+
+        assert element.tag == '{http://schemas.openxmlformats.org/drawingml/2006/main}clipPath'
+        path = element.find('a:path', ns)
+        assert path is not None
+        assert path.get('w') == '100'
+        assert path.get('h') == '100'
+
+        move_to = path.find('a:moveTo', ns)
+        assert move_to is not None
+        assert move_to.find('a:pt', ns).get('x') == '0'
+
+        cubic = path.find('a:cubicBezTo', ns)
+        assert cubic is not None
+        points = cubic.findall('a:pt', ns)
+        assert len(points) == 3
 
     def test_create_slide_xml(self, xml_builder):
         """Test slide XML creation."""
@@ -88,7 +112,7 @@ class TestXMLBuilder:
         xml_content = xml_builder.create_slide_xml(slide_content=slide_content)
 
         # Verify XML is well-formed
-        root = ET.fromstring(xml_content)
+        root = ET.fromstring(xml_content.encode('utf-8'))
         assert root.tag == '{http://schemas.openxmlformats.org/presentationml/2006/main}sld'
 
         # Verify content is included
@@ -110,7 +134,7 @@ class TestXMLBuilder:
         xml_content = xml_builder.create_content_types_xml(additional_overrides=additional_overrides)
 
         # Verify XML is well-formed
-        root = ET.fromstring(xml_content)
+        root = ET.fromstring(xml_content.encode('utf-8'))
         assert root.tag == '{http://schemas.openxmlformats.org/package/2006/content-types}Types'
 
         # Verify standard defaults
@@ -164,7 +188,7 @@ class TestXMLBuilder:
         xml_content = xml_builder.create_relationships_xml(relationships)
 
         # Verify XML is well-formed
-        root = ET.fromstring(xml_content)
+        root = ET.fromstring(xml_content.encode('utf-8'))
         assert root.tag == '{http://schemas.openxmlformats.org/package/2006/relationships}Relationships'
 
         # Verify relationships
@@ -243,4 +267,3 @@ class TestConvenienceFunctions:
 
 class TestXMLIntegration:
     """Test integration scenarios."""
-

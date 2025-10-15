@@ -8,7 +8,7 @@ Leverages battle-tested path generation components via adapters.
 
 import logging
 import time
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
 from ..ir import (
     BezierSegment,
@@ -23,6 +23,10 @@ from ..ir import (
 )
 from ..policy import PathDecision, Policy
 from .base import Mapper, MapperResult, MappingError, OutputFormat
+from .clip_render import clip_result_to_xml
+from .shape_helpers import build_color_trace
+if TYPE_CHECKING:
+    from core.services.conversion_services import ConversionServices, EmuRect, EmuValue
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +52,18 @@ class PathMapper(Mapper):
         super().__init__(policy)
         self.logger = logging.getLogger(__name__)
 
-        # Integration with existing PathSystem
-        self.path_system = path_system
+        # Integration with existing PathSystem and conversion services
+        self.path_system = None
+        self.services: 'ConversionServices | None' = getattr(policy, 'services', None)
+        if path_system is not None:
+            if self._looks_like_services(path_system):
+                if self.services is None:
+                    self.services = path_system
+            else:
+                self.path_system = path_system
 
-        # Adapter initialization (will be connected to legacy components)
-        self._drawingml_adapter = None
-        self._emf_adapter = None
+        if self.services is None:
+            raise RuntimeError("PathMapper requires ConversionServices injection.")
 
     def can_map(self, element: IRElement) -> bool:
         """Check if element is a Path"""
@@ -73,6 +83,8 @@ class PathMapper(Mapper):
             MappingError: If mapping fails
         """
         start_time = time.perf_counter()
+        self._emu_trace: list[dict[str, Any]] = []
+        self._color_trace: list[dict[str, Any]] = []
 
         try:
             # Get policy decision
@@ -84,10 +96,29 @@ class PathMapper(Mapper):
             else:
                 result = self._map_to_emf(path, decision)
 
+            # Attach EMU trace metadata
+            if getattr(self, "_emu_trace", None):
+                if result.metadata is None:
+                    result.metadata = {}
+                else:
+                    result.metadata = dict(result.metadata)
+                trace_list = result.metadata.setdefault("emu_trace", [])
+                trace_list.extend(self._emu_trace)
+
+            # Attach color trace metadata
+            if getattr(self, "_color_trace", None):
+                if result.metadata is None:
+                    result.metadata = {}
+                else:
+                    result.metadata = dict(result.metadata)
+                color_list = result.metadata.setdefault("color_trace", [])
+                color_list.extend(self._color_trace)
+
             # Record timing
             result.processing_time_ms = (time.perf_counter() - start_time) * 1000
 
             # Record statistics
+            result = self._attach_navigation(result, path)
             self._record_mapping(result)
 
             return result
@@ -146,22 +177,48 @@ class PathMapper(Mapper):
             clip_xml = ""
             clip_meta = None
             clip_media_files = None
+            clip_emf_xml = None
             if path.clip:
                 clip_xml, clip_meta = self._generate_clip_xml(path, path.clip)
-                if clip_meta and 'media_files' in clip_meta:
-                    clip_media_files = clip_meta.pop('media_files')
+            if clip_meta and 'media_files' in clip_meta:
+                clip_media_files = clip_meta.get('media_files')
 
             # Calculate bounds for positioning
             bbox = getattr(path, 'bbox', None)
             if bbox:
-                x_emu = int(bbox.x * 12700)  # Convert to EMU (1 point = 12700 EMU)
-                y_emu = int(bbox.y * 12700)
-                width_emu = int(bbox.width * 12700)
-                height_emu = int(bbox.height * 12700)
+                rect_emu = self._emu_rect(bbox)
+                x_emu = rect_emu.x.value
+                y_emu = rect_emu.y.value
+                width_emu = rect_emu.width.value
+                height_emu = rect_emu.height.value
             else:
                 # Default bounds if bbox not available
                 x_emu = y_emu = 0
                 width_emu = height_emu = 914400  # 1 inch in EMU
+
+            if clip_emf_xml:
+                fallback_metadata = dict(clip_meta or {})
+                fallback_metadata.setdefault('fallback_reason', 'clip_emf_fallback')
+                fallback_metadata['clip_strategy'] = fallback_metadata.get('strategy')
+                fallback_metadata['clip_emf_pic_xml'] = clip_emf_xml
+                fallback_metadata['bbox'] = bbox
+                fallback_metadata['has_fill'] = path.fill is not None
+                fallback_metadata['has_stroke'] = path.stroke is not None
+                fallback_metadata['has_clip'] = True
+                fallback_metadata['processing_method'] = 'clip_emf_fallback'
+                fallback_metadata['source_id'] = getattr(path, 'source_id', None)
+
+                return MapperResult(
+                    element=path,
+                    output_format=OutputFormat.EMF_VECTOR,
+                    xml_content=clip_emf_xml,
+                    policy_decision=decision,
+                    metadata=fallback_metadata,
+                    estimated_quality=decision.estimated_quality or 0.96,
+                    estimated_performance=decision.estimated_performance or 0.8,
+                    output_size_bytes=len(clip_emf_xml.encode('utf-8')),
+                    media_files=clip_media_files,
+                )
 
             # Get shape ID from path metadata or use default
             shape_id = getattr(path, 'shape_id', 1)
@@ -237,6 +294,7 @@ class PathMapper(Mapper):
                     'clip_structured_used_bbox': clip_meta.get('structured_used_bbox') if clip_meta else None,
                     'clip_media_meta': clip_meta.get('media_meta') if clip_meta else None,
                     'clip_media_files': clip_media_files,
+                    'clip_emf_pic_xml': clip_meta.get('emf_pic_xml') if clip_meta else None,
                     'processing_method': 'native_clean_slate',
                     'source_id': getattr(path, 'source_id', None),
                 },
@@ -256,7 +314,7 @@ class PathMapper(Mapper):
             from .emf_adapter import create_emf_adapter
 
             # Generate real EMF blob
-            emf_adapter = create_emf_adapter()
+            emf_adapter = create_emf_adapter(self.services)
 
             if not emf_adapter.can_generate_emf(path):
                 # Fallback to placeholder if EMF generation not available
@@ -326,10 +384,11 @@ class PathMapper(Mapper):
         try:
             bbox = getattr(path, 'bbox', None)
             if bbox:
-                x_emu = int(bbox.x * 12700)
-                y_emu = int(bbox.y * 12700)
-                width_emu = int(bbox.width * 12700)
-                height_emu = int(bbox.height * 12700)
+                rect_emu = self._emu_rect(bbox)
+                x_emu = rect_emu.x.value
+                y_emu = rect_emu.y.value
+                width_emu = rect_emu.width.value
+                height_emu = rect_emu.height.value
             else:
                 x_emu = y_emu = 0
                 width_emu = height_emu = 914400
@@ -433,8 +492,13 @@ class PathMapper(Mapper):
             normalized = max(0, min(21600, int(coord * 100)))
             return str(normalized)
 
-    def _generate_fill_xml(self, fill: Any) -> str:
+    def _generate_fill_xml(self, fill: Any, *, label: str = "fill") -> str:
         """Generate DrawingML fill XML from IR paint"""
+        if not fill:
+            return '<a:noFill/>'
+
+        self._record_color_from_paint(label, fill)
+
         if isinstance(fill, SolidPaint):
             return f'<a:solidFill><a:srgbClr val="{fill.rgb}"/></a:solidFill>'
 
@@ -474,12 +538,12 @@ class PathMapper(Mapper):
         if not stroke:
             return '<a:ln><a:noFill/></a:ln>'
 
-        width_emu = int(stroke.width * 12700)  # Convert to EMU
-        xml = f'<a:ln w="{width_emu}">'
+        width_emu = self._emu_value(stroke.width, label="stroke_width")
+        xml = f'<a:ln w="{width_emu.value}">' 
 
         # Stroke paint
         if hasattr(stroke, 'paint') and stroke.paint:
-            xml += self._generate_fill_xml(stroke.paint)
+            xml += self._generate_fill_xml(stroke.paint, label="stroke")
         else:
             xml += '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>'
 
@@ -507,55 +571,80 @@ class PathMapper(Mapper):
         xml += '</a:ln>'
         return xml
 
+    def _record_emu_value(self, axis: str, label: str | None, emu_value: 'EmuValue') -> None:
+        trace = getattr(self, "_emu_trace", None)
+        if trace is None:
+            trace = []
+            self._emu_trace = trace
+        trace.append({
+            "axis": axis,
+            "label": label or axis,
+            "emu": emu_value,
+        })
+
+    def _record_color_trace(self, entry: dict[str, Any]) -> None:
+        trace = getattr(self, "_color_trace", None)
+        if trace is None:
+            trace = []
+            self._color_trace = trace
+        trace.append(entry)
+
+    def _record_color_from_paint(self, label: str, paint: Any) -> None:
+        if paint is None:
+            return
+        for entry in build_color_trace(label, paint):
+            self._record_color_trace(entry)
+
+    def _emu_value(
+        self,
+        value: float | int,
+        axis: str = "uniform",
+        *,
+        label: str | None = None,
+    ) -> 'EmuValue':
+        if self.services is None or not hasattr(self.services, "emu"):
+            raise RuntimeError("PathMapper requires ConversionServices.emu(); ensure services are provided.")
+        emu_val = self.services.emu(value, axis=axis)
+        self._record_emu_value(axis=axis, label=label, emu_value=emu_val)
+        return emu_val
+
+    def _emu_rect(self, rect) -> 'EmuRect':
+        if self.services is None or not hasattr(self.services, "emu_rect"):
+            raise RuntimeError("PathMapper requires ConversionServices.emu_rect(); ensure services are provided.")
+        return self.services.emu_rect(rect)
+
+    @staticmethod
+    def _looks_like_services(candidate: Any) -> bool:
+        return bool(candidate) and hasattr(candidate, "emu")
+
     def _generate_clip_xml(self, path: Path, clip: ClipRef) -> tuple[str, dict | None]:
         """Generate DrawingML clipping XML from IR clip reference using real clipping system"""
         if not clip:
             return "", None
 
         try:
-            # Import clipping adapter
             from .clipping_adapter import create_clipping_adapter
 
-            # Generate real clipping using existing comprehensive system
             clipping_adapter = create_clipping_adapter(self.services)
 
             if not clipping_adapter.can_generate_clipping(clip):
-                # Fallback to basic placeholder
                 return f'<!-- Clipping Fallback: {clip.clip_id} -->', {'strategy': 'fallback'}
 
-            clipping_result = clipping_adapter.generate_clip_xml(
+            clip_result = clipping_adapter.generate_clip_xml(
                 clip,
                 element_context=self._build_clip_context(path, clip),
             )
 
-            # Log clipping strategy for debugging
-            self.logger.debug(f"Clipping generated - Strategy: {clipping_result.strategy}, "
-                            f"Complexity: {clipping_result.complexity}")
+            clip_xml, clip_meta, _ = clip_result_to_xml(clip_result, clip)
+            clip_meta = clip_meta or {}
 
-            clip_meta = {
-                'strategy': clipping_result.strategy,
-                'complexity': clipping_result.complexity,
-            }
+            self.logger.debug(
+                "Clipping generated - Strategy: %s, Used bbox: %s",
+                clip_result.strategy.value,
+                clip_result.used_bbox_rect,
+            )
 
-            metadata = clipping_result.metadata or {}
-
-            if 'bridge' in metadata:
-                clip_meta['bridge'] = metadata['bridge']
-            if 'structured_strategy' in metadata:
-                clip_meta['structured_strategy'] = metadata['structured_strategy']
-            structured_result = metadata.get('structured_result')
-            if structured_result is not None:
-                clip_meta['structured_used_bbox'] = getattr(structured_result, 'used_bbox_rect', None)
-                clip_meta['structured_kind'] = getattr(getattr(structured_result, 'strategy', None), 'value', None)
-            if 'used_bbox_rect' in metadata:
-                clip_meta['bridge_used_bbox'] = metadata['used_bbox_rect']
-            media_files = metadata.get('media_files')
-            if media_files:
-                clip_meta['media_files'] = media_files
-            if 'media_meta' in metadata:
-                clip_meta['media_meta'] = metadata['media_meta']
-
-            return clipping_result.xml_content, clip_meta
+            return clip_xml, clip_meta
 
         except Exception as e:
             self.logger.warning(f"Clipping generation failed, using placeholder: {e}")
@@ -582,10 +671,11 @@ class PathMapper(Mapper):
         # Extract bounds from path if available
         bbox = getattr(path, 'bbox', None)
         if bbox:
-            x_emu = int(bbox.x * 12700)
-            y_emu = int(bbox.y * 12700)
-            width_emu = int(bbox.width * 12700)
-            height_emu = int(bbox.height * 12700)
+            rect_emu = self._emu_rect(bbox)
+            x_emu = rect_emu.x.value
+            y_emu = rect_emu.y.value
+            width_emu = rect_emu.width.value
+            height_emu = rect_emu.height.value
         else:
             x_emu = y_emu = 0
             width_emu = height_emu = 914400
@@ -610,14 +700,6 @@ class PathMapper(Mapper):
         {stroke_xml}
     </p:spPr>
 </p:sp>"""
-
-    def set_drawingml_adapter(self, adapter: Any) -> None:
-        """Set adapter for legacy DrawingML generation"""
-        self._drawingml_adapter = adapter
-
-    def set_emf_adapter(self, adapter: Any) -> None:
-        """Set adapter for EMF generation"""
-        self._emf_adapter = adapter
 
     def set_path_system(self, path_system: Any) -> None:
         """Set existing PathSystem for integration"""

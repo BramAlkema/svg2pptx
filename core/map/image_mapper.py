@@ -8,11 +8,15 @@ and embedding strategies.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
 
 from ..ir import ClipRef, Image, IRElement
 from ..policy import ImageDecision, Policy
 from .base import Mapper, MapperResult, MappingError, OutputFormat
+from .clip_render import clip_result_to_xml
+
+if TYPE_CHECKING:
+    from core.services.conversion_services import ConversionServices, EmuRect, EmuValue
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +29,7 @@ class ImageMapper(Mapper):
     management for raster and vector images.
     """
 
-    def __init__(self, policy: Policy, services=None):
+    def __init__(self, policy: Policy, services: 'ConversionServices'):
         """
         Initialize image mapper.
 
@@ -36,6 +40,8 @@ class ImageMapper(Mapper):
         super().__init__(policy)
         self.logger = logging.getLogger(__name__)
         self.services = services
+        if self.services is None:
+            raise RuntimeError("ImageMapper requires ConversionServices injection.")
 
         # Initialize image processing adapter
         try:
@@ -72,6 +78,7 @@ class ImageMapper(Mapper):
             MappingError: If mapping fails
         """
         start_time = time.perf_counter()
+        self._emu_trace: list[dict[str, Any]] = []
 
         try:
             # Get policy decision (images typically go to EMF for best fidelity)
@@ -80,10 +87,19 @@ class ImageMapper(Mapper):
             # Always map images as embedded pictures for best compatibility
             result = self._map_to_picture(image, decision)
 
+            if getattr(self, "_emu_trace", None):
+                if result.metadata is None:
+                    result.metadata = {}
+                else:
+                    result.metadata = dict(result.metadata)
+                trace_list = result.metadata.setdefault("emu_trace", [])
+                trace_list.extend(self._emu_trace)
+
             # Record timing
             result.processing_time_ms = (time.perf_counter() - start_time) * 1000
 
             # Record statistics
+            result = self._attach_navigation(result, image)
             self._record_mapping(result)
 
             return result
@@ -120,10 +136,10 @@ class ImageMapper(Mapper):
                     else:
                         scaled_width, scaled_height = int(image.size.width), int(image.size.height)
 
-                    x_emu = int(image.origin.x * 12700)  # Convert to EMU
-                    y_emu = int(image.origin.y * 12700)
-                    width_emu = int(scaled_width * 12700)
-                    height_emu = int(scaled_height * 12700)
+                    x_emu = self._emu_value(image.origin.x, axis="x", label="image_origin_x")
+                    y_emu = self._emu_value(image.origin.y, axis="y", label="image_origin_y")
+                    width_emu = self._emu_value(scaled_width, axis="x", label="image_width")
+                    height_emu = self._emu_value(scaled_height, axis="y", label="image_height")
 
                     image_adapter_used = True
                     processing_metadata = processing_result.metadata
@@ -136,10 +152,10 @@ class ImageMapper(Mapper):
                     rel_id = f"rId{self._rel_id_counter}"
                     self._rel_id_counter += 1
 
-                    x_emu = int(image.origin.x * 12700)
-                    y_emu = int(image.origin.y * 12700)
-                    width_emu = int(image.size.width * 12700)
-                    height_emu = int(image.size.height * 12700)
+                    x_emu = self._emu_value(image.origin.x, axis="x", label="image_origin_x")
+                    y_emu = self._emu_value(image.origin.y, axis="y", label="image_origin_y")
+                    width_emu = self._emu_value(image.size.width, axis="x", label="image_width")
+                    height_emu = self._emu_value(image.size.height, axis="y", label="image_height")
 
                     image_adapter_used = False
                     processing_metadata = {'processing_method': 'fallback'}
@@ -150,13 +166,26 @@ class ImageMapper(Mapper):
                 rel_id = f"rId{self._rel_id_counter}"
                 self._rel_id_counter += 1
 
-                x_emu = int(image.origin.x * 12700)
-                y_emu = int(image.origin.y * 12700)
-                width_emu = int(image.size.width * 12700)
-                height_emu = int(image.size.height * 12700)
+                x_emu = self._emu_value(image.origin.x, axis="x", label="image_origin_x")
+                y_emu = self._emu_value(image.origin.y, axis="y", label="image_origin_y")
+                width_emu = self._emu_value(image.size.width, axis="x", label="image_width")
+                height_emu = self._emu_value(image.size.height, axis="y", label="image_height")
 
                 image_adapter_used = False
                 processing_metadata = {'processing_method': 'basic'}
+
+            emu_position = {
+                'x': x_emu,
+                'y': y_emu,
+                'width': width_emu,
+                'height': height_emu,
+            }
+            emu_position_values = {
+                'x': x_emu.value,
+                'y': y_emu.value,
+                'width': width_emu.value,
+                'height': height_emu.value,
+            }
 
             # Generate clipping XML if needed
             clip_xml = ""
@@ -177,14 +206,22 @@ class ImageMapper(Mapper):
             if processed_format in self._vector_formats:
                 # Vector images (SVG) - typically need conversion or EMF
                 xml_content = self._generate_vector_image_xml(
-                    image, rel_id, x_emu, y_emu, width_emu, height_emu,
+                    image, rel_id,
+                    emu_position_values['x'],
+                    emu_position_values['y'],
+                    emu_position_values['width'],
+                    emu_position_values['height'],
                     clip_xml, opacity_xml,
                 )
                 output_format = OutputFormat.EMF_VECTOR
             else:
                 # Raster images - direct embedding
                 xml_content = self._generate_raster_image_xml(
-                    image, rel_id, x_emu, y_emu, width_emu, height_emu,
+                    image, rel_id,
+                    emu_position_values['x'],
+                    emu_position_values['y'],
+                    emu_position_values['width'],
+                    emu_position_values['height'],
                     clip_xml, opacity_xml,
                 )
                 output_format = OutputFormat.EMF_RASTER
@@ -219,15 +256,15 @@ class ImageMapper(Mapper):
                     'has_clipping': image.clip is not None,
                     'clip_strategy': clip_meta.get('strategy') if clip_meta else None,
                     'clip_complexity': clip_meta.get('complexity') if clip_meta else None,
-                    'clip_bridge': clip_meta.get('bridge') if clip_meta else None,
-                    'clip_structured_strategy': clip_meta.get('structured_strategy') if clip_meta else None,
                     'clip_structured_kind': clip_meta.get('structured_kind') if clip_meta else None,
                     'clip_structured_used_bbox': clip_meta.get('structured_used_bbox') if clip_meta else None,
                     'clip_media_meta': clip_meta.get('media_meta') if clip_meta else None,
                     'clip_media_files': clip_media_files,
+                    'clip_emf_pic_xml': clip_meta.get('emf_pic_xml') if clip_meta else None,
                     'has_opacity': image.opacity < 1.0,
                     'image_adapter_used': image_adapter_used,
                     'processing_metadata': processing_metadata,
+                    'emu_position': emu_position,
                 },
                 estimated_quality=decision.estimated_quality or 0.98,
                 estimated_performance=decision.estimated_performance or 0.9,
@@ -327,7 +364,7 @@ class ImageMapper(Mapper):
         if not clip_ref:
             return "", None
 
-        if isinstance(clip_ref, ClipRef) and clip_ref.path_segments:
+        if isinstance(clip_ref, ClipRef):
             try:
                 from .clipping_adapter import create_clipping_adapter
                 adapter = create_clipping_adapter(self.services)
@@ -337,28 +374,11 @@ class ImageMapper(Mapper):
                     effect_stack = getattr(image, 'effect_stack', None)
                 if effect_stack is not None:
                     context['effect_stack'] = effect_stack
+                if not adapter.can_generate_clipping(clip_ref):
+                    return f'<!-- Clipping Fallback: {clip_ref.clip_id} -->', {'strategy': 'fallback'}
                 result = adapter.generate_clip_xml(clip_ref, context)
-
-                clip_meta = {
-                    'strategy': result.strategy,
-                    'complexity': result.complexity,
-                }
-                metadata = result.metadata or {}
-                if 'bridge' in metadata:
-                    clip_meta['bridge'] = metadata['bridge']
-                if 'structured_strategy' in metadata:
-                    clip_meta['structured_strategy'] = metadata['structured_strategy']
-                structured_result = metadata.get('structured_result')
-                if structured_result is not None:
-                    clip_meta['structured_kind'] = getattr(getattr(structured_result, 'strategy', None), 'value', None)
-                    clip_meta['structured_used_bbox'] = getattr(structured_result, 'used_bbox_rect', None)
-                media_files = metadata.get('media_files')
-                if media_files:
-                    clip_meta['media_files'] = media_files
-                if 'media_meta' in metadata:
-                    clip_meta['media_meta'] = metadata['media_meta']
-
-                return result.xml_content, clip_meta
+                clip_xml, clip_meta, _ = clip_result_to_xml(result, clip_ref)
+                return clip_xml, clip_meta
             except Exception as exc:
                 self.logger.debug(f"Image clipping adapter fallback: {exc}")
 
@@ -366,14 +386,14 @@ class ImageMapper(Mapper):
         if isinstance(clip_id, str) and clip_id.startswith("bbox:"):
             try:
                 _, _x, _y, width, height = clip_id.split(':')
-                width_emu = int(float(width) * 12700)
-                height_emu = int(float(height) * 12700)
+                width_emu = self._emu_value(float(width), axis="x", label="image_clip_width")
+                height_emu = self._emu_value(float(height), axis="y", label="image_clip_height")
                 return f"""<a:clipPath>
             <a:path>
                 <a:moveTo><a:pt x="0" y="0"/></a:moveTo>
-                <a:lnTo><a:pt x="{width_emu}" y="0"/></a:lnTo>
-                <a:lnTo><a:pt x="{width_emu}" y="{height_emu}"/></a:lnTo>
-                <a:lnTo><a:pt x="0" y="{height_emu}"/></a:lnTo>
+                <a:lnTo><a:pt x="{width_emu.value}" y="0"/></a:lnTo>
+                <a:lnTo><a:pt x="{width_emu.value}" y="{height_emu.value}"/></a:lnTo>
+                <a:lnTo><a:pt x="0" y="{height_emu.value}"/></a:lnTo>
                 <a:close/>
             </a:path>
         </a:clipPath>""", {'strategy': 'bbox'}
@@ -394,6 +414,35 @@ class ImageMapper(Mapper):
             'svg': 'application/emf',  # SVG converted to EMF
         }
         return content_type_map.get(format.lower(), 'application/octet-stream')
+
+    def _record_emu_value(self, axis: str, label: str | None, emu_value: 'EmuValue') -> None:
+        trace = getattr(self, "_emu_trace", None)
+        if trace is None:
+            trace = []
+            self._emu_trace = trace
+        trace.append({
+            "axis": axis,
+            "label": label or axis,
+            "emu": emu_value,
+        })
+
+    def _emu_value(
+        self,
+        value: float | int,
+        axis: str = "uniform",
+        *,
+        label: str | None = None,
+    ) -> 'EmuValue':
+        if self.services is None or not hasattr(self.services, "emu"):
+            raise RuntimeError("ImageMapper requires ConversionServices.emu(); ensure services are provided.")
+        emu_val = self.services.emu(value, axis=axis)
+        self._record_emu_value(axis=axis, label=label, emu_value=emu_val)
+        return emu_val
+
+    def _emu_rect(self, rect) -> 'EmuRect':
+        if self.services is None or not hasattr(self.services, "emu_rect"):
+            raise RuntimeError("ImageMapper requires ConversionServices.emu_rect(); ensure services are provided.")
+        return self.services.emu_rect(rect)
 
     def get_relationship_data(self, image: Image) -> dict[str, Any]:
         """
@@ -442,7 +491,7 @@ class ImageMapper(Mapper):
         }
 
 
-def create_image_mapper(policy: Policy, services=None) -> ImageMapper:
+def create_image_mapper(policy: Policy, services: 'ConversionServices') -> ImageMapper:
     """
     Create ImageMapper with policy engine.
 

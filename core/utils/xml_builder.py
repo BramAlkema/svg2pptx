@@ -20,10 +20,10 @@ class XMLBuilder:
     Centralized XML builder for PowerPoint and Office Open XML generation.
 
     Consolidates XML generation patterns from:
-    - src/converters/animation_templates.py
+    - core/converters/animation_templates.py
     - [Removed] Old multislide implementation
-    - src/emf_packaging.py
-    - src/ooxml_templates.py
+    - core/emf/emf_blob.py
+    - core/ooxml_templates.py
     """
 
     # Common XML namespaces used throughout the application
@@ -38,12 +38,20 @@ class XMLBuilder:
     def __init__(self):
         """Initialize XML builder with common settings."""
         self._id_counter = 1
+        ET.register_namespace('a', self.NAMESPACES['a'])
+        ET.register_namespace('p', self.NAMESPACES['p'])
+        ET.register_namespace('r', self.NAMESPACES['r'])
 
     def get_next_id(self) -> int:
         """Get next unique ID for XML elements."""
         current_id = self._id_counter
         self._id_counter += 1
         return current_id
+
+    @staticmethod
+    def _serialize_element(element: ET._Element) -> str:
+        """Serialize an XML element to a unicode string."""
+        return ET.tostring(element, encoding="unicode")
 
     def escape_xml(self, text: str) -> str:
         """Safely escape text for XML content."""
@@ -146,6 +154,43 @@ class XMLBuilder:
         <a:masterClrMapping/>
     </p:clrMapOvr>
 </p:sld>'''
+
+    def create_clip_path_xml(
+        self,
+        width_emu: int,
+        height_emu: int,
+        commands: list[tuple[str, list[tuple[int, int]]]],
+        *,
+        fill: str = "none",
+        close: bool = True,
+    ) -> str:
+        """Create an <a:clipPath> snippet with the provided commands."""
+        clip_el = ET.Element(ET.QName(self.NAMESPACES['a'], 'clipPath'))
+        path_attrs = {
+            'w': str(max(1, width_emu)),
+            'h': str(max(1, height_emu)),
+            'fill': fill,
+        }
+
+        path_el = ET.SubElement(
+            clip_el,
+            ET.QName(self.NAMESPACES['a'], 'path'),
+            path_attrs,
+        )
+
+        for command, points in commands:
+            cmd_el = ET.SubElement(path_el, ET.QName(self.NAMESPACES['a'], command))
+            for x, y in points:
+                ET.SubElement(
+                    cmd_el,
+                    ET.QName(self.NAMESPACES['a'], 'pt'),
+                    {'x': str(x), 'y': str(y)},
+                )
+
+        if close and commands:
+            ET.SubElement(path_el, ET.QName(self.NAMESPACES['a'], 'close'))
+
+        return self._serialize_element(clip_el)
 
     def create_content_types_xml(self, additional_overrides: list[dict[str, str]] | None = None) -> str:
         """
