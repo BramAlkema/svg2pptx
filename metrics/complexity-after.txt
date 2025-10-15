@@ -1,0 +1,279 @@
+core/paint/dashmap.py
+    F 244:0 _match_preset - D (30)
+    F 32:0 apply_svg_dash_to_ln - C (15)
+core/pipeline/resource_manager.py
+    M 84:4 ResourceManager.prepare_embedded_fonts - F (52)
+    M 309:4 ResourceManager._resolve_external_font - C (15)
+core/pipeline/converter.py
+    M 206:4 CleanSlateConverter.convert_string - E (38)
+    M 687:4 CleanSlateConverter._collect_debug_data - C (13)
+    M 449:4 CleanSlateConverter._initialize_components - C (11)
+core/pipeline/navigation.py
+    M 83:4 NavigationSpec.get_target_description - C (11)
+core/pipeline/error_reporter.py
+    M 264:4 PipelineErrorReporter._generate_recovery_suggestions - C (11)
+core/css/animation_extractor.py
+    M 267:4 CSSAnimationExtractor._build_animation_definitions - C (19)
+    M 88:4 CSSAnimationExtractor._parse_keyframes - C (15)
+    M 433:4 CSSAnimationExtractor._build_transform_definitions - C (15)
+    M 202:4 CSSAnimationExtractor._element_animations - C (12)
+    M 513:4 CSSAnimationExtractor._parse_transform - C (12)
+core/css/resolver.py
+    M 204:4 StyleResolver.compute_paint_style - C (14)
+    F 26:0 parse_color - C (13)
+core/clip/service.py
+    M 41:4 StructuredClipService.compute - C (14)
+core/color/manipulation.py
+    M 178:4 ColorManipulation._blend_colors - C (14)
+core/color/core.py
+    M 109:4 Color._parse_string_value - D (29)
+core/parse/parser.py
+    M 419:4 SVGParser._clip_child_to_segments - D (26)
+    M 271:4 SVGParser._has_external_references - C (13)
+    M 374:4 SVGParser._collect_clip_definitions - C (13)
+core/io/package_writer.py
+    M 462:4 PackageWriter._generate_content_types - C (12)
+    M 425:4 PackageWriter._apply_theme_constants - C (11)
+core/io/embedder.py
+    M 215:4 DrawingMLEmbedder._generate_slide_xml - C (20)
+    M 314:4 DrawingMLEmbedder._create_navigation_relationships - C (19)
+    M 504:4 DrawingMLEmbedder._apply_run_navigation - C (17)
+core/algorithms/deterministic_curve_positioning.py
+    M 379:4 DeterministicCurvePositioner._expand_command - D (22)
+    M 249:4 DeterministicCurvePositioner.sample_path_for_text - C (11)
+    M 316:4 DeterministicCurvePositioner.classify_wordart - C (11)
+core/algorithms/curve_text/positioning.py
+    M 29:4 CurveTextPositioner.sample_path_for_text - C (11)
+core/algorithms/curve_text/curve_sampling.py
+    F 43:0 parse_path_segments - C (20)
+core/paths/drawingml_generator.py
+    M 578:4 DrawingMLGenerator._update_current_point - C (20)
+    M 135:4 DrawingMLGenerator.generate_path_xml - C (14)
+core/paths/coordinate_system.py
+    M 281:4 CoordinateSystem._extract_coordinate_points - E (34)
+    M 182:4 CoordinateSystem.calculate_path_bounds - C (11)
+core/paths/a2c.py
+    F 36:0 arc_to_cubic_bezier - C (12)
+core/paths/arc_converter.py
+    M 226:4 ArcConverter.validate_arc_parameters - C (12)
+    M 128:4 ArcConverter.arc_to_bezier_segments - C (11)
+    M 271:4 ArcConverter.convert_arc_command - C (11)
+core/converters/animation_converter.py
+    M 141:4 AnimationConverter.build_conversion_result - C (13)
+core/converters/masking.py
+    M 284:4 MaskingConverter._apply_clipping - C (17)
+    M 767:4 MaskingConverter._convert_svg_path_to_pptx - C (17)
+core/utils/dash_pattern.py
+    F 79:0 phase_rotate_pattern - C (14)
+core/utils/powerpoint_merger.py
+    M 328:4 PPTXMerger._copy_autoshape - C (12)
+core/utils/preprocessor_utilities.py
+    M 408:4 PreprocessorUtilities.format_transform_attribute - C (15)
+    M 371:4 PreprocessorUtilities._parse_transform_match - C (13)
+    M 244:4 PreprocessorUtilities.parse_style_attribute - C (11)
+core/utils/input_validator.py
+    M 433:4 InputValidator._sanitize_color_value - C (17)
+    M 608:4 InputValidator.validate_transform_list - C (16)
+    M 368:4 InputValidator._sanitize_attribute_value - C (15)
+    M 122:4 InputValidator.parse_length_safe - C (12)
+    M 186:4 InputValidator._convert_to_pixels - C (12)
+    C 91:0 InputValidator - C (11)
+    M 248:4 InputValidator.parse_numeric_safe - C (11)
+core/utils/path_processor.py
+    M 478:4 PathProcessor._remove_redundant_commands - C (14)
+    M 72:4 PathCommand.to_drawingml - C (13)
+    M 177:4 PathProcessor._create_path_command - C (13)
+    C 60:0 PathCommand - C (11)
+core/utils/xml_builder/shapes/text.py
+    M 15:4 TextShapeGenerator.generate_text_shape - C (12)
+core/utils/xml_builder/shapes/group.py
+    M 17:4 GroupShapeGenerator.generate_group_shape - C (15)
+    C 14:0 GroupShapeGenerator - C (14)
+    M 80:4 GroupShapeGenerator.generate_group_picture - C (11)
+core/utils/xml_builder/shapes/path.py
+    M 15:4 PathShapeGenerator.generate_path_shape - C (17)
+    C 12:0 PathShapeGenerator - C (15)
+    M 145:4 PathShapeGenerator.generate_path_emf_placeholder - C (13)
+    M 91:4 PathShapeGenerator.generate_path_emf_picture - C (12)
+core/utils/xml_builder/effects/filters.py
+    M 54:4 FilterEffectGenerator.generate_specular_lighting_for_filter - C (11)
+core/groups/clipping_analyzer.py
+    M 507:4 ClippingAnalyzer._determine_strategy - C (18)
+    M 338:4 ClippingAnalyzer._analyze_clippath_complexity - C (15)
+    M 389:4 ClippingAnalyzer._shape_bbox - C (14)
+    M 229:4 ClippingAnalyzer._resolve_clip_path_reference - C (11)
+core/multipage/converter.py
+    M 112:4 CleanSlateMultiPageConverter.convert_pages - C (11)
+core/xml/utils.py
+    F 80:0 has_external_references - C (13)
+core/units/core.py
+    M 301:4 UnitConverter._vectorized_to_pixels - C (16)
+    M 352:4 UnitConverter._vectorized_to_pixels_numba - C (14)
+    M 202:4 UnitConverter._to_pixels - C (13)
+core/elements/gradient_processor.py
+    M 207:4 GradientProcessor._analyze_gradient_stops - C (11)
+core/elements/pattern_processor.py
+    M 338:4 PatternProcessor._classify_pattern_type - C (17)
+    M 584:4 PatternProcessor._identify_pattern_optimizations - C (11)
+core/map/text_mapper.py
+    M 182:4 TextMapper._map_to_drawingml - C (18)
+    M 789:4 TextMapper._generate_run_xml - C (14)
+    M 348:4 TextMapper._map_to_outline - C (13)
+    M 269:4 TextMapper._generate_standard_text_xml - C (12)
+    M 471:4 TextMapper._apply_warp_preset - C (12)
+    M 520:4 TextMapper._map_to_emf - C (11)
+    M 676:4 TextMapper._extract_path_geometry - C (11)
+    M 710:4 TextMapper._generate_paragraphs_xml - C (11)
+core/map/clip_render.py
+    F 12:0 clip_result_to_xml - C (12)
+core/map/path_mapper.py
+    M 164:4 PathMapper._map_to_drawingml_native - D (23)
+    M 539:4 PathMapper._generate_stroke_xml - C (15)
+core/map/image_mapper.py
+    M 123:4 ImageMapper._map_to_picture - D (26)
+    M 379:4 ImageMapper._generate_image_clip_xml - C (11)
+core/map/clipping_adapter.py
+    M 194:4 ClippingPathAdapter._analyze_clip_path - C (11)
+core/map/text_adapter.py
+    M 140:4 TextProcessingAdapter._process_with_clean_slate - C (14)
+core/map/shape_helpers.py
+    F 96:0 generate_stroke_xml - C (15)
+core/transforms/matrix_composer.py
+    F 245:0 parse_transform - C (15)
+    F 470:0 _resolve_slide_dimensions - C (11)
+core/transforms/parser.py
+    M 78:4 TransformParser._create_transform - C (16)
+core/pre/resolve_clippath_plugin.py
+    M 515:4 ResolveClipPathsPlugin._resolve_clippath_to_paths - C (13)
+core/pre/chain.py
+    M 48:4 PreprocessorChain.process - C (11)
+core/pre/normalize_transforms.py
+    M 183:4 NormalizeTransformsPreprocessor._parse_transform_function - C (19)
+core/batch/coordinator.py
+    F 30:0 coordinate_batch_workflow_clean_slate - C (17)
+core/batch/tasks.py
+    F 265:0 merge_presentations - D (21)
+    F 155:0 convert_multiple_svgs_clean_slate - C (17)
+    F 522:0 extract_and_process_zip - C (13)
+core/batch/url_downloader.py
+    F 33:0 download_svgs_to_temp - C (15)
+core/batch/simple_api.py
+    F 168:0 merge_presentations_sync - C (14)
+core/batch/file_manager.py
+    M 346:4 BatchFileManager.extract_zip_with_structure - C (13)
+    M 277:4 BatchFileManager.get_storage_stats - C (12)
+    M 145:4 BatchFileManager.get_converted_files - C (11)
+    M 478:4 BatchFileManager.create_zip_from_converted_files - C (11)
+core/analyze/analyzer.py
+    M 501:4 SVGAnalyzer._calculate_ir_complexity_adjustment - D (21)
+    M 273:4 SVGAnalyzer._calculate_text_complexity - C (17)
+core/analyze/svg_validator.py
+    M 264:4 SVGValidator._validate_structure - C (13)
+core/analyze/complexity_calculator.py
+    M 127:4 ComplexityCalculator._calculate_feature_multiplier - C (14)
+core/text/integration_adapter.py
+    M 188:4 TextIntegrationAdapter.validate_text_element - D (21)
+core/performance/metrics.py
+    M 483:4 MetricsCollector._calculate_trend - C (14)
+    M 245:4 MetricsAggregator.aggregate_metric - C (12)
+    M 161:4 TimeSeriesStorage.query_metrics - C (11)
+core/performance/benchmark.py
+    M 430:4 BenchmarkEngine.analyze_results - C (18)
+    M 266:4 BenchmarkEngine.execute_benchmark - C (15)
+core/performance/speedrun_benchmark.py
+    M 401:4 SVGSpeedrunBenchmark.generate_benchmark_report - C (13)
+core/performance/filter_emf_cache.py
+    M 367:4 EMFFilterCache._summarize_color_metadata - C (15)
+core/performance/optimizer.py
+    M 385:4 PerformanceOptimizer.get_optimization_recommendations - C (14)
+    M 213:4 PerformanceOptimizer.convert_elements - C (11)
+core/performance/profiler.py
+    M 182:4 PerformanceProfiler.profile_operation - C (19)
+    M 456:4 PerformanceProfiler.get_optimization_recommendations - C (14)
+    M 324:4 PerformanceProfiler.get_session_report - C (11)
+core/performance/decorators.py
+    F 377:0 _validate_benchmark_parameters - C (15)
+core/viewbox/core.py
+    M 197:4 ViewportEngine.extract_viewport_dimensions_batch - C (11)
+core/viewbox/content_bounds.py
+    F 81:0 get_element_bounds - C (11)
+    F 195:0 calculate_content_bounds - C (11)
+core/presentation/composer.py
+    M 87:4 AssetEmbedder.register_embedded_fonts - C (16)
+core/parse_split/ir_converter.py
+    M 740:4 IRConverter._process_text_child_node - D (28)
+    M 879:4 IRConverter._parse_path_data - D (22)
+    M 524:4 IRConverter._convert_foreignobject_to_ir - C (19)
+    M 981:4 IRConverter._classify_payload_type - C (13)
+    M 225:4 IRConverter._convert_circle_to_ir - C (12)
+    M 414:4 IRConverter._convert_polygon_to_ir - C (11)
+    M 451:4 IRConverter._convert_text_to_ir - C (11)
+core/parse_split/element_traversal.py
+    M 38:4 ElementTraversal._extract_recursive - C (13)
+core/parse_split/clip_parser.py
+    M 63:4 ClipPathExtractor._clip_child_to_segments - C (16)
+    M 21:4 ClipPathExtractor.collect - C (12)
+core/services/font_embedding_engine.py
+    M 296:4 FontEmbeddingEngine.create_intelligent_pptx_package - C (12)
+core/services/text_to_path_processor.py
+    M 177:4 TextToPathProcessor._detect_font_availability - C (11)
+core/services/filter_service.py
+    M 68:4 FilterService._convert_filter_definition - C (14)
+    M 151:4 FilterService.resolve_effects - C (12)
+core/services/conversion_services.py
+    M 196:4 ConversionServices.create_default - C (15)
+    M 548:4 ConversionServices.emu - C (13)
+core/services/pattern_service.py
+    M 111:4 PatternService._analyze_pattern - F (41)
+core/services/secure_file_service.py
+    M 259:4 SecureFileService.validate_output_path - C (17)
+core/services/font_service.py
+    M 214:4 FontService._matches_font_criteria - C (13)
+core/animations/timeline.py
+    M 207:4 TimelineGenerator._resolve_animation_conflicts - C (12)
+core/animations/interpolation.py
+    M 220:4 TransformInterpolator._format_transform_values - C (18)
+    M 103:4 NumericInterpolator.interpolate_numeric - C (13)
+    M 382:4 InterpolationEngine.interpolate_keyframes - C (12)
+    C 168:0 TransformInterpolator - C (11)
+core/animations/core.py
+    M 136:4 AnimationDefinition.__post_init__ - C (17)
+    F 350:0 format_transform_string - C (16)
+    M 425:4 AnimationSummary.calculate_complexity - C (13)
+core/animations/parser.py
+    M 395:4 SMILParser.validate_animation_structure - C (15)
+    M 193:4 SMILParser._parse_animation_values - C (13)
+    M 309:4 SMILParser._parse_key_splines - C (12)
+core/animations/powerpoint.py
+    M 353:4 PowerPointAnimationGenerator._build_timeline_keyframes - D (21)
+    M 500:4 PowerPointAnimationGenerator._parse_motion_position - C (11)
+core/policy/targets.py
+    M 695:4 PolicyMetrics.record_decision - C (13)
+core/policy/config.py
+    M 301:4 PolicyConfig.from_dict - C (13)
+core/policy/text_policy.py
+    M 71:4 TextPolicy.decide - D (24)
+    M 260:4 TextPolicy._evaluate_font_availability - D (23)
+    C 49:0 TextPolicy - C (11)
+    M 390:4 TextPolicy._analyze_transform_complexity - C (11)
+core/policy/path_policy.py
+    M 21:4 PathPolicy.decide - C (14)
+core/policy/text_warp_classifier.py
+    F 67:0 classify_text_path_warp - D (24)
+    F 416:0 _classify_arch_family - C (14)
+    F 611:0 _classify_polygonal_shapes - C (14)
+    F 505:0 _classify_bulge_family - C (13)
+    F 387:0 _select_circle_preset - C (11)
+    F 465:0 _classify_wave_family - C (11)
+    F 692:0 _classify_fade - C (11)
+core/policy/engine.py
+    M 203:4 Policy._analyze_filter - C (15)
+    M 294:4 Policy._analyze_gradient - C (13)
+    M 541:4 Policy._analyze_clippath - C (12)
+core/policy/effects_policy.py
+    M 146:4 EffectsPolicy._decide_shadow - C (11)
+core/policy/shape_policy.py
+    F 132:0 decide_shape_strategy - C (11)
+
+185 blocks (classes, functions, methods) analyzed.
+Average complexity: C (14.908108108108108)

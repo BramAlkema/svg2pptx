@@ -1,0 +1,92 @@
+component,file,line,snippet
+archive/development-artifacts,archive/development-artifacts/scripts/text_layout.py,11,EMU_PER_PT = EMU_PER_INCH // 72  # 12700
+archive/legacy-src,archive/legacy-src/converters/base.py,1404,blur_radius_emu = int(blur_radius * 12700)  # Convert to EMUs
+archive/legacy-src,archive/legacy-src/converters/base.py,1415,dx_emu = int(dx * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1416,dy_emu = int(dy * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1417,blur_emu = int(blur * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1472,"effect_xml = '<a:innerShdw blurRad=""12700"" dist=""0""><a:srgbClr val=""000000""><a:alpha val=""40000""/></a:srgbClr></a:innerShdw>'"
+archive/legacy-src,archive/legacy-src/converters/base.py,1499,blur_radius_emu = int(blur_radius * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1505,dx_emu = int(dx * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1506,dy_emu = int(dy * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1521,dx_emu = int(dx * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1522,dy_emu = int(dy * 12700)
+archive/legacy-src,archive/legacy-src/converters/base.py,1523,blur_emu = int(blur * 12700)
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/diffuse_lighting.py,428,"<a:bevelT w=""25400"" h=""12700""/>"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/displacement_map.py,847,"path_commands.append(f'<a:moveTo><a:pt x=""{int(first_point[0] * 12700)}"" y=""{int(first_point[1] * 12700)}""/></a:moveTo>')"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/displacement_map.py,850,"path_commands.append(f'<a:lnTo><a:pt x=""{int(point[0] * 12700)}"" y=""{int(point[1] * 12700)}""/></a:lnTo>')"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/displacement_map.py,883,"path_commands = [f'<a:moveTo><a:pt x=""{int(first_point[0] * 12700)}"" y=""{int(first_point[1] * 12700)}""/></a:moveTo>']"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/displacement_map.py,889,"path_commands.append(f'<a:lnTo><a:pt x=""{int(point[0] * 12700)}"" y=""{int(point[1] * 12700)}""/></a:lnTo>')"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/specular_lighting.py,451,"<a:bevelT w=""25400"" h=""12700""/>"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/tile.py,362,"tx = int(tile_result.offset_x * 12700) if hasattr(tile_result, 'offset_x') else 0"
+archive/legacy-src,archive/legacy-src/converters/filters/geometric/tile.py,363,"ty = int(tile_result.offset_y * 12700) if hasattr(tile_result, 'offset_y') else 0"
+archive/legacy-src,archive/legacy-src/converters/filters/image/blur.py,579,"blur_radius = max(0, min(int(blur_radius), 1270000))  # Reasonable limit"
+archive/legacy-src,archive/legacy-src/converters/filters/image/convolve_matrix.py,402,"return '''<a:ln w=""12700"" cap=""rnd"" cmpd=""sng"" algn=""ctr"">"
+archive/legacy-src,archive/legacy-src/converters/filters/image/convolve_matrix.py,414,"return '''<a:ln w=""12700"" cap=""rnd"" cmpd=""sng"" algn=""ctr"">"
+archive/legacy-src,archive/legacy-src/converters/filters/image/convolve_matrix.py,426,"return '''<a:ln w=""12700"" cap=""rnd"" cmpd=""sng"" algn=""ctr"">"
+archive/legacy-src,archive/legacy-src/converters/filters/image/convolve_matrix.py,438,"return '''<a:ln w=""12700"" cap=""rnd"" cmpd=""sng"" algn=""ctr"">"
+archive/legacy-src,archive/legacy-src/converters/path_generator.py,88,EMU_PER_POINT = EMU_PER_INCH / POINTS_PER_INCH  # ~12700 EMUs per point
+archive/legacy-src,archive/legacy-src/converters/paths.py,120,viewport_width = context.coordinate_system.slide_width / 12700
+archive/legacy-src,archive/legacy-src/converters/paths.py,121,viewport_height = context.coordinate_system.slide_height / 12700
+archive/legacy-src,archive/legacy-src/converters/text_path_engine.py,187,return int(numeric_value * 12700)  # 1px ≈ 12700 EMU
+archive/legacy-src,archive/legacy-src/converters/text_to_path.py,498,"<a:ext cx=""1270000"" cy=""1270000""/>"
+archive/legacy-src,archive/legacy-src/converters/text_to_path.py,500,"<a:chExt cx=""1270000"" cy=""1270000""/>"
+archive/legacy-src,archive/legacy-src/converters/wordart_builder.py,317,"ln.set(""w"", ""12700"")  # 1 point outline"
+archive/legacy-src,archive/legacy-src/services/filter_service.py,74,blur_radius = float(std_deviation) * 12700  # Convert to EMUs
+archive/legacy-src,archive/legacy-src/services/filter_service.py,85,dx_emu = int(float(dx) * 12700)
+archive/legacy-src,archive/legacy-src/services/filter_service.py,86,dy_emu = int(float(dy) * 12700)
+archive/legacy-src,archive/legacy-src/services/filter_service.py,87,blur_emu = int(float(std_deviation) * 12700)
+archive/test_env,archive/test_env/lib/python3.13/site-packages/pip/_vendor/idna/idnadata.py,3055,"0x12700000128,"
+archive/test_env,archive/test_env/lib/python3.13/site-packages/pptx/oxml/simpletypes.py,735,"""pt"": 12700,"
+archive/test_env,archive/test_env/lib/python3.13/site-packages/pptx/util.py,19,_EMUS_PER_PT = 12700
+archive/test_env,archive/test_env/lib/python3.13/site-packages/scipy/cluster/tests/hierarchy_test_data.py,31,"[2.71127000e+00, 2.77032450e+00, 2.63466500e+00],"
+archive/test_env,archive/test_env/lib/python3.13/site-packages/scipy/integrate/_lebedev.py,1368,b = 0.9861621540127005E-1
+archive/test_env,archive/test_env/lib/python3.13/site-packages/xlsxwriter/chart.py,3338,width = int(0.5 + (12700 * width))
+archive/test_env,archive/test_env/lib/python3.13/site-packages/xlsxwriter/drawing.py,813,width = int(0.5 + (12700 * width))
+core/clip,core/clip/service.py,20,EMU_PER_UNIT = 12700
+core/fractional_emu,core/fractional_emu/constants.py,10,EMU_PER_POINT = 12700
+core/services,core/services/text_layout_engine.py,28,EMU_PER_POINT = 12700  # Standard EMU conversion
+core/transforms,core/transforms/matrix_composer.py,25,EMU_PER_POINT = 12700
+core/units,core/units/core.py,38,EMU_PER_POINT = 12700  # 1pt = 1/72 inch
+core/utils,core/utils/enhanced_xml_builder.py,1219,"shadow_blur = min(self._emu_value(surface_scale), 127000) if with_shadow else 25400"
+core/utils,core/utils/ooxml_transform_utils.py,45,EMU_PER_POINT = 12700  # 1 point = 1/72 inch
+core/viewbox,core/viewbox/core.py,36,EMU_PER_POINT = 12700
+development/prototypes,development/prototypes/precision-research/fractional_emu_numpy.py,29,EMU_PER_POINT = 12700
+tests/e2e,tests/e2e/core_systems/test_units_system_e2e.py,51,- 1pt = 12700 EMU
+tests/e2e,tests/e2e/core_systems/test_units_system_e2e.py,66,return int(float(value[:-2]) * 12700)  # 1pt = 12700 EMU
+tests/e2e,tests/e2e/core_systems/test_units_system_e2e.py,174,y_emu = int(20 * 12700)  # 20pt * 12700 EMU/pt
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,48,"assert '<a:blur rad=""63500""/>' in result.xml_content  # 5.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,71,"assert 'blurRad=""38100""' in result.xml_content  # 3.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,72,"assert 'dist=""50800""' in result.xml_content     # 4.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,89,"assert '<a:glow rad=""76200"">' in result.xml_content  # 6.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,105,"assert '<a:softEdge rad=""50800""/>' in result.xml_content  # 4.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,125,"assert 'blurRad=""25400""' in result.xml_content  # 2.0pt * 12700"
+tests/e2e,tests/e2e/test_native_shapes_with_effects.py,128,"assert 'dist=""38100""' in result.xml_content     # 3.0pt * 12700"
+tests/integration,tests/integration/multislide/conftest.py,157,mock_pt.side_effect = lambda x: x * 12700  # Convert to EMU
+tests/quality,tests/quality/lint/test_emu_scaling_inventory.py,34,if '12700' in text:
+tests/unit,tests/unit/core/ir/test_effects.py,26,assert blur.to_emu() == 63500  # 5.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,36,assert blur.to_emu() == 1270000
+tests/unit,tests/unit/core/ir/test_effects.py,82,assert blur_emu == 38100  # 3.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,83,assert dist_emu == 25400  # 2.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,145,assert glow.to_emu() == 63500  # 5.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,164,assert soft.to_emu() == 31750  # 2.5 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,169,assert soft.to_emu() == 127000
+tests/unit,tests/unit/core/ir/test_effects.py,200,assert blur_emu == 38100  # 3.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,201,assert dist_emu == 12700  # 1.0 * 12700
+tests/unit,tests/unit/core/ir/test_effects.py,247,"(1.0, 12700),"
+tests/unit,tests/unit/core/ir/test_effects.py,250,"(10.0, 127000),"
+tests/unit,tests/unit/core/ir/test_effects.py,251,"(100.0, 1270000),"
+tests/unit,tests/unit/core/ir/test_effects.py,260,"(1.0, 12700),"
+tests/unit,tests/unit/core/ir/test_effects.py,270,"(1.0, 12700),"
+tests/unit,tests/unit/core/map/test_bbox_clipping.py,22,"assert ""1270000"" in clip_xml and ""635000"" in clip_xml"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,36,"assert '<a:blur rad=""63500""/>' in xml  # 5.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,52,"assert 'blurRad=""38100""' in xml  # 3.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,53,"assert 'dist=""25400""' in xml     # 2.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,64,"assert '<a:glow rad=""50800"">' in xml  # 4.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,72,"assert '<a:softEdge rad=""31750""/>' in xml  # 2.5 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,85,"assert 'blurRad=""38100""' in xml  # 3.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,88,"assert 'dist=""12700""' in xml     # 1.0 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,275,"assert '<a:blur rad=""1270000""/>' in xml  # 100 * 12700"
+tests/unit,tests/unit/core/map/test_effect_xml_generation.py,276,"assert 'blurRad=""635000""' in xml         # 50 * 12700"
+tests/unit,tests/unit/core/services/test_conversion_services.py,30,assert result.value == int(round(10.0 * 12700))
+tests/unit,tests/unit/core/services/test_conversion_services.py,48,assert rect_result.width.value == int(round(3.0 * 12700))
+tests/unit,tests/unit/core/services/test_conversion_services.py,49,assert rect_result.height.value == int(round(4.0 * 12700))

@@ -1,0 +1,9 @@
+debug_path_bug.py:6:from core.parse.parser import SVGParser
+scripts/debugging/debug_parse_to_ir.py:10:from core.parse.parser import SVGParser
+scripts/debugging/debug_complex_svg.py:80:        from core.parse.parser import SVGParser
+scripts/debugging/debug_e2e_issue.py:54:        from core.parse.parser import SVGParser
+tests/unit/parse/test_safe_analyzer_iteration.py:11:from core.parse.parser import SVGParser
+tests/unit/core/parse/test_foreignobject_clipping.py:6:from core.parse.parser import SVGParser
+tests/unit/core/parse/test_hyperlinks.py:15:from core.parse.parser import SVGParser
+tests/unit/core/parse/test_clip_paths.py:14:from core.parse.parser import SVGParser
+tests/unit/core/parse/test_parser_lowlevel.py:7:from core.parse.parser import SVGParser
