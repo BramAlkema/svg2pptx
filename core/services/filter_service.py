@@ -3,6 +3,7 @@
 FilterService for handling SVG filter definitions and conversions.
 
 Provides filter registration, processing, and conversion to DrawingML.
+Enhanced with comprehensive filter system integration.
 """
 
 import logging
@@ -18,12 +19,30 @@ logger = logging.getLogger(__name__)
 
 
 class FilterService:
-    """Service for managing SVG filter definitions and conversions."""
+    """
+    Service for managing SVG filter definitions and conversions.
 
-    def __init__(self, policy_engine: Optional['PolicyEngine'] = None):
+    This enhanced service integrates with the comprehensive filter system
+    while maintaining backward compatibility with the minimal stub API.
+    """
+
+    def __init__(self, policy_engine: Optional['PolicyEngine'] = None, use_registry: bool = True):
         self._filter_cache: dict[str, ET.Element] = {}
         self._conversion_cache: dict[str, str] = {}
         self._policy_engine = policy_engine
+        self._use_registry = use_registry
+        self._registry = None
+
+        # Initialize registry if requested
+        if use_registry:
+            try:
+                from core.filters.registry import FilterRegistry
+                self._registry = FilterRegistry()
+                self._registry.register_default_filters()
+                logger.info(f"FilterService initialized with {len(self._registry.list_filters())} filter types")
+            except Exception as e:
+                logger.warning(f"Failed to initialize filter registry: {e}. Falling back to stub mode.")
+                self._use_registry = False
 
     def register_filter(self, filter_id: str, filter_element: ET.Element) -> None:
         """Register a filter definition for later resolution."""
@@ -174,8 +193,17 @@ class FilterService:
         self._conversion_cache.clear()
 
     def get_supported_filters(self) -> list[str]:
-        """Get list of supported filter types."""
-        return ['feGaussianBlur', 'feDropShadow']
+        """
+        Get list of supported filter types.
+
+        Returns list from registry if available, otherwise returns stub list.
+        """
+        if self._use_registry and self._registry:
+            # Return all registered filter types
+            return self._registry.list_filters()
+        else:
+            # Fallback to minimal stub implementation
+            return ['feGaussianBlur', 'feDropShadow']
 
     def _analyze_filter_type(self, primitives: list[ET.Element]) -> str:
         """
