@@ -13,7 +13,7 @@ from enum import Enum
 from typing import List, Optional, Dict, Any, Union
 from abc import ABC, abstractmethod
 
-from src.converters.filters.core.base import Filter, FilterResult, FilterContext
+from ..base import Filter, FilterResult, FilterContext
 
 
 class EdgeMode(Enum):

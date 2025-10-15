@@ -310,17 +310,20 @@ class FilterRegistry:
         fallback for missing modules to ensure registry stability.
         """
         default_filter_specs = [
-            # Image filters
+            # Image filters (3)
             ('core.filters.image.blur', 'GaussianBlurFilter'),
             ('core.filters.image.color', 'ColorMatrixFilter'),
             ('core.filters.image.convolve_matrix', 'ConvolveMatrixFilter'),
 
-            # Geometric filters
+            # Geometric filters (8)
             ('core.filters.geometric.transforms', 'OffsetFilter'),
             ('core.filters.geometric.composite', 'CompositeFilter'),
             ('core.filters.geometric.morphology', 'MorphologyFilter'),
             ('core.filters.geometric.diffuse_lighting', 'DiffuseLightingFilter'),
             ('core.filters.geometric.specular_lighting', 'SpecularLightingFilter'),
+            ('core.filters.geometric.tile', 'TileFilter'),
+            ('core.filters.geometric.component_transfer', 'ComponentTransferFilter'),
+            ('core.filters.geometric.displacement_map', 'DisplacementMapFilter'),
         ]
 
         filters_loaded = 0

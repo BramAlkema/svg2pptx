@@ -6,11 +6,9 @@ EMF blob generation and packaging migrated from legacy src/ for self-contained o
 """
 
 from .emf_blob import EMFBlob, EMFBrushStyle, EMFRecordType
-from .emf_packaging import EMFPackager
 
 __all__ = [
     'EMFBlob',
     'EMFRecordType',
     'EMFBrushStyle',
-    'EMFPackager',
 ]

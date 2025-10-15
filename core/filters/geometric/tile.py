@@ -11,9 +11,9 @@ from dataclasses import dataclass
 from typing import Tuple, Optional, Dict, Any, List
 from abc import ABC, abstractmethod
 
-from src.converters.filters.core.base import Filter, FilterResult, FilterContext
-from src.emf_tiles import get_tile_library, get_pattern_tile, create_colored_pattern
-from src.emf_blob import EMFBlob, create_pattern_tile
+from ..base import Filter, FilterResult, FilterContext
+from core.emf.emf_tiles import get_tile_library, get_pattern_tile, create_colored_pattern
+from core.emf.emf_blob import EMFBlob, create_pattern_tile
 
 
 @dataclass
